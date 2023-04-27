@@ -1,5 +1,7 @@
-/* NOTE: This stylesheet is included in both options.html and popup.html.  So changes here affect
-   both of these. */
+/* This stylesheet is included in both options.html and action.html, so changes affect both. */
+:root {
+  --closeButtonWidth: 25px;
+}
 body {
   font: 14px "DejaVu Sans", "Arial", sans-serif;
   color: #303942;
@@ -177,16 +179,40 @@ td.booleanOption { font-size: 12px; }
   overflow-y: auto;
   /* Each exclusion rule is about 30px, so this allows 7 before scrolling */
   max-height: 215px;
-  min-height: 75px;
   border-radius: 2px;
   color: #444;
-  width: 100%
+  width: 100%;
 }
 #exclusionRules {
   width: 100%;
+  border-collapse: collapse;
+}
+#exclusionRules td {
+  vertical-align: top;
+  border: 2px solid transparent;
 }
 #exclusionRules td:nth-of-type(2) {
   width: 33%;
+}
+#exclusionRules td:nth-of-type(3) {
+  /* Make the close button td use only the minimum width needed. */
+  width: var(--closeButtonWidth);
+  padding-top: 3px;
+}
+
+#exclusionRules tr.validationError .validationMessage {
+  display: block;
+}
+
+#exclusionRules tr.validationError td:nth-of-type(1) input {
+  border-color: orange;
+}
+
+#exclusionRules .validationMessage {
+  display: block;
+  color: orange;
+  margin-top: 2px;
+  margin-left: 2px;
 }
 #exclusionRules .remove {
   border: none;
@@ -206,14 +232,16 @@ input[name=pattern], input[name=passKeys], .exclusionHeaderText {
 }
 #exclusionAddButton {
   float: right;
-  margin-right: 0px;
-  margin-top: 5px;
+  /* Add the spacing between the table's cells to the right margin of this button. */
+  margin-right: calc(var(--closeButtonWidth) + 4px);
+  margin-top: 10px;
 }
 #footer {
   background: #f5f5f5;
   border-top: 1px solid #979ca0;
   position: fixed;
   bottom: 0px;
+  padding: 15px 0;
   z-index: 10;
 }
 #footer, #footerTable, #footerTableData {

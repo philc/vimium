@@ -68,13 +68,10 @@
     "default_icon": {
       "16": "icons/action_enabled_16.png",
       "32": "icons/action_enabled_32.png"
-    }
+    },
+    "default_popup": "pages/action.html"
   },
   // TODO(philc): Manifest v3
-  // "browser_action": {
-  //   "default_icon": "icons/browser_action_disabled.png",
-  //   "default_popup": "pages/popup.html"
-  // },
   "web_accessible_resources": [
     {
       "resources": [
