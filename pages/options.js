@@ -26,9 +26,13 @@ const EventDispatcher = {
 
 // The table-editor used for exclusion rules.
 const ExclusionRulesEditor = {
+  // When the Add rule button is clicked, use this as the pattern for the new rule. This is used by
+  // the action.html toolbar popup.
+  defaultPatternForNewRules: null,
+
   init() {
     document.querySelector("#exclusionAddButton").addEventListener("click", () => {
-      this.addRow();
+      this.addRow(this.defaultPatternForNewRules);
       this.dispatchEvent("change");
     });
   },
