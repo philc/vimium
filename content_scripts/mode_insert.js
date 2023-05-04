@@ -12,6 +12,18 @@ class InsertMode extends Mode {
     // If truthy, then we were activated by the user (with "i").
     this.global = options.global;
 
+    this.passNextKeyKeys = [];
+
+    // This list of keys is parsed from the user's key mapping config by commands.js, and stored in
+    // chrome.storage.local.
+    chrome.storage.local.get("passNextKeyKeys").then((value) => {
+      this.passNextKeyKeys = value.passNextKeyKeys || [];
+    });
+    chrome.storage.onChanged.addListener(async (changes, areaName) => {
+      if (areaName != "local") return;
+      this.passNextKeyKeys = (await chrome.storage.local.get("passNextKeyKeys")) || [];
+    });
+
     const handleKeyEvent = (event) => {
       if (!this.isActive(event)) {
         return this.continueBubbling;
@@ -26,7 +38,7 @@ class InsertMode extends Mode {
 
       // Check for a pass-next-key key.
       const keyString = KeyboardUtils.getKeyCharString(event);
-      if (Settings.get("passNextKeyKeys").includes(keyString)) {
+      if (this.passNextKeyKeys.includes(keyString)) {
         new PassNextKeyMode();
       } else if ((event.type === "keydown") && KeyboardUtils.isEscape(event)) {
         if (DomUtils.isFocusable(activeElement)) {

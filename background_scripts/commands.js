@@ -84,7 +84,8 @@ const Commands = {
       .filter((key) =>
         (this.keyToCommandRegistry[key].command === "passNextKey") && (key.length > 1)
       );
-    Settings.set("passNextKeyKeys", passNextKeys);
+
+    chrome.storage.local.set({ passNextKeyKeys: passNextKeys });
   },
 
   // Lower-case the appropriate portions of named keys.
