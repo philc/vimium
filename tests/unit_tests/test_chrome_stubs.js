@@ -21,7 +21,9 @@ window.chrome = {
   areRunningVimiumTests: true,
 
   runtime: {
-    getURL() { return ""; },
+    getURL() {
+      return "";
+    },
     getManifest() {
       return { version: "1.2.3" };
     },
@@ -179,21 +181,21 @@ window.chrome = {
         }
       },
 
-      async get(keys) {
-        let key;
+      async get(keysArg) {
         chrome.runtime.lastError = undefined;
-        if (keys === null) {
-          keys = [];
-          for (key of Object.keys(this.store)) {
-            const value = this.store[key];
-            keys.push(key);
+        if (keysArg == null) {
+          return globalThis.structuredClone(this.store);
+        } else if (typeof keysArg == "string") {
+          const result = [];
+          result[keysArg] = globalThis.structuredClone(this.store[keysArg]);
+          return result;
+        } else {
+          const result = {};
+          for (key of keysArg) {
+            result[key] = globalThis.structuredClone(this.store[key]);
           }
+          return result;
         }
-        const items = {};
-        for (key of keys) {
-          items[key] = this.store[key];
-        }
-        return items;
       },
 
       async remove(key) {
