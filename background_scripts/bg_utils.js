@@ -77,11 +77,11 @@ var BgUtils = {
 
   // Log messages to the extension's logging page, but only if that page is open.
   log: (function () {
-    console.log("log is being called");
     const loggingPageUrl = chrome.runtime.getURL("pages/logging.html");
     // Do not output URL for tests.
     if (loggingPageUrl != null) {
-      console.log(`Vimium logging URL:\n  ${loggingPageUrl}`);
+      // TODO(philc): Consider removing this code. We don't want these messages in the tests.
+      // console.log(`Vimium logging URL:\n  ${loggingPageUrl}`);
     }
     // For development, it's sometimes useful to automatically launch the logging page on reload.
     // TODO(philc): can we remove this logging function? Background pages no longer have access to
