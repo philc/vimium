@@ -9,7 +9,7 @@ const ExclusionRulesEditor = {
   init() {
     document.querySelector("#exclusionAddButton").addEventListener("click", () => {
       this.addRow(this.defaultPatternForNewRules);
-      this.dispatchEvent("change");
+      this.dispatchEvent("input");
     });
   },
 
@@ -34,15 +34,15 @@ const ExclusionRulesEditor = {
 
     const patternEl = rowEl.querySelector("[name=pattern]");
     patternEl.value = pattern ?? "";
-    patternEl.addEventListener("input", () => this.dispatchEvent("change"));
+    patternEl.addEventListener("input", () => this.dispatchEvent("input"));
 
     const keysEl = rowEl.querySelector("[name=passKeys]");
     keysEl.value = passKeys ?? "";
-    keysEl.addEventListener("input", () => this.dispatchEvent("change"));
+    keysEl.addEventListener("input", () => this.dispatchEvent("input"));
 
     rowEl.querySelector(".remove").addEventListener("click", (e) => {
       e.target.closest("tr").remove();
-      this.dispatchEvent("change");
+      this.dispatchEvent("input");
     });
     rulesTable.appendChild(rowEl);
   },
@@ -98,7 +98,9 @@ const OptionsPage = {
     };
 
     for (const el of document.querySelectorAll("input, textarea")) {
-      el.addEventListener("change", () => onUpdated());
+      // We want to immediately enable the save button when a setting is changed, so we want to use
+      // the HTML element's "input" event here rather than the "change" event.
+      el.addEventListener("input", () => onUpdated());
     }
 
     saveOptionsEl.addEventListener("click", () => OptionsPage.saveOptions());
@@ -138,7 +140,7 @@ const OptionsPage = {
     });
 
     ExclusionRulesEditor.init();
-    ExclusionRulesEditor.addEventListener("change", onUpdated);
+    ExclusionRulesEditor.addEventListener("input", onUpdated);
 
     const settings = Settings.getSettings();
     OptionsPage.setFormFromSettings(settings);
