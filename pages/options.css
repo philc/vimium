@@ -79,6 +79,9 @@ table#options{
   font-size: 14px;
   position: relative;
   border-spacing: 0 23px;
+  /* This should match the height of the footer, so that the footer UI doesn't sit on top of this
+     options table, covering some of the options UI. */
+  margin-bottom: 50px;
 }
 .example {
   font-size: 12px;
@@ -247,11 +250,7 @@ input[name=pattern], input[name=passKeys], .exclusionHeaderText {
 #footer, #footerTable, #footerTableData {
   width: 100%;
 }
-#endSpace {
-  /* Leave space for the fixed footer. */
-  min-height: 30px;
-  max-height: 30px;
-}
+
 #helpText, #versionAndOptions {
   font-size: 12px;
 }
