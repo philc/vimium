@@ -10,8 +10,10 @@ const Commands = {
       this.availableCommands[command] = Object.assign(options || {}, { description });
     }
 
-    // TODO(philc): manifest v3 re-enable reloading key mappings when they've been modified.
-    // Settings.postUpdateHooks["keyMappings"] = this.loadKeyMappings.bind(this);
+    Settings.addEventListener("change", () => {
+      this.loadKeyMappings(Settings.get("keyMappings"));
+    });
+
     this.loadKeyMappings(Settings.get("keyMappings"));
   },
 
