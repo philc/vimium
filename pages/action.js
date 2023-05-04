@@ -42,7 +42,7 @@ const ActionPage = {
 
     ExclusionRulesEditor.defaultPatternForNewRules = defaultPatternForNewRules;
     ExclusionRulesEditor.init();
-    ExclusionRulesEditor.addEventListener("change", onUpdated);
+    ExclusionRulesEditor.addEventListener("input", onUpdated);
     const rules = Settings.get("exclusionRules").filter((r) =>
       this.tabUrl.match(this.getPatternRegExp(r.pattern))
     );
