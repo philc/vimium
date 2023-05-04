@@ -87,7 +87,7 @@ const options = {
 };
 
 const OptionsPage = {
-  init: async () => {
+  async init() {
     await Settings.onLoaded();
 
     const saveOptionsEl = document.querySelector("#saveOptions");
@@ -103,7 +103,7 @@ const OptionsPage = {
       el.addEventListener("input", () => onUpdated());
     }
 
-    saveOptionsEl.addEventListener("click", () => OptionsPage.saveOptions());
+    saveOptionsEl.addEventListener("click", () => this.saveOptions());
     document.querySelector("#showCommands").addEventListener(
       "click",
       () => HelpDialog.toggle({ showAllCommandDetails: true }),
@@ -111,17 +111,17 @@ const OptionsPage = {
 
     document.querySelector("#filterLinkHints").addEventListener(
       "click",
-      () => OptionsPage.maintainLinkHintsView(),
+      () => this.maintainLinkHintsView(),
     );
 
     document.querySelector("#downloadBackup").addEventListener(
       "mousedown",
-      () => OptionsPage.onDownloadBackupClicked(),
+      () => this.onDownloadBackupClicked(),
       true,
     );
     document.querySelector("#uploadBackup").addEventListener(
       "change",
-      () => OptionsPage.onUploadBackupClicked(),
+      () => this.onUploadBackupClicked(),
     );
 
     window.onbeforeunload = () => {
@@ -134,7 +134,7 @@ const OptionsPage = {
       if (event.ctrlKey && (event.keyCode === 13)) {
         if (document && document.activeElement && document.activeElement.blur) {
           document.activeElement.blur();
-          OptionsPage.saveOptions();
+          this.saveOptions();
         }
       }
     });
@@ -143,10 +143,10 @@ const OptionsPage = {
     ExclusionRulesEditor.addEventListener("input", onUpdated);
 
     const settings = Settings.getSettings();
-    OptionsPage.setFormFromSettings(settings);
+    this.setFormFromSettings(settings);
   },
 
-  setFormFromSettings: (settings) => {
+  setFormFromSettings(settings) {
     for (const [optionName, optionType] of Object.entries(options)) {
       const el = document.getElementById(optionName);
       const value = settings[optionName];
@@ -168,10 +168,10 @@ const OptionsPage = {
     ExclusionRulesEditor.setForm(Settings.get("exclusionRules"));
 
     document.querySelector("#uploadBackup").value = "";
-    OptionsPage.maintainLinkHintsView();
+    this.maintainLinkHintsView();
   },
 
-  getSettingsFromForm: () => {
+  getSettingsFromForm() {
     const settings = {};
     for (const [optionName, optionType] of Object.entries(options)) {
       const el = document.getElementById(optionName);
@@ -200,8 +200,8 @@ const OptionsPage = {
     return settings;
   },
 
-  saveOptions: () => {
-    Settings.setSettings(OptionsPage.getSettingsFromForm());
+  saveOptions() {
+    Settings.setSettings(this.getSettingsFromForm());
     const el = document.querySelector("#saveOptions");
     el.disabled = true;
     el.textContent = "Saved";
@@ -209,7 +209,7 @@ const OptionsPage = {
 
   // Display the UI for link hint numbers vs. characters, depending upon the value of
   // "filterLinkHints".
-  maintainLinkHintsView: () => {
+  maintainLinkHintsView() {
     const show = (el, visible) => el.style.display = visible ? "table-row" : "none";
     const isFilteredLinkhints = document.querySelector("#filterLinkHints").checked;
     show(document.querySelector("#linkHintCharactersContainer"), !isFilteredLinkhints);
@@ -217,8 +217,8 @@ const OptionsPage = {
     show(document.querySelector("#waitForEnterForFilteredHintsContainer"), isFilteredLinkhints);
   },
 
-  onDownloadBackupClicked: () => {
-    let backup = OptionsPage.getSettingsFromForm();
+  onDownloadBackupClicked() {
+    let backup = this.getSettingsFromForm();
     backup = Settings.pruneOutDefaultValues(backup);
     // TODO(philc):
     // backup.settingsVersion = settings["settingsVersion"];
@@ -226,7 +226,7 @@ const OptionsPage = {
     document.querySelector("#downloadBackup").href = URL.createObjectURL(settingsBlob);
   },
 
-  onUploadBackupClicked: () => {
+  onUploadBackupClicked() {
     if (document.activeElement) {
       document.activeElement.blur();
     }
@@ -249,7 +249,7 @@ const OptionsPage = {
         }
 
         await Settings.setSettings(backup);
-        OptionsPage.setFormFromSettings(Settings.getSettings());
+        this.setFormFromSettings(Settings.getSettings());
         const saveOptionsEl = document.querySelector("#saveOptions");
         saveOptionsEl.disabled = true;
         saveOptionsEl.textContent = "Saved";
@@ -269,10 +269,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     case "/pages/options.html":
       await OptionsPage.init();
       break;
-    // TODO(philc): manifest v3: Fix the options page
-    // case "/pages/popup.html":
-    //   initPopupPage();
-    //   break;
+      // TODO(philc): manifest v3: Fix the options page
+      // case "/pages/popup.html":
+      //   initPopupPage();
+      //   break;
   }
 });
 
