@@ -1,29 +1,5 @@
 // TODO(philc): manifest v3 - custom styles needs to be fixed.
 
-// Mixin-functions for enabling a class to dispatch methods.
-const EventDispatcher = {
-  addEventListener: (eventName, listener) => {
-    this.events = this.events || [];
-    this.events[eventName] = this.events[eventName] || [];
-    this.events[eventName].push(listener);
-  },
-
-  dispatchEvent: (eventName) => {
-    this.events = this.events || [];
-    for (const listener of this.events[eventName] || []) {
-      listener();
-    }
-  },
-
-  removeEventListener: (eventName, listener) => {
-    const events = this.events || {};
-    const listeners = events[eventName] || [];
-    if (listeners.length > 0) {
-      events[eventName] = listeners.filter((l) => l != listener);
-    }
-  },
-};
-
 // The table-editor used for exclusion rules.
 const ExclusionRulesEditor = {
   // When the Add rule button is clicked, use this as the pattern for the new rule. This is used by

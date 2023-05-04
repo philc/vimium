@@ -69,15 +69,13 @@ const Exclusions = {
     Settings.set("exclusionRules", newRules);
   },
 
-  postUpdateHook() {
+  onSettingsUpdated() {
     // NOTE(mrmr1993): In FF, the |rules| argument will be garbage collected when the exclusions
     // popup is closed. Do NOT store it/use it asynchronously.
     ExclusionRegexpCache.clear();
   },
 };
 
-// Register postUpdateHook for exclusionRules setting.
-// TODO(philc): manifest v3 rebuild the exclusion rules cache when the settings change.
-// Settings.postUpdateHooks["exclusionRules"] = Exclusions.postUpdateHook.bind(Exclusions);
+Settings.addEventListener("change", () => Exclusions.onSettingsUpdated());
 
 globalThis.Exclusions = Exclusions;
