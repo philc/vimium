@@ -24,7 +24,7 @@ const ActionPage = {
 
     const onUpdated = () => {
       saveOptionsEl.disabled = false;
-      saveOptionsEl.textContent = "Save Changes";
+      saveOptionsEl.textContent = "Save changes";
       this.syncEnabledKeysCaption();
       this.showValidationErrors();
     };

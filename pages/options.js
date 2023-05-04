@@ -94,7 +94,7 @@ const OptionsPage = {
 
     const onUpdated = () => {
       saveOptionsEl.disabled = false;
-      saveOptionsEl.textContent = "Save Changes";
+      saveOptionsEl.textContent = "Save changes";
     };
 
     for (const el of document.querySelectorAll("input, textarea")) {
