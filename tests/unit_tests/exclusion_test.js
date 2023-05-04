@@ -14,7 +14,7 @@ const isEnabledForUrl = (request) => Exclusions.isEnabledForUrl(request.url);
 context("Excluded URLs and pass keys", () => {
   setup(async () => {
     await Settings.onLoaded();
-    Settings.set("exclusionRules", [
+    await Settings.set("exclusionRules", [
       { pattern: "http*://mail.google.com/*", passKeys: "" },
       { pattern: "http*://www.facebook.com/*", passKeys: "abab" },
       { pattern: "http*://www.facebook.com/*", passKeys: "cdcd" },
@@ -24,7 +24,10 @@ context("Excluded URLs and pass keys", () => {
       { pattern: "http*://www.duplicate.com/*", passKeys: "ace" },
       { pattern: "http*://www.duplicate.com/*", passKeys: "bdf" },
     ]);
-    Exclusions.postUpdateHook();
+  });
+
+  tearDown(async () => {
+    await Settings.clear();
   });
 
   should("be disabled for excluded sites", () => {
@@ -63,8 +66,10 @@ context("Excluded URLs and pass keys", () => {
     assert.equal("abcdef", rule.passKeys);
   });
 
-  should("be enabled for malformed regular expressions", () => {
-    Exclusions.postUpdateHook([{ pattern: "http*://www.bad-regexp.com/*[a-", passKeys: "" }]);
+  should("be enabled when given malformed regular expressions", async () => {
+    await Settings.set("exclusionRules", [
+      { pattern: "http*://www.bad-regexp.com/*[a-", passKeys: "" },
+    ]);
     const rule = isEnabledForUrl({ url: "http://www.bad-regexp.com/pages" });
     assert.isTrue(rule.isEnabledForUrl);
   });
