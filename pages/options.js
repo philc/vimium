@@ -152,10 +152,7 @@ const OptionsPage = {
   },
 
   onDownloadBackupClicked() {
-    let backup = this.getSettingsFromForm();
-    backup = Settings.pruneOutDefaultValues(backup);
-    // TODO(philc):
-    // backup.settingsVersion = settings["settingsVersion"];
+    const backup = Settings.pruneOutDefaultValues(this.getSettingsFromForm());
     const settingsBlob = new Blob([JSON.stringify(backup, null, 2) + "\n"]);
     document.querySelector("#downloadBackup").href = URL.createObjectURL(settingsBlob);
   },
@@ -165,8 +162,6 @@ const OptionsPage = {
       document.activeElement.blur();
     }
 
-    // TODO(philc): This settings version needs to be handled as part of Settings.set.
-    let restoreSettingsVersion = null;
     const files = event.target.files;
     if (files.length === 1) {
       const file = files[0];
