@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run --allow-read --allow-write --allow-env --allow-net --allow-run --unstable
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-net --allow-run --unstable
 // --unstable is required for Puppeteer.
 // Usage: ./make.js command. Use -l to list commands.
 // This is a set of tasks for building and testing Vimium in development.
@@ -58,6 +58,12 @@ async function buildStorePackage() {
   await shell("mkdir", ["-p", "dist/vimium", "dist/chrome-canary", "dist/chrome-store", "dist/firefox"]);
   await shell("rsync", rsyncOptions);
 
+  // Firefox needs clipboardRead and clipboardWrite for commands like "copyCurrentUrl", but Chrome does not.
+  // See #4186.
+  const firefoxPermissions = Array.from(manifestContents.permissions);
+  firefoxPermissions.push("clipboardRead");
+  firefoxPermissions.push("clipboardWrite");
+
   writeDistManifest(Object.assign({}, manifestContents, {
     // Chrome considers this key invalid in manifest.json, so we add it only during the Firefox build phase.
     browser_specific_settings: {
@@ -65,21 +71,18 @@ async function buildStorePackage() {
         strict_min_version: "62.0"
       },
     },
+    permissions: firefoxPermissions,
   }));
   await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${vimiumVersion}.zip .`]);
 
-  // Build the Chrome Store package. Chrome does not require the clipboardWrite permission.
-  const permissions = manifestContents.permissions.filter((p) => p != "clipboardWrite");
-  writeDistManifest(Object.assign({}, manifestContents, {
-    permissions,
-  }));
+  // Build the Chrome Store package.
+  writeDistManifest(manifestContents);
   await shell("bash", ["-c", `${zipCommand} ../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`]);
 
   // Build the Chrome Store dev package.
   writeDistManifest(Object.assign({}, manifestContents, {
     name: "Vimium Canary",
     description: "This is the development branch of Vimium (it is beta software).",
-    permissions,
   }));
   await shell("bash", ["-c", `${zipCommand} ../chrome-canary/vimium-canary-${vimiumVersion}.zip .`]);
 }
@@ -122,18 +125,18 @@ const runDomTests = async () => {
     // Another workaround would be to spin up a local file server here and load dom_tests from the network.
     // Discussion: https://bugs.chromium.org/p/chromium/issues/detail?id=824651
     let shouldaJsContents =
-        (await Deno.readTextFile("./tests/vendor/shoulda.js")) +
-        "\n" +
-        // Export the module contents to window.shoulda, which is what the tests expect.
-        "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, tearDown};";
+      (await Deno.readTextFile("./tests/vendor/shoulda.js")) +
+      "\n" +
+      // Export the module contents to window.shoulda, which is what the tests expect.
+      "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, tearDown};";
 
     // Remove the `export` statement from the shoulda.js module. Because we're using document.write to add
     // this, an export statement will cause a JS error and halt further parsing.
     shouldaJsContents = shouldaJsContents.replace(/export {[^}]+}/, "");
 
     await page.evaluateOnNewDocument((content) => {
-        window.shouldaJsContents = content;
-      },
+      window.shouldaJsContents = content;
+    },
       shouldaJsContents);
 
     page.goto("file://" + testFile);
