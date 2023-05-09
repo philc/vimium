@@ -9,3 +9,4 @@ dist
 jscoverage.json
 tags
 .cake_task_cache
+.idea
