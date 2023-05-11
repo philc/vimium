@@ -1,5 +1,3 @@
-// TODO(philc): manifest v3 - custom styles needs to be fixed.
-
 const options = {
   filterLinkHints: "boolean",
   waitForEnterForFilteredHints: "boolean",
@@ -190,10 +188,7 @@ const OptionsPage = {
 
 document.addEventListener("DOMContentLoaded", async () => {
   await Settings.onLoaded();
-
-  // TODO(philc): manifest v3
-  // DomUtils.injectUserCss(); // Manually inject custom user styles.
-
+  DomUtils.injectUserCss();
   await OptionsPage.init();
 });
 
