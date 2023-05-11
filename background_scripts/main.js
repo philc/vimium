@@ -773,9 +773,6 @@ var sendRequestHandlers = {
   },
 };
 
-// We always remove chrome.storage.local/findModeRawQueryListIncognito on startup.
-chrome.storage.local.remove("findModeRawQueryListIncognito");
-
 // Tidy up tab caches when tabs are removed. Also remove
 // chrome.storage.local/findModeRawQueryListIncognito if there are no remaining incognito-mode
 // windows. Since the common case is that there are none to begin with, we first check whether the
@@ -784,7 +781,7 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
   for (let cache of [frameIdsForTab, urlForTab, portsForTab, HintCoordinator.tabState]) {
     delete cache[tabId];
   }
-  return chrome.storage.local.get("findModeRawQueryListIncognito", function (items) {
+  return chrome.storage.session.get("findModeRawQueryListIncognito", function (items) {
     if (items.findModeRawQueryListIncognito) {
       return chrome.windows != null
         ? chrome.windows.getAll(null, function (windows) {
@@ -794,7 +791,7 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
             }
           }
           // There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.
-          return chrome.storage.local.remove("findModeRawQueryListIncognito");
+          return chrome.storage.session.remove("findModeRawQueryListIncognito");
         })
         : undefined;
     }
