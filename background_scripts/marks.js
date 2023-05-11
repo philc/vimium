@@ -13,7 +13,7 @@ const Marks = {
   // mark is used, whether this is the original Vimium session or a subsequent session. This affects
   // whether or not tabId can be considered valid.
   create(req, sender) {
-    chrome.storage.local.get("vimiumSecret", (items) => {
+    chrome.storage.session.get("vimiumSecret", (items) => {
       const markInfo = {
         vimiumSecret: items.vimiumSecret,
         markName: req.markName,
@@ -49,7 +49,7 @@ const Marks = {
   // then we create a new one. Whichever of those we do, we then set the scroll position to the
   // original scroll position.
   goto(req, sender) {
-    chrome.storage.local.get("vimiumSecret", (items) => {
+    chrome.storage.session.get("vimiumSecret", (items) => {
       const {
         vimiumSecret,
       } = items;

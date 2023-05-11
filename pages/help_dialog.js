@@ -80,7 +80,7 @@ const HelpDialog = {
     $("help-dialog-title").textContent = showAllCommandDetails ? "Command Listing" : "Help";
     $("help-dialog-version").textContent = Utils.getCurrentVersion();
 
-    chrome.storage.local.get("helpPageData", ({ helpPageData }) => {
+    chrome.storage.session.get("helpPageData", ({ helpPageData }) => {
       for (let group of Object.keys(helpPageData)) {
         const commands = helpPageData[group];
         const container = this.dialogElement.querySelector(`#help-dialog-${group}`);

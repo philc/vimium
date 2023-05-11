@@ -15,13 +15,13 @@ class InsertMode extends Mode {
     this.passNextKeyKeys = [];
 
     // This list of keys is parsed from the user's key mapping config by commands.js, and stored in
-    // chrome.storage.local.
-    chrome.storage.local.get("passNextKeyKeys").then((value) => {
+    // chrome.storage.session.
+    chrome.storage.session.get("passNextKeyKeys").then((value) => {
       this.passNextKeyKeys = value.passNextKeyKeys || [];
     });
     chrome.storage.onChanged.addListener(async (changes, areaName) => {
       if (areaName != "local") return;
-      this.passNextKeyKeys = (await chrome.storage.local.get("passNextKeyKeys")) || [];
+      this.passNextKeyKeys = (await chrome.storage.session.get("passNextKeyKeys")) || [];
     });
 
     const handleKeyEvent = (event) => {

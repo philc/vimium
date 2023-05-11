@@ -72,7 +72,7 @@ const Commands = {
       }
     }
 
-    chrome.storage.local.set({ mapKeyRegistry: this.mapKeyRegistry });
+    chrome.storage.session.set({ mapKeyRegistry: this.mapKeyRegistry });
     this.installKeyStateMapping();
     this.prepareHelpPageData();
 
@@ -85,7 +85,7 @@ const Commands = {
         (this.keyToCommandRegistry[key].command === "passNextKey") && (key.length > 1)
       );
 
-    chrome.storage.local.set({ passNextKeyKeys: passNextKeys });
+    chrome.storage.session.set({ passNextKeyKeys: passNextKeys });
   },
 
   // Lower-case the appropriate portions of named keys.
@@ -173,10 +173,10 @@ const Commands = {
         }
       }
     }
-    chrome.storage.local.set({ normalModeKeyStateMapping: keyStateMapping });
+    chrome.storage.session.set({ normalModeKeyStateMapping: keyStateMapping });
     // Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it
     // is by default).
-    chrome.storage.local.set({ useVimLikeEscape: !("<c-[>" in keyStateMapping) });
+    chrome.storage.session.set({ useVimLikeEscape: !("<c-[>" in keyStateMapping) });
   },
 
   // Build the "helpPageData" data structure which the help page needs and place it in Chrome
@@ -202,7 +202,7 @@ const Commands = {
         });
       }
     }
-    chrome.storage.local.set({ helpPageData: commandGroups });
+    chrome.storage.session.set({ helpPageData: commandGroups });
   },
 
   // An ordered listing of all available commands, grouped by type. This is the order they will be
