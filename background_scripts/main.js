@@ -3,6 +3,10 @@
 // diligently track down precisely which return statements could be removed when I was doing the
 // conversion.
 
+// Allow Vimium's content scripts to access chrome.storage.session. Otherwise,
+// chrome.storage.session will be null in content scripts.
+chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
+
 // The browser may have tabs already open. We inject the content scripts immediately so that they
 // work straight away.
 chrome.runtime.onInstalled.addListener(function ({ reason }) {
@@ -46,11 +50,11 @@ globalThis.urlForTab = {};
 // This is exported for use by "marks.js".
 globalThis.tabLoadedHandlers = {}; // tabId -> function()
 
-// A secret, available only within the current instantiation of Vimium, for the duration of the browser
-// session. The secret is a generated strong random string.
+// A Vimium secret, available only within the current browser session. The secret is a generated
+// strong random string.
 const randomArray = globalThis.crypto.getRandomValues(new Uint8Array(32)); // 32-byte random token.
 const secretToken = randomArray.reduce((a, b) => a.toString(16) + b.toString(16));
-chrome.storage.local.set({ vimiumSecret: secretToken });
+chrome.storage.session.set({ vimiumSecret: secretToken });
 
 const completionSources = {
   bookmarks: new BookmarkCompleter(),
@@ -127,12 +131,12 @@ const onURLChange = (details) => {
 chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
 chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
 
-// Cache "content_scripts/vimium.css" in chrome.storage.local for UI components.
+// Cache "content_scripts/vimium.css" in chrome.storage.session for UI components.
 (function () {
   const url = chrome.runtime.getURL("content_scripts/vimium.css");
   fetch(url).then(async (response) => {
     if (response.ok) {
-      chrome.storage.local.set({ vimiumCSSInChromeStorage: await response.text() });
+      chrome.storage.session.set({ vimiumCSSInChromeStorage: await response.text() });
     }
   });
 })();

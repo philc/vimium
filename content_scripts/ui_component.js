@@ -15,9 +15,9 @@ class UIComponent {
       // Default to everything hidden while the stylesheet loads.
       styleSheet.innerHTML = "iframe {display: none;}";
 
-      // Fetch "content_scripts/vimium.css" from chrome.storage.local; the background page caches it
-      // there.
-      chrome.storage.local.get(
+      // Fetch "content_scripts/vimium.css" from chrome.storage.session; the background page caches
+      // it there.
+      chrome.storage.session.get(
         "vimiumCSSInChromeStorage",
         (items) => styleSheet.innerHTML = items.vimiumCSSInChromeStorage,
       );
@@ -56,7 +56,7 @@ class UIComponent {
         this.iframeElement.addEventListener("load", () => {
           // Get vimiumSecret so the iframe can determine that our message isn't the page
           // impersonating us.
-          chrome.storage.local.get("vimiumSecret", ({ vimiumSecret }) => {
+          chrome.storage.session.get("vimiumSecret", ({ vimiumSecret }) => {
             const { port1, port2 } = new MessageChannel();
             this.iframeElement.contentWindow.postMessage(vimiumSecret, chrome.runtime.getURL(""), [
               port2,

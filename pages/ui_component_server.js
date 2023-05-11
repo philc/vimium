@@ -3,7 +3,7 @@
 // Vimium. So a malicious host page trying to register its own port can do no better than guessing.
 
 var registerPort = function (event) {
-  chrome.storage.local.get("vimiumSecret", function ({ vimiumSecret: secret }) {
+  chrome.storage.session.get("vimiumSecret", function ({ vimiumSecret: secret }) {
     if ((event.source !== window.parent) || (event.data !== secret)) {
       return;
     }
