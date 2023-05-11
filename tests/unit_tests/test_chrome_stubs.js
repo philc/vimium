@@ -17,6 +17,57 @@ window.XMLHttpRequest = XMLHttpRequest = class XMLHttpRequest {
   send() {}
 };
 
+// There are 3 chrome.storage.* objects with identical APIs.
+// - areaName: one of "local", "sync", "session".
+const createStorageAPI = (areaName) => {
+  return {
+    store: {},
+
+    async set(items) {
+      let key, value;
+      chrome.runtime.lastError = undefined;
+      for (key of Object.keys(items)) {
+        value = items[key];
+        this.store[key] = value;
+      }
+      for (key of Object.keys(items)) {
+        value = items[key];
+        window.chrome.storage.onChanged.call(key, value, areaName);
+      }
+    },
+
+    async get(keysArg) {
+      chrome.runtime.lastError = undefined;
+      if (keysArg == null) {
+        return globalThis.structuredClone(this.store);
+      } else if (typeof keysArg == "string") {
+        const result = {};
+        result[keysArg] = globalThis.structuredClone(this.store[keysArg]);
+        return result;
+      } else {
+        const result = {};
+        for (key of keysArg) {
+          result[key] = globalThis.structuredClone(this.store[key]);
+        }
+        return result;
+      }
+    },
+
+    async remove(key) {
+      chrome.runtime.lastError = undefined;
+      if (key in this.store) {
+        delete this.store[key];
+      }
+      window.chrome.storage.onChanged.callEmpty(key);
+    },
+
+    async clear() {
+      // TODO: Consider firing the change listener if Chrome's API implementation does.
+      this.store = {};
+    }
+  };
+};
+
 window.chrome = {
   areRunningVimiumTests: true,
 
@@ -127,30 +178,17 @@ window.chrome = {
   },
 
   storage: {
-    local: {
-      get(_, callback) {
-        if (callback) callback({});
-      },
-      set(_, callback) {
-        if (callback) callback({});
-      },
-      remove(_, callback) {
-        if (callback) callback({});
-      },
-    },
-
-    // chrome.storage.onChanged
     onChanged: {
       addListener(func) {
         this.func = func;
       },
 
       // Fake a callback from chrome.storage.sync.
-      call(key, value) {
+      call(key, value, area) {
         chrome.runtime.lastError = undefined;
         const key_value = {};
         key_value[key] = { newValue: value };
-        if (this.func) return this.func(key_value, "sync");
+        if (this.func) return this.func(key_value, area);
       },
 
       callEmpty(key) {
@@ -163,51 +201,8 @@ window.chrome = {
       },
     },
 
-    session: {
-      MAX_SESSION_RESULTS: 25,
-    },
-
-    // chrome.storage.sync
-    sync: {
-      store: {},
-
-      async set(items) {
-        let key, value;
-        chrome.runtime.lastError = undefined;
-        for (key of Object.keys(items)) {
-          value = items[key];
-          this.store[key] = value;
-        }
-        for (key of Object.keys(items)) {
-          value = items[key];
-          window.chrome.storage.onChanged.call(key, value);
-        }
-      },
-
-      async get(keysArg) {
-        chrome.runtime.lastError = undefined;
-        if (keysArg == null) {
-          return globalThis.structuredClone(this.store);
-        } else if (typeof keysArg == "string") {
-          const result = [];
-          result[keysArg] = globalThis.structuredClone(this.store[keysArg]);
-          return result;
-        } else {
-          const result = {};
-          for (key of keysArg) {
-            result[key] = globalThis.structuredClone(this.store[key]);
-          }
-          return result;
-        }
-      },
-
-      async remove(key) {
-        chrome.runtime.lastError = undefined;
-        if (key in this.store) {
-          delete this.store[key];
-        }
-        window.chrome.storage.onChanged.callEmpty(key);
-      },
-    },
+    local: createStorageAPI("sync"),
+    sync: createStorageAPI("sync"),
+    session: createStorageAPI("session"),
   },
 };
