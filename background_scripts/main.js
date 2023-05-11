@@ -858,10 +858,6 @@ showUpgradeMessageIfNecessary = function () {
 
 // The install date is shown on the logging page.
 chrome.runtime.onInstalled.addListener(async ({ reason }) => {
-  if (!["chrome_update", "shared_module_update"].includes(reason)) {
-    chrome.storage.local.set({ installDate: new Date().toString() });
-  }
-
   // Setup code for the background service worker.
   await Settings.onLoaded();
   await Commands.init();
