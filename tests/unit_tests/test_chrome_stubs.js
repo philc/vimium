@@ -122,8 +122,11 @@ window.chrome = {
     setBadgeBackgroundColor() {},
   },
 
+  sessions: {
+    MAX_SESSION_RESULTS: 25,
+  },
+
   storage: {
-    // chrome.storage.local
     local: {
       get(_, callback) {
         if (callback) callback({});
