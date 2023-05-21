@@ -104,8 +104,9 @@ const completionHandlers = {
 const handleCompletions = (sender) => (request, port) =>
   completionHandlers[request.handler](completers[request.name], request, port);
 
-chrome.runtime.onConnect.addListener(function (port) {
+chrome.runtime.onConnect.addListener(async function (port) {
   // TODO(philc): This probably needs to be reworked for manifest v3
+  await Settings.onLoaded();
   if (portHandlers[port.name]) {
     return port.onMessage.addListener(portHandlers[port.name](port.sender, port));
   }
