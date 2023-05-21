@@ -8,6 +8,19 @@
   "background": {
     "service_worker": "background_scripts/background.js",
     "type": "module"
+    // Uncomment when developing in Firefox.
+    // "scripts": [
+    //   "lib/utils.js",
+    //   "lib/settings.js",
+    //   "background_scripts/bg_utils.js",
+    //   "background_scripts/commands.js",
+    //   "background_scripts/exclusions.js",
+    //   "background_scripts/completion_engines.js",
+    //   "background_scripts/completion_search.js",
+    //   "background_scripts/completion.js",
+    //   "background_scripts/marks.js",
+    //   "background_scripts/main.js"
+    // ]
   },
   "options_ui": {
     "page": "pages/options.html",
@@ -21,9 +34,8 @@
     "storage",
     "sessions",
     "notifications",
-    "webNavigation",
-    "favicon"
-    // "<all_urls>"
+    "favicon", // The favicon permission is not yet supported by Firefox.
+    "webNavigation"
   ],
   "content_scripts": [
     {
@@ -62,6 +74,14 @@
       "all_frames": true
     }
   ],
+  // Uncomment when developing in Firefox.
+  // "browser_specific_settings": {
+  //   "gecko": {
+  //     // This ID is provided by the Firefox Addons site.
+  //     "id": "local-dev@vimium.github.io",
+  //     "strict_min_version": "109.0"
+  //   }
+  // },
   "action": {
     "default_icon": {
       "16": "icons/action_enabled_16.png",
