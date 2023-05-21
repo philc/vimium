@@ -1,6 +1,6 @@
 import * as shoulda from "../vendor/shoulda.js";
-import "../../lib/utils.js";
 import "./test_chrome_stubs.js";
+import "../../lib/utils.js";
 
 const shouldaSubset = {
   assert: shoulda.assert,
