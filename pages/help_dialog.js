@@ -50,14 +50,17 @@ const HelpDialog = {
       false,
     );
 
-    document.getElementById("helpDialogOptionsPage").addEventListener(
-      "click",
-      function (clickEvent) {
-        clickEvent.preventDefault();
-        chrome.runtime.sendMessage({ handler: "openOptionsPageInNewTab" });
-      },
-      false,
-    );
+    // "auxclick" handles a click with the middle mouse button.
+    for (let eventName of ["click", "auxclick"]) {
+      document.getElementById("helpDialogOptionsPage").addEventListener(
+        eventName,
+        (event) => {
+          event.preventDefault();
+          chrome.runtime.sendMessage({ handler: "openOptionsPageInNewTab" });
+        },
+        false,
+      );
+    }
 
     document.getElementById("toggleAdvancedCommands")
       .addEventListener("click", HelpDialog.toggleAdvancedCommands.bind(HelpDialog), false);
