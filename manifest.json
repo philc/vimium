@@ -9,13 +9,11 @@
     "service_worker": "background_scripts/background.js",
     "type": "module"
   },
-  // TODO(philc): Manifest v3
-  "options_page": "pages/options.html",
-  // "options_ui": {
-  //   "page": "pages/options.html",
-  //   "chrome_style": false,
-  //   "open_in_tab": true
-  // },
+  "options_ui": {
+    "page": "pages/options.html",
+    "browser_style": false,
+    "open_in_tab": true
+  },
   "permissions": [
     "tabs",
     "bookmarks",
