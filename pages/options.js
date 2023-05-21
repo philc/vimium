@@ -15,6 +15,7 @@ const options = {
   grabBackFocus: "boolean",
   searchEngines: "string",
   searchUrl: "string",
+  settingsVersion: "string", // This is a hidden field.
   userDefinedLinkHintCss: "string",
 };
 
