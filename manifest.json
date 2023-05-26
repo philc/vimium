@@ -27,6 +27,7 @@
     "browser_style": false,
     "open_in_tab": true
   },
+  "host_permissions": ["<all_urls>"],
   "permissions": [
     "tabs",
     "bookmarks",
@@ -34,6 +35,10 @@
     "storage",
     "sessions",
     "notifications",
+    // We're using the scripting permission to 1) inject our content scripts and CSS into existing
+    // tabs when Vimium is first installed, and 2) inject the user's link hints CSS when a page
+    // loads. This permission was required when moving to manifest V3.
+    "scripting",
     "favicon", // The favicon permission is not yet supported by Firefox.
     "webNavigation"
   ],
