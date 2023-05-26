@@ -5,42 +5,54 @@
 
 // Allow Vimium's content scripts to access chrome.storage.session. Otherwise,
 // chrome.storage.session will be null in content scripts.
-chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
+chrome.storage.session.setAccessLevel({ accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS" });
 
-// The browser may have tabs already open. We inject the content scripts immediately so that they
-// work straight away.
-chrome.runtime.onInstalled.addListener(function ({ reason }) {
+// The browser may have tabs already open. We inject the content scripts and Vimium's CSS
+// immediately so that the extension is running on the pages immediately after install, rather than
+// having to reload those pages.
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
+  console.log("On installed");
   // See https://developer.chrome.com/extensions/runtime#event-onInstalled
   if (["chrome_update", "shared_module_update"].includes(reason)) return;
+  // TODO(philc): Why do we return here if it's Firefox? I think this should run on Firefox.
   if (Utils.isFirefox()) return;
   const manifest = chrome.runtime.getManifest();
-  // Content scripts loaded on every page should be in the same group. We assume it is the first.
-  const contentScripts = manifest.content_scripts[0];
-  const jobs = [
-    [
-      // TODO(philc): manifest v3. chrome.tabs.executeScript is no longer available in manifest v2.
-      // chrome.tabs.executeScript,
-      // contentScripts.js,
-    ],
-    [
-      // TODO(philc): manifest v3
-      // chrome.tabs.insertCSS,
-      // contentScripts.css,
-    ],
-  ];
-  return; // TODO(philc): manifest v3
-  // Chrome complains if we don't evaluate chrome.runtime.lastError on errors (and we get errors for tabs on
-  // which Vimium cannot run).
-  const checkLastRuntimeError = () => chrome.runtime.lastError;
-  return chrome.tabs.query({ status: "complete" }, function (tabs) {
-    for (let tab of tabs) {
-      for (let [func, files] of jobs) {
-        for (let file of files) {
-          func(tab.id, { file, allFrames: contentScripts.all_frames }, checkLastRuntimeError);
-        }
-      }
-    }
-  });
+  const contentScriptConfig = manifest.content_scripts[0];
+  const contentScripts = contentScriptConfig.js;
+  const cssFiles = contentScriptConfig.css;
+  await Settings.onLoaded();
+
+  // The scripting.executeScript and scripting.insertCSS APIs can fail if we don't have permissions
+  // to run scripts in a given tab. Examples are: chrome:// URLs, file:// pages (if the user hasn't
+  // granted Vimium access to file URLs), and probably incognito tabs (unconfirmed). Calling these
+  // APIs on such tabs results in an error getting logged on the background page. To avoid this
+  // noise, we swallow the failures. We could instead try to determine if the tab is scriptable by
+  // checking its URL scheme before calling these APIs, but that approach has some nuance to it.
+  // This is simpler.
+  const swallowError = (error) => {};
+
+  const tabs = await chrome.tabs.query({ status: "complete" });
+  for (const tab of tabs) {
+    const target = { tabId: tab.id, allFrames: true };
+
+    // Inject all of our content javascripts.
+    chrome.scripting.executeScript({
+      files: contentScripts,
+      target: target,
+    }).catch(swallowError);
+
+    // Inject our extension's CSS.
+    chrome.scripting.insertCSS({
+      files: cssFiles,
+      target: target,
+    }).catch(swallowError);
+
+    // Inject the user's link hint CSS.
+    chrome.scripting.insertCSS({
+      css: Settings.get("userDefinedLinkHintCss"),
+      target: target,
+    }).catch(swallowError);
+  }
 });
 
 const frameIdsForTab = {};
@@ -498,14 +510,17 @@ var selectTab = (direction, { count, tab }) =>
   });
 
 chrome.webNavigation.onCommitted.addListener(async ({ tabId, frameId }) => {
+  // Vimium can't run on all tabs (e.g. chrome:// URLs). insertCSS will throw an error on such tabs,
+  // which is expected, and noise. Swallow that error.
+  const swallowError = () => {};
   await Settings.onLoaded();
-  const cssConf = {
-    frameId,
-    code: Settings.get("userDefinedLinkHintCss"),
-    runAt: "document_start",
-  };
-  // TODO(philc): manifest v3
-  // return chrome.tabs.insertCSS(tabId, cssConf, () => chrome.runtime.lastError);
+  await chrome.scripting.insertCSS({
+    css: Settings.get("userDefinedLinkHintCss"),
+    target: {
+      tabId: tabId,
+      frameIds: [frameId],
+    },
+  }).catch(swallowError);
 });
 
 const Frames = {
