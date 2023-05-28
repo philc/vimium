@@ -146,7 +146,7 @@ class Amazon extends BaseEngine {
   constructor() {
     super({
       engineUrl:
-        "https://completion.amazon.com/search/complete?method=completion&search-alias=aps&client=amazon-search-ui&mkt=1&q=%s",
+        "https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=aps&prefix=%s",
       regexps: ["^https?://(www|smile)\\.amazon\\.(com|co\\.uk|ca|de|com\\.au)/s/"],
       example: {
         searchUrl: "https://www.amazon.com/s/?field-keywords=%s",
@@ -155,8 +155,8 @@ class Amazon extends BaseEngine {
     });
   }
 
-  parse(xhr) {
-    return JSON.parse(xhr.responseText)[1];
+  parse(text) {
+    return JSON.parse(text).suggestions.map((suggestion) => suggestion.value);
   }
 }
 
@@ -242,4 +242,4 @@ const CompletionEngines = [
 
 globalThis.CompletionEngines = CompletionEngines;
 
-export { DuckDuckGo, Qwant, Webster };
+export { Amazon, DuckDuckGo, Qwant, Webster };
