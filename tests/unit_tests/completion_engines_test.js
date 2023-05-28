@@ -3,16 +3,15 @@ import "../../background_scripts/bg_utils.js";
 import * as Engines from "../../background_scripts/completion_engines.js";
 import "../../background_scripts/completion.js";
 
-// Engines which have trivial parsers are omitted from these tests.
-context("Webster completion", () => {
+context("Amazon completion", () => {
   should("parses results", () => {
     const response = JSON.stringify({
-      "docs": [
-        { "word": "one" },
-        { "word": "two" },
+      "suggestions": [
+        { "value": "one" },
+        { "value": "two" },
       ],
     });
-    const results = new Engines.Webster().parse(response);
+    const results = new Engines.Amazon().parse(response);
     assert.equal(["one", "two"], results);
   });
 });
