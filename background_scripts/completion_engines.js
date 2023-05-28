@@ -172,8 +172,8 @@ class DuckDuckGo extends BaseEngine {
     });
   }
 
-  parse(xhr) {
-    return Array.from(JSON.parse(xhr.responseText)).map((suggestion) => suggestion.phrase);
+  parse(text) {
+    return JSON.parse(text).map((suggestion) => suggestion.phrase);
   }
 }
 
@@ -190,8 +190,8 @@ class Webster extends BaseEngine {
     });
   }
 
-  parse(xhr) {
-    return Array.from(JSON.parse(xhr.responseText).docs).map((suggestion) => suggestion.word);
+  parse(text) {
+    return JSON.parse(text).docs.map((suggestion) => suggestion.word);
   }
 }
 
@@ -208,10 +208,8 @@ class Qwant extends BaseEngine {
     });
   }
 
-  parse(xhr) {
-    return Array.from(JSON.parse(xhr.responseText).data.items).map((suggestion) =>
-      suggestion.value
-    );
+  parse(text) {
+    return JSON.parse(text).data.items.map((suggestion) => suggestion.value);
   }
 }
 
@@ -243,3 +241,5 @@ const CompletionEngines = [
 ];
 
 globalThis.CompletionEngines = CompletionEngines;
+
+export { DuckDuckGo, Qwant, Webster };
