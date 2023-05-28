@@ -17,9 +17,10 @@
 //
 //   4. Each completion engine *must* include an example custom search engine. The example must
 //      include an example "keyword" and an example "searchUrl", and may include an example
-//      "description" and an "explanation".
+//      "description" and an "explanation". This info is shown as documentation to the user.
 //
-// Each new completion engine must be added to the list "CompletionEngines" at the bottom of this file.
+// Each new completion engine must be added to the list "CompletionEngines" at the bottom of this
+// file.
 //
 // The lookup logic which uses these completion engines is in "./completion_search.js".
 //
@@ -194,6 +195,7 @@ class Webster extends BaseEngine {
   }
 }
 
+// Qwant is a privacy-friendly alternative search engine.
 class Qwant extends BaseEngine {
   constructor() {
     super({
@@ -225,7 +227,8 @@ class DummyCompletionEngine extends BaseEngine {
   }
 }
 
-// Note: Order matters here.
+// On the user-facing documentation page pages/completion_engines.html, these completion search
+// engines will be shown to the user in this order.
 const CompletionEngines = [
   Youtube,
   GoogleMaps,
