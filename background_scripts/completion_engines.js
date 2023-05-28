@@ -213,25 +213,6 @@ class Qwant extends BaseEngine {
   }
 }
 
-class UpToDate extends BaseEngine {
-  constructor() {
-    super({
-      engineUrl:
-        "https://www.uptodate.com/services/app/contents/search/autocomplete/json?term=%s&limit=10",
-      regexps: ["^https?://www\\.uptodate\\.com/"],
-      example: {
-        searchUrl:
-          "https://www.uptodate.com/contents/search?search=%s&searchType=PLAIN_TEXT&source=USER_INPUT&searchControl=TOP_PULLDOWN&autoComplete=false",
-        keyword: "upto",
-      },
-    });
-  }
-
-  parse(xhr) {
-    return JSON.parse(xhr.responseText).data.searchTerms;
-  }
-}
-
 // A dummy search engine which is guaranteed to match any search URL, but never produces
 // completions. This allows the rest of the logic to be written knowing that there will always be a
 // completion engine match.
@@ -255,7 +236,6 @@ const CompletionEngines = [
   Amazon,
   Webster,
   Qwant,
-  UpToDate,
   DummyCompletionEngine,
 ];
 
