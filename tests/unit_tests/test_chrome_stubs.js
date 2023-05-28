@@ -2,19 +2,11 @@
 // This file contains stubs for a number of browser and chrome APIs which are missing in Deno.
 //
 
-let XMLHttpRequest;
-
 window.document = {
   createElement() {
     return {};
   },
   addEventListener() {},
-};
-
-window.XMLHttpRequest = XMLHttpRequest = class XMLHttpRequest {
-  open() {}
-  onload() {}
-  send() {}
 };
 
 // There are 3 chrome.storage.* objects with identical APIs.

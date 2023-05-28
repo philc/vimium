@@ -33,8 +33,8 @@ class EnginePrefixWrapper {
     return this.engine.getUrl(queryTerms);
   }
 
-  parse(xhr) {
-    return this.postprocessSuggestions(this.engine.parse(xhr));
+  parse(responseText) {
+    return this.postprocessSuggestions(this.engine.parse(responseText));
   }
 
   postprocessSuggestions(suggestions) {
@@ -52,19 +52,28 @@ const CompletionSearch = {
   // if the user is still typing).
   delay: 100,
 
-  get(searchUrl, url, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.timeout = 2500;
-    // According to https://xhr.spec.whatwg.org/#request-error-steps, readystatechange always gets
-    // called whether a request succeeds or not, and the `readyState == 4` means an associated
-    // `state` is "done", which is true even if any error happens
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4) {
-        return callback(xhr.status === 200 ? xhr : null);
-      }
-    };
-    return xhr.send();
+  async get(searchUrl, url, callback) {
+    const timeoutDuration = 2500;
+    const controller = new AbortController();
+    let isError = false;
+    let responseText;
+    const timer = Utils.setTimeout(timeoutDuration, () => controller.abort());
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      responseText = await response.text();
+    } catch (error) {
+      // Fetch throws an error if the network is unreachable, etc.
+      isError = true;
+    }
+
+    clearTimeout(timer);
+
+    if (isError) {
+      callback(null);
+    } else {
+      callback(responseText);
+    }
   },
 
   // Look up the completion engine for this searchUrl. Because of DummyCompletionEngine, we know
@@ -98,6 +107,7 @@ const CompletionSearch = {
   // synchronously (ie. from a cache). In this case we just return the results. Returns null if we
   // cannot service the request synchronously.
   //
+  // TODO(philc): This function is large and nestedand could use refactoring.
   complete(searchUrl, queryTerms, callback = null) {
     let handler;
     const query = queryTerms.join(" ").toLowerCase();
@@ -183,20 +193,18 @@ const CompletionSearch = {
 
         // Elide duplicate requests. First fetch the suggestions...
         if (this.inTransit[completionCacheKey] == null) {
-          this.inTransit[completionCacheKey] = new AsyncDataFetcher((callback) => {
+          this.inTransit[completionCacheKey] = new AsyncDataFetcher(async (callback) => {
             const engine = new EnginePrefixWrapper(searchUrl, this.lookupEngine(searchUrl));
             const url = engine.getUrl(queryTerms);
 
-            // TODO(philc): Do we need to return the result of this.get here, or can we remove this
-            // return statement?
-            return this.get(searchUrl, url, (xhr = null) => {
+            await this.get(searchUrl, url, (responseText) => {
               // Parsing the response may fail if we receive an unexpected or an
               // unexpectedly-formatted response. In all cases, we fall back to the catch clause,
               // below. Therefore, we "fail safe" in the case of incorrect or out-of-date completion
               // engines.
               let suggestions;
               try {
-                suggestions = engine.parse(xhr)
+                suggestions = engine.parse(responseText)
                   // Make all suggestions lower case. It looks odd when suggestions from one
                   // completion engine are upper case, and those from another are lower case.
                   .map((s) => s.toLowerCase())

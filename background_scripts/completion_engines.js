@@ -11,9 +11,9 @@
 //      completion engine will be used. This is passed as the "regexps" option to the "BaseEngine"
 //      constructor.
 //
-//   3. A "parse" function. This takes a successful XMLHttpRequest object (the request has completed
-//      successfully), and returns a list of suggestions (a list of strings). This method is always
-//      executed within the context of a try/catch block, so errors do not propagate.
+//   3. A "parse" function. This takes the text body of an HTTP response and returns a list of
+//      suggestions (a list of strings). This method is always executed within the context of a
+//      try/catch block, so errors do not propagate.
 //
 //   4. Each completion engine *must* include an example custom search engine. The example must
 //      include an example "keyword" and an example "searchUrl", and may include an example
