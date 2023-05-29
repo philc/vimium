@@ -12,7 +12,7 @@ window.document = {
 // There are 3 chrome.storage.* objects with identical APIs.
 // - areaName: one of "local", "sync", "session".
 const createStorageAPI = (areaName) => {
-  return {
+  const storage = {
     store: {},
 
     async set(items) {
@@ -56,8 +56,12 @@ const createStorageAPI = (areaName) => {
     async clear() {
       // TODO: Consider firing the change listener if Chrome's API implementation does.
       this.store = {};
-    }
+    },
   };
+
+  // The "session" storage has one API that the others don't.
+  if (areaName == "session") storage.setAccessLevel = () => {};
+  return storage;
 };
 
 window.chrome = {
@@ -98,6 +102,7 @@ window.chrome = {
   },
 
   tabs: {
+    get(id) {},
     onUpdated: {
       addListener() {
         return true;
@@ -131,6 +136,8 @@ window.chrome = {
     query() {
       return true;
     },
+    sendMessage(id, properties) {},
+    update(id, properties) {},
   },
 
   webNavigation: {
@@ -154,11 +161,15 @@ window.chrome = {
     getAll() {
       return true;
     },
+    getCurrent() {
+      return {};
+    },
     onFocusChanged: {
       addListener() {
         return true;
       },
     },
+    update(id, properties) {},
   },
 
   browserAction: {

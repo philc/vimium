@@ -96,17 +96,13 @@ const Marks = {
       exitOnEscape: true,
       suppressAllKeyboardEvents: true,
       keydown: (event) => {
-        // TODO(philc): manifest v3. This needs some work before re-enabling given how it's using
-        // Settings.storage.
-        console.log("Activate goto mode keydown");
-        return;
         if (KeyboardUtils.isPrintable(event)) {
           this.exit(() => {
             const keyChar = KeyboardUtils.getKeyChar(event);
             if (this.isGlobalMark(event, keyChar)) {
               // This key must match @getLocationKey() in the back end.
               const key = `vimiumGlobalMark|${keyChar}`;
-              Settings.storage.get(key, function (items) {
+              chrome.storage.local.get(key, function (items) {
                 if (key in items) {
                   chrome.runtime.sendMessage({ handler: "gotoMark", markName: keyChar });
                   HUD.showForDuration(`Jumped to global mark '${keyChar}'`, 1000);
