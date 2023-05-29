@@ -324,7 +324,7 @@ context("tab completer", () => {
   let completer;
 
   setup(() => {
-    chrome.tabs = { query: (args, onComplete) => onComplete(tabs) };
+    stub(chrome.tabs, "query", (args, onComplete) => onComplete(tabs));
     completer = new TabCompleter();
   });
 
