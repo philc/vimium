@@ -1,7 +1,5 @@
 {
   "fmt": {
-    "options": {
-      "lineWidth": 100
-    }
+    "lineWidth": 100
   }
 }
