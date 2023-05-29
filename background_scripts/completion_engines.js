@@ -29,6 +29,7 @@
 //   options.engineUrl: the URL to use for the completion engine. This must be a string.
 //   options.regexps: one or regular expressions.  This may either a single string or a list of strings.
 //   options.example: an example object containing at least "keyword" and "searchUrl", and optional "description".
+// TODO(philc): This base class is doing very little. We should remove it and use composition.
 class BaseEngine {
   constructor(options) {
     Object.assign(this, options);
@@ -43,20 +44,10 @@ class BaseEngine {
   }
 }
 
-// Several Google completion engines package responses as XML. This parses such XML.
-class GoogleXMLBaseEngine extends BaseEngine {
-  parse(xhr) {
-    return Array.from(xhr.responseXML.getElementsByTagName("suggestion"))
-      .map((suggestion) => suggestion.getAttribute("data"))
-      .filter((suggestion) => suggestion);
-  }
-}
-
-class Google extends GoogleXMLBaseEngine {
+class Google extends BaseEngine {
   constructor() {
     super({
-      engineUrl:
-        "https://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=%s",
+      engineUrl: "http://suggestqueries.google.com/complete/search?client=chrome&q=%s",
       regexps: ["^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/"],
       example: {
         searchUrl: "https://www.google.com/search?q=%s",
@@ -64,20 +55,25 @@ class Google extends GoogleXMLBaseEngine {
       },
     });
   }
+
+  parse(text) {
+    return JSON.parse(text)[1];
+  }
 }
 
-class GoogleMaps extends GoogleXMLBaseEngine {
+const googleMapsPrefix = "map of ";
+
+class GoogleMaps extends BaseEngine {
   constructor() {
-    const q = GoogleMaps.prefix.split(" ").join("+");
     super({
       engineUrl:
-        `https://suggestqueries.google.com/complete/search?ss_protocol=legace&client=toolbar&q=${q}%s`,
+        `http://suggestqueries.google.com/complete/search?client=chrome&ds=yt&q=${googleMapsPrefix}%s`,
       regexps: ["^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/maps"],
       example: {
         searchUrl: "https://www.google.com/maps?q=%s",
         keyword: "m",
         explanation: `\
-This uses regular Google completion, but prepends the text "<tt>map of</tt>" to the query.  It works
+This uses regular Google completion, but prepends the text "<tt>map of </tt>" to the query.  It works
 well for places, countries, states, geographical regions and the like, but will not perform address
 search.\
 `,
@@ -85,26 +81,27 @@ search.\
     });
   }
 
-  parse(xhr) {
-    return Array.from(super.parse(xhr))
-      .filter((suggestion) => suggestion.startsWith(GoogleMaps.prefix))
-      .map((suggestion) => suggestion.slice(GoogleMaps.prefix.length));
+  parse(text) {
+    return JSON.parse(text)[1]
+      .filter((suggestion) => suggestion.startsWith(googleMapsPrefix))
+      .map((suggestion) => suggestion.slice(googleMapsPrefix));
   }
 }
 
-GoogleMaps.prefix = "map of";
-
-class Youtube extends GoogleXMLBaseEngine {
+class Youtube extends BaseEngine {
   constructor() {
     super({
-      engineUrl:
-        "https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&xml=t&q=%s",
+      engineUrl: "http://suggestqueries.google.com/complete/search?client=chrome&ds=yt&q=%s",
       regexps: ["^https?://[a-z]+\\.youtube\\.com/results"],
       example: {
         searchUrl: "https://www.youtube.com/results?search_query=%s",
         keyword: "y",
       },
     });
+  }
+
+  parse(text) {
+    return JSON.parse(text)[1];
   }
 }
 
@@ -120,8 +117,8 @@ class Wikipedia extends BaseEngine {
     });
   }
 
-  parse(xhr) {
-    return JSON.parse(xhr.responseText)[1];
+  parse(text) {
+    return JSON.parse(text)[1];
   }
 }
 
@@ -137,8 +134,8 @@ class Bing extends BaseEngine {
     });
   }
 
-  parse(xhr) {
-    return JSON.parse(xhr.responseText)[1];
+  parse(text) {
+    return JSON.parse(text)[1];
   }
 }
 
