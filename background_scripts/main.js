@@ -3,6 +3,8 @@
 // diligently track down precisely which return statements could be removed when I was doing the
 // conversion.
 
+import * as TabOperations from "./tab_operations.js";
+
 // Allow Vimium's content scripts to access chrome.storage.session. Otherwise,
 // chrome.storage.session will be null in content scripts.
 chrome.storage.session.setAccessLevel({ accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS" });
@@ -153,94 +155,6 @@ chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Has
     }
   });
 })();
-
-const TabOperations = {
-  // Opens the url in the current tab.
-  openUrlInCurrentTab(request) {
-    if (Utils.hasJavascriptPrefix(request.url)) {
-      const tabId = request.tabId;
-      const frameId = request.frameId;
-      chrome.tabs.sendMessage(tabId, { frameId, name: "executeScript", script: request.url });
-    } else {
-      chrome.tabs.update(request.tabId, { url: Utils.convertToUrl(request.url) });
-    }
-  },
-
-  // Opens request.url in new tab and switches to it.
-  openUrlInNewTab(request, callback) {
-    if (callback == null) {
-      callback = function () {};
-    }
-    const tabConfig = {
-      url: Utils.convertToUrl(request.url),
-      active: true,
-      windowId: request.tab.windowId,
-    };
-
-    const position = request.position;
-
-    let tabIndex = null;
-
-    switch (position) {
-      case "start":
-        tabIndex = 0;
-        break;
-      case "before":
-        tabIndex = request.tab.index;
-        break;
-      // if on Chrome or on Firefox but without openerTabId, `tabs.create` opens a tab at the end.
-      // but on Firefox and with openerTabId, it opens a new tab next to the opener tab
-      case "end":
-        tabIndex = Utils.isFirefox() ? 9999 : null;
-        break;
-      // "after" is the default case when there are no options.
-      default:
-        tabIndex = request.tab.index + 1;
-    }
-    tabConfig.index = tabIndex;
-
-    if (request.active != null) {
-      tabConfig.active = request.active;
-    }
-    // Firefox does not support "about:newtab" in chrome.tabs.create.
-    if (tabConfig["url"] === Utils.chromeNewTabUrl) {
-      delete tabConfig["url"];
-    }
-
-    // Firefox <57 throws an error when openerTabId is used (issue 1238314).
-    const canUseOpenerTabId = !Utils.isFirefox() || Utils.firefoxVersion() instanceof Promise ||
-      (Utils.compareVersions(Utils.firefoxVersion(), "57") >= 0);
-    if (canUseOpenerTabId) {
-      tabConfig.openerTabId = request.tab.id;
-    }
-
-    // clean position and active, so following `openUrlInNewTab(request)` will create a tab just next to this new tab
-    return chrome.tabs.create(
-      tabConfig,
-      (tab) =>
-        callback(Object.assign(request, { tab, tabId: tab.id, position: "", active: false })),
-    );
-  },
-
-  // Opens request.url in new window and switches to it.
-  openUrlInNewWindow(request, callback) {
-    if (callback == null) {
-      callback = function () {};
-    }
-    const winConfig = {
-      url: Utils.convertToUrl(request.url),
-      active: true,
-    };
-    if (request.active != null) {
-      winConfig.active = request.active;
-    }
-    // Firefox does not support "about:newtab" in chrome.tabs.create.
-    if (tabConfig["url"] === Utils.chromeNewTabUrl) {
-      delete winConfig["url"];
-    }
-    return chrome.windows.create(winConfig, callback);
-  },
-};
 
 const muteTab = (tab) => chrome.tabs.update(tab.id, { muted: !tab.mutedInfo.muted });
 const toggleMuteTab = function ({ tab: currentTab, registryEntry, tabId, frameId }) {
