@@ -133,8 +133,8 @@ const OptionsPage = {
     return settings;
   },
 
-  saveOptions() {
-    Settings.setSettings(this.getSettingsFromForm());
+  async saveOptions() {
+    await Settings.setSettings(this.getSettingsFromForm());
     const el = document.querySelector("#saveOptions");
     el.disabled = true;
     el.textContent = "Saved";
