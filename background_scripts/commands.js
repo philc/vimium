@@ -80,11 +80,8 @@ const Commands = {
     // insert mode. We exclude single-key mappings (that is, printable keys) because when users
     // press printable keys in insert mode they expect the character to be input, not to be droppped
     // into some special Vimium mode.
-    const passNextKeys = Object.keys(this.keyToCommandRegistry)
-      .filter((key) =>
-        (this.keyToCommandRegistry[key].command === "passNextKey") && (key.length > 1)
-      );
-
+    const passNextKeys = Object.entries(this.keyToCommandRegistry)
+      .filter((key, v) => key.length > 1 && v.command == "passNextKeys");
     await chrome.storage.session.set({ passNextKeyKeys: passNextKeys });
   },
 

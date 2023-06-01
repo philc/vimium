@@ -18,10 +18,7 @@ class NormalMode extends KeyHandlerMode {
     );
 
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (
-        area === "session" && changes.normalModeKeyStateMapping &&
-        changes.normalModeKeyStateMapping.newValue
-      ) {
+      if (area === "session" && changes.normalModeKeyStateMapping?.newValue) {
         this.setKeyMapping(changes.normalModeKeyStateMapping.newValue);
       }
     });
