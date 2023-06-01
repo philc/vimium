@@ -138,10 +138,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 const onURLChange = (details) => {
-  chrome.tabs.sendMessage(details.tabId, { name: "checkEnabledAfterURLChange" });
+  // sendMessage will throw "Error: Could not establish connection. Receiving end does not exist."
+  // if there is no Vimium content script loaded in the given tab. This can occur if the user
+  // navigated to a page where Vimium doesn't have permissions, like chrome:// URLs. This error is
+  // noisy and mysterious (it usually doesn't have a valid line number), so we silence it.
+  chrome.tabs.sendMessage(details.tabId, { name: "checkEnabledAfterURLChange" })
+    .catch(() => {});
 };
 
-// Re-check whether Vimium is enabled for a frame when the url changes without a reload.
+// Re-check whether Vimium is enabled for a frame when the URL changes without a reload.
 chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
 chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
 
