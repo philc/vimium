@@ -10,14 +10,14 @@ const Commands = {
       this.availableCommands[command] = Object.assign(options || {}, { description });
     }
 
-    Settings.addEventListener("change", () => {
-      this.loadKeyMappings(Settings.get("keyMappings"));
+    Settings.addEventListener("change", async () => {
+      await this.loadKeyMappings(Settings.get("keyMappings"));
     });
 
-    this.loadKeyMappings(Settings.get("keyMappings"));
+    await this.loadKeyMappings(Settings.get("keyMappings"));
   },
 
-  loadKeyMappings(customKeyMappings) {
+  async loadKeyMappings(customKeyMappings) {
     let key, command;
     this.keyToCommandRegistry = {};
     this.mapKeyRegistry = {};
@@ -72,12 +72,12 @@ const Commands = {
       }
     }
 
-    chrome.storage.session.set({ mapKeyRegistry: this.mapKeyRegistry });
-    this.installKeyStateMapping();
+    await chrome.storage.session.set({ mapKeyRegistry: this.mapKeyRegistry });
+    await this.installKeyStateMapping();
     this.prepareHelpPageData();
 
-    // Push the key mapping for passNextKey into Settings so that it's available in the front end
-    // for insert mode. We exclude single-key mappings (that is, printable keys) because when users
+    // Push the key mapping for passNextKey into storage so that it's available in the front end for
+    // insert mode. We exclude single-key mappings (that is, printable keys) because when users
     // press printable keys in insert mode they expect the character to be input, not to be droppped
     // into some special Vimium mode.
     const passNextKeys = Object.keys(this.keyToCommandRegistry)
@@ -85,7 +85,7 @@ const Commands = {
         (this.keyToCommandRegistry[key].command === "passNextKey") && (key.length > 1)
       );
 
-    chrome.storage.session.set({ passNextKeyKeys: passNextKeys });
+    await chrome.storage.session.set({ passNextKeyKeys: passNextKeys });
   },
 
   // Lower-case the appropriate portions of named keys.
@@ -149,7 +149,7 @@ const Commands = {
 
   // This generates and installs a nested key-to-command mapping structure. There is an example in
   // mode_key_handler.js.
-  installKeyStateMapping() {
+  async installKeyStateMapping() {
     const keyStateMapping = {};
     for (let keys of Object.keys(this.keyToCommandRegistry || {})) {
       const registryEntry = this.keyToCommandRegistry[keys];
@@ -173,10 +173,12 @@ const Commands = {
         }
       }
     }
-    chrome.storage.session.set({ normalModeKeyStateMapping: keyStateMapping });
-    // Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it
-    // is by default).
-    chrome.storage.session.set({ useVimLikeEscape: !("<c-[>" in keyStateMapping) });
+    await chrome.storage.session.set({
+      normalModeKeyStateMapping: keyStateMapping,
+      // Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it
+      // is by default).
+      useVimLikeEscape: !("<c-[>" in keyStateMapping),
+    });
   },
 
   // Build the "helpPageData" data structure which the help page needs and place it in Chrome
