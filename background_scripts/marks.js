@@ -55,6 +55,7 @@ const Marks = {
     const markInfo = items[key];
     if (markInfo.vimiumSecret !== vimiumSecret) {
       // This is a different Vimium instantiation, so markInfo.tabId is definitely out of date.
+      Utils.debugLog("marks: vimiumSecret is incorrect.");
       await this.focusOrLaunch(markInfo, req);
     } else {
       // Check whether markInfo.tabId still exists. According to

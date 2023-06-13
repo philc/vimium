@@ -4,7 +4,9 @@
 
 var registerPort = function (event) {
   chrome.storage.session.get("vimiumSecret", function ({ vimiumSecret: secret }) {
-    if ((event.source !== window.parent) || (event.data !== secret)) {
+    if (event.source !== window.parent) return;
+    if (event.data !== secret) {
+      Utils.debugLog("ui_component_server: vimiumSecret is incorrect.");
       return;
     }
     UIComponentServer.portOpen(event.ports[0]);
