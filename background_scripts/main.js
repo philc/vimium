@@ -58,6 +58,8 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
 });
 
 const frameIdsForTab = {};
+
+// A map of tabId => frameId => port
 globalThis.portsForTab = {};
 globalThis.urlForTab = {};
 
@@ -791,7 +793,6 @@ showUpgradeMessageIfNecessary = function () {
   }
 };
 
-// The install date is shown on the logging page.
 chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   // Setup code for the background service worker.
   await Settings.onLoaded();
