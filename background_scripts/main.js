@@ -96,13 +96,14 @@ const completionHandlers = {
   filter(completer, request, port) {
     // TODO(philc): Do we need any of these return statements?
     return completer.filter(request, function (response) {
-      // NOTE(smblott): response contains `relevancyFunction` (function) properties which cause postMessage,
-      // below, to fail in Firefox. See #2576.  We cannot simply delete these methods, as they're needed
-      // elsewhere.  Converting the response to JSON and back is a quick and easy way to sanitize the object.
+      // NOTE(smblott): response contains `relevancyFunction` (function) properties which cause
+      // postMessage, below, to fail in Firefox. See #2576. We cannot simply delete these methods,
+      // as they're needed elsewhere. Converting the response to JSON and back is a quick and easy
+      // way to sanitize the object.
       response = JSON.parse(JSON.stringify(response));
-      // We use try here because this may fail if the sender has already navigated away from the original page.
-      // This can happen, for example, when posting completion suggestions from the SearchEngineCompleter
-      // (which is done asynchronously).
+      // We use try here because this may fail if the sender has already navigated away from the
+      // original page. This can happen, for example, when posting completion suggestions from the
+      // SearchEngineCompleter (which is done asynchronously).
       try {
         return port.postMessage(Object.assign(request, response, { handler: "completions" }));
       } catch (error) {}
@@ -256,7 +257,8 @@ const BackgroundCommands = {
           // Otherwise, just create a new tab.
           const newTabUrl = Settings.get("newTabUrl");
           if (newTabUrl === "pages/blank.html") {
-            // "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab" instead.
+            // "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab"
+            // instead.
             request.urls = [
               request.tab.incognito ? "chrome://newtab" : chrome.runtime.getURL(newTabUrl),
             ];
