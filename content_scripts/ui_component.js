@@ -69,17 +69,6 @@ class UIComponent {
 
               switch (eventName) {
                 case "uiComponentIsReady":
-                  // If any other frame receives the focus, then hide the UI component.
-                  chrome.runtime.onMessage.addListener(({ name, focusFrameId }) => {
-                    if (
-                      (name === "frameFocused") && this.options && this.options.focus &&
-                      ![frameId, this.iframeFrameId].includes(focusFrameId)
-                    ) {
-                      this.hide(false);
-                    }
-                    // We will not be calling sendResponse.
-                    return false;
-                  });
                   // If this frame receives the focus, then hide the UI component.
                   window.addEventListener(
                     "focus",

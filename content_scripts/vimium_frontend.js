@@ -204,8 +204,6 @@ const initializePreDomReady = async function () {
       }
     },
     setScrollPosition,
-    // A frame has received the focus; we don't care here (UI components handle this).
-    frameFocused() {},
     checkEnabledAfterURLChange,
     runInTopFrame({ sourceFrameId, registryEntry }) {
       if (DomUtils.isTopFrame()) {
@@ -285,12 +283,9 @@ var installListeners = Utils.makeIdempotent(function () {
   );
 });
 
-// Whenever we get the focus:
-// - Tell the background page this frame's URL.
-// - Check if we should be enabled.
+// Whenever we get the focus, check if we should be enabled.
 const onFocus = forTrusted(function (event) {
   if (event.target === window) {
-    chrome.runtime.sendMessage({ handler: "frameFocused" });
     checkIfEnabledForUrl(true);
   }
 });
