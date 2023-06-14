@@ -335,12 +335,29 @@ const BackgroundCommands = {
   moveTabLeft: moveTab,
   moveTabRight: moveTab,
 
-  nextFrame({ count, frameId, tabId }) {
-    frameIdsForTab[tabId] = cycleToFrame(frameIdsForTab[tabId], frameId, count);
-    return chrome.tabs.sendMessage(tabId, {
-      name: "focusFrame",
-      frameId: frameIdsForTab[tabId][0],
-      highlight: true,
+  async nextFrame({ count, tabId }) {
+    const frames = await chrome.webNavigation.getAllFrames({ tabId: tabId });
+    // We're assuming that these frames are returned in the order that they appear on the page. This
+    // seems to be the case empirically. If it's ever needed, we could also sort by frameId.
+    const frameIds = frames.map((f) => f.frameId);
+    const promises = frameIds.map(async (frameId) => {
+      // It may be possible that this sendMessage call fails, if a frame gets unloaded or something
+      // while the request is in flight. If so, we'll need to swallow/log such errors.
+      const focused = await chrome.tabs.sendMessage(tabId, { name: "isWindowFocused" }, {
+        frameId: frameId,
+      });
+      return { frameId: frameId, focused: focused };
+    });
+    const frameResponses = await Promise.all(promises);
+    const focusedFrameId = frameResponses.find(({ frameId, focused }) => focused)?.frameId;
+    // It's theoretically possible that focusedFrameId is null if the user switched tabs or away
+    // from the browser while the request is in flight.
+    if (focusedFrameId == null) return;
+    const index = frameIds.indexOf(focusedFrameId);
+    count = count ?? 1;
+    const nextIndex = (index + count) % frameIds.length;
+    await chrome.tabs.sendMessage(tabId, { name: "focusFrame", highlight: true }, {
+      frameId: frameIds[nextIndex],
     });
   },
 

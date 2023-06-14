@@ -192,10 +192,11 @@ const initializePreDomReady = async function () {
   checkIfEnabledForUrl(document.hasFocus());
 
   const requestHandlers = {
+    isWindowFocused(request, sender, sendResponse) {
+      sendResponse(windowIsFocused());
+    },
     focusFrame(request) {
-      if (frameId === request.frameId) {
-        return focusThisFrame(request);
-      }
+      return focusThisFrame(request);
     },
     getScrollPosition(ignoredA, ignoredB, sendResponse) {
       if (frameId === 0) {
