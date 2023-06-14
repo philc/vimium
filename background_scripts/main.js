@@ -567,26 +567,6 @@ const Frames = {
   },
 };
 
-const handleFrameFocused = function ({ tabId, frameId }) {
-  if (frameIdsForTab[tabId] == null) {
-    frameIdsForTab[tabId] = [];
-  }
-  frameIdsForTab[tabId] = cycleToFrame(frameIdsForTab[tabId], frameId);
-  // Inform all frames that a frame has received the focus.
-  return chrome.tabs.sendMessage(tabId, { name: "frameFocused", focusFrameId: frameId });
-};
-
-// Rotate through frames to the frame count places after frameId.
-var cycleToFrame = function (frames, frameId, count) {
-  // We can't always track which frame chrome has focused, but here we learn that it's frameId; so
-  // add an additional offset such that we do indeed start from frameId.
-  if (count == null) {
-    count = 0;
-  }
-  count = (count + Math.max(0, frames.indexOf(frameId))) % frames.length;
-  return [...frames.slice(count), ...frames.slice(0, count)];
-};
-
 var HintCoordinator = {
   tabState: {},
 
@@ -715,7 +695,6 @@ var sendRequestHandlers = {
       index: request.tab.index + 1,
     });
   },
-  frameFocused: handleFrameFocused,
   nextFrame: BackgroundCommands.nextFrame,
   selectSpecificTab,
   createMark: Marks.create.bind(Marks),
