@@ -13,7 +13,7 @@ chrome.storage.session.setAccessLevel({ accessLevel: "TRUSTED_AND_UNTRUSTED_CONT
 // immediately so that the extension is running on the pages immediately after install, rather than
 // having to reload those pages.
 chrome.runtime.onInstalled.addListener(async ({ reason }) => {
-  console.log("On installed");
+  Utils.debugLog("Installed");
   // See https://developer.chrome.com/extensions/runtime#event-onInstalled
   if (["chrome_update", "shared_module_update"].includes(reason)) return;
   // TODO(philc): Why do we return here if it's Firefox? I think this should run on Firefox.
