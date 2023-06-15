@@ -10,8 +10,5 @@ Utils.nextTick = (func) => func();
 document.addEventListener("DOMContentLoaded", async () => {
   await Settings.onLoaded();
 
-  // Install frontend event handlers.
-  Frame.registerFrameId({ chromeFrameId: 0 });
-
   await HUD.init();
 });

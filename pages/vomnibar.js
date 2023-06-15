@@ -442,6 +442,9 @@ class BackgroundCompleter {
           break;
       }
     });
+    this.port.onDisconnect.addListener((port) => {
+      console.log("Vomnibar port disconnected.");
+    });
   }
 
   filter(request) {
