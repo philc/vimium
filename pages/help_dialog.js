@@ -210,13 +210,14 @@ UIComponentServer.registerHandler(function (event) {
     case "activate":
       HelpDialog.init();
       HelpDialog.show(event.data);
-      Frame.postMessage("registerFrame");
+      // Frame.postMessage("registerFrame");
       // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
       Mode.setIndicator();
       break;
     case "hidden":
       // Unregister the frame, so that it's not available for `gf` or link hints.
-      Frame.postMessage("unregisterFrame");
+    // TODO(philc): Ensure we make this dialog unavailable for `gf` after it's dismissed.
+      // Frame.postMessage("unregisterFrame");
       // Abandon any HUD which might be showing within the help dialog.
       HUD.abandon();
       break;

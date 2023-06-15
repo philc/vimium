@@ -109,7 +109,8 @@ const HintCoordinator = {
 
   sendMessage(messageType, request) {
     if (request == null) request = {};
-    Frame.postMessage("linkHintsMessage", Object.assign(request, { messageType }));
+    request = Object.assign(request, { messageType, handler: "linkHintsMessage" });
+    chrome.runtime.sendMessage(request);
   },
 
   prepareToActivateMode(mode, onExit) {
@@ -143,8 +144,9 @@ const HintCoordinator = {
   //   frameId: the frame id of this hint's local frame
   //   localIndex: the index in @localHints for the full hint descriptor for this hint
   //   linkText: the link's text for filtered hints (this is null for alphabet hints)
-  getHintDescriptors({ modeIndex, isVimiumHelpDialog }) {
-    DomUtils.documentReady(() => {
+  getHintDescriptors({ modeIndex, isVimiumHelpDialog }, sender, sendResponse) {
+    let response = [];
+    if (DomUtils.isReady()) {
       const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
       // If link hints is launched within the help dialog, then we only offer hints from that
       // frame. This improves the usability of the help dialog on the options page (particularly
@@ -154,20 +156,22 @@ const HintCoordinator = {
       } else {
         this.localHints = LocalHints.getLocalHints(requireHref);
       }
-      this.localHintDescriptors = this.localHints.map(({ linkText }, localIndex) => ({
+      response = this.localHintDescriptors = this.localHints.map(({ linkText }, localIndex) => ({
+        // TODO(philc): We don't need to send back frameId in this structure.
         frameId,
         localIndex,
         linkText,
       }));
-      this.sendMessage("postHintDescriptors", { hintDescriptors: this.localHintDescriptors });
-    });
+    }
+    sendResponse(response);
+    return true; // Send the response asynchronously.
   },
 
   // We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint
   // descriptors. We also propagate the key state between frames. Therefore, the hint-selection
   // process proceeds in lock step in every frame, and @linkHintsMode is in the same state in every
   // frame.
-  activateMode({ hintDescriptors, modeIndex, originatingFrameId }) {
+  activateMode({ frameId, hintDescriptors, modeIndex, originatingFrameId }) {
     // We do not receive the frame's own hint descritors back from the background page. Instead, we
     // merge them with the hint descriptors from other frames here.
     hintDescriptors[frameId] = this.localHintDescriptors;
@@ -178,24 +182,22 @@ const HintCoordinator = {
       .map((frame) => hintDescriptors[frame])
       .flat(1);
 
-    return DomUtils.documentReady(() => {
-      if (
-        this.cacheAllKeydownEvents != null ? this.cacheAllKeydownEvents.modeIsActive : undefined
-      ) {
-        this.cacheAllKeydownEvents.exit();
-      }
-      if (frameId !== originatingFrameId) {
-        this.onExit = [];
-      }
-      this.linkHintsMode = new LinkHintsMode(hintDescriptors, availableModes[modeIndex]);
-      // Replay keydown events which we missed (but for filtered hints only).
-      if (Settings.get("filterLinkHints" && this.cacheAllKeydownEvents)) {
-        this.cacheAllKeydownEvents.replayKeydownEvents();
-      }
-      this.cacheAllKeydownEvents = null;
-      return this.linkHintsMode;
-    });
-  }, // Return this (for tests).
+    if (
+      this.cacheAllKeydownEvents != null ? this.cacheAllKeydownEvents.modeIsActive : undefined
+    ) {
+      this.cacheAllKeydownEvents.exit();
+    }
+    if (frameId !== originatingFrameId) {
+      this.onExit = [];
+    }
+    this.linkHintsMode = new LinkHintsMode(hintDescriptors, availableModes[modeIndex]);
+    // Replay keydown events which we missed (but for filtered hints only).
+    if (Settings.get("filterLinkHints" && this.cacheAllKeydownEvents)) {
+      this.cacheAllKeydownEvents.replayKeydownEvents();
+    }
+    this.cacheAllKeydownEvents = null;
+    return this.linkHintsMode;
+  }, // Return this (for tests). TODO(philc): Remove?
 
   // The following messages are exchanged between frames while link-hints mode is active.
   updateKeyState(request) {

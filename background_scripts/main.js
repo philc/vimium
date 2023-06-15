@@ -128,16 +128,15 @@ chrome.runtime.onConnect.addListener(async function (port) {
   }
 });
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(async function (request, sender) {
+  await Settings.onLoaded();
   request = Object.assign({ count: 1, frameId: sender.frameId }, request, {
     tab: sender.tab,
     tabId: sender.tab.id,
   });
-  if (sendRequestHandlers[request.handler]) {
-    sendResponse(sendRequestHandlers[request.handler](request, sender));
-  }
-  // Ensure that the sendResponse callback is freed.
-  return false;
+  const handler = sendRequestHandlers[request.handler];
+  const result = handler ? handler(request, sender) : null;
+  return result;
 });
 
 const onURLChange = (details) => {
@@ -340,10 +339,9 @@ const BackgroundCommands = {
   moveTabRight: moveTab,
 
   async nextFrame({ count, tabId }) {
-    const frames = await chrome.webNavigation.getAllFrames({ tabId: tabId });
     // We're assuming that these frames are returned in the order that they appear on the page. This
     // seems to be the case empirically. If it's ever needed, we could also sort by frameId.
-    const frameIds = frames.map((f) => f.frameId);
+    const frameIds = getFrameIdsForTab(tabId);
     const promises = frameIds.map(async (frameId) => {
       // It may be possible that this sendMessage call fails, if a frame gets unloaded or something
       // while the request is in flight. If so, we'll need to swallow/log such errors.
@@ -464,61 +462,144 @@ chrome.webNavigation.onCommitted.addListener(async ({ tabId, frameId }) => {
   }).catch(swallowError);
 });
 
-const Frames = {
-  onConnect(sender, port) {
-    const [tabId, frameId] = [sender.tab.id, sender.frameId];
-    port.onDisconnect.addListener(() => Frames.unregisterFrame({ tabId, frameId, port }));
-    const message = { handler: "registerFrameId", chromeFrameId: frameId };
-    let firefoxVersion;
-    if (Utils.isFirefox()) {
-      firefoxVersion = Utils.firefoxVersion();
-      message.firefoxVersion = firefoxVersion;
-    }
-    if (typeof firefoxVersion === "object") {
-      firefoxVersion.then(() => {
-        message.firefoxVersion = Utils.firefoxVersion();
-        port.postMessage(message);
-      });
+async function getFrameIdsForTab(tabId) {
+  const frames = await chrome.webNavigation.getAllFrames({ tabId: tabId });
+  return frames.map((f) => f.frameId);
+}
+
+const HintCoordinator = {
+  onMessage(tabId, frameId, request) {
+    // TODO(philc): Make this switch more explicit.
+    if (request.messageType in this) {
+      return this[request.messageType](tabId, frameId, request);
     } else {
-      port.postMessage(message);
+      // If there's no handler here, then the message is forwarded to all frames in the sender's
+      // tab.
+      // TODO(philc): This is used for when link_hints.js sends an exit message. Possibly others.
+      // Make it explicit which messages are processed by this background page, and which
+      // get forwarded to the content scripts.
+      return this.sendMessage(request.messageType, tabId, request);
     }
-    (portsForTab[tabId] != null ? portsForTab[tabId] : (portsForTab[tabId] = {}))[frameId] = port;
-
-    // Return our onMessage handler for this port.
-    return (request, port) => {
-      return this[request.handler]({ request, tabId, frameId, port, sender });
-    };
   },
 
-  registerFrame({ tabId, frameId, port }) {
-    frameIdsForTab[tabId] = frameIdsForTab[tabId] || [];
-    if (!frameIdsForTab[tabId].includes(frameId)) {
-      frameIdsForTab[tabId].push(frameId);
+  // Post a link-hints message to all frames.
+  // - frameId: if null, the message will be sent to all frames in the tab.
+  // Returns the reply from chrome.tabs.sendMessage
+  // TODO(philc): Morph this API to look closer to chrome.tabs.sendMessage
+  // TODO(philc): Actually just remove this function
+  async sendMessage(messageType, tabId, request, frameId) {
+    if (request == null) {
+      request = {};
     }
-    portsForTab[tabId] = portsForTab[tabId] || {};
-    return portsForTab[tabId][frameId] = port;
+
+    const messageObj = Object.assign(request, {
+      name: "linkHintsMessage",
+      messageType: messageType,
+    });
+    const options = frameId != null ? { frameId: frameId } : null;
+    return await chrome.tabs.sendMessage(tabId, messageObj, options);
   },
 
-  unregisterFrame({ tabId, frameId, port }) {
-    // Check that the port trying to unregister the frame hasn't already been replaced by a new
-    // frame registering. See #2125.
-    const registeredPort = portsForTab[tabId] != null ? portsForTab[tabId][frameId] : undefined;
-    if ((registeredPort === port) || !registeredPort) {
-      if (tabId in frameIdsForTab) {
-        frameIdsForTab[tabId] = frameIdsForTab[tabId].filter((fId) => fId !== frameId);
-      }
-      if (tabId in portsForTab) {
-        delete portsForTab[tabId][frameId];
-      }
+  // This is sent by the content script once the user issues the link hints command.
+  async prepareToActivateMode(tabId, originatingFrameId, { modeIndex, isVimiumHelpDialog }) {
+    let promises;
+    // TODO(philc): Add a timeout mechanism here. Manifest v3.
+    const frameIds = await getFrameIdsForTab(tabId);
+    promises = frameIds.map(async (frameId) => {
+      const descriptors = await this.sendMessage("getHintDescriptors", tabId, {
+        modeIndex,
+        isVimiumHelpDialog,
+      }, frameId).catch((error) => console.log("Swallowed error:", error));
+      return {
+        frameId: frameId,
+        descriptors: descriptors,
+      };
+    });
+    const responses = (await Promise.all(promises)).filter((r) => r.descriptors != null);
+
+    const frameIdToDescriptors = {};
+    for (const { frameId, descriptors } of responses) {
+      frameIdToDescriptors[frameId] = descriptors;
     }
-    HintCoordinator.unregisterFrame(tabId, frameId);
+
+    promises = responses.map(({ frameId }) => {
+      // Don't send this frame's own link hints back to it -- they're already stored in that frame's
+      // content script. At the time that we wrote this, this resulted in a 150% speedup for link
+      // busy sites like Reddit.
+      const outgoingDescriptors = Object.assign({}, frameIdToDescriptors);
+      delete outgoingDescriptors[frameId];
+      return this.sendMessage("activateMode", tabId, {
+        frameId: frameId,
+        // TODO(philc): do I need this originating frame ID?
+        originatingFrameId: originatingFrameId,
+        // TODO(philc): Rename this to a map
+        hintDescriptors: outgoingDescriptors,
+        modeIndex: modeIndex,
+      }, frameId);
+    });
+    await Promise.all(promises);
+  },
+};
+
+// Port handler mapping
+const portHandlers = {
+  // TODO(philc): Migrate this to sendMessage, or rewrite how UIComponents interact with iframes.
+  completions: handleCompletions,
+};
+
+var sendRequestHandlers = {
+  runBackgroundCommand(request) {
+    return BackgroundCommands[request.registryEntry.command](request);
+  },
+  // getCurrentTabUrl is used by the content scripts to get their full URL, because window.location
+  // cannot help with Chrome-specific URLs like "view-source:http:..".
+  getCurrentTabUrl({ tab }) {
+    return tab.url;
+  },
+  openUrlInNewTab: mkRepeatCommand((request, callback) =>
+    TabOperations.openUrlInNewTab(request, callback)
+  ),
+  openUrlInNewWindow(request) {
+    return TabOperations.openUrlInNewWindow(request);
+  },
+  openUrlInIncognito(request) {
+    return chrome.windows.create({ incognito: true, url: Utils.convertToUrl(request.url) });
+  },
+  openUrlInCurrentTab: TabOperations.openUrlInCurrentTab,
+  openOptionsPageInNewTab(request) {
+    return chrome.tabs.create({
+      url: chrome.runtime.getURL("pages/options.html"),
+      index: request.tab.index + 1,
+    });
   },
 
-  isEnabledForUrl({ request, tabId, port }) {
+  domReady(_, sender) {
+    const isTopFrame = sender.frameId == 0;
+    if (!isTopFrame) return;
+    const tabId = sender.tab.id;
+    // The only feature that uses tabLoadedHandlers is marks.
+    if (tabLoadedHandlers[tabId]) tabLoadedHandlers[tabId]();
+    delete tabLoadedHandlers[tabId];
+  },
+
+  nextFrame: BackgroundCommands.nextFrame,
+  selectSpecificTab,
+  createMark: Marks.create.bind(Marks),
+  gotoMark: Marks.goto.bind(Marks),
+  // Send a message to all frames in the current tab.
+  sendMessageToFrames(request, sender) {
+    return chrome.tabs.sendMessage(sender.tab.id, request.message);
+  },
+  linkHintsMessage(request, sender) {
+    HintCoordinator.onMessage(sender.tab.id, sender.frameId, request);
+  },
+
+  isEnabledForUrl(request, sender) {
+    const tabId = sender.tab.id;
     if (request.frameIsFocused) {
       urlForTab[tabId] = request.url;
     }
-    request.isFirefox = Utils.isFirefox(); // Update the value for Utils.isFirefox in the frontend.
+    // request.isFirefox = Utils.isFirefox(); // Update the value for Utils.isFirefox in the frontend.
     const enabledState = Exclusions.isEnabledForUrl(request.url);
 
     if (request.frameIsFocused) {
@@ -548,164 +629,8 @@ const Frames = {
       chrome.action.setIcon({ path: iconSet[whichIcon], tabId: tabId });
     }
 
-    return port.postMessage(Object.assign(request, enabledState));
-  },
-
-  domReady({ tabId, frameId }) {
-    if (frameId == 0) {
-      if (tabLoadedHandlers[tabId]) {
-        tabLoadedHandlers[tabId]();
-      }
-      delete tabLoadedHandlers[tabId];
-    }
-  },
-
-  linkHintsMessage({ request, tabId, frameId }) {
-    HintCoordinator.onMessage(tabId, frameId, request);
-  },
-
-  // For debugging only. This allows content scripts to log messages to the extension's logging
-  // page.
-  log({ frameId, sender, request: { message } }) {
-    BgUtils.log(`${frameId} ${message}`, sender);
-  },
-};
-
-var HintCoordinator = {
-  tabState: {},
-
-  onMessage(tabId, frameId, request) {
-    if (request.messageType in this) {
-      return this[request.messageType](tabId, frameId, request);
-    } else {
-      // If there's no handler here, then the message is forwarded to all frames in the sender's
-      // tab.
-      return this.sendMessage(request.messageType, tabId, request);
-    }
-  },
-
-  // Post a link-hints message to a particular frame's port. We catch errors in case the frame has
-  // gone away.
-  postMessage(tabId, frameId, messageType, port, request) {
-    if (request == null) {
-      request = {};
-    }
-    try {
-      return port.postMessage(Object.assign(request, { handler: "linkHintsMessage", messageType }));
-    } catch (error) {
-      return this.unregisterFrame(tabId, frameId);
-    }
-  },
-
-  // Post a link-hints message to all participating frames.
-  sendMessage(messageType, tabId, request) {
-    if (request == null) {
-      request = {};
-    }
-
-    for (let frameId of Object.keys(this.tabState[tabId].ports || {})) {
-      const port = this.tabState[tabId].ports[frameId];
-      this.postMessage(tabId, parseInt(frameId), messageType, port, request);
-    }
-  },
-
-  prepareToActivateMode(tabId, originatingFrameId, { modeIndex, isVimiumHelpDialog }) {
-    this.tabState[tabId] = {
-      frameIds: frameIdsForTab[tabId].slice(),
-      hintDescriptors: {},
-      originatingFrameId,
-      modeIndex,
-    };
-    this.tabState[tabId].ports = {};
-    frameIdsForTab[tabId].map((frameId) => {
-      return this.tabState[tabId].ports[frameId] = portsForTab[tabId][frameId];
-    });
-    this.sendMessage("getHintDescriptors", tabId, { modeIndex, isVimiumHelpDialog });
-  },
-
-  // Receive hint descriptors from all frames and activate link-hints mode when we have them all.
-  postHintDescriptors(tabId, frameId, { hintDescriptors }) {
-    if (!this.tabState[tabId].frameIds.includes(frameId)) {
-      return;
-    }
-    this.tabState[tabId].hintDescriptors[frameId] = hintDescriptors;
-    this.tabState[tabId].frameIds = this.tabState[tabId].frameIds.filter((fId) => fId !== frameId);
-    if (this.tabState[tabId].frameIds.length === 0) {
-      for (frameId of Object.keys(this.tabState[tabId].ports || {})) {
-        const port = this.tabState[tabId].ports[frameId];
-        if (frameId in this.tabState[tabId].hintDescriptors) {
-          hintDescriptors = Object.assign({}, this.tabState[tabId].hintDescriptors);
-          // We do not send back the frame's own hint descriptors. This is faster (approx. speedup
-          // 3/2) for link-busy sites like reddit.
-          delete hintDescriptors[frameId];
-          this.postMessage(tabId, parseInt(frameId), "activateMode", port, {
-            originatingFrameId: this.tabState[tabId].originatingFrameId,
-            hintDescriptors,
-            modeIndex: this.tabState[tabId].modeIndex,
-          });
-        }
-      }
-    }
-  },
-
-  // If an unregistering frame is participating in link-hints mode, then we need to tidy up after
-  // it.
-  unregisterFrame(tabId, frameId) {
-    if (!this.tabState[tabId]) {
-      return;
-    }
-    if (
-      (this.tabState[tabId].ports != null ? this.tabState[tabId].ports[frameId] : undefined) != null
-    ) {
-      delete this.tabState[tabId].ports[frameId];
-    }
-    if (
-      (this.tabState[tabId].frameIds != null) && this.tabState[tabId].frameIds.includes(frameId)
-    ) {
-      // We fake an empty "postHintDescriptors" because the frame has gone away.
-      return this.postHintDescriptors(tabId, frameId, { hintDescriptors: [] });
-    }
-  },
-};
-
-// Port handler mapping
-var portHandlers = {
-  completions: handleCompletions,
-  frames: Frames.onConnect.bind(Frames),
-};
-
-var sendRequestHandlers = {
-  runBackgroundCommand(request) {
-    return BackgroundCommands[request.registryEntry.command](request);
-  },
-  // getCurrentTabUrl is used by the content scripts to get their full URL, because window.location
-  // cannot help with Chrome-specific URLs like "view-source:http:..".
-  getCurrentTabUrl({ tab }) {
-    return tab.url;
-  },
-  openUrlInNewTab: mkRepeatCommand((request, callback) =>
-    TabOperations.openUrlInNewTab(request, callback)
-  ),
-  openUrlInNewWindow(request) {
-    return TabOperations.openUrlInNewWindow(request);
-  },
-  openUrlInIncognito(request) {
-    return chrome.windows.create({ incognito: true, url: Utils.convertToUrl(request.url) });
-  },
-  openUrlInCurrentTab: TabOperations.openUrlInCurrentTab,
-  openOptionsPageInNewTab(request) {
-    return chrome.tabs.create({
-      url: chrome.runtime.getURL("pages/options.html"),
-      index: request.tab.index + 1,
-    });
-  },
-  nextFrame: BackgroundCommands.nextFrame,
-  selectSpecificTab,
-  createMark: Marks.create.bind(Marks),
-  gotoMark: Marks.goto.bind(Marks),
-  // Send a message to all frames in the current tab.
-  sendMessageToFrames(request, sender) {
-    return chrome.tabs.sendMessage(sender.tab.id, request.message);
+    const response = Object.assign({ frameId: sender.frameId }, enabledState);
+    return response;
   },
 };
 
@@ -808,7 +733,6 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
 
 Object.assign(globalThis, {
   TabOperations,
-  Frames,
   // Exported for tests.
   HintCoordinator,
 });

@@ -43,7 +43,7 @@ HintCoordinator.sendMessage = (name, request) => {
 };
 
 const activateLinkHintsMode = () => {
-  HintCoordinator.getHintDescriptors({ modeIndex: 0 });
+  HintCoordinator.getHintDescriptors({ modeIndex: 0 }, {}, () => {});
   return HintCoordinator.activateMode({
     hintDescriptors: {},
     modeIndex: 0,
