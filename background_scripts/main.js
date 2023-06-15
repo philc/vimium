@@ -153,15 +153,17 @@ const onURLChange = (details) => {
 chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
 chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
 
-// Cache "content_scripts/vimium.css" in chrome.storage.session for UI components.
-(function () {
-  const url = chrome.runtime.getURL("content_scripts/vimium.css");
-  fetch(url).then(async (response) => {
-    if (response.ok) {
-      chrome.storage.session.set({ vimiumCSSInChromeStorage: await response.text() });
-    }
-  });
-})();
+if (!globalThis.isUnitTests) {
+  // Cache "content_scripts/vimium.css" in chrome.storage.session for UI components.
+  (function () {
+    const url = chrome.runtime.getURL("content_scripts/vimium.css");
+    fetch(url).then(async (response) => {
+      if (response.ok) {
+        chrome.storage.session.set({ vimiumCSSInChromeStorage: await response.text() });
+      }
+    });
+  })();
+}
 
 const muteTab = (tab) => chrome.tabs.update(tab.id, { muted: !tab.mutedInfo.muted });
 const toggleMuteTab = function ({ tab: currentTab, registryEntry, tabId, frameId }) {
@@ -804,4 +806,9 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   showUpgradeMessageIfNecessary();
 });
 
-Object.assign(globalThis, { TabOperations, Frames });
+Object.assign(globalThis, {
+  TabOperations,
+  Frames,
+  // Exported for tests.
+  HintCoordinator,
+});

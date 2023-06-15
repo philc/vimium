@@ -14,5 +14,7 @@ const shouldaSubset = {
   tearDown: shoulda.tearDown,
 };
 
+globalThis.isUnitTests = true;
+
 // Attach shoulda's functions, like setup, context, should, to the global namespace.
 Object.assign(window, shouldaSubset);
