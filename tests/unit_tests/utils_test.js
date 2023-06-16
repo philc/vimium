@@ -237,3 +237,11 @@ context("extractQuery", () => {
     assert.equal("star wars", Utils.extractQuery(searchUrl, url));
   });
 });
+
+context("pick", () => {
+  should("omit properties", () => {
+    assert.equal({ a: 1, b: 2 },
+                 Utils.pick({ a: 1, b:2, c: 3},
+                      ["a", "b", "d"]));
+  });
+});
