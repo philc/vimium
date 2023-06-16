@@ -66,7 +66,7 @@ class Suggestion {
     }
     // NOTE(philc): We're using these vimium-specific class names so we don't collide with the page's CSS.
     let faviconHtml = "";
-    if (this.type === "tab" && !Utils.isFirefox()) {
+    if (this.type === "tab" && !BgUtils.isFirefox()) {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
       faviconUrl.searchParams.set("pageUrl", this.url);
       faviconUrl.searchParams.set("size", "16");
