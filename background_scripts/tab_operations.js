@@ -55,12 +55,7 @@ function openUrlInNewTab(request, callback) {
     delete tabConfig["url"];
   }
 
-  // Firefox <57 throws an error when openerTabId is used (issue 1238314).
-  const canUseOpenerTabId = !Utils.isFirefox() || Utils.firefoxVersion() instanceof Promise ||
-    (Utils.compareVersions(Utils.firefoxVersion(), "57") >= 0);
-  if (canUseOpenerTabId) {
-    tabConfig.openerTabId = request.tab.id;
-  }
+  tabConfig.openerTabId = request.tab.id;
 
   // clean position and active, so following `openUrlInNewTab(request)` will create a tab just next to this new tab
   return chrome.tabs.create(
