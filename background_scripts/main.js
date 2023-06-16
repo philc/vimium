@@ -594,7 +594,7 @@ var sendRequestHandlers = {
     HintCoordinator.onMessage(sender.tab.id, sender.frameId, request);
   },
 
-  isEnabledForUrl(request, sender) {
+  async initializeFrame(request, sender) {
     const tabId = sender.tab.id;
     if (request.frameIsFocused) {
       urlForTab[tabId] = request.url;
