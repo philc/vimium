@@ -426,13 +426,12 @@ root.lastFocusedInput = (function () {
 // Checks if Vimium should be enabled or not in this frame. As a side effect, it also informs the
 // background page whether this frame has the focus, allowing the background page to track the
 // active frame's URL and set the page icon.
-// TODO(philc): Don't make this a closure. Why is it?
 const checkIfEnabledForUrl = async (frameIsFocused) => {
   if (frameIsFocused == null) {
     frameIsFocused = windowIsFocused();
   }
   const response = await chrome.runtime.sendMessage({
-    handler: "isEnabledForUrl",
+    handler: "initializeFrame",
     frameIsFocused,
     url: window.location.toString(),
   });
