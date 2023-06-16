@@ -423,6 +423,7 @@ root.lastFocusedInput = (function () {
   return () => recentlyFocusedElement;
 })();
 
+// TODO(philc): Update this comment to ensure it's still fully accurate.
 // Checks if Vimium should be enabled or not in this frame. As a side effect, it also informs the
 // background page whether this frame has the focus, allowing the background page to track the
 // active frame's URL and set the page icon.
@@ -435,8 +436,15 @@ const checkIfEnabledForUrl = async (frameIsFocused) => {
     frameIsFocused,
     url: window.location.toString(),
   });
+
+  // This browser info is used by other content scripts, but can only be determinted by the
+  // background page.
+  Utils._isFirefox = response.isFirefox;
+  Utils._firefoxVersion = response.firefoxVersion;
+  Utils._browserInfoLoaded = true;
   // This is the first time we learn what this frame's ID is.
   frameId = response.frameId;
+
   if (!normalMode) {
     installModes();
   }

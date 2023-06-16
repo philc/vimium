@@ -17,7 +17,7 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   // See https://developer.chrome.com/extensions/runtime#event-onInstalled
   if (["chrome_update", "shared_module_update"].includes(reason)) return;
   // TODO(philc): Why do we return here if it's Firefox? I think this should run on Firefox.
-  if (Utils.isFirefox()) return;
+  if (BgUtils.isFirefox()) return;
   const manifest = chrome.runtime.getManifest();
   const contentScriptConfig = manifest.content_scripts[0];
   const contentScripts = contentScriptConfig.js;
@@ -599,7 +599,7 @@ var sendRequestHandlers = {
     if (request.frameIsFocused) {
       urlForTab[tabId] = request.url;
     }
-    // request.isFirefox = Utils.isFirefox(); // Update the value for Utils.isFirefox in the frontend.
+
     const enabledState = Exclusions.isEnabledForUrl(request.url);
 
     if (request.frameIsFocused) {
@@ -629,7 +629,12 @@ var sendRequestHandlers = {
       chrome.action.setIcon({ path: iconSet[whichIcon], tabId: tabId });
     }
 
-    const response = Object.assign({ frameId: sender.frameId }, enabledState);
+    const response = Object.assign({
+      isFirefox: BgUtils.isFirefox(),
+      firefoxVersion: await BgUtils.getFirefoxVersion(),
+      frameId: sender.frameId,
+    }, enabledState);
+
     return response;
   },
 };

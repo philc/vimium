@@ -39,7 +39,7 @@ function openUrlInNewTab(request, callback) {
     // if on Chrome or on Firefox but without openerTabId, `tabs.create` opens a tab at the end.
     // but on Firefox and with openerTabId, it opens a new tab next to the opener tab
     case "end":
-      tabIndex = Utils.isFirefox() ? 9999 : null;
+      tabIndex = BgUtils.isFirefox() ? 9999 : null;
       break;
     // "after" is the default case when there are no options.
     default:
@@ -65,7 +65,7 @@ function openUrlInNewTab(request, callback) {
 }
 
 // Opens request.url in new window and switches to it.
-function openUrlInNewWindow (request, callback) {
+function openUrlInNewWindow(request, callback) {
   if (callback == null) {
     callback = function () {};
   }
@@ -81,6 +81,6 @@ function openUrlInNewWindow (request, callback) {
     delete winConfig["url"];
   }
   return chrome.windows.create(winConfig, callback);
-};
+}
 
 export { openUrlInCurrentTab, openUrlInNewTab, openUrlInNewWindow };
