@@ -148,10 +148,9 @@ context("jsaction matching", () => {
   });
 
   should("not select inactive jsaction elements", () => {
-    for (
-      let text of ["mousedown:namespace.actionName", "click:namespace._", "none", "namespace:_"]
-    ) {
-      this.element.setAttribute("jsaction", text);
+    const attributes =["mousedown:namespace.actionName", "click:namespace._", "none", "namespace:_"];
+    for (const attribute of attributes) {
+      this.element.setAttribute("jsaction", attribute);
       const linkHints = activateLinkHintsMode();
       const hintMarkers = getHintMarkers().filter((marker) => marker.linkText !== "Frame.");
       linkHints.deactivateMode();
