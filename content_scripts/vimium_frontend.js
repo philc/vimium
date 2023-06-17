@@ -40,17 +40,8 @@ const windowIsFocused = (function () {
   return () => windowHasFocus;
 })();
 
-// This is set by Frame.registerFrameId(). A frameId of 0 indicates that this is the top frame in
-// the tab.
+// This is set by initializeFrame. We can only get this frame's ID from the background page.
 let frameId = null;
-
-// For debugging only. This writes to the Vimium log page, the URL of which is shown on the console
-// on the background page.
-// TODO(philc): Remove
-const bgLog = function (...args) {
-  args = args.map((a) => a.toString());
-  // Frame.postMessage("log", { message: args.join(" ") });
-};
 
 // If an input grabs the focus before the user has interacted with the page, then grab it back (if
 // the grabBackFocus option is set).
@@ -258,7 +249,7 @@ const initializePreDomReady = async function () {
 };
 
 // Wrapper to install event listeners.  Syntactic sugar.
-const installListener = (element, event, callback) =>
+const installListener = (element, event, callback) => {
   element.addEventListener(
     event,
     forTrusted(function () {
@@ -274,6 +265,7 @@ const installListener = (element, event, callback) =>
     }),
     true,
   );
+};
 
 //
 // Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl
@@ -282,18 +274,17 @@ const installListener = (element, event, callback) =>
 // Note: We install the listeners even if Vimium is disabled. See comment in commit
 // 6446cf04c7b44c3d419dc450a73b60bcaf5cdf02.
 //
-var installListeners = Utils.makeIdempotent(function () {
+const installListeners = Utils.makeIdempotent(function () {
   // Key event handlers fire on window before they do on document. Prefer window for key events so
   // the page can't set handlers to grab the keys before us.
-  for (
-    let type of ["keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll"]
-  ) {
+  const events = ["keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll"];
+  for (const type of events) {
     // TODO(philc): Can we remove this extra closure?
     ((type) => installListener(window, type, (event) => handlerStack.bubbleEvent(type, event)))(
       type,
     );
   }
-  return installListener(
+  installListener(
     document,
     "DOMActivate",
     (event) => handlerStack.bubbleEvent("DOMActivate", event),
@@ -507,7 +498,6 @@ Object.assign(root, {
   handlerStack,
   frameId,
   windowIsFocused,
-  bgLog,
   // These are exported for normal mode and link-hints mode.
   focusThisFrame,
   // Exported only for tests.

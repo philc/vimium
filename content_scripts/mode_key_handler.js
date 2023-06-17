@@ -118,7 +118,6 @@ class KeyHandlerMode extends Mode {
   }
 
   handleKeyChar(keyChar) {
-    bgLog(`handle key ${keyChar} (${this.name})`);
     // A count prefix applies only so long a keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
     if (!(keyChar in this.keyState[0])) {
       this.countPrefix = 0;
@@ -134,7 +133,6 @@ class KeyHandlerMode extends Mode {
     if (this.keyState[0].command != null) {
       const command = this.keyState[0];
       const count = this.countPrefix > 0 ? this.countPrefix : 1;
-      bgLog(`  invoke ${command.command} count=${count} `);
       this.reset();
       this.commandHandler({ command, count });
       if ((this.options.count != null) && (--this.options.count <= 0)) {
