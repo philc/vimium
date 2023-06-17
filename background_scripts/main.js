@@ -482,11 +482,10 @@ const HintCoordinator = {
 
   // This is sent by the content script once the user issues the link hints command.
   async prepareToActivateMode(tabId, originatingFrameId, { modeIndex, isVimiumHelpDialog }) {
-    let promises;
-    // TODO(philc): Add a timeout mechanism here. Manifest v3.
     const frameIds = await getFrameIdsForTab(tabId);
-    promises = frameIds.map(async (frameId) => {
-      const descriptors = await chrome.tabs.sendMessage(
+    const timeout = 3000;
+    let promises = frameIds.map(async (frameId) => {
+      let promise = chrome.tabs.sendMessage(
         tabId,
         {
           name: "linkHintsMessage",
@@ -495,15 +494,21 @@ const HintCoordinator = {
           isVimiumHelpDialog,
         },
         { frameId },
-      ).catch((error) => Utils.debugLog("Swallowed error:", error));
+      );
+
+      promise = Utils.promiseWithTimeout(promise, timeout)
+        .catch((error) => Utils.debugLog("Swallowed getHintDescriptors error:", error));
+
+      const descriptors = await promise;
 
       return {
-        frameId: frameId,
-        descriptors: descriptors,
+        frameId,
+        descriptors,
       };
     });
 
-    const responses = (await Promise.all(promises)).filter((r) => r.descriptors != null);
+    const responses = (await Promise.all(promises))
+      .filter((r) => r.descriptors != null);
 
     const frameIdToDescriptors = {};
     for (const { frameId, descriptors } of responses) {
