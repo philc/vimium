@@ -92,48 +92,6 @@ const BgUtils = {
     return globalThis.browser ? (await browser.runtime.getBrowserInfo()).version : null;
   },
 
-  // Log messages to the extension's logging page, but only if that page is open.
-  log: (function () {
-    const loggingPageUrl = chrome.runtime.getURL("pages/logging.html");
-    // Do not output URL for tests.
-    if (loggingPageUrl != null) {
-      // TODO(philc): Consider removing this code. We don't want these messages in the tests.
-      // console.log(`Vimium logging URL:\n  ${loggingPageUrl}`);
-    }
-    // For development, it's sometimes useful to automatically launch the logging page on reload.
-    // TODO(philc): can we remove this logging function? Background pages no longer have access to
-    // localStorage, and I haven't used this in years.
-    // if (localStorage.autoLaunchLoggingPage) {
-    //   chrome.windows.create({ url: loggingPageUrl, focused: false });
-    // }
-    return function (message, sender = null) {
-      // TODO(philc): manifest v3 -- chrome.extension.getViews is undefined.
-      return;
-      // for (let viewWindow of chrome.extension.getViews({ type: "tab" })) {
-      //   if (viewWindow.location.pathname === "/pages/logging.html") {
-      //     // Don't log messages from the logging page itself. We do this check late because most of
-      //     // the time it's not needed.
-      //     if ((sender != null ? sender.url : undefined) !== loggingPageUrl) {
-      //       const date = new Date();
-      //       let [hours, minutes, seconds, milliseconds] = [
-      //         date.getHours(),
-      //         date.getMinutes(),
-      //         date.getSeconds(),
-      //         date.getMilliseconds(),
-      //       ];
-      //       if (minutes < 10) minutes = "0" + minutes;
-      //       if (seconds < 10) seconds = "0" + seconds;
-      //       if (milliseconds < 10) milliseconds = "00" + milliseconds;
-      //       if (milliseconds < 100) milliseconds = "0" + milliseconds;
-      //       const dateString = `${hours}:${minutes}:${seconds}.${milliseconds}`;
-      //       const logElement = viewWindow.document.getElementById("log-text");
-      //       logElement.value += `${dateString}: ${message}\n`;
-      //       logElement.scrollTop = 2000000000;
-      //     }
-      // }
-    };
-  }()),
-
   // Remove comments and leading/trailing whitespace from a list of lines, and merge lines where the
   // last character on the preceding line is "\".
   parseLines(text) {

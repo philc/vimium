@@ -12,7 +12,9 @@ const ExclusionRegexpCache = {
       try {
         result = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
       } catch (error) {
-        BgUtils.log(`bad regexp in exclusion rule: ${pattern}`);
+        if (!globalThis.isUnitTests) {
+          console.log(`bad regexp in exclusion rule: ${pattern}`);
+        }
         result = /^$/; // Match the empty string.
       }
       this.cache[pattern] = result;
