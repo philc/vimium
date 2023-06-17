@@ -465,15 +465,14 @@ async function getFrameIdsForTab(tabId) {
 
 const HintCoordinator = {
   onMessage(request, sender) {
-    // TODO(philc): Make this switch more explicit.
-    if (request.messageType in this) {
-      return this[request.messageType](sender.tab.id, sender.frameId, request);
+    if (request.messageType == "prepareToActivateMode") {
+      return this.prepareToActivateMode(sender.tab.id, sender.frameId, request);
     } else {
-      // If there's no handler here, then the message is forwarded to all frames in the sender's
-      // tab.
-      // TODO(philc): This is used for when link_hints.js sends an exit message. Possibly others.
-      // Make it explicit which messages are processed by this background page, and which get
-      // forwarded to the content scripts.
+      // All other messages with name linkHintsMessage should be forwarded to all frames the
+      // sender's tab.
+      // TODO(philc): This forwarding logic is confusing. It would be a nicer dev UX to explicitly
+      // enumerate the types of messages we expect to see here, and throw an error if we receive a
+      // different one.
       return chrome.tabs.sendMessage(
         sender.tab.id,
         Object.assign({ name: "linkHintsMessage" }, request),
