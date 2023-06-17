@@ -57,12 +57,6 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   }
 });
 
-const frameIdsForTab = {};
-
-// A map of tabId => frameId => port
-globalThis.portsForTab = {};
-globalThis.urlForTab = {};
-
 // This is exported for use by "marks.js".
 globalThis.tabLoadedHandlers = {}; // tabId -> function()
 
@@ -596,9 +590,6 @@ var sendRequestHandlers = {
 
   async initializeFrame(request, sender) {
     const tabId = sender.tab.id;
-    if (request.frameIsFocused) {
-      urlForTab[tabId] = request.url;
-    }
 
     const enabledState = Exclusions.isEnabledForUrl(request.url);
 
@@ -639,15 +630,14 @@ var sendRequestHandlers = {
   },
 };
 
-// Tidy up tab caches when tabs are removed. Also remove
-// chrome.storage.local/findModeRawQueryListIncognito if there are no remaining incognito-mode
-// windows. Since the common case is that there are none to begin with, we first check whether the
-// key is set at all.
+// Remove chrome.storage.local/findModeRawQueryListIncognito if there are no remaining
+// incognito-mode windows. Since the common case is that there are none to begin with, we first
+// check whether the key is set at all.
 chrome.tabs.onRemoved.addListener(function (tabId) {
-  for (let cache of [frameIdsForTab, urlForTab, portsForTab, HintCoordinator.tabState]) {
-    delete cache[tabId];
+  if (tabLoadedHandlers[tabId]) {
+    delete tabLoadedHandlers[tabId];
   }
-  return chrome.storage.session.get("findModeRawQueryListIncognito", function (items) {
+  chrome.storage.session.get("findModeRawQueryListIncognito", function (items) {
     if (items.findModeRawQueryListIncognito) {
       return chrome.windows != null
         ? chrome.windows.getAll(null, function (windows) {
