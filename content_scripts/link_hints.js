@@ -169,17 +169,17 @@ const HintCoordinator = {
 
   // We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint
   // descriptors. We also propagate the key state between frames. Therefore, the hint-selection
-  // process proceeds in lock step in every frame, and @linkHintsMode is in the same state in every
-  // frame.
-  activateMode({ frameId, hintDescriptors, modeIndex, originatingFrameId }) {
+  // process proceeds in lock step in every frame, and this.linkHintsMode is in the same state in
+  // every frame.
+  activateMode({ frameId, frameIdToHintDescriptors, modeIndex, originatingFrameId }) {
     // We do not receive the frame's own hint descritors back from the background page. Instead, we
     // merge them with the hint descriptors from other frames here.
-    hintDescriptors[frameId] = this.localHintDescriptors;
+    frameIdToHintDescriptors[frameId] = this.localHintDescriptors;
     this.localHintDescriptors = null;
 
-    hintDescriptors = Object.keys(hintDescriptors || {})
+    const hintDescriptors = Object.keys(frameIdToHintDescriptors || {})
       .sort()
-      .map((frame) => hintDescriptors[frame])
+      .map((frame) => frameIdToHintDescriptors[frame])
       .flat(1);
 
     if (
