@@ -464,17 +464,17 @@ async function getFrameIdsForTab(tabId) {
 }
 
 const HintCoordinator = {
-  onMessage(tabId, frameId, request) {
+  onMessage(request, sender) {
     // TODO(philc): Make this switch more explicit.
     if (request.messageType in this) {
-      return this[request.messageType](tabId, frameId, request);
+      return this[request.messageType](sender.tab.id, sender.frameId, request);
     } else {
       // If there's no handler here, then the message is forwarded to all frames in the sender's
       // tab.
       // TODO(philc): This is used for when link_hints.js sends an exit message. Possibly others.
       // Make it explicit which messages are processed by this background page, and which
       // get forwarded to the content scripts.
-      return this.sendMessage(request.messageType, tabId, request);
+      return this.sendMessage(request.messageType, sender.tab.id, request);
     }
   },
 
@@ -587,7 +587,7 @@ var sendRequestHandlers = {
     return chrome.tabs.sendMessage(sender.tab.id, request.message);
   },
   linkHintsMessage(request, sender) {
-    HintCoordinator.onMessage(sender.tab.id, sender.frameId, request);
+    HintCoordinator.onMessage(request, sender);
   },
 
   async initializeFrame(request, sender) {
