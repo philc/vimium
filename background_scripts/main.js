@@ -472,28 +472,13 @@ const HintCoordinator = {
       // If there's no handler here, then the message is forwarded to all frames in the sender's
       // tab.
       // TODO(philc): This is used for when link_hints.js sends an exit message. Possibly others.
-      // Make it explicit which messages are processed by this background page, and which
-      // get forwarded to the content scripts.
-      return this.sendMessage(request.messageType, sender.tab.id, request);
+      // Make it explicit which messages are processed by this background page, and which get
+      // forwarded to the content scripts.
+      return chrome.tabs.sendMessage(
+        sender.tab.id,
+        Object.assign({ name: "linkHintsMessage" }, request),
+      );
     }
-  },
-
-  // Post a link-hints message to all frames.
-  // - frameId: if null, the message will be sent to all frames in the tab.
-  // Returns the reply from chrome.tabs.sendMessage
-  // TODO(philc): Morph this API to look closer to chrome.tabs.sendMessage
-  // TODO(philc): Actually just remove this function
-  async sendMessage(messageType, tabId, request, frameId) {
-    if (request == null) {
-      request = {};
-    }
-
-    const messageObj = Object.assign(request, {
-      name: "linkHintsMessage",
-      messageType: messageType,
-    });
-    const options = frameId != null ? { frameId: frameId } : null;
-    return await chrome.tabs.sendMessage(tabId, messageObj, options);
   },
 
   // This is sent by the content script once the user issues the link hints command.
@@ -502,15 +487,23 @@ const HintCoordinator = {
     // TODO(philc): Add a timeout mechanism here. Manifest v3.
     const frameIds = await getFrameIdsForTab(tabId);
     promises = frameIds.map(async (frameId) => {
-      const descriptors = await this.sendMessage("getHintDescriptors", tabId, {
-        modeIndex,
-        isVimiumHelpDialog,
-      }, frameId).catch((error) => console.log("Swallowed error:", error));
+      const descriptors = await chrome.tabs.sendMessage(
+        tabId,
+        {
+          name: "linkHintsMessage",
+          messageType: "getHintDescriptors",
+          modeIndex,
+          isVimiumHelpDialog,
+        },
+        { frameId },
+      ).catch((error) => Utils.debugLog("Swallowed error:", error));
+
       return {
         frameId: frameId,
         descriptors: descriptors,
       };
     });
+
     const responses = (await Promise.all(promises)).filter((r) => r.descriptors != null);
 
     const frameIdToDescriptors = {};
@@ -524,14 +517,21 @@ const HintCoordinator = {
       // busy sites like Reddit.
       const outgoingDescriptors = Object.assign({}, frameIdToDescriptors);
       delete outgoingDescriptors[frameId];
-      return this.sendMessage("activateMode", tabId, {
-        frameId: frameId,
-        // TODO(philc): do I need this originating frame ID?
-        originatingFrameId: originatingFrameId,
-        // TODO(philc): Rename this to a map
-        hintDescriptors: outgoingDescriptors,
-        modeIndex: modeIndex,
-      }, frameId);
+      return chrome.tabs.sendMessage(
+        tabId,
+        {
+          name: "linkHintsMessage",
+          messageType: "activateMode",
+          // TODO(philc): Do we need to send this frameId?
+          frameId: frameId,
+          // TODO(philc): do I need this originating frame ID?
+          originatingFrameId: originatingFrameId,
+          // TODO(philc): Rename this to a map
+          hintDescriptors: outgoingDescriptors,
+          modeIndex: modeIndex,
+        },
+        { frameId },
+      );
     });
     await Promise.all(promises);
   },

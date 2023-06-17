@@ -16,7 +16,7 @@ context("HintCoordinator", () => {
       { frameId: 1 },
     ]);
 
-    stub(chrome.tabs, "sendMessage", (tabId, message, options) => {
+    stub(chrome.tabs, "sendMessage", async (tabId, message, options) => {
       if (message.messageType == "getHintDescriptors") {
         return hintDescriptors[options.frameId];
       } else if (message.messageType == "activateMode") {
