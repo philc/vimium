@@ -519,19 +519,16 @@ const HintCoordinator = {
       // Don't send this frame's own link hints back to it -- they're already stored in that frame's
       // content script. At the time that we wrote this, this resulted in a 150% speedup for link
       // busy sites like Reddit.
-      const outgoingDescriptors = Object.assign({}, frameIdToDescriptors);
-      delete outgoingDescriptors[frameId];
+      const outgoingFrameIdToHintDescriptors = Object.assign({}, frameIdToDescriptors);
+      delete outgoingFrameIdToHintDescriptors[frameId];
       return chrome.tabs.sendMessage(
         tabId,
         {
           name: "linkHintsMessage",
           messageType: "activateMode",
-          // TODO(philc): Do we need to send this frameId?
           frameId: frameId,
-          // TODO(philc): do I need this originating frame ID?
           originatingFrameId: originatingFrameId,
-          // TODO(philc): Rename this to a map
-          hintDescriptors: outgoingDescriptors,
+          frameIdToHintDescriptors: outgoingFrameIdToHintDescriptors,
           modeIndex: modeIndex,
         },
         { frameId },
@@ -547,7 +544,7 @@ const portHandlers = {
   completions: handleCompletions,
 };
 
-var sendRequestHandlers = {
+const sendRequestHandlers = {
   runBackgroundCommand(request) {
     return BackgroundCommands[request.registryEntry.command](request);
   },
@@ -596,7 +593,6 @@ var sendRequestHandlers = {
 
   async initializeFrame(request, sender) {
     const tabId = sender.tab.id;
-
     const enabledState = Exclusions.isEnabledForUrl(request.url);
 
     if (request.frameIsFocused) {

@@ -6,7 +6,7 @@ import "../../background_scripts/main.js";
 context("HintCoordinator", () => {
   should("prepareToActivateMode", async () => {
     let receivedMessages = [];
-    const hintDescriptors = {
+    const frameIdToHintDescriptors = {
       "0": { frameId: 0, localIndex: 123, linkText: null },
       "1": { frameId: 1, localIndex: 456, linkText: null },
     };
@@ -18,7 +18,7 @@ context("HintCoordinator", () => {
 
     stub(chrome.tabs, "sendMessage", async (tabId, message, options) => {
       if (message.messageType == "getHintDescriptors") {
-        return hintDescriptors[options.frameId];
+        return frameIdToHintDescriptors[options.frameId];
       } else if (message.messageType == "activateMode") {
         receivedMessages.push(message);
       }
@@ -29,12 +29,14 @@ context("HintCoordinator", () => {
       isVimiumHelpDialog: false,
     });
 
-    receivedMessages = receivedMessages.map((m) => Utils.pick(m, ["frameId", "hintDescriptors"]));
+    receivedMessages = receivedMessages.map(
+      (m) => Utils.pick(m, ["frameId", "frameIdToHintDescriptors"]),
+    );
 
     // Each frame should receive only the hint descriptors from the other frames.
     assert.equal([
-      { frameId: 0, hintDescriptors: { "1": hintDescriptors[1] } },
-      { frameId: 1, hintDescriptors: { "0": hintDescriptors[0] } },
+      { frameId: 0, frameIdToHintDescriptors: { "1": frameIdToHintDescriptors[1] } },
+      { frameId: 1, frameIdToHintDescriptors: { "0": frameIdToHintDescriptors[0] } },
     ], receivedMessages);
   });
 });
