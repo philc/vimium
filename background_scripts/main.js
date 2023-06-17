@@ -16,7 +16,9 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   Utils.debugLog("Installed");
   // See https://developer.chrome.com/extensions/runtime#event-onInstalled
   if (["chrome_update", "shared_module_update"].includes(reason)) return;
-  // TODO(philc): Why do we return here if it's Firefox? I think this should run on Firefox.
+  // NOTE(philc): 2023-06-16: we do not install the content scripts in all tabs on Firefox.
+  // I believe this is because Firefox does this already. See https://stackoverflow.com/a/37132144
+  // for commentary.
   if (BgUtils.isFirefox()) return;
   const manifest = chrome.runtime.getManifest();
   const contentScriptConfig = manifest.content_scripts[0];
