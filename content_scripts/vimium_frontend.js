@@ -178,13 +178,12 @@ const installModes = function () {
 const initializePreDomReady = async function () {
   // TODO(philc): When the extension is disabled, deactivate the content script. We used to do this
   // by listening on the port.disconnect fn, but we no longer use ports.
-  // We disable the content scripts when we lose contact with the background page, or on unload.
-  const onUnloadFn = Utils.makeIdempotent(() => onWindowUnload());
+  // Disable the content scripts the page is unloaded
   window.addEventListener(
     "unload",
     forTrusted(function (event) {
       if (event.target === window) {
-        onUnloadFn();
+        onUnload();
       }
     }),
     true,
@@ -249,6 +248,12 @@ const initializePreDomReady = async function () {
   });
 };
 
+// If our extension gets uninstalled, reloaded, or updated, the content scripts for the old version
+// become orphaned: they remain running but cannot communicate with the background page or invoke
+// most extension APIs. There is no Chrome API to be notified of this event, so we test for it every
+// time a keystroke is pressed before we act on that keystroke. https://stackoverflow.com/a/64407849
+const extensionHasBeenUnloaded = () => chrome.runtime.id == null;
+
 // Wrapper to install event listeners.  Syntactic sugar.
 const installListener = (element, event, callback) => {
   element.addEventListener(
@@ -257,6 +262,10 @@ const installListener = (element, event, callback) => {
       // TODO(philc): I think this workaround can be removed?
       if (typeof global === "undefined" || global === null) { // See #2800.
         Object.assign(window, root);
+      }
+      if (extensionHasBeenUnloaded()) {
+        onUnload();
+        return;
       }
       if (isEnabledForUrl) {
         return callback.apply(this, arguments);
@@ -309,13 +318,13 @@ const initializeOnDomReady = () => {
   chrome.runtime.sendMessage({ handler: "domReady" });
 };
 
-const onWindowUnload = () => {
+const onUnload = Utils.makeIdempotent(() => {
   HintCoordinator.exit({ isSuccess: false });
   handlerStack.reset();
   isEnabledForUrl = false;
   window.removeEventListener("focus", onFocus, true);
   window.removeEventListener("hashchange", checkEnabledAfterURLChange, true);
-};
+});
 
 var setScrollPosition = ({ scrollX, scrollY }) =>
   DomUtils.documentReady(function () {
