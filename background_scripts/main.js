@@ -537,7 +537,16 @@ const HintCoordinator = {
           modeIndex: modeIndex,
         },
         { frameId },
-      );
+      ).catch((error) => {
+        Utils.debugLog(
+          "Swallowed linkHints activateMode error:",
+          error,
+          "tabId",
+          tabId,
+          "frameId",
+          frameId,
+        );
+      });
     });
     await Promise.all(promises);
   },
