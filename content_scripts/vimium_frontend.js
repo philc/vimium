@@ -219,9 +219,10 @@ const initializePreDomReady = async function () {
       return HintCoordinator[request.messageType](request, sender, sendResponse);
     },
     showMessage(request) {
-      return HUD.showForDuration(request.message, 2000);
+      HUD.showForDuration(request.message, 2000);
     },
     executeScript(request) {
+      // TODO(philc): Can we remove this return?
       return DomUtils.injectUserScript(request.script);
     },
   };
