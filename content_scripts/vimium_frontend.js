@@ -196,15 +196,15 @@ const initializePreDomReady = async function () {
   checkIfEnabledForUrl(document.hasFocus());
 
   const requestHandlers = {
-    isWindowFocused(request, sender, sendResponse) {
-      sendResponse(windowIsFocused());
+    isWindowFocused(request, sender) {
+      return windowIsFocused();
     },
     focusFrame(request) {
-      return focusThisFrame(request);
+      focusThisFrame(request);
     },
-    getScrollPosition(ignoredA, ignoredB, sendResponse) {
+    getScrollPosition(ignoredA, ignoredB) {
       if (DomUtils.isTopFrame()) {
-        return sendResponse({ scrollX: window.scrollX, scrollY: window.scrollY });
+        return { scrollX: window.scrollX, scrollY: window.scrollY };
       }
     },
     setScrollPosition,
@@ -214,8 +214,8 @@ const initializePreDomReady = async function () {
         return NormalModeCommands[registryEntry.command](sourceFrameId, registryEntry);
       }
     },
-    linkHintsMessage(request, sender, sendResponse) {
-      return HintCoordinator[request.messageType](request, sender, sendResponse);
+    linkHintsMessage(request, sender) {
+      return HintCoordinator[request.messageType](request, sender);
     },
     showMessage(request) {
       HUD.showForDuration(request.message, 2000);
@@ -226,25 +226,18 @@ const initializePreDomReady = async function () {
     },
   };
 
-  chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  Utils.addChromeRuntimeOnMessageListener(async function (request, sender) {
     Utils.debugLog("Vimium frontend: chrome.runtime.onMessage", request);
     request.isTrusted = true;
     // TODO(philc): Clean up the difference between name and handler.
-    //
-    // TODO(philc): I'm pretty sure we can remove this.
-    // Some requests intended for the background page are delivered to the options page too; ignore
-    // them.
-    // if (!request.handler || !!request.name) {
-
     // Some request are handled elsewhere; ignore them too.
     const shouldHandleMessage = request.name !== "userIsInteractingWithThePage" &&
       (isEnabledForUrl ||
         ["checkEnabledAfterURLChange", "runInTopFrame"].includes(request.name));
-    if (shouldHandleMessage) {
-      requestHandlers[request.name](request, sender, sendResponse);
-    }
-    // Ensure that the sendResponse callback is freed.
-    return false;
+    const result = shouldHandleMessage
+      ? await requestHandlers[request.name](request, sender)
+      : null;
+    return result;
   });
 };
 
@@ -326,7 +319,7 @@ const onUnload = Utils.makeIdempotent(() => {
   window.removeEventListener("hashchange", checkEnabledAfterURLChange, true);
 });
 
-var setScrollPosition = ({ scrollX, scrollY }) =>
+const setScrollPosition = ({ scrollX, scrollY }) =>
   DomUtils.documentReady(function () {
     if (DomUtils.isTopFrame()) {
       Utils.nextTick(function () {
