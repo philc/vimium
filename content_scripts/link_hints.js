@@ -144,7 +144,7 @@ const HintCoordinator = {
   //   frameId: the frame id of this hint's local frame
   //   localIndex: the index in @localHints for the full hint descriptor for this hint
   //   linkText: the link's text for filtered hints (this is null for alphabet hints)
-  getHintDescriptors({ modeIndex, isVimiumHelpDialog }, sender, sendResponse) {
+  async getHintDescriptors({ modeIndex, isVimiumHelpDialog }, sender) {
     let response = [];
     if (DomUtils.isReady()) {
       const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
@@ -163,8 +163,7 @@ const HintCoordinator = {
         linkText,
       }));
     }
-    sendResponse(response);
-    return true; // Send the response asynchronously.
+    return response;
   },
 
   // We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint

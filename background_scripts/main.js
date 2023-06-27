@@ -124,14 +124,14 @@ chrome.runtime.onConnect.addListener(async function (port) {
   }
 });
 
-chrome.runtime.onMessage.addListener(async function (request, sender) {
+Utils.addChromeRuntimeOnMessageListener(async function (request, sender) {
   await Settings.onLoaded();
   request = Object.assign({ count: 1, frameId: sender.frameId }, request, {
     tab: sender.tab,
     tabId: sender.tab.id,
   });
   const handler = sendRequestHandlers[request.handler];
-  const result = handler ? handler(request, sender) : null;
+  const result = handler ? await handler(request, sender) : null;
   return result;
 });
 
