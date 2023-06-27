@@ -125,6 +125,11 @@ chrome.runtime.onConnect.addListener(async function (port) {
 });
 
 Utils.addChromeRuntimeOnMessageListener(async function (request, sender) {
+  // NOTE(philc): We expect all messages to come from a content script in a tab. I've observed in
+  // Firefox when the extension is first installed, domReady and initializeFrame messages come from
+  // content scripts in about:blank URLs, which have a null sender.tab. I don't know what this
+  // corresponds to. Since we expect a valid sender.tab, ignore those messages.
+  if (sender.tab == null) return;
   await Settings.onLoaded();
   request = Object.assign({ count: 1, frameId: sender.frameId }, request, {
     tab: sender.tab,
