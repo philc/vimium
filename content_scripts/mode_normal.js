@@ -143,7 +143,7 @@ var NormalModeCommands = {
       } else {
         url = "view-source:" + url;
       }
-      return chrome.runtime.sendMessage({ handler: "openUrlInNewTab", url });
+      chrome.runtime.sendMessage({ handler: "openUrlInNewTab", url });
     });
   },
 
