@@ -9,6 +9,8 @@ class UIComponent {
     this.options = null;
     this.shadowDOM = null;
 
+    const isDomTests = iframeUrl.includes("?dom_tests=true");
+
     DomUtils.documentReady(() => {
       const styleSheet = DomUtils.createElement("style");
       styleSheet.type = "text/css";
@@ -53,50 +55,50 @@ class UIComponent {
         this.iframeElement.src = chrome.runtime.getURL(iframeUrl);
         document.documentElement.appendChild(shadowWrapper);
 
-        this.iframeElement.addEventListener("load", () => {
+        this.iframeElement.addEventListener("load", async () => {
           // Get vimiumSecret so the iframe can determine that our message isn't the page
           // impersonating us.
-          chrome.storage.session.get("vimiumSecret", ({ vimiumSecret }) => {
-            const { port1, port2 } = new MessageChannel();
-            this.iframeElement.contentWindow.postMessage(vimiumSecret, chrome.runtime.getURL(""), [
-              port2,
-            ]);
-            port1.onmessage = (event) => {
-              let eventName = null;
-              if (event) {
-                eventName = (event.data ? event.data.name : undefined) || event.data;
-              }
+          const secret = (await chrome.storage.session.get("vimiumSecret")).vimiumSecret;
+          const { port1, port2 } = new MessageChannel();
+          // Outside of tests, target origin starts with chrome-extension://{vimium's-id}
+          const targetOrigin = isDomTests ? "*" : chrome.runtime.getURL("");
+          this.iframeElement.contentWindow.postMessage(secret, targetOrigin, [port2]);
+          port1.onmessage = (event) => {
+            let eventName = null;
+            if (event) {
+              eventName = (event.data ? event.data.name : undefined) || event.data;
+            }
 
-              switch (eventName) {
-                case "uiComponentIsReady":
-                  // If this frame receives the focus, then hide the UI component.
-                  window.addEventListener(
-                    "focus",
-                    forTrusted((event) => {
-                      if ((event.target === window) && this.options && this.options.focus) {
-                        this.hide(false);
-                      }
-                      // Continue propagating the event.
-                      return true;
-                    }),
-                    true,
-                  );
-                  // Set the iframe's port, thereby rendering the UI component ready.
-                  setIframePort(port1);
-                  break;
-                case "setIframeFrameId":
-                  this.iframeFrameId = event.data.iframeFrameId;
-                  break;
-                case "hide":
-                  return this.hide();
-                  break;
-                default:
-                  this.handleMessage(event);
-              }
-            };
-          });
+            switch (eventName) {
+              case "uiComponentIsReady":
+                // If this frame receives the focus, then hide the UI component.
+                window.addEventListener(
+                  "focus",
+                  forTrusted((event) => {
+                    if ((event.target === window) && this.options && this.options.focus) {
+                      this.hide(false);
+                    }
+                    // Continue propagating the event.
+                    return true;
+                  }),
+                  true,
+                );
+                // Set the iframe's port, thereby rendering the UI component ready.
+                setIframePort(port1);
+                break;
+              case "setIframeFrameId":
+                this.iframeFrameId = event.data.iframeFrameId;
+                break;
+              case "hide":
+                return this.hide();
+                break;
+              default:
+                this.handleMessage(event);
+            }
+          };
         });
       });
+      // TODO(philc): Is this still required? If so, document why.
       if (Utils.isFirefox()) {
         this.postMessage({ name: "settings", isFirefox: true });
       }
