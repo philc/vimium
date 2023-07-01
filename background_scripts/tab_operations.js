@@ -8,7 +8,7 @@ function openUrlInCurrentTab(request) {
   if (Utils.hasJavascriptPrefix(request.url)) {
     const tabId = request.tabId;
     const frameId = request.frameId;
-    chrome.tabs.sendMessage(tabId, { frameId, handler: "executeScript", script: request.url });
+    chrome.tabs.sendMessage(tabId, { frameId, handler: "executeUserScript", script: request.url });
   } else {
     chrome.tabs.update(request.tabId, { url: Utils.convertToUrl(request.url) });
   }
