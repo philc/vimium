@@ -109,7 +109,7 @@ const HintCoordinator = {
 
   sendMessage(messageType, request) {
     if (request == null) request = {};
-    request = Object.assign(request, { messageType, handler: "linkHintsMessage" });
+    request = Object.assign(request, { messageType, handler: "broadcastLinkHintsMessage" });
     chrome.runtime.sendMessage(request);
   },
 
@@ -132,7 +132,8 @@ const HintCoordinator = {
       }
     });
     this.onExit = [onExit];
-    this.sendMessage("prepareToActivateMode", {
+    chrome.runtime.sendMessage({
+      handler: "prepareToActivateLinkHintsMode",
       modeIndex: availableModes.indexOf(mode),
       isVimiumHelpDialog: window.isVimiumHelpDialog,
     });

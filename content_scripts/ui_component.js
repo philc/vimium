@@ -173,7 +173,7 @@ class UIComponent {
             chrome.runtime.sendMessage({
               handler: "sendMessageToFrames",
               message: {
-                name: "focusFrame",
+                handler: "focusFrame",
                 frameId: this.options.sourceFrameId,
                 forceFocusThisFrame: true,
               },

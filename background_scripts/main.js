@@ -124,29 +124,12 @@ chrome.runtime.onConnect.addListener(async function (port) {
   }
 });
 
-Utils.addChromeRuntimeOnMessageListener(async function (request, sender) {
-  Utils.debugLog("background main.js: chrome.runtime.onMessage", request, sender);
-  // NOTE(philc): We expect all messages to come from a content script in a tab. I've observed in
-  // Firefox when the extension is first installed, domReady and initializeFrame messages come from
-  // content scripts in about:blank URLs, which have a null sender.tab. I don't know what this
-  // corresponds to. Since we expect a valid sender.tab, ignore those messages.
-  if (sender.tab == null) return;
-  await Settings.onLoaded();
-  request = Object.assign({ count: 1, frameId: sender.frameId }, request, {
-    tab: sender.tab,
-    tabId: sender.tab.id,
-  });
-  const handler = sendRequestHandlers[request.handler];
-  const result = handler ? await handler(request, sender) : null;
-  return result;
-});
-
 const onURLChange = (details) => {
   // sendMessage will throw "Error: Could not establish connection. Receiving end does not exist."
   // if there is no Vimium content script loaded in the given tab. This can occur if the user
   // navigated to a page where Vimium doesn't have permissions, like chrome:// URLs. This error is
   // noisy and mysterious (it usually doesn't have a valid line number), so we silence it.
-  chrome.tabs.sendMessage(details.tabId, { name: "checkEnabledAfterURLChange" })
+  chrome.tabs.sendMessage(details.tabId, { handler: "checkEnabledAfterURLChange" })
     .catch(() => {});
 };
 
@@ -179,7 +162,7 @@ const toggleMuteTab = function ({ tab: currentTab, registryEntry, tabId, frameId
       if (audibleUnmutedTabs.length >= 0) {
         chrome.tabs.sendMessage(tabId, {
           frameId,
-          name: "showMessage",
+          handler: "showMessage",
           message: `Muting ${audibleUnmutedTabs.length} tab(s).`,
         });
         for (tab of audibleUnmutedTabs) {
@@ -188,7 +171,7 @@ const toggleMuteTab = function ({ tab: currentTab, registryEntry, tabId, frameId
       } else {
         chrome.tabs.sendMessage(tabId, {
           frameId,
-          name: "showMessage",
+          handler: "showMessage",
           message: "Unmuting all muted tabs.",
         });
         for (tab of tabs) {
@@ -200,9 +183,9 @@ const toggleMuteTab = function ({ tab: currentTab, registryEntry, tabId, frameId
     });
   } else {
     if (currentTab.mutedInfo.muted) {
-      chrome.tabs.sendMessage(tabId, { frameId, name: "showMessage", message: "Unmuted tab." });
+      chrome.tabs.sendMessage(tabId, { frameId, handler: "showMessage", message: "Unmuted tab." });
     } else {
-      chrome.tabs.sendMessage(tabId, { frameId, name: "showMessage", message: "Muted tab." });
+      chrome.tabs.sendMessage(tabId, { frameId, handler: "showMessage", message: "Muted tab." });
     }
     muteTab(currentTab);
   }
@@ -347,7 +330,7 @@ const BackgroundCommands = {
     const promises = frameIds.map(async (frameId) => {
       // It may be possible that this sendMessage call fails, if a frame gets unloaded or something
       // while the request is in flight. If so, we'll need to swallow/log such errors.
-      const focused = await chrome.tabs.sendMessage(tabId, { name: "isWindowFocused" }, {
+      const focused = await chrome.tabs.sendMessage(tabId, { handler: "isWindowFocused" }, {
         frameId: frameId,
       });
       return { frameId: frameId, focused: focused };
@@ -360,7 +343,7 @@ const BackgroundCommands = {
     const index = frameIds.indexOf(focusedFrameId);
     count = count ?? 1;
     const nextIndex = (index + count) % frameIds.length;
-    await chrome.tabs.sendMessage(tabId, { name: "focusFrame", highlight: true }, {
+    await chrome.tabs.sendMessage(tabId, { handler: "focusFrame", highlight: true }, {
       frameId: frameIds[nextIndex],
     });
   },
@@ -470,20 +453,12 @@ async function getFrameIdsForTab(tabId) {
 }
 
 const HintCoordinator = {
-  onMessage(request, sender) {
-    if (request.messageType == "prepareToActivateMode") {
-      return this.prepareToActivateMode(sender.tab.id, sender.frameId, request);
-    } else {
-      // All other messages with name linkHintsMessage should be forwarded to all frames the
-      // sender's tab.
-      // TODO(philc): This forwarding logic is confusing. It would be a nicer dev UX to explicitly
-      // enumerate the types of messages we expect to see here, and throw an error if we receive a
-      // different one.
-      return chrome.tabs.sendMessage(
-        sender.tab.id,
-        Object.assign({ name: "linkHintsMessage" }, request),
-      );
-    }
+  // Forward the message in "request" to all frames the in sender's tab.
+  broadcastLinkHintsMessage(request, sender) {
+    chrome.tabs.sendMessage(
+      sender.tab.id,
+      Object.assign(request, { handler: "linkHintsMessage" }),
+    );
   },
 
   // This is sent by the content script once the user issues the link hints command.
@@ -494,7 +469,7 @@ const HintCoordinator = {
       let promise = chrome.tabs.sendMessage(
         tabId,
         {
-          name: "linkHintsMessage",
+          handler: "linkHintsMessage",
           messageType: "getHintDescriptors",
           modeIndex,
           isVimiumHelpDialog,
@@ -530,7 +505,7 @@ const HintCoordinator = {
       return chrome.tabs.sendMessage(
         tabId,
         {
-          name: "linkHintsMessage",
+          handler: "linkHintsMessage",
           messageType: "activateMode",
           frameId: frameId,
           originatingFrameId: originatingFrameId,
@@ -600,10 +575,14 @@ const sendRequestHandlers = {
   gotoMark: Marks.goto.bind(Marks),
   // Send a message to all frames in the current tab.
   sendMessageToFrames(request, sender) {
-    return chrome.tabs.sendMessage(sender.tab.id, request.message);
+    const newRequest = Object.assign({}, request.message);
+    chrome.tabs.sendMessage(sender.tab.id, newRequest);
   },
-  linkHintsMessage(request, sender) {
-    HintCoordinator.onMessage(request, sender);
+  broadcastLinkHintsMessage(request, sender) {
+    HintCoordinator.broadcastLinkHintsMessage(request, sender);
+  },
+  prepareToActivateLinkHintsMode(request, sender) {
+    HintCoordinator.prepareToActivateMode(sender.tab.id, sender.frameId, request);
   },
 
   async initializeFrame(request, sender) {
@@ -646,6 +625,26 @@ const sendRequestHandlers = {
     return response;
   },
 };
+
+Utils.addChromeRuntimeOnMessageListener(
+  Object.keys(sendRequestHandlers),
+  async function (request, sender) {
+    Utils.debugLog("background main.js: chrome.runtime.onMessage", request, sender);
+    // NOTE(philc): We expect all messages to come from a content script in a tab. I've observed in
+    // Firefox when the extension is first installed, domReady and initializeFrame messages come from
+    // content scripts in about:blank URLs, which have a null sender.tab. I don't know what this
+    // corresponds to. Since we expect a valid sender.tab, ignore those messages.
+    if (sender.tab == null) return;
+    await Settings.onLoaded();
+    request = Object.assign({ count: 1, frameId: sender.frameId }, request, {
+      tab: sender.tab,
+      tabId: sender.tab.id,
+    });
+    const handler = sendRequestHandlers[request.handler];
+    const result = handler ? await handler(request, sender) : null;
+    return result;
+  },
+);
 
 // Remove chrome.storage.local/findModeRawQueryListIncognito if there are no remaining
 // incognito-mode windows. Since the common case is that there are none to begin with, we first

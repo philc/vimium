@@ -7,7 +7,7 @@ const ActionPage = {
     const activeTab = tabs[0];
     this.tabUrl = activeTab.url;
 
-    if (! await this.isVimiumInstalledInTab(activeTab.id)) {
+    if (!await this.isVimiumInstalledInTab(activeTab.id)) {
       for (const el of Array.from(document.querySelectorAll("body > *"))) {
         el.style.display = "none";
       }
@@ -54,7 +54,9 @@ const ActionPage = {
 
   async isVimiumInstalledInTab(tabId) {
     try {
-      await chrome.tabs.sendMessage(tabId, "isVimiumInstalledInTab");
+      // There is no handler in our content script for this message, but that's OK. We just want to
+      // see if sending any message triggers an error.
+      await chrome.tabs.sendMessage(tabId, { handler: "isVimiumInstalledInTab" });
       return true;
     } catch {
       // If there's no content script running in the activeTab, we'll get a connection error.

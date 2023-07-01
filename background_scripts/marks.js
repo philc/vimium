@@ -30,7 +30,7 @@ const Marks = {
     } else {
       // The front-end frame hasn't provided the scroll position (because it's not the top frame
       // within its tab). We need to ask the top frame what its scroll position is.
-      chrome.tabs.sendMessage(sender.tab.id, { name: "getScrollPosition" }, (response) => {
+      chrome.tabs.sendMessage(sender.tab.id, { handler: "getScrollPosition" }, (response) => {
         this.saveMark(
           Object.assign(markInfo, { scrollX: response.scrollX, scrollY: response.scrollY }),
         );
@@ -79,7 +79,7 @@ const Marks = {
   async gotoPositionInTab({ tabId, scrollX, scrollY }) {
     const tab = await chrome.tabs.update(tabId, { active: true });
     chrome.windows.update(tab.windowId, { focused: true });
-    chrome.tabs.sendMessage(tabId, { name: "setScrollPosition", scrollX, scrollY });
+    chrome.tabs.sendMessage(tabId, { handler: "setScrollPosition", scrollX, scrollY });
   },
 
   // The tab we're trying to find no longer exists. We either find another tab with a matching URL
