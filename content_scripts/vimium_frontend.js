@@ -221,9 +221,8 @@ const initializePreDomReady = async function () {
     showMessage(request) {
       HUD.showForDuration(request.message, 2000);
     },
-    executeScript(request) {
-      // TODO(philc): Can we remove this return?
-      return DomUtils.injectUserScript(request.script);
+    executeUserScript(request) {
+      DomUtils.injectUserScript(request.script);
     },
   };
 
