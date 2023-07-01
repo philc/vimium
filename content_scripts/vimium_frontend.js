@@ -245,7 +245,7 @@ const initializePreDomReady = async function () {
 // become orphaned: they remain running but cannot communicate with the background page or invoke
 // most extension APIs. There is no Chrome API to be notified of this event, so we test for it every
 // time a keystroke is pressed before we act on that keystroke. https://stackoverflow.com/a/64407849
-const extensionHasBeenUnloaded = () => chrome.runtime.id == null;
+const extensionHasBeenUnloaded = () => chrome.runtime?.id == null;
 
 // Wrapper to install event listeners.  Syntactic sugar.
 const installListener = (element, event, callback) => {
@@ -257,6 +257,7 @@ const installListener = (element, event, callback) => {
         Object.assign(window, root);
       }
       if (extensionHasBeenUnloaded()) {
+        console.log("Vimium extension has been unloaded. Unloading content script.");
         onUnload();
         return;
       }
