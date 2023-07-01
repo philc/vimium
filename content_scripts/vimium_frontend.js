@@ -54,7 +54,8 @@ class GrabBackFocus extends Mode {
         this.exit();
         chrome.runtime.sendMessage({
           handler: "sendMessageToFrames",
-          message: { name: "userIsInteractingWithThePage" },
+          message: { handler: "userIsInteractingWithThePage" },
+
         });
       });
     };
@@ -226,19 +227,21 @@ const initializePreDomReady = async function () {
     },
   };
 
-  Utils.addChromeRuntimeOnMessageListener(async function (request, sender) {
-    Utils.debugLog("Vimium frontend: chrome.runtime.onMessage", request);
-    request.isTrusted = true;
-    // TODO(philc): Clean up the difference between name and handler.
-    // Some request are handled elsewhere; ignore them too.
-    const shouldHandleMessage = request.name !== "userIsInteractingWithThePage" &&
-      (isEnabledForUrl ||
-        ["checkEnabledAfterURLChange", "runInTopFrame"].includes(request.name));
-    const result = shouldHandleMessage
-      ? await requestHandlers[request.name](request, sender)
-      : null;
-    return result;
-  });
+  Utils.addChromeRuntimeOnMessageListener(
+    Object.keys(requestHandlers),
+    async function (request, sender) {
+      Utils.debugLog("Vimium frontend: chrome.runtime.onMessage", request);
+      request.isTrusted = true;
+      // Some request are handled elsewhere; ignore them.
+      const shouldHandleMessage = request.handler !== "userIsInteractingWithThePage" &&
+        (isEnabledForUrl ||
+          ["checkEnabledAfterURLChange", "runInTopFrame"].includes(request.handler));
+      const result = shouldHandleMessage
+        ? await requestHandlers[request.handler](request, sender)
+        : null;
+      return result;
+    },
+  );
 };
 
 // If our extension gets uninstalled, reloaded, or updated, the content scripts for the old version

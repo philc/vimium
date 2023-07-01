@@ -47,7 +47,7 @@ class NormalMode extends KeyHandlerMode {
       const sourceFrameId = window.isVimiumUIComponent ? 0 : frameId;
       chrome.runtime.sendMessage({
         handler: "sendMessageToFrames",
-        message: { name: "runInTopFrame", sourceFrameId, registryEntry },
+        message: { handler: "runInTopFrame", sourceFrameId, registryEntry },
       });
     } else if (registryEntry.background) {
       chrome.runtime.sendMessage({ handler: "runBackgroundCommand", registryEntry, count });
