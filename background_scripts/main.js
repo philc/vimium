@@ -447,7 +447,12 @@ chrome.webNavigation.onCommitted.addListener(async ({ tabId, frameId }) => {
   }).catch(swallowError);
 });
 
+// Returns all frame IDs for the given tab.
+// Note that in Chrome, this will omit frame IDs for iFrames which contain chrome-extension:// URLs,
+// even if those pages are listed in Vimium's web_accessible_resources in manifest.json.
 async function getFrameIdsForTab(tabId) {
+  // getAllFrames unfortunately excludes frames and iframes from chrome-extension:// URLs.
+  // In Firefox, by contrast, pages with moz-extension:// URLs are included.
   const frames = await chrome.webNavigation.getAllFrames({ tabId: tabId });
   return frames.map((f) => f.frameId);
 }
@@ -462,8 +467,11 @@ const HintCoordinator = {
   },
 
   // This is sent by the content script once the user issues the link hints command.
-  async prepareToActivateMode(tabId, originatingFrameId, { modeIndex, isVimiumHelpDialog }) {
-    const frameIds = await getFrameIdsForTab(tabId);
+  async prepareToActivateLinkHintsMode(tabId, originatingFrameId, { modeIndex, isVimiumHelpDialog }) {
+    // If link hints was triggered on the Vimium help dialog (which is shown inside an iframe), we
+    // cannot directly retrieve that iFrame's frameId using the getFrameIdsForTab. However, we do
+    // have that frameId on the message send by the help dialog page to activate link hints.
+    const frameIds = isVimiumHelpDialog ? [originatingFrameId] : await getFrameIdsForTab(tabId);
     const timeout = 3000;
     let promises = frameIds.map(async (frameId) => {
       let promise = chrome.tabs.sendMessage(
@@ -584,7 +592,7 @@ const sendRequestHandlers = {
     HintCoordinator.broadcastLinkHintsMessage(request, sender);
   },
   prepareToActivateLinkHintsMode(request, sender) {
-    HintCoordinator.prepareToActivateMode(sender.tab.id, sender.frameId, request);
+    HintCoordinator.prepareToActivateLinkHintsMode(sender.tab.id, sender.frameId, request);
   },
 
   async initializeFrame(request, sender) {

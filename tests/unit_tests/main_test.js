@@ -4,7 +4,7 @@ import "../../background_scripts/marks.js";
 import "../../background_scripts/main.js";
 
 context("HintCoordinator", () => {
-  should("prepareToActivateMode", async () => {
+  should("prepareToActivateLinKhintsMode", async () => {
     let receivedMessages = [];
     const frameIdToHintDescriptors = {
       "0": { frameId: 0, localIndex: 123, linkText: null },
@@ -24,7 +24,7 @@ context("HintCoordinator", () => {
       }
     });
 
-    await HintCoordinator.prepareToActivateMode(0, 0, {
+    await HintCoordinator.prepareToActivateLinkHintsMode(0, 0, {
       modeIndex: 0,
       isVimiumHelpDialog: false,
     });
