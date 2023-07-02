@@ -573,10 +573,12 @@ const sendRequestHandlers = {
   selectSpecificTab,
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks),
-  // Send a message to all frames in the current tab.
+  // Send a message to all frames in the current tab. If request.frameId is provided, then send
+  // messages to only the frame with that ID.
   sendMessageToFrames(request, sender) {
     const newRequest = Object.assign({}, request.message);
-    chrome.tabs.sendMessage(sender.tab.id, newRequest);
+    const options = request.frameId != null ? { frameId: request.frameId } : {};
+    chrome.tabs.sendMessage(sender.tab.id, newRequest, options);
   },
   broadcastLinkHintsMessage(request, sender) {
     HintCoordinator.broadcastLinkHintsMessage(request, sender);
