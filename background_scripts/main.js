@@ -326,7 +326,7 @@ const BackgroundCommands = {
   async nextFrame({ count, tabId }) {
     // We're assuming that these frames are returned in the order that they appear on the page. This
     // seems to be the case empirically. If it's ever needed, we could also sort by frameId.
-    const frameIds = getFrameIdsForTab(tabId);
+    const frameIds = await getFrameIdsForTab(tabId);
     const promises = frameIds.map(async (frameId) => {
       // It may be possible that this sendMessage call fails, if a frame gets unloaded or something
       // while the request is in flight. If so, we'll need to swallow/log such errors.
