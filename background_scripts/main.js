@@ -468,10 +468,11 @@ const HintCoordinator = {
 
   // This is sent by the content script once the user issues the link hints command.
   async prepareToActivateLinkHintsMode(tabId, originatingFrameId, { modeIndex, isVimiumHelpDialog }) {
+    const frameIds = await getFrameIdsForTab(tabId);
     // If link hints was triggered on the Vimium help dialog (which is shown inside an iframe), we
     // cannot directly retrieve that iFrame's frameId using the getFrameIdsForTab. However, we do
-    // have that frameId on the message send by the help dialog page to activate link hints.
-    const frameIds = isVimiumHelpDialog ? [originatingFrameId] : await getFrameIdsForTab(tabId);
+    // have that frameId on the message sent by the help dialog page to activate link hints.
+    if (isVimiumHelpDialog) frameIds.push(originatingFrameId);
     const timeout = 3000;
     let promises = frameIds.map(async (frameId) => {
       let promise = chrome.tabs.sendMessage(

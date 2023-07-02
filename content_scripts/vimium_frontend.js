@@ -216,7 +216,9 @@ const initializePreDomReady = async function () {
       }
     },
     linkHintsMessage(request, sender) {
-      return HintCoordinator[request.messageType](request, sender);
+      if (HintCoordinator.willHandleMessage(request.messageType)) {
+        return HintCoordinator[request.messageType](request, sender);
+      }
     },
     showMessage(request) {
       HUD.showForDuration(request.message, 2000);

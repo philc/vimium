@@ -107,6 +107,16 @@ const HintCoordinator = {
   localHints: null,
   cacheAllKeydownEvents: null,
 
+  // Returns if the HintCoordinator will handle a given LinkHintsMessage.
+  // Some messages will not be handled in the case where the help dialog is shown, and is then
+  // hidden, but is still receiving link hints messages via broadcastLinkHintsMessage.
+  willHandleMessage(messageType) {
+    if (this.linkHintsMode) return true;
+    return ["prepareToActivateMode", "activateMode", "getHintDescriptors", "exit"].includes(
+      messageType,
+    );
+  },
+
   sendMessage(messageType, request) {
     if (request == null) request = {};
     request = Object.assign(request, { messageType, handler: "broadcastLinkHintsMessage" });
