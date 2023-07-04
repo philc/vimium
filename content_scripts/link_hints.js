@@ -157,23 +157,23 @@ const HintCoordinator = {
   //   linkText: the link's text for filtered hints (this is null for alphabet hints)
   async getHintDescriptors({ modeIndex, isVimiumHelpDialog }, sender) {
     let response = [];
-    if (DomUtils.isReady()) {
-      const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
-      // If link hints is launched within the help dialog, then we only offer hints from that
-      // frame. This improves the usability of the help dialog on the options page (particularly
-      // for selecting command names).
-      if (isVimiumHelpDialog && !window.isVimiumHelpDialog) {
-        this.localHints = [];
-      } else {
-        this.localHints = LocalHints.getLocalHints(requireHref);
-      }
-      response = this.localHintDescriptors = this.localHints.map(({ linkText }, localIndex) => ({
-        // TODO(philc): We don't need to send back frameId in this structure.
-        frameId,
-        localIndex,
-        linkText,
-      }));
+    if (!DomUtils.isReady() || DomUtils.windowIsTooSmall()) return response;
+
+    const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
+    // If link hints is launched within the help dialog, then we only offer hints from that
+    // frame. This improves the usability of the help dialog on the options page (particularly
+    // for selecting command names).
+    if (isVimiumHelpDialog && !window.isVimiumHelpDialog) {
+      this.localHints = [];
+    } else {
+      this.localHints = LocalHints.getLocalHints(requireHref);
     }
+    response = this.localHintDescriptors = this.localHints.map(({ linkText }, localIndex) => ({
+      // TODO(philc): We don't need to send back frameId in this structure.
+      frameId,
+      localIndex,
+      linkText,
+    }));
     return response;
   },
 
