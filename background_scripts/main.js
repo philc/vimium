@@ -79,11 +79,18 @@ const onURLChange = (details) => {
   // if there is no Vimium content script loaded in the given tab. This can occur if the user
   // navigated to a page where Vimium doesn't have permissions, like chrome:// URLs. This error is
   // noisy and mysterious (it usually doesn't have a valid line number), so we silence it.
-  chrome.tabs.sendMessage(details.tabId, { handler: "checkEnabledAfterURLChange" })
+  chrome.tabs.sendMessage(details.tabId, {
+    handler: "checkEnabledAfterURLChange",
+    silenceLogging: true
+  }, {
+    frameId: details.frameId,
+  })
     .catch(() => {});
 };
 
 // Re-check whether Vimium is enabled for a frame when the URL changes without a reload.
+// There's no reliable way to detect when the URL has changed in the content script, so we
+// have to use the webNavigation API in our background script.
 chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.pushState.
 chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
 
@@ -774,5 +781,5 @@ Object.assign(globalThis, {
   TabOperations,
   // Exported for tests:
   HintCoordinator,
-  BackgroundCommands
+  BackgroundCommands,
 });

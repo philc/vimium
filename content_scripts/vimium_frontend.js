@@ -217,7 +217,11 @@ const initializePreDomReady = async function () {
   Utils.addChromeRuntimeOnMessageListener(
     Object.keys(requestHandlers),
     async function (request, sender) {
-      Utils.debugLog("Vimium frontend: chrome.runtime.onMessage", request);
+      // Some requests are so frequent and noisy (like checkEnabledAfterURLChange docs.google.com)
+      // that we silence debug logging for just those requests so the rest remains useful.
+      if (!request.silenceLogging) {
+        Utils.debugLog("Vimium frontend: chrome.runtime.onMessage", request);
+      }
       request.isTrusted = true;
       // Some request are handled elsewhere; ignore them.
       const shouldHandleMessage = request.handler !== "userIsInteractingWithThePage" &&
@@ -436,9 +440,19 @@ const checkIfEnabledForUrl = async (frameIsFocused) => {
   if (!isEnabledForUrl) HUD.hide(true, false);
 };
 
+let previousUrl = document.location.href;
+
 // When we're informed by the background page that a URL in this tab has changed, we check if we
 // have the correct enabled state (but only if this frame has the focus).
-var checkEnabledAfterURLChange = forTrusted(function () {
+var checkEnabledAfterURLChange = forTrusted(function (request) {
+  // The background page can't tell if the URL has actually changed after a client-side
+  // history.pushState call. To limit log spam, ignore spurious URL change events where the URL
+  // didn't actually change.
+  if (previousUrl == document.location.href) {
+    return;
+  } else {
+    previousUrl = document.location.href;
+  }
   // The URL changing feels like navigation to the user, so reset the scroller (see #3119).
   Scroller.reset();
   if (windowIsFocused()) {
