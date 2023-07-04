@@ -177,19 +177,6 @@ const installModes = function () {
 // Complete initialization work that should be done prior to DOMReady.
 //
 const initializePreDomReady = async function () {
-  // TODO(philc): When the extension is disabled, deactivate the content script. We used to do this
-  // by listening on the port.disconnect fn, but we no longer use ports.
-  // Disable the content scripts the page is unloaded
-  window.addEventListener(
-    "unload",
-    forTrusted(function (event) {
-      if (event.target === window) {
-        onUnload();
-      }
-    }),
-    true,
-  );
-
   // NOTE(philc): I'm blocking further Vimium initialization on this, for simplicity. If necessary
   // we could allow other tasks to run concurrently.
   await Settings.onLoaded();
