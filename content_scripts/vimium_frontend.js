@@ -55,7 +55,6 @@ class GrabBackFocus extends Mode {
         chrome.runtime.sendMessage({
           handler: "sendMessageToFrames",
           message: { handler: "userIsInteractingWithThePage" },
-
         });
       });
     };
@@ -365,15 +364,13 @@ const flashFrame = (function () {
 //
 // Called from the backend in order to change frame focus.
 //
-var focusThisFrame = function (request) {
+const focusThisFrame = function (request) {
   if (!request.forceFocusThisFrame) {
-    if (
-      DomUtils.windowIsTooSmall() ||
-      (document.body && document.body.tagName.toLowerCase() == "frameset")
-    ) {
-      // This frame is too small to focus or it's a frameset. Cancel and tell the background page to
-      // focus the next frame instead. This affects sites like Google Inbox, which have many tiny
-      // iframes. See #1317.
+    // Avoid focusing tiny frames. See #1317.
+    const shouldFocus = !DomUtils.windowIsTooSmall() &&
+      (document.body?.tagName.toLowerCase() != "frameset");
+    if (!shouldFocus) {
+      // Cancel and tell the background page to focus the next frame instead.
       chrome.runtime.sendMessage({ handler: "nextFrame" });
       return;
     }
