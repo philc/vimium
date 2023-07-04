@@ -8,6 +8,7 @@ Object.assign(window, shoulda);
 Utils.nextTick = (func) => func();
 
 document.addEventListener("DOMContentLoaded", async () => {
+  isEnabledForUrl = true;
   await Settings.onLoaded();
 
   await HUD.init();

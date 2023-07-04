@@ -420,6 +420,8 @@ const checkIfEnabledForUrl = async (frameIsFocused) => {
     url: window.location.toString(),
   });
 
+  isEnabledForUrl = response.isEnabledForUrl;
+
   // This browser info is used by other content scripts, but can only be determinted by the
   // background page.
   Utils._isFirefox = response.isFirefox;
@@ -428,14 +430,10 @@ const checkIfEnabledForUrl = async (frameIsFocused) => {
   // This is the first time we learn what this frame's ID is.
   frameId = response.frameId;
 
-  if (!normalMode) {
-    installModes();
-  }
+  if (normalMode == null) installModes();
   normalMode.setPassKeys(response.passKeys);
   // Hide the HUD if we're not enabled.
-  if (!response.isEnabledForUrl) {
-    HUD.hide(true, false);
-  }
+  if (!isEnabledForUrl) HUD.hide(true, false);
 };
 
 // When we're informed by the background page that a URL in this tab has changed, we check if we
