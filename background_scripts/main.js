@@ -9,56 +9,6 @@ import * as TabOperations from "./tab_operations.js";
 // chrome.storage.session will be null in content scripts.
 chrome.storage.session.setAccessLevel({ accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS" });
 
-// The browser may have tabs already open. We inject the content scripts and Vimium's CSS
-// immediately so that the extension is running on the pages immediately after install, rather than
-// having to reload those pages.
-chrome.runtime.onInstalled.addListener(async ({ reason }) => {
-  Utils.debugLog("Installed");
-  // See https://developer.chrome.com/extensions/runtime#event-onInstalled
-  if (["chrome_update", "shared_module_update"].includes(reason)) return;
-  // NOTE(philc): 2023-06-16: we do not install the content scripts in all tabs on Firefox.
-  // I believe this is because Firefox does this already. See https://stackoverflow.com/a/37132144
-  // for commentary.
-  if (BgUtils.isFirefox()) return;
-  const manifest = chrome.runtime.getManifest();
-  const contentScriptConfig = manifest.content_scripts[0];
-  const contentScripts = contentScriptConfig.js;
-  const cssFiles = contentScriptConfig.css;
-  await Settings.onLoaded();
-
-  // The scripting.executeScript and scripting.insertCSS APIs can fail if we don't have permissions
-  // to run scripts in a given tab. Examples are: chrome:// URLs, file:// pages (if the user hasn't
-  // granted Vimium access to file URLs), and probably incognito tabs (unconfirmed). Calling these
-  // APIs on such tabs results in an error getting logged on the background page. To avoid this
-  // noise, we swallow the failures. We could instead try to determine if the tab is scriptable by
-  // checking its URL scheme before calling these APIs, but that approach has some nuance to it.
-  // This is simpler.
-  const swallowError = (error) => {};
-
-  const tabs = await chrome.tabs.query({ status: "complete" });
-  for (const tab of tabs) {
-    const target = { tabId: tab.id, allFrames: true };
-
-    // Inject all of our content javascripts.
-    chrome.scripting.executeScript({
-      files: contentScripts,
-      target: target,
-    }).catch(swallowError);
-
-    // Inject our extension's CSS.
-    chrome.scripting.insertCSS({
-      files: cssFiles,
-      target: target,
-    }).catch(swallowError);
-
-    // Inject the user's link hint CSS.
-    chrome.scripting.insertCSS({
-      css: Settings.get("userDefinedLinkHintCss"),
-      target: target,
-    }).catch(swallowError);
-  }
-});
-
 // This is exported for use by "marks.js".
 globalThis.tabLoadedHandlers = {}; // tabId -> function()
 
@@ -467,7 +417,11 @@ const HintCoordinator = {
   },
 
   // This is sent by the content script once the user issues the link hints command.
-  async prepareToActivateLinkHintsMode(tabId, originatingFrameId, { modeIndex, isVimiumHelpDialog }) {
+  async prepareToActivateLinkHintsMode(
+    tabId,
+    originatingFrameId,
+    { modeIndex, isVimiumHelpDialog },
+  ) {
     const frameIds = await getFrameIdsForTab(tabId);
     // If link hints was triggered on the Vimium help dialog (which is shown inside an iframe), we
     // cannot directly retrieve that iFrame's frameId using the getFrameIdsForTab. However, we do
@@ -740,10 +694,67 @@ showUpgradeMessageIfNecessary = function () {
   }
 };
 
-chrome.runtime.onInstalled.addListener(async ({ reason }) => {
-  // Setup code for the background service worker.
+async function injectContentScriptsAndCSSIntoExistingTabs() {
+  const manifest = chrome.runtime.getManifest();
+  const contentScriptConfig = manifest.content_scripts[0];
+  const contentScripts = contentScriptConfig.js;
+  const cssFiles = contentScriptConfig.css;
+
+  // The scripting.executeScript and scripting.insertCSS APIs can fail if we don't have permissions
+  // to run scripts in a given tab. Examples are: chrome:// URLs, file:// pages (if the user hasn't
+  // granted Vimium access to file URLs), and probably incognito tabs (unconfirmed). Calling these
+  // APIs on such tabs results in an error getting logged on the background page. To avoid this
+  // noise, we swallow the failures. We could instead try to determine if the tab is scriptable by
+  // checking its URL scheme before calling these APIs, but that approach has some nuance to it.
+  // This is simpler.
+  const swallowError = (error) => {};
+
+  const tabs = await chrome.tabs.query({ status: "complete" });
+  for (const tab of tabs) {
+    const target = { tabId: tab.id, allFrames: true };
+
+    // Inject all of our content javascripts.
+    chrome.scripting.executeScript({
+      files: contentScripts,
+      target: target,
+    }).catch(swallowError);
+
+    // Inject our extension's CSS.
+    chrome.scripting.insertCSS({
+      files: cssFiles,
+      target: target,
+    }).catch(swallowError);
+
+    // Inject the user's link hint CSS.
+    chrome.scripting.insertCSS({
+      css: Settings.get("userDefinedLinkHintCss"),
+      target: target,
+    }).catch(swallowError);
+  }
+}
+
+async function initializeExtension() {
   await Settings.onLoaded();
   await Commands.init();
+}
+
+// The browser may have tabs already open. We inject the content scripts and Vimium's CSS
+// immediately so that the extension is running on the pages immediately after install, rather than
+// having to reload those pages.
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
+  Utils.debugLog("chrome.runtime.onInstalled");
+
+  // NOTE(philc): In my testing, when the onInstalled event occurs, the onStartup event does not
+  // also occur, so we need to initialize Vimium here.
+  await initializeExtension();
+
+  const shouldInjectContentScripts =
+    // NOTE(philc): 2023-06-16: we do not install the content scripts in all tabs on Firefox.
+    // I believe this is because Firefox does this already. See https://stackoverflow.com/a/37132144
+    // for commentary.
+    !BgUtils.isFirefox() &&
+    (["chrome_update", "shared_module_update"].includes(reason));
+  if (shouldInjectContentScripts) injectContentScriptsAndCSSIntoExistingTabs();
 
   // Avoid showing the upgrade notification when previousVersion is undefined, which is the case for
   // new installs.
@@ -751,6 +762,12 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
     await Settings.set("previousVersion", Utils.getCurrentVersion());
   }
   showUpgradeMessageIfNecessary();
+});
+
+// Note that this event is not fired when an incognito profile is started.
+chrome.runtime.onStartup.addListener(async () => {
+  Utils.debugLog("chrome.runtime.onStartup");
+  await initializeExtension();
 });
 
 Object.assign(globalThis, {

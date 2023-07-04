@@ -87,6 +87,9 @@ window.chrome = {
     onInstalled: {
       addListener() {},
     },
+    onStartup: {
+      addListener() {},
+    },
   },
 
   extension: {
