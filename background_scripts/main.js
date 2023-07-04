@@ -772,6 +772,7 @@ chrome.runtime.onStartup.addListener(async () => {
 
 Object.assign(globalThis, {
   TabOperations,
-  // Exported for tests.
+  // Exported for tests:
   HintCoordinator,
+  BackgroundCommands
 });

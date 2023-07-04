@@ -11,10 +11,7 @@ context("HintCoordinator", () => {
       "1": { frameId: 1, localIndex: 456, linkText: null },
     };
 
-    stub(chrome.webNavigation, "getAllFrames", async () => [
-      { frameId: 0 },
-      { frameId: 1 },
-    ]);
+    stub(chrome.webNavigation, "getAllFrames", async () => [{ frameId: 0 }, { frameId: 1 }]);
 
     stub(chrome.tabs, "sendMessage", async (tabId, message, options) => {
       if (message.messageType == "getHintDescriptors") {
@@ -38,5 +35,22 @@ context("HintCoordinator", () => {
       { frameId: 0, frameIdToHintDescriptors: { "1": frameIdToHintDescriptors[1] } },
       { frameId: 1, frameIdToHintDescriptors: { "0": frameIdToHintDescriptors[0] } },
     ], receivedMessages);
+  });
+});
+
+context("Selecting frames", () => {
+  should("nextFrame", async () => {
+    let focusedFrames = [];
+    stub(chrome.webNavigation, "getAllFrames", async () => [{ frameId: 1 }, { frameId: 2 }]);
+    stub(chrome.tabs, "sendMessage", async (tabId, message, options) => {
+      if (message.handler == "isWindowFocused") {
+        return options.frameId == 2;
+      } else if (message.handler == "focusFrame") {
+        focusedFrames.push(options.frameId);
+      }
+    });
+
+    await BackgroundCommands.nextFrame(1, 0);
+    assert.equal([1], focusedFrames);
   });
 });
