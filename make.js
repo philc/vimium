@@ -51,8 +51,8 @@ async function buildStorePackage() {
   };
   // cd into "dist/vimium" before building the zip, so that the files in the zip don't each have the
   // path prefix "dist/vimium".
-  // --filesync ensures that files in the archive which are no longer on disk are deleted. It's equivalent to
-  // removing the zip file before the build.
+  // --filesync ensures that files in the archive which are no longer on disk are deleted. It's
+  // equivalent to removing the zip file before the build.
   const zipCommand = "cd dist/vimium && zip -r --filesync ";
 
   await shell("rm", ["-rf", "dist/vimium"]);
@@ -65,14 +65,15 @@ async function buildStorePackage() {
   ]);
   await shell("rsync", rsyncOptions);
 
-  // Firefox needs clipboardRead and clipboardWrite for commands like "copyCurrentUrl", but Chrome does not.
-  // See #4186.
+  // Firefox needs clipboardRead and clipboardWrite for commands like "copyCurrentUrl", but Chrome
+  // does not. See #4186.
   const firefoxPermissions = Array.from(manifestContents.permissions);
   firefoxPermissions.push("clipboardRead");
   firefoxPermissions.push("clipboardWrite");
 
   writeDistManifest(Object.assign({}, manifestContents, {
-    // Chrome considers this key invalid in manifest.json, so we add it only during the Firefox build phase.
+    // Chrome considers this key invalid in manifest.json, so we add it only during the Firefox
+    // build phase.
     browser_specific_settings: {
       gecko: {
         strict_min_version: "62.0",
@@ -118,8 +119,9 @@ const runDomTests = async () => {
 
   await (async () => {
     const browser = await puppeteer.launch({
-      // NOTE(philc): "Disabling web security" is required for vomnibar_test.js, because we have a file://
-      // page accessing an iframe, and Chrome prevents this because it's a cross-origin request.
+      // NOTE(philc): "Disabling web security" is required for vomnibar_test.js, because we have a
+      // file:// page accessing an iframe, and Chrome prevents this because it's a cross-origin
+      // request.
       args: ["--disable-web-security"],
     });
 
@@ -145,20 +147,21 @@ const runDomTests = async () => {
       (request) => console.log(console.log(`${request.failure().errorText} ${request.url()}`)),
     );
 
-    // Shoulda.js is an ECMAScript module, and those cannot be loaded over file:/// protocols due to a Chrome
-    // security restriction, and this test suite loads the dom_tests.html page from the local file system. To
-    // (painfully) work around this, we're injecting the contents of shoulda.js into the page. We munge the
-    // file contents and assign it to a string (`shouldaJsContents`), and then have the page itself
-    // document.write that string during load (the document.write call is in dom_tests.html).
-    // Another workaround would be to spin up a local file server here and load dom_tests from the network.
+    // Shoulda.js is an ECMAScript module, and those cannot be loaded over file:/// protocols due to
+    // a Chrome security restriction, and this test suite loads the dom_tests.html page from the
+    // local file system. To (painfully) work around this, we're injecting the contents of
+    // shoulda.js into the page. We munge the file contents and assign it to a string
+    // (`shouldaJsContents`), and then have the page itself document.write that string during load
+    // (the document.write call is in dom_tests.html). Another workaround would be to spin up a
+    // local file server here and load dom_tests from the network.
     // Discussion: https://bugs.chromium.org/p/chromium/issues/detail?id=824651
     let shouldaJsContents = (await Deno.readTextFile("./tests/vendor/shoulda.js")) +
       "\n" +
       // Export the module contents to window.shoulda, which is what the tests expect.
       "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, tearDown};";
 
-    // Remove the `export` statement from the shoulda.js module. Because we're using document.write to add
-    // this, an export statement will cause a JS error and halt further parsing.
+    // Remove the `export` statement from the shoulda.js module. Because we're using document.write
+    // to add this, an export statement will cause a JS error and halt further parsing.
     shouldaJsContents = shouldaJsContents.replace(/export {[^}]+}/, "");
 
     await page.evaluateOnNewDocument((content) => {
@@ -174,9 +177,9 @@ const runDomTests = async () => {
       return shoulda.getStats().failed;
     });
 
-    // NOTE(philc): At one point in development, I noticed that the output from Deno would suddenly pause,
-    // prior to the tests fully finishing, so closing the browser here may be racy. If it occurs again, we may
-    // need to add "await delay(200)".
+    // NOTE(philc): At one point in development, I noticed that the output from Deno would suddenly
+    // pause, prior to the tests fully finishing, so closing the browser here may be racy. If it
+    // occurs again, we may need to add "await delay(200)".
     await browser.close();
     if (receivedErrorOutput) {
       throw "The tests fail because there was a page-level error.";
