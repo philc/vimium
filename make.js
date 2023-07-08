@@ -8,6 +8,7 @@ import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
 import { desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 import * as shoulda from "./tests/vendor/shoulda.js";
+import JSON5 from "https://deno.land/x/json5/mod.ts";
 
 const projectPath = new URL(".", import.meta.url).pathname;
 
@@ -40,8 +41,11 @@ async function buildStorePackage() {
     "test_harnesses",
     "tests",
   ];
-  const fileContents = await Deno.readTextFile("./manifest.json");
-  const manifestContents = JSON.parse(fileContents);
+
+  // Chrome's manifest.json supports JavaScript comment syntax. However, the Chrome Store rejects
+  // manifests with JavaScript comments in them! So here we use the JSON5 library, rather than JSON
+  // library, to parse our manifest.json and remove its comments.
+  const manifestContents = JSON5.parse(await Deno.readTextFile("./manifest.json"));
   const rsyncOptions = ["-r", ".", "dist/vimium"].concat(
     ...excludeList.map((item) => ["--exclude", item]),
   );
