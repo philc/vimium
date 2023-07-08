@@ -404,9 +404,9 @@ chrome.webNavigation.onCommitted.addListener(async ({ tabId, frameId }) => {
   }).catch(swallowError);
 });
 
-// Returns all frame IDs for the given tab.
-// Note that in Chrome, this will omit frame IDs for iFrames which contain chrome-extension:// URLs,
-// even if those pages are listed in Vimium's web_accessible_resources in manifest.json.
+// Returns all frame IDs for the given tab. Note that in Chrome, this will omit frame IDs for frames
+// or iFrames which contain chrome-extension:// URLs, even if those pages are listed in Vimium's
+// web_accessible_resources in manifest.json.
 async function getFrameIdsForTab(tabId) {
   // getAllFrames unfortunately excludes frames and iframes from chrome-extension:// URLs.
   // In Firefox, by contrast, pages with moz-extension:// URLs are included.
@@ -427,13 +427,17 @@ const HintCoordinator = {
   async prepareToActivateLinkHintsMode(
     tabId,
     originatingFrameId,
-    { modeIndex, isVimiumHelpDialog },
+    { modeIndex, isVimiumHelpDialog, isVimiumOptionsPage },
   ) {
     const frameIds = await getFrameIdsForTab(tabId);
-    // If link hints was triggered on the Vimium help dialog (which is shown inside an iframe), we
-    // cannot directly retrieve that iFrame's frameId using the getFrameIdsForTab. However, we do
-    // have that frameId on the message sent by the help dialog page to activate link hints.
-    if (isVimiumHelpDialog) frameIds.push(originatingFrameId);
+    // If link hints was triggered on the Options page, or the Vimium help dialog (which is shown
+    // inside an iframe), we cannot directly retrieve those frameIds using the getFrameIdsForTab.
+    // However, as a workaround, if those pages were the pages activating hints, their frameId is
+    // equal to originatingFrameId
+    const isExtensionPage = isVimiumHelpDialog || isVimiumOptionsPage;
+    if (isExtensionPage && !frameIds.includes(originatingFrameId)) {
+      frameIds.push(originatingFrameId);
+    }
     const timeout = 3000;
     let promises = frameIds.map(async (frameId) => {
       let promise = chrome.tabs.sendMessage(
@@ -601,7 +605,7 @@ const sendRequestHandlers = {
 Utils.addChromeRuntimeOnMessageListener(
   Object.keys(sendRequestHandlers),
   async function (request, sender) {
-    Utils.debugLog("background main.js: chrome.runtime.onMessage", request, sender);
+    Utils.debugLog("main.js: chrome.runtime.onMessage", request.handler, request, sender);
     // NOTE(philc): We expect all messages to come from a content script in a tab. I've observed in
     // Firefox when the extension is first installed, domReady and initializeFrame messages come from
     // content scripts in about:blank URLs, which have a null sender.tab. I don't know what this

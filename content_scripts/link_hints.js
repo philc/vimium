@@ -146,6 +146,7 @@ const HintCoordinator = {
       handler: "prepareToActivateLinkHintsMode",
       modeIndex: availableModes.indexOf(mode),
       isVimiumHelpDialog: window.isVimiumHelpDialog,
+      isVimiumOptionsPage: window.isVimiumOptionsPage
     });
   },
 
