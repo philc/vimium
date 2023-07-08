@@ -9,18 +9,7 @@
     "service_worker": "background_scripts/background.js",
     "type": "module"
     // Uncomment when developing in Firefox.
-    // "scripts": [
-    //   "lib/utils.js",
-    //   "lib/settings.js",
-    //   "background_scripts/bg_utils.js",
-    //   "background_scripts/commands.js",
-    //   "background_scripts/exclusions.js",
-    //   "background_scripts/completion_engines.js",
-    //   "background_scripts/completion_search.js",
-    //   "background_scripts/completion.js",
-    //   "background_scripts/marks.js",
-    //   "background_scripts/main.js"
-    // ]
+    // "scripts": ["background_scripts/background.js"]
   },
   "options_ui": {
     "page": "pages/options.html",
