@@ -75,7 +75,7 @@ async function buildStorePackage() {
   firefoxPermissions.push("clipboardRead");
   firefoxPermissions.push("clipboardWrite");
 
-  writeDistManifest(Object.assign({}, manifestContents, {
+  await writeDistManifest(Object.assign({}, manifestContents, {
     // Chrome considers this key invalid in manifest.json, so we add it only during the Firefox
     // build phase.
     browser_specific_settings: {
@@ -88,14 +88,14 @@ async function buildStorePackage() {
   await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${vimiumVersion}.zip .`]);
 
   // Build the Chrome Store package.
-  writeDistManifest(manifestContents);
+  await writeDistManifest(manifestContents);
   await shell("bash", [
     "-c",
     `${zipCommand} ../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`,
   ]);
 
   // Build the Chrome Store dev package.
-  writeDistManifest(Object.assign({}, manifestContents, {
+  await writeDistManifest(Object.assign({}, manifestContents, {
     name: "Vimium Canary",
     description: "This is the development branch of Vimium (it is beta software).",
   }));
