@@ -1,6 +1,8 @@
 {
   "version": "2",
   "remote": {
+    "https://cdn.skypack.dev/-/json5@v2.2.3-595sOcismSLIYZuuBGYo/dist=es2019,mode=imports/optimized/json5.js": "e3902909af865e1bab65bf170d79bc0d6f72f2c3626601aed12d9b0aaee3169c",
+    "https://cdn.skypack.dev/json5": "9e731bca7ee24e6532af2f3745357ff72c9be405ebb2b0eba8489e589ba13ee8",
     "https://deno.land/std@0.122.0/_util/assert.ts": "2f868145a042a11d5ad0a3c748dcf580add8a0dbc0e876eaa0026303a5488f58",
     "https://deno.land/std@0.122.0/_util/os.ts": "dfb186cc4e968c770ab6cc3288bd65f4871be03b93beecae57d657232ecffcac",
     "https://deno.land/std@0.122.0/fs/_util.ts": "f2ce811350236ea8c28450ed822a5f42a0892316515b1cd61321dec13569c56b",
@@ -253,6 +255,7 @@
     "https://deno.land/x/drake@v1.5.1/lib/tasks.ts": "4da700366fe15881c665e90d1668b60aafe0af2e0c8d10c2a48739986f971fcc",
     "https://deno.land/x/drake@v1.5.1/lib/utils.ts": "55e56f4f0fb119374ae063a907e2bbe325443f6ea9f88408612ac619ac617fdc",
     "https://deno.land/x/drake@v1.5.1/mod.ts": "56d43e13b0c80dbb473944b5554567592299bba228947c6b3c9dc0f68a217d74",
+    "https://deno.land/x/json5@v1.0.0/mod.ts": "0975ee46086985b2e354e901d052f50b3c4b0ed828d0563492b6a02589402574",
     "https://deno.land/x/puppeteer@16.2.0/mod.ts": "52a47aa1850fc0a8255d6c8c462f4ab7e43104d342e6de7bda334221ca8bdcac",
     "https://deno.land/x/puppeteer@16.2.0/src/deno/BrowserFetcher.ts": "6be7a586667b429138994a4955b2339fc58af9b6d08378672c8a2b052045e308",
     "https://deno.land/x/puppeteer@16.2.0/src/deno/BrowserRunner.ts": "a32b6d2df712afce5f0707aabb6fbcd1e9b1b20e90fc5c34daa081960a638e62",
