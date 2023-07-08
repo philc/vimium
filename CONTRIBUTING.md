@@ -76,14 +76,10 @@ Vimium is written in Javascript. To install Vimium from source:
 
 **On Firefox:**
 
-For 'local storage' to work while using the temporary addon, you need to add an 'application' section to the
-manifest with an arbitrary ID that is unique for you, for example:
+Firefox needs a modified version of the manifest.json that's used for Chrome. To generate this,
+run
 
-    "applications": {
-      "gecko": {
-        "id": "vimium@example.net"
-      }
-    },
+`./make.js write-firefox-manifest`
 
 After that:
 

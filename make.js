@@ -56,6 +56,13 @@ function createFirefoxManifest(manifest) {
   return manifest;
 }
 
+async function parseManifestFile() {
+  // Chrome's manifest.json supports JavaScript comment syntax. However, the Chrome Store rejects
+  // manifests with JavaScript comments in them! So here we use the JSON5 library, rather than JSON
+  // library, to parse our manifest.json and remove its comments.
+  return JSON5.parse(await Deno.readTextFile("./manifest.json"));
+}
+
 // Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/.
 async function buildStorePackage() {
   const excludeList = [
@@ -71,10 +78,7 @@ async function buildStorePackage() {
     "tests",
   ];
 
-  // Chrome's manifest.json supports JavaScript comment syntax. However, the Chrome Store rejects
-  // manifests with JavaScript comments in them! So here we use the JSON5 library, rather than JSON
-  // library, to parse our manifest.json and remove its comments.
-  const chromeManifest = JSON5.parse(await Deno.readTextFile("./manifest.json"));
+  const chromeManifest = await parseManifestFile();
   const rsyncOptions = ["-r", ".", "dist/vimium"].concat(
     ...excludeList.map((item) => ["--exclude", item]),
   );
@@ -234,6 +238,12 @@ task("test", [], async () => {
 desc("Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/");
 task("package", [], async () => {
   await buildStorePackage();
+});
+
+desc("Replaces manifest.json with a Firefox-compatible version, for development");
+task("write-firefox-manifest", [], async () => {
+  const firefoxManifest = createFirefoxManifest(await parseManifestFile());
+  await Deno.writeTextFile("./manifest.json", JSON.stringify(firefoxManifest, null, 2));
 });
 
 run();
