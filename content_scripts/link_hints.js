@@ -183,11 +183,13 @@ const HintCoordinator = {
   // every frame.
   activateMode({ frameId, frameIdToHintDescriptors, modeIndex, originatingFrameId }) {
     // We do not receive the frame's own hint descritors back from the background page. Instead, we
-    // merge them with the hint descriptors from other frames here.
-    frameIdToHintDescriptors[frameId] = this.localHintDescriptors;
+    // merge them with the hint descriptors from other frames here. Note that
+    // this.localHintDescriptors can be null if "getHintDescriptors" failed in this frame when it
+    // last called, or if this frame didn't exist at the time that hints were requested.
+    frameIdToHintDescriptors[frameId] = this.localHintDescriptors || [];
     this.localHintDescriptors = null;
 
-    const hintDescriptors = Object.keys(frameIdToHintDescriptors || {})
+    const hintDescriptors = Object.keys(frameIdToHintDescriptors)
       .sort()
       .map((frame) => frameIdToHintDescriptors[frame])
       .flat(1);
@@ -1206,9 +1208,9 @@ var LocalHints = {
   // element.
   //
   getLocalHints(requireHref) {
-    // We need documentElement to be ready in order to find links.
     let hint, nonOverlappingElements, rect, visibleElement;
     let element;
+    // We need documentElement to be ready in order to find links.
     if (!document.documentElement) {
       return [];
     }
