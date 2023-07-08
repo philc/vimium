@@ -1,3 +1,11 @@
+2.0.0 (unreleased)
+
+- Support manifest v3. Chrome is requiring all extensions support this. This required a partial
+  rewrite and many changes. Please report any issues [here](https://github.com/philc/vimium/issues).
+- Revamped the UI for the action bar, which configures which keys Vimium ignores on a particular
+  site.
+- Remove the use of window.unload handlers, in preparation for Chrome's bfcache.
+
 1.67.7 (2023-07-12)
 
 - Fix an issue where focusing the google search box puts the cursor at the start, rather than end,
