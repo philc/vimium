@@ -94,7 +94,6 @@
     },
     "default_popup": "pages/action.html"
   },
-  // TODO(philc): Manifest v3
   "web_accessible_resources": [
     {
       "resources": [
