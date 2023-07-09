@@ -319,36 +319,24 @@ const setScrollPosition = ({ scrollX, scrollY }) =>
     }
   });
 
-const flashFrame = (function () {
+const flashFrame = (() => {
   let highlightedFrameElement = null;
-
-  return function () {
+  return () => {
     if (highlightedFrameElement == null) {
-      // TODO(philc): Make this a regular if body, not a closure.
-      highlightedFrameElement = (function () {
-        // Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
+      highlightedFrameElement = DomUtils.createElement("div");
 
-        highlightedFrameElement = DomUtils.createElement("div");
-        // Firefox doesn't support createShadowRoot, so guard against its non-existance.
-        // https://hacks.mozilla.org/2018/10/firefox-63-tricks-and-treats/ says
-        // Firefox 63 has enabled Shadow DOM v1 by default
-        const _shadowDOM = highlightedFrameElement.attachShadow
-          ? highlightedFrameElement.attachShadow({ mode: "open" })
-          : highlightedFrameElement;
+      // Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
+      const shadowDOM = highlightedFrameElement.attachShadow({ mode: "open" });
 
-        // Inject stylesheet.
-        const _styleSheet = DomUtils.createElement("style");
-        _styleSheet.innerHTML = `@import url(\"${
-          chrome.runtime.getURL("content_scripts/vimium.css")
-        }\");`;
-        _shadowDOM.appendChild(_styleSheet);
+      // Inject stylesheet.
+      const styleEl = DomUtils.createElement("style");
+      const vimiumCssUrl = chrome.runtime.getURL("content_scripts/vimium.css");
+      styleEl.textContent = `@import url("${vimiumCssUrl}");`;
+      shadowDOM.appendChild(styleEl);
 
-        const _frameEl = DomUtils.createElement("div");
-        _frameEl.className = "vimiumReset vimiumHighlightedFrame";
-        _shadowDOM.appendChild(_frameEl);
-
-        return highlightedFrameElement;
-      })();
+      const frameEl = DomUtils.createElement("div");
+      frameEl.className = "vimiumReset vimiumHighlightedFrame";
+      shadowDOM.appendChild(frameEl);
     }
 
     document.documentElement.appendChild(highlightedFrameElement);
