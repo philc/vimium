@@ -247,10 +247,6 @@ const installListener = (element, event, callback) => {
   element.addEventListener(
     event,
     forTrusted(function () {
-      // TODO(philc): I think this workaround can be removed?
-      if (typeof global === "undefined" || global === null) { // See #2800.
-        Object.assign(window, root);
-      }
       if (extensionHasBeenUnloaded()) {
         console.log("Vimium extension has been unloaded. Unloading content script.");
         onUnload();
