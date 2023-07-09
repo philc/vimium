@@ -176,10 +176,11 @@ const installModes = function () {
 // Complete initialization work that should be done prior to DOMReady.
 //
 const initializePreDomReady = async function () {
+  // Run this as early as possible, so the page can't register any event handlers before us.
+  installListeners();
   // NOTE(philc): I'm blocking further Vimium initialization on this, for simplicity. If necessary
   // we could allow other tasks to run concurrently.
   await Settings.onLoaded();
-  installListeners();
   checkIfEnabledForUrl(document.hasFocus());
 
   const requestHandlers = {
@@ -265,13 +266,10 @@ const installListener = (element, event, callback) => {
   );
 };
 
-//
 // Installing or uninstalling listeners is error prone. Instead we elect to check isEnabledForUrl
 // each time so we know whether the listener should run or not.
-// Run this as early as possible, so the page can't register any event handlers before us.
 // Note: We install the listeners even if Vimium is disabled. See comment in commit
 // 6446cf04c7b44c3d419dc450a73b60bcaf5cdf02.
-//
 const installListeners = Utils.makeIdempotent(function () {
   // Key event handlers fire on window before they do on document. Prefer window for key events so
   // the page can't set handlers to grab the keys before us.
