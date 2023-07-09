@@ -389,10 +389,9 @@ root.lastFocusedInput = (function () {
   return () => recentlyFocusedElement;
 })();
 
-// TODO(philc): Update this comment to ensure it's still fully accurate.
 // Checks if Vimium should be enabled or not in this frame. As a side effect, it also informs the
-// background page whether this frame has the focus, allowing the background page to track the
-// active frame's URL and set the page icon.
+// background page whether this frame has the focus, allowing the background page to change the
+// Vimium Action icon to indicate whether the curent page is excluded in Vimium.
 const checkIfEnabledForUrl = async (frameIsFocused) => {
   if (frameIsFocused == null) {
     frameIsFocused = windowIsFocused();
