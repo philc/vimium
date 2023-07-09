@@ -277,10 +277,7 @@ const installListeners = Utils.makeIdempotent(function () {
   // the page can't set handlers to grab the keys before us.
   const events = ["keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll"];
   for (const type of events) {
-    // TODO(philc): Can we remove this extra closure?
-    ((type) => installListener(window, type, (event) => handlerStack.bubbleEvent(type, event)))(
-      type,
-    );
+    installListener(window, type, (event) => handlerStack.bubbleEvent(type, event));
   }
   installListener(
     document,
