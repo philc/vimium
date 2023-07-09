@@ -2,13 +2,6 @@
 // This content script must be run prior to domReady so that we perform some operations very early.
 //
 
-const root = {};
-// On Firefox, sometimes the variables assigned to window are lost (bug 1408996), so we reinstall them.
-// NOTE(mrmr1993): This bug leads to catastrophic failure (ie. nothing works and errors abound).
-DomUtils.documentReady(function () {
-  Object.assign(window, root);
-});
-
 let isEnabledForUrl = true;
 const isIncognitoMode = chrome.extension.inIncognitoContext;
 let normalMode = null;
@@ -373,13 +366,12 @@ const focusThisFrame = function (request) {
 };
 
 // Used by focusInput command.
-root.lastFocusedInput = (function () {
+globalThis.lastFocusedInput = (function () {
   // Track the most recently focused input element.
   let recentlyFocusedElement = null;
   window.addEventListener(
     "focus",
     forTrusted(function (event) {
-      const DomUtils = window.DomUtils || root.DomUtils; // Workaround FF bug 1408996.
       if (DomUtils.isEditable(event.target)) {
         recentlyFocusedElement = event.target;
       }
@@ -440,8 +432,8 @@ var checkEnabledAfterURLChange = forTrusted(function (request) {
 
 // If we are in the help dialog iframe, then HelpDialog is already defined with the necessary
 // functions.
-if (root.HelpDialog == null) {
-  root.HelpDialog = {
+if (globalThis.HelpDialog == null) {
+  globalThis.HelpDialog = {
     helpUI: null,
     isShowing() {
       return this.helpUI && this.helpUI.showing;
@@ -476,7 +468,7 @@ if (root.HelpDialog == null) {
 initializePreDomReady();
 DomUtils.documentReady(initializeOnDomReady);
 
-Object.assign(root, {
+Object.assign(globalThis, {
   handlerStack,
   frameId,
   windowIsFocused,
@@ -485,5 +477,3 @@ Object.assign(root, {
   // Exported only for tests.
   installModes,
 });
-
-Object.assign(window, root);
