@@ -386,7 +386,12 @@ const Scroller = {
     // smooth, continuous scrolls, and is just an optimization.
     if (!CoreScroller.wouldNotInitiateScroll()) {
       const element = findScrollableElement(activatedElement, direction, amount, factor);
-      const elementAmount = factor * getDimension(element, direction, amount);
+      let elementAmount = factor * getDimension(element, direction, amount);
+      const pageOverlap = Settings.get('pageOverlap');
+      if (direction === "y" && Math.abs(elementAmount) > 3 * pageOverlap) {
+        const sign = getSign(elementAmount);
+        elementAmount -= sign * pageOverlap;
+      }
       return CoreScroller.scroll(element, direction, elementAmount, continuous);
     }
   },

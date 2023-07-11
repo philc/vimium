@@ -283,6 +283,7 @@ const Options = {
   regexFindMode: CheckBoxOption,
   ignoreKeyboardLayout: CheckBoxOption,
   scrollStepSize: NumberOption,
+  pageOverlap: NumberOption,
   smoothScroll: CheckBoxOption,
   grabBackFocus: CheckBoxOption,
   searchEngines: TextOption,
