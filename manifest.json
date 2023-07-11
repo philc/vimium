@@ -91,6 +91,9 @@
         "pages/hud.html",
         "pages/help_dialog.html",
         "pages/completion_engines.html",
+        // This allows one to script the reloading of Vimium.
+        // This should only be enabled in development.
+        // "pages/reload.html",
         "_favicon/*"
       ],
       "matches": ["<all_urls>"]
