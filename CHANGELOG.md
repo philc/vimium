@@ -1,3 +1,8 @@
+1.67.7 (2023-07-12)
+
+- Fix an issue where focusing the google search box puts the cursor at the start, rather than end,
+  of the search box. ([#4247](https://github.com/philc/vimium/issues/4247))
+
 1.67.6 (2022-12-19)
 
 - Fix a spurious issue preventing approval on the Mozilla addons site
