@@ -214,7 +214,12 @@ const initializePreDomReady = async function () {
       // Some requests are so frequent and noisy (like checkEnabledAfterURLChange docs.google.com)
       // that we silence debug logging for just those requests so the rest remains useful.
       if (!request.silenceLogging) {
-        Utils.debugLog("Vimium frontend: chrome.runtime.onMessage", request);
+        Utils.debugLog(
+          "frontend.js: onMessage:%otype:%o",
+          request.handler,
+          request.messageType,
+          // request // Often useful for debugging.
+        );
       }
       request.isTrusted = true;
       // Some request are handled elsewhere; ignore them.
