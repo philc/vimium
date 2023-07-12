@@ -623,7 +623,14 @@ const sendRequestHandlers = {
 Utils.addChromeRuntimeOnMessageListener(
   Object.keys(sendRequestHandlers),
   async function (request, sender) {
-    Utils.debugLog("main.js: chrome.runtime.onMessage", request.handler, request, sender);
+    Utils.debugLog(
+      "main.js: onMessage:%ourl:%otab:%oframe:%o",
+      request.handler,
+      sender.url.replace(/https?:\/\//, ""),
+      sender.tab?.id,
+      sender.frameId,
+      // request // Often useful for debugging.
+    );
     // NOTE(philc): We expect all messages to come from a content script in a tab. I've observed in
     // Firefox when the extension is first installed, domReady and initializeFrame messages come from
     // content scripts in about:blank URLs, which have a null sender.tab. I don't know what this
