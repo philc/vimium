@@ -174,9 +174,9 @@ class UIComponent {
           if (this.options && (this.options.sourceFrameId != null)) {
             chrome.runtime.sendMessage({
               handler: "sendMessageToFrames",
+              frameId: this.options.sourceFrameId,
               message: {
                 handler: "focusFrame",
-                frameId: this.options.sourceFrameId,
                 forceFocusThisFrame: true,
               },
             });

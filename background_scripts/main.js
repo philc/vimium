@@ -107,7 +107,11 @@ if (!globalThis.isUnitTests) {
 }
 
 const muteTab = (tab) => chrome.tabs.update(tab.id, { muted: !tab.mutedInfo.muted });
-const toggleMuteTab = function ({ tab: currentTab, registryEntry, tabId, frameId }) {
+const toggleMuteTab = (request, sender) => {
+  const currentTab = request.tab;
+  const tabId = request.tabId;
+  const registryEntry = request.registryEntry;
+
   if ((registryEntry.options.all != null) || (registryEntry.options.other != null)) {
     // If there are any audible, unmuted tabs, then we mute them; otherwise we unmute any muted tabs.
     chrome.tabs.query({ audible: true }, function (tabs) {
@@ -118,7 +122,7 @@ const toggleMuteTab = function ({ tab: currentTab, registryEntry, tabId, frameId
       const audibleUnmutedTabs = tabs.filter((t) => t.audible && !t.mutedInfo.muted);
       if (audibleUnmutedTabs.length >= 0) {
         chrome.tabs.sendMessage(tabId, {
-          frameId,
+          frameId: sender.frameId,
           handler: "showMessage",
           message: `Muting ${audibleUnmutedTabs.length} tab(s).`,
         });
@@ -127,7 +131,7 @@ const toggleMuteTab = function ({ tab: currentTab, registryEntry, tabId, frameId
         }
       } else {
         chrome.tabs.sendMessage(tabId, {
-          frameId,
+          frameId: sender.frameId,
           handler: "showMessage",
           message: "Unmuting all muted tabs.",
         });
@@ -140,9 +144,17 @@ const toggleMuteTab = function ({ tab: currentTab, registryEntry, tabId, frameId
     });
   } else {
     if (currentTab.mutedInfo.muted) {
-      chrome.tabs.sendMessage(tabId, { frameId, handler: "showMessage", message: "Unmuted tab." });
+      chrome.tabs.sendMessage(tabId, {
+        frameId: sender.frameId,
+        handler: "showMessage",
+        message: "Unmuted tab.",
+      });
     } else {
-      chrome.tabs.sendMessage(tabId, { frameId, handler: "showMessage", message: "Muted tab." });
+      chrome.tabs.sendMessage(tabId, {
+        frameId: sender.frameId,
+        handler: "showMessage",
+        message: "Muted tab.",
+      });
     }
     muteTab(currentTab);
   }
@@ -287,27 +299,29 @@ const BackgroundCommands = {
     const promises = frameIds.map(async (frameId) => {
       // It is possible that this sendMessage call fails, if a frame gets unloaded while the request
       // is in flight.
-      let error = false;
-      const focused = await (chrome.tabs.sendMessage(tabId, { handler: "isWindowFocused" }, {
+      let isError = false;
+      const status = await (chrome.tabs.sendMessage(tabId, { handler: "getFocusStatus" }, {
         frameId: frameId,
       }).catch((err) => {
-        error = true;
+        isError = true;
       }));
-      return { frameId, focused, error };
+      return { frameId, status, isError };
     });
 
-    const frameResponses = await Promise.all(promises);
-    const focusedFrameId = frameResponses.find(({ frameId, focused }) => focused)?.frameId;
+    const frameResponses = (await Promise.all(promises)).filter((r) => !r.isError);
+
+    const focusedFrameId = frameResponses.find(({ status }) => status.focused)?.frameId;
     // It's theoretically possible that focusedFrameId is null if the user switched tabs or away
     // from the browser while the request is in flight.
     if (focusedFrameId == null) return;
 
     // Prune any frames which gave an error response (i.e. they disappeared).
-    frameIds = frameResponses.filter((r) => !r.error).map((r) => r.frameId);
+    frameIds = frameResponses.filter((r) => r.status.focusable).map((r) => r.frameId);
 
     const index = frameIds.indexOf(focusedFrameId);
     count = count ?? 1;
     const nextIndex = (index + count) % frameIds.length;
+    if (index == nextIndex) return;
     await chrome.tabs.sendMessage(tabId, { handler: "focusFrame", highlight: true }, {
       frameId: frameIds[nextIndex],
     });
@@ -517,8 +531,8 @@ const portHandlers = {
 };
 
 const sendRequestHandlers = {
-  runBackgroundCommand(request) {
-    return BackgroundCommands[request.registryEntry.command](request);
+  runBackgroundCommand(request, sender) {
+    return BackgroundCommands[request.registryEntry.command](request, sender);
   },
   // getCurrentTabUrl is used by the content scripts to get their full URL, because window.location
   // cannot help with Chrome-specific URLs like "view-source:http:..".
@@ -645,7 +659,7 @@ Utils.addChromeRuntimeOnMessageListener(
     // corresponds to. Since we expect a valid sender.tab, ignore those messages.
     if (sender.tab == null) return;
     await Settings.onLoaded();
-    request = Object.assign({ count: 1, frameId: sender.frameId }, request, {
+    request = Object.assign({ count: 1 }, request, {
       tab: sender.tab,
       tabId: sender.tab.id,
     });
