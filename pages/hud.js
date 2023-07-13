@@ -22,15 +22,6 @@ const setTextInInputElement = function (inputElement, text) {
 document.addEventListener("DOMContentLoaded", async () => {
   await Settings.onLoaded();
   DomUtils.injectUserCss();
-
-  const response = await chrome.runtime.sendMessage({
-    handler: "initializeFrame",
-    frameIsFocused: false,
-    url: window.location.toString(),
-  });
-  Utils._isFirefox = response.isFirefox;
-  Utils._firefoxVersion = response.firefoxVersion;
-  Utils._browserInfoLoaded = true;
 });
 
 const onKeyEvent = function (event) {
@@ -202,13 +193,10 @@ const handlers = {
       UIComponentServer.postMessage({ name: "pasteResponse", data: value });
     });
   },
-
-  settings({ isFirefox }) {
-    return Utils.isFirefox = () => isFirefox;
-  },
 };
 
-UIComponentServer.registerHandler(function ({ data }) {
+UIComponentServer.registerHandler(async function ({ data }) {
+  await Utils.populateBrowserInfo();
   const handler = handlers[data.name || data];
   if (handler) {
     return handler(data);

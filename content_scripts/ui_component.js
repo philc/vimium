@@ -98,10 +98,6 @@ class UIComponent {
           };
         });
       });
-      // TODO(philc): Is this still required? If so, document why.
-      if (Utils.isFirefox()) {
-        this.postMessage({ name: "settings", isFirefox: true });
-      }
     });
   }
 
