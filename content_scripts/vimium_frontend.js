@@ -33,6 +33,12 @@ const windowIsFocused = (function () {
   return () => windowHasFocus;
 })();
 
+// True if this window should be focusable by various Vim commands (e.g. "nextFrame").
+const isWindowFocusable = () => {
+  // Avoid focusing tiny frames. See #1317.
+  return !DomUtils.windowIsTooSmall() && (document.body?.tagName.toLowerCase() != "frameset");
+};
+
 // This is set by initializeFrame. We can only get this frame's ID from the background page.
 let frameId = null;
 
@@ -177,8 +183,11 @@ const initializePreDomReady = async function () {
   checkIfEnabledForUrl(document.hasFocus());
 
   const requestHandlers = {
-    isWindowFocused(request, sender) {
-      return windowIsFocused();
+    getFocusStatus(request, sender) {
+      return {
+        focused: windowIsFocused(),
+        focusable: isWindowFocusable(),
+      };
     },
     focusFrame(request) {
       focusThisFrame(request);
@@ -191,6 +200,8 @@ const initializePreDomReady = async function () {
     setScrollPosition,
     checkEnabledAfterURLChange,
     runInTopFrame({ sourceFrameId, registryEntry }) {
+      // TODO(philc): it seems to me that we should be able to get rid of this runInTopFrame
+      // command, and instead use chrome.tabs.sendMessage with a frameId 0 from the background page.
       if (DomUtils.isTopFrame()) {
         return NormalModeCommands[registryEntry.command](sourceFrameId, registryEntry);
       }
@@ -346,16 +357,10 @@ const flashFrame = (() => {
 // Called from the backend in order to change frame focus.
 //
 const focusThisFrame = function (request) {
-  if (!request.forceFocusThisFrame) {
-    // Avoid focusing tiny frames. See #1317.
-    const shouldFocus = !DomUtils.windowIsTooSmall() &&
-      (document.body?.tagName.toLowerCase() != "frameset");
-    if (!shouldFocus) {
-      // Cancel and tell the background page to focus the next frame instead.
-      chrome.runtime.sendMessage({ handler: "nextFrame" });
-      return;
-    }
-  }
+  // It should never be the case that we get a forceFocusThisFrame request on a window that isn't
+  // focusable, because the background script checks that the window is focusable before sending the
+  // focusFrame message.
+  if (!request.forceFocusThisFrame && !isWindowFocusable()) return;
 
   Utils.nextTick(function () {
     window.focus();

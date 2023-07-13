@@ -36,9 +36,7 @@ class NormalMode extends KeyHandlerMode {
         `You have asked Vimium to perform ${count} repetitions of the ` +
           `command: ${registryEntry.description}.\n Are you sure you want to continue?`,
       );
-      if (!result) {
-        return;
-      }
+      if (!result) return;
     }
 
     if (registryEntry.topFrame) {

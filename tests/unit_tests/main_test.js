@@ -43,8 +43,8 @@ context("Selecting frames", () => {
     let focusedFrames = [];
     stub(chrome.webNavigation, "getAllFrames", async () => [{ frameId: 1 }, { frameId: 2 }]);
     stub(chrome.tabs, "sendMessage", async (tabId, message, options) => {
-      if (message.handler == "isWindowFocused") {
-        return options.frameId == 2;
+      if (message.handler == "getFocusStatus") {
+        return { focused: options.frameId == 2, focusable: true };
       } else if (message.handler == "focusFrame") {
         focusedFrames.push(options.frameId);
       }
