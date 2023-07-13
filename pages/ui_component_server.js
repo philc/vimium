@@ -21,9 +21,9 @@ var UIComponentServer = {
 
   portOpen(ownerPagePort) {
     this.ownerPagePort = ownerPagePort;
-    this.ownerPagePort.onmessage = (event) => {
+    this.ownerPagePort.onmessage = async (event) => {
       if (this.handleMessage) {
-        return this.handleMessage(event);
+        return await this.handleMessage(event);
       }
     };
     this.registerIsReady();

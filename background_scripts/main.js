@@ -623,6 +623,13 @@ const sendRequestHandlers = {
     return response;
   },
 
+  async getBrowserInfo() {
+    return {
+      isFirefox: BgUtils.isFirefox(),
+      firefoxVersion: await BgUtils.getFirefoxVersion(),
+    };
+  },
+
   async reloadVimiumExtension() {
     // Clear the background page's console log, if its console window is open.
     console.clear();
