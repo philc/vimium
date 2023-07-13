@@ -35,7 +35,7 @@ const Marks = {
   },
 
   showMessage(message, keyChar) {
-    HUD.showForDuration(`${message} \"${keyChar}\".`, 1000);
+    HUD.show(`${message} \"${keyChar}\".`, 1000);
   },
 
   // If <Shift> is depressed, then it's a global mark, otherwise it's a local mark. This is
@@ -105,9 +105,9 @@ const Marks = {
               chrome.storage.local.get(key, function (items) {
                 if (key in items) {
                   chrome.runtime.sendMessage({ handler: "gotoMark", markName: keyChar });
-                  HUD.showForDuration(`Jumped to global mark '${keyChar}'`, 1000);
+                  HUD.show(`Jumped to global mark '${keyChar}'`, 1000);
                 } else {
-                  HUD.showForDuration(`Global mark not set '${keyChar}'`, 1000);
+                  HUD.show(`Global mark not set '${keyChar}'`, 1000);
                 }
               });
             } else {
