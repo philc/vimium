@@ -3,7 +3,6 @@ import "./test_helper.js";
 Utils.getCurrentVersion = () => "1.44";
 
 import "../../lib/settings.js";
-import "../../lib/clipboard.js";
 import "../../background_scripts/bg_utils.js";
 import "../../background_scripts/exclusions.js";
 import "../../background_scripts/commands.js";
