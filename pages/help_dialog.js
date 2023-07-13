@@ -220,7 +220,8 @@ UIComponentServer.registerHandler(function (event) {
   }
 });
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async () => {
+  await Settings.onLoaded();
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
