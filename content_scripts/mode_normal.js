@@ -151,7 +151,7 @@ var NormalModeCommands = {
       if (28 < url.length) {
         url = url.slice(0, 26) + "....";
       }
-      HUD.showForDuration(`Yanked ${url}`, 2000);
+      HUD.show(`Yanked ${url}`, 2000);
     });
   },
 
@@ -276,7 +276,7 @@ var NormalModeCommands = {
     );
 
     if (visibleInputs.length === 0) {
-      HUD.showForDuration("There are no inputs to focus.", 1000);
+      HUD.show("There are no inputs to focus.", 1000);
       return;
     }
 

@@ -212,7 +212,7 @@ const initializePreDomReady = async function () {
       }
     },
     showMessage(request) {
-      HUD.showForDuration(request.message, 2000);
+      HUD.show(request.message, 2000);
     },
     executeUserScript(request) {
       DomUtils.injectUserScript(request.script);

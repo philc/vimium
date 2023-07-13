@@ -42,9 +42,9 @@ const COPY_LINK_URL = {
       if (url.slice(0, 7) === "mailto:") url = url.slice(7);
       HUD.copyToClipboard(url);
       if (28 < url.length) url = url.slice(0, 26) + "....";
-      HUD.showForDuration(`Yanked ${url}`, 2000);
+      HUD.show(`Yanked ${url}`, 2000);
     } else {
-      HUD.showForDuration("No link to yank.", 2000);
+      HUD.show("No link to yank.", 2000);
     }
   },
 };
@@ -68,9 +68,9 @@ const COPY_LINK_TEXT = {
     if (text.length > 0) {
       HUD.copyToClipboard(text);
       if (28 < text.length) text = text.slice(0, 26) + "....";
-      HUD.showForDuration(`Yanked ${text}`, 2000);
+      HUD.show(`Yanked ${text}`, 2000);
     } else {
-      HUD.showForDuration("No text to yank.", 2000);
+      HUD.show("No text to yank.", 2000);
     }
   },
 };
@@ -308,7 +308,7 @@ class LinkHintsMode {
     this.tabCount = 0;
 
     if (hintDescriptors.length === 0) {
-      HUD.showForDuration("No links to select.", 2000);
+      HUD.show("No links to select.", 2000);
       return;
     }
 

@@ -57,18 +57,18 @@ const HUD = {
     }
   },
 
-  showForDuration(text, duration) {
-    this.show(text);
-    this._showForDurationTimerId = setTimeout(() => this.hide(), duration);
-  },
-
-  show(text) {
+  // duration - if omitted, the message will show until dismissed.
+  show(text, duration) {
     DomUtils.documentComplete(async () => {
+      clearTimeout(this._showForDurationTimerId);
       // @hudUI.activate will take charge of making it visible
       await this.init(false);
-      clearTimeout(this._showForDurationTimerId);
       this.hudUI.activate({ name: "show", text });
       this.tween.fade(1.0, 150);
+
+      if (duration != null) {
+        this._showForDurationTimerId = setTimeout(() => this.hide(), duration);
+      }
     });
   },
 

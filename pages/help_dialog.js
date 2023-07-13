@@ -150,7 +150,7 @@ const HelpDialog = {
                 commandNameElement.title = `Click to copy \"${command.command}\" to clipboard.`;
                 commandNameElement.addEventListener("click", function () {
                   HUD.copyToClipboard(commandNameElement.textContent);
-                  HUD.showForDuration(`Yanked ${commandNameElement.textContent}.`, 2000);
+                  HUD.show(`Yanked ${commandNameElement.textContent}.`, 2000);
                 });
               },
             );
