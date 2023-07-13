@@ -22,6 +22,15 @@ const setTextInInputElement = function (inputElement, text) {
 document.addEventListener("DOMContentLoaded", async () => {
   await Settings.onLoaded();
   DomUtils.injectUserCss();
+
+  const response = await chrome.runtime.sendMessage({
+    handler: "initializeFrame",
+    frameIsFocused: false,
+    url: window.location.toString(),
+  });
+  Utils._isFirefox = response.isFirefox;
+  Utils._firefoxVersion = response.firefoxVersion;
+  Utils._browserInfoLoaded = true;
 });
 
 const onKeyEvent = function (event) {
