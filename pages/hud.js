@@ -157,9 +157,8 @@ const handlers = {
 
   updateMatchesCount({ matchCount, showMatchText }) {
     const countElement = document.getElementById("hud-match-count");
-    if (countElement == null) { // Don't do anything if we're not in find mode.
-      return;
-    }
+    // Don't do anything if we're not in find mode.
+    if (countElement == null) return;
 
     if (Utils.isFirefox()) {
       document.getElementById("hud-find-input").focus();
@@ -170,13 +169,18 @@ const handlers = {
     countElement.textContent = showMatchText ? countText : "";
   },
 
-  copyToClipboard(data) {
+  copyToClipboard(message) {
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
-      await Clipboard.copy(data);
-      if (focusedElement != null) {
-        focusedElement.focus();
-      }
+      // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
+      // the error "DOMException: Document is not focused." is thrown.
+      window.focus();
+
+      // Replace nbsp; characters with space. See #2217.
+      const value = message.data.replace(/\xa0/g, " ");
+      await navigator.clipboard.writeText(value);
+
+      if (focusedElement != null) focusedElement.focus();
       window.parent.focus();
       UIComponentServer.postMessage({ name: "unfocusIfFocused" });
     });
@@ -185,12 +189,17 @@ const handlers = {
   pasteFromClipboard() {
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
-      const data = await Clipboard.paste();
-      if (focusedElement != null) {
-        focusedElement.focus();
-      }
+      // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
+      // the error "DOMException: Document is not focused." is thrown.
+      window.focus();
+
+      let value = await navigator.clipboard.readText();
+      // Replace nbsp; characters with space. See #2217.
+      value = value.replace(/\xa0/g, " ");
+
+      if (focusedElement != null) focusedElement.focus();
       window.parent.focus();
-      UIComponentServer.postMessage({ name: "pasteResponse", data });
+      UIComponentServer.postMessage({ name: "pasteResponse", data: value });
     });
   },
 
