@@ -26,9 +26,7 @@ const initializeModeState = () => {
 //
 // Retrieve the hint markers as an array object.
 //
-const getHintMarkers = () => {
-  return Array.prototype.slice.call(document.getElementsByClassName("vimiumHintMarker"), 0);
-};
+const getHintMarkerEls = () => Array.from(document.querySelectorAll(".vimiumHintMarker"));
 
 const stubSettings = (key, value) => stub(Settings._settings, key, value);
 
@@ -85,13 +83,13 @@ const createGeneralHintTests = (isFilteredMode) => {
       };
       stub(document.body.style, "position", "static");
       let linkHints = activateLinkHintsMode();
-      let hintMarkers = getHintMarkers();
+      let hintMarkers = getHintMarkerEls();
       assertStartPosition(document.getElementsByTagName("a")[0], hintMarkers[0]);
       assertStartPosition(document.getElementsByTagName("a")[1], hintMarkers[1]);
       linkHints.deactivateMode();
       stub(document.body.style, "position", "relative");
       linkHints = activateLinkHintsMode();
-      hintMarkers = getHintMarkers();
+      hintMarkers = getHintMarkerEls();
       assertStartPosition(document.getElementsByTagName("a")[0], hintMarkers[0]);
       assertStartPosition(document.getElementsByTagName("a")[1], hintMarkers[1]);
       linkHints.deactivateMode();
@@ -115,13 +113,9 @@ context("False positives in link-hint", () => {
   tearDown(() => document.getElementById("test-div").innerHTML = "");
 
   should("handle false positives", () => {
-    const linkHints = activateLinkHintsMode();
-    const hintMarkers = getHintMarkers();
-    linkHints.deactivateMode();
-    assert.equal(2, hintMarkers.length);
-    for (let hintMarker of hintMarkers) {
-      assert.equal("clickable", hintMarker.linkText);
-    }
+    const mode = activateLinkHintsMode();
+    mode.deactivateMode();
+    assert.equal(["clickable", "clickable"], mode.hintMarkers.map((m) => m.linkText));
   });
 });
 
@@ -136,23 +130,27 @@ context("jsaction matching", () => {
   tearDown(() => document.getElementById("test-div").innerHTML = "");
 
   should("select jsaction elements", () => {
-    for (let text of ["click:namespace.actionName", "namespace.actionName"]) {
+    for (const text of ["click:namespace.actionName", "namespace.actionName"]) {
       this.element.setAttribute("jsaction", text);
-      const linkHints = activateLinkHintsMode();
-      const hintMarkers = getHintMarkers().filter((marker) => marker.linkText !== "Frame.");
-      linkHints.deactivateMode();
-      assert.equal(1, hintMarkers.length);
-      assert.equal("clickable", hintMarkers[0].linkText);
-      assert.equal(this.element, hintMarkers[0].localHintDescriptor.element);
+      const mode = activateLinkHintsMode();
+      mode.deactivateMode();
+      assert.equal(1, mode.hintMarkers.length);
+      assert.equal("clickable", mode.hintMarkers[0].linkText);
+      assert.equal(this.element, mode.hintMarkers[0].localHintDescriptor.element);
     }
   });
 
   should("not select inactive jsaction elements", () => {
-    const attributes =["mousedown:namespace.actionName", "click:namespace._", "none", "namespace:_"];
+    const attributes = [
+      "mousedown:namespace.actionName",
+      "click:namespace._",
+      "none",
+      "namespace:_",
+    ];
     for (const attribute of attributes) {
       this.element.setAttribute("jsaction", attribute);
       const linkHints = activateLinkHintsMode();
-      const hintMarkers = getHintMarkers().filter((marker) => marker.linkText !== "Frame.");
+      const hintMarkers = getHintMarkerEls().filter((marker) => marker.linkText !== "Frame.");
       linkHints.deactivateMode();
       assert.equal(0, hintMarkers.length);
     }
@@ -230,8 +228,8 @@ const inputs = [];
 //       input.addEventListener("click", activeListener, false);
 
 //       linkHintsMode = activateLinkHintsMode();
-//       const [hint] = getHintMarkers().
-//             filter(hint => input === HintCoordinator.getLocalHintMarker(hint.hintDescriptor).element);
+//       const [hint] = getHintMarkerEls().
+//             filter(hint => input === HintCoordinator.getLocalHint(hint.hintDescriptor).element);
 
 //       for (let char of hint.hintString)
 //         sendKeyboardEvent(char);
@@ -282,7 +280,7 @@ const createLinks = function (n) {
 };
 
 context("Alphabetical link hints", () => {
-  let linkHints;
+  let mode;
   setup(() => {
     initializeModeState();
     stubSettings("filterLinkHints", false);
@@ -292,29 +290,27 @@ context("Alphabetical link hints", () => {
     document.getElementById("test-div").innerHTML = "";
     // Three hints will trigger double hint chars.
     createLinks(3);
-    linkHints = activateLinkHintsMode();
+    mode = activateLinkHintsMode();
   });
 
   tearDown(() => {
-    linkHints.deactivateMode();
+    mode.deactivateMode();
     document.getElementById("test-div").innerHTML = "";
   });
 
   should("label the hints correctly", () => {
-    const hintMarkers = getHintMarkers();
-    const expectedHints = ["aa", "b", "ab"];
-    assert.equal(3, hintMarkers.length);
-    for (let i = 0; i < expectedHints.length; i++) {
-      const hint = expectedHints[i];
-      assert.equal(hint, hintMarkers[i].hintString);
-    }
+    assert.equal(
+      ["aa", "b", "ab"],
+      mode.hintMarkers.map((m) => m.hintString),
+    );
   });
 
   should("narrow the hints", () => {
-    const hintMarkers = getHintMarkers();
     sendKeyboardEvent("a");
-    assert.equal("none", hintMarkers[1].style.display);
-    assert.equal("", hintMarkers[0].style.display);
+    assert.equal(
+      ["", "none", ""],
+      mode.hintMarkers.map((m) => m.element.style.display),
+    );
   });
 
   should("generate the correct number of alphabet hints", () => {
@@ -341,9 +337,11 @@ context("Alphabetical link hints", () => {
 });
 
 context("Filtered link hints", () => {
-  // Note. In all of these tests, the order of the elements returned by getHintMarkers() may be
+  // Note. In all of these tests, the order of the elements returned by getHintMarkerEls() may be
   // different from the order they are listed in the test HTML content. This is because
   // LinkHints.activateMode() sorts the elements.
+
+  let mode;
 
   setup(() => {
     stubSettings("filterLinkHints", true);
@@ -356,16 +354,16 @@ context("Filtered link hints", () => {
       initializeModeState();
       const testContent = "<a>test</a><a>tress</a><a>trait</a><a>track<img alt='alt text'/></a>";
       document.getElementById("test-div").innerHTML = testContent;
-      this.linkHints = activateLinkHintsMode();
+      mode = activateLinkHintsMode();
     });
 
     tearDown(() => {
       document.getElementById("test-div").innerHTML = "";
-      this.linkHints.deactivateMode();
+      mode.deactivateMode();
     });
 
     should("label the hints", () => {
-      const hintMarkers = getHintMarkers();
+      const hintMarkers = getHintMarkerEls();
       const expectedMarkers = [1, 2, 3, 4].map((m) => m.toString());
       const actualMarkers = [0, 1, 2, 3].map((i) => hintMarkers[i].textContent.toLowerCase());
       assert.equal(expectedMarkers.length, actualMarkers.length);
@@ -375,28 +373,30 @@ context("Filtered link hints", () => {
     });
 
     should("narrow the hints", () => {
-      const hintMarkers = getHintMarkers();
       sendKeyboardEvent("t");
       sendKeyboardEvent("r");
-      assert.equal("none", hintMarkers[0].style.display);
-      assert.equal("3", hintMarkers[1].hintString);
-      assert.equal("", hintMarkers[1].style.display);
+      assert.equal(
+        ["none", "", "", ""],
+        mode.hintMarkers.map((m) => m.element.style.display),
+      );
+      assert.equal("3", mode.hintMarkers[1].hintString);
       sendKeyboardEvent("a");
-      assert.equal("1", hintMarkers[3].hintString);
+      assert.equal("1", mode.hintMarkers[3].hintString);
     });
 
-    // This test is the same as above, but with an extra non-matching character.  The effect should be the
-    // same.
+    // This test is the same as above, but with an extra non-matching character. The effect should
+    // be the same.
     should("narrow the hints and ignore typing mistakes", () => {
-      const hintMarkers = getHintMarkers();
       sendKeyboardEvent("t");
       sendKeyboardEvent("r");
       sendKeyboardEvent("x");
-      assert.equal("none", hintMarkers[0].style.display);
-      assert.equal("3", hintMarkers[1].hintString);
-      assert.equal("", hintMarkers[1].style.display);
+      assert.equal(
+        ["none", "", "", ""],
+        mode.hintMarkers.map((m) => m.element.style.display),
+      );
+      assert.equal("3", mode.hintMarkers[1].hintString);
       sendKeyboardEvent("a");
-      assert.equal("1", hintMarkers[3].hintString);
+      assert.equal("1", mode.hintMarkers[3].hintString);
     });
   });
 
@@ -408,16 +408,16 @@ context("Filtered link hints", () => {
         "<a><img title='some title' width='10px' height='10px'/></a>" +
         "<a><img src='' width='320px' height='100px'/></a>";
       document.getElementById("test-div").innerHTML = testContent;
-      this.linkHints = activateLinkHintsMode();
+      mode = activateLinkHintsMode();
     });
 
     tearDown(() => {
       document.getElementById("test-div").innerHTML = "";
-      this.linkHints.deactivateMode();
+      mode.deactivateMode();
     });
 
     should("label the images", () => {
-      let hintMarkers = getHintMarkers().map((marker) => marker.textContent.toLowerCase());
+      let hintMarkers = getHintMarkerEls().map((m) => m.textContent.toLowerCase());
       // We don't know the actual hint numbers which will be assigned, so we replace them with "N".
       hintMarkers = hintMarkers.map((str) => str.replace(/^[1-4]/, "N"));
       assert.equal(4, hintMarkers.length);
@@ -446,8 +446,8 @@ context("Filtered link hints", () => {
     });
 
     should("label the input elements", () => {
-      let hintMarkers = getHintMarkers();
-      hintMarkers = getHintMarkers().map((marker) => marker.textContent.toLowerCase());
+      let hintMarkers = getHintMarkerEls();
+      hintMarkers = getHintMarkerEls().map((m) => m.textContent.toLowerCase());
       // We don't know the actual hint numbers which will be assigned, so we replace them with "N".
       hintMarkers = hintMarkers.map((str) => str.replace(/^[0-9]+/, "N"));
       assert.equal(5, hintMarkers.length);
@@ -477,7 +477,7 @@ context("Filtered link hints", () => {
       document.getElementById("test-div").innerHTML = testContent;
       this.linkHints = activateLinkHintsMode();
       this.getActiveHintMarker = () => {
-        return HintCoordinator.getLocalHintMarker(
+        return HintCoordinator.getLocalHint(
           this.linkHints.markerMatcher.activeHintMarker.hintDescriptor,
         ).element.id;
       };
