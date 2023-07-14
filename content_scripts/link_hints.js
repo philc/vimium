@@ -10,6 +10,50 @@
 // In 'filter' mode, our link hints are numbers, and the user can narrow down the range of
 // possibilities by typing the text of the link itself.
 //
+
+// A DOM element that sits on top of a link, showing the key the user should type to select the
+// link.
+// TODO(philc): Is this correct?
+class HintMarker {
+  hintDescriptor;
+  // TODO(philc): Do we need to include both a hintDescriptor and localHintDescriptor?
+  localHintDescriptor;
+  isLocalMarker;
+  linkText; // Used in FilterHints
+  hintString; // Used in AlphabetHints
+  showLinkText; // TODO(philc): Possibly remove
+  markerRect;
+  // Element is null if the hint marker reflects a hint that's owned by another frame.
+  element;
+  // Cached book-keeping when computing a marker's score against a query.
+  linkWords;
+  score;
+  stableSortCount;
+  constructor() {
+    Object.seal(this);
+  }
+}
+
+class LocalHint {
+  element;
+  rect;
+  linkText; // Used only by FilterHints.
+  showLinkText; // Used only by FilterHints.
+  constructor() {
+    Object.seal(this);
+  }
+}
+
+class HintDescriptor {
+  frameId;
+  localIndex;
+  linkText; // Used only by FilterHints.
+  constructor(o) {
+    Object.seal(this);
+    if (o) Object.assign(this, o);
+  }
+}
+
 // The "name" property below is a short-form name to appear in the link-hints mode's name. It's for
 // debug only.
 //
@@ -169,12 +213,14 @@ const HintCoordinator = {
     } else {
       this.localHints = LocalHints.getLocalHints(requireHref);
     }
-    response = this.localHintDescriptors = this.localHints.map(({ linkText }, localIndex) => ({
-      // TODO(philc): We don't need to send back frameId in this structure.
-      frameId,
-      localIndex,
-      linkText,
-    }));
+    this.localHintDescriptors = this.localHints.map(({ linkText }, localIndex) => (
+      new HintDescriptor({
+        frameId,
+        localIndex,
+        linkText,
+      })
+    ));
+    response = this.localHintDescriptors;
     return response;
   },
 
@@ -195,6 +241,7 @@ const HintCoordinator = {
       .map((frame) => frameIdToHintDescriptors[frame])
       .flat(1);
 
+    // TODO(philc): Clean up this logic
     if (
       this.cacheAllKeydownEvents != null ? this.cacheAllKeydownEvents.modeIsActive : undefined
     ) {
@@ -225,7 +272,7 @@ const HintCoordinator = {
   activateActiveHintMarker() {
     this.linkHintsMode.activateLink(this.linkHintsMode.markerMatcher.activeHintMarker);
   },
-  getLocalHintMarker(hint) {
+  getLocalHint(hint) {
     if (hint.frameId === frameId) return this.localHints[hint.localIndex];
     else return null;
   },
@@ -353,7 +400,7 @@ class LinkHintsMode {
     // Note(philc): Append these markers as top level children instead of as child nodes to the link
     // itself, because some clickable elements cannot contain children, e.g. submit buttons.
     this.hintMarkerContainingDiv = DomUtils.addElementList(
-      this.hintMarkers.filter((marker) => marker.isLocalMarker),
+      this.hintMarkers.filter((m) => m.isLocalMarker).map((m) => m.element),
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" },
     );
 
@@ -389,22 +436,25 @@ class LinkHintsMode {
   // Creates a link marker for the given link.
   //
   createMarkerFor(desc) {
-    let marker;
+    const marker = new HintMarker();
     if (desc.frameId === frameId) {
-      const localHintDescriptor = HintCoordinator.getLocalHintMarker(desc);
+      const localHintDescriptor = HintCoordinator.getLocalHint(desc);
       const el = DomUtils.createElement("div");
+      // TODO(philc): Consider putting this on the hint marker since it's not a DOM element property.
+      // Or remove it. Do we need it since its already part of the localHintDescriptor property?
       el.rect = localHintDescriptor.rect;
       el.style.left = el.rect.left + "px";
       el.style.top = el.rect.top + "px";
       // Each hint marker is assigned a different z-index.
       el.style.zIndex = this.getNextZIndex();
-      marker = Object.assign(el, {
-        className: "vimiumReset internalVimiumHintMarker vimiumHintMarker",
-        showLinkText: localHintDescriptor.showLinkText,
+      el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
+      Object.assign(marker, {
+        element: el,
         localHintDescriptor,
+        // TODO(philc): Can we remove this "showLinkText" property since it's on the hint descriptor
+        // already?
+        showLinkText: localHintDescriptor.showLinkText,
       });
-    } else {
-      marker = {};
     }
 
     return Object.assign(marker, {
@@ -523,10 +573,10 @@ class LinkHintsMode {
     } else if (linksMatched.length === 1) {
       this.activateLink(linksMatched[0], userMightOverType);
     } else {
-      for (let marker of this.hintMarkers) {
+      for (const marker of this.hintMarkers) {
         this.hideMarker(marker);
       }
-      for (let matched of linksMatched) {
+      for (const matched of linksMatched) {
         this.showMarker(matched, this.markerMatcher.hintKeystrokeQueue.length);
       }
     }
@@ -546,9 +596,9 @@ class LinkHintsMode {
   // Rotate the hints' z-index values so that hidden hints become visible.
   rotateHints() {
     // Get local, visible hint markers.
-    let marker, stack;
-    const localHintMarkers = this.hintMarkers.filter((marker) =>
-      marker.isLocalMarker && (marker.style.display !== "none")
+    let marker, stack; // TODO(philc): Make these const.
+    const localHintMarkers = this.hintMarkers.filter((m) =>
+      m.isLocalMarker && (m.element.style.display !== "none")
     );
 
     // Fill in the markers' rects, if necessary.
@@ -590,11 +640,11 @@ class LinkHintsMode {
     // Rotate the z-indexes within each stack.
     for (stack of stacks) {
       if (stack.length > 1) {
-        const zIndexes = stack.map((marker) => marker.style.zIndex);
+        const zIndexes = stack.map((marker) => marker.element.style.zIndex);
         zIndexes.push(zIndexes[0]);
         for (let index = 0; index < stack.length; index++) {
           marker = stack[index];
-          marker.style.zIndex = zIndexes[index + 1];
+          marker.element.style.zIndex = zIndexes[index + 1];
         }
       }
     }
@@ -676,23 +726,21 @@ class LinkHintsMode {
   // Shows the marker, highlighting matchingCharCount characters.
   //
   showMarker(linkMarker, matchingCharCount) {
-    if (!linkMarker.isLocalMarker) {
-      return;
-    }
+    if (!linkMarker.isLocalMarker) return;
 
-    linkMarker.style.display = "";
-    for (let j = 0, end = linkMarker.childNodes.length; j < end; j++) {
+    linkMarker.element.style.display = "";
+    for (let j = 0, end = linkMarker.element.childNodes.length; j < end; j++) {
       if (j < matchingCharCount) {
-        linkMarker.childNodes[j].classList.add("matchingCharacter");
+        linkMarker.element.childNodes[j].classList.add("matchingCharacter");
       } else {
-        linkMarker.childNodes[j].classList.remove("matchingCharacter");
+        linkMarker.element.childNodes[j].classList.remove("matchingCharacter");
       }
     }
   }
 
-  hideMarker(linkMarker) {
-    if (linkMarker.isLocalMarker) {
-      linkMarker.style.display = "none";
+  hideMarker(marker) {
+    if (marker.isLocalMarker) {
+      marker.element.style.display = "none";
     }
   }
 
@@ -724,7 +772,7 @@ class AlphabetHints {
       const marker = hintMarkers[i];
       marker.hintString = hintStrings[i];
       if (marker.isLocalMarker) {
-        marker.innerHTML = spanWrap(marker.hintString.toUpperCase());
+        marker.element.innerHTML = spanWrap(marker.hintString.toUpperCase());
       }
     }
   }
@@ -752,9 +800,7 @@ class AlphabetHints {
   getMatchingHints(hintMarkers) {
     const matchString = this.hintKeystrokeQueue.join("");
     return {
-      linksMatched: hintMarkers.filter((linkMarker) =>
-        linkMarker.hintString.startsWith(matchString)
-      ),
+      linksMatched: hintMarkers.filter((m) => m.hintString.startsWith(matchString)),
     };
   }
 
@@ -797,15 +843,19 @@ class FilterHints {
   }
 
   renderMarker(marker) {
+    // TODO(philc): Should we add an assert here that we never call this when !marker.isLocalMarker ?
     let linkText = marker.linkText;
     if (linkText.length > 35) {
       linkText = linkText.slice(0, 33) + "...";
     }
-    marker.innerHTML = spanWrap(marker.hintString + (marker.showLinkText ? ": " + linkText : ""));
+    const caption = marker.hintString + (marker.showLinkText ? ": " + linkText : "");
+    if (marker.isLocalMarker) {
+      marker.element.innerHTML = spanWrap(caption);
+    }
   }
 
   fillInMarkers(hintMarkers, getNextZIndex) {
-    for (let marker of hintMarkers) {
+    for (const marker of hintMarkers) {
       if (marker.isLocalMarker) {
         this.renderMarker(marker);
       }
@@ -829,15 +879,15 @@ class FilterHints {
     // <Enter>).
     tabCount = ((linksMatched.length * Math.abs(tabCount)) + tabCount) % linksMatched.length;
 
-    if (this.activeHintMarker) {
-      this.activeHintMarker.classList.remove("vimiumActiveHintMarker");
+    if (this.activeHintMarker?.element) {
+      this.activeHintMarker.element.classList.remove("vimiumActiveHintMarker");
     }
 
     this.activeHintMarker = linksMatched[tabCount];
 
-    if (this.activeHintMarker) {
-      this.activeHintMarker.classList.add("vimiumActiveHintMarker");
-      this.activeHintMarker.style.zIndex = getNextZIndex();
+    if (this.activeHintMarker?.element) {
+      this.activeHintMarker.element.classList.add("vimiumActiveHintMarker");
+      this.activeHintMarker.element.style.zIndex = getNextZIndex();
     }
 
     return {
