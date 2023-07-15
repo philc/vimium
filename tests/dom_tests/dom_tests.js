@@ -136,7 +136,7 @@ context("jsaction matching", () => {
       mode.deactivateMode();
       assert.equal(1, mode.hintMarkers.length);
       assert.equal("clickable", mode.hintMarkers[0].linkText);
-      assert.equal(this.element, mode.hintMarkers[0].localHintDescriptor.element);
+      assert.equal(this.element, mode.hintMarkers[0].localHint.element);
     }
   });
 

@@ -16,9 +16,8 @@
 // TODO(philc): Is this correct?
 class HintMarker {
   hintDescriptor;
-  // TODO(philc): Do we need to include both a hintDescriptor and localHintDescriptor?
-  localHintDescriptor;
-  isLocalMarker;
+  localHint;
+  isLocalMarker; // TODO(philc): Can we remove this property?
   linkText; // Used in FilterHints
   hintString; // Used in AlphabetHints
   showLinkText; // TODO(philc): Possibly remove
@@ -273,8 +272,7 @@ const HintCoordinator = {
     this.linkHintsMode.activateLink(this.linkHintsMode.markerMatcher.activeHintMarker);
   },
   getLocalHint(hint) {
-    if (hint.frameId === frameId) return this.localHints[hint.localIndex];
-    else return null;
+    return this.localHints[hint.localIndex];
   },
 
   exit({ isSuccess }) {
@@ -397,8 +395,8 @@ class LinkHintsMode {
       }
     });
 
-    // Note(philc): Append these markers as top level children instead of as child nodes to the link
-    // itself, because some clickable elements cannot contain children, e.g. submit buttons.
+    // Append these markers as top level children instead of as child nodes to the link itself,
+    // because some clickable elements cannot contain children, e.g. submit buttons.
     this.hintMarkerContainingDiv = DomUtils.addElementsToPage(
       this.hintMarkers.filter((m) => m.isLocalMarker).map((m) => m.element),
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" },
@@ -437,12 +435,13 @@ class LinkHintsMode {
   //
   createMarkerFor(desc) {
     const marker = new HintMarker();
-    if (desc.frameId === frameId) {
-      const localHintDescriptor = HintCoordinator.getLocalHint(desc);
+    const isLocalMarker = desc.frameId === frameId;
+    if (isLocalMarker) {
+      const localHint = HintCoordinator.getLocalHint(desc);
       const el = DomUtils.createElement("div");
       // TODO(philc): Consider putting this on the hint marker since it's not a DOM element property.
       // Or remove it. Do we need it since its already part of the localHintDescriptor property?
-      el.rect = localHintDescriptor.rect;
+      el.rect = localHint.rect;
       el.style.left = el.rect.left + "px";
       el.style.top = el.rect.top + "px";
       // Each hint marker is assigned a different z-index.
@@ -450,16 +449,16 @@ class LinkHintsMode {
       el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
       Object.assign(marker, {
         element: el,
-        localHintDescriptor,
-        // TODO(philc): Can we remove this "showLinkText" property since it's on the hint descriptor
+        localHint,
+        // TODO(philc): Can we remove this "showLinkText" property since it's on the localHint
         // already?
-        showLinkText: localHintDescriptor.showLinkText,
+        showLinkText: localHint.showLinkText,
       });
     }
 
     return Object.assign(marker, {
       hintDescriptor: desc,
-      isLocalMarker: desc.frameId === frameId,
+      isLocalMarker,
       linkText: desc.linkText,
       stableSortCount: ++this.stableSortCount,
     });
@@ -661,18 +660,19 @@ class LinkHintsMode {
     this.removeHintMarkers();
 
     if (linkMatched.isLocalMarker) {
-      const localHintDescriptor = linkMatched.localHintDescriptor;
-      clickEl = localHintDescriptor.element;
+      const localHint = linkMatched.localHint;
+      clickEl = localHint.element;
       HintCoordinator.onExit.push((isSuccess) => {
+        // TODO(philc): localHint shouldn't have a reason property.
         if (isSuccess) {
-          if (localHintDescriptor.reason === "Frame.") {
+          if (localHint.reason === "Frame.") {
             return Utils.nextTick(() => focusThisFrame({ highlight: true }));
-          } else if (localHintDescriptor.reason === "Scroll.") {
+          } else if (localHint.reason === "Scroll.") {
             // Tell the scroller that this is the activated element.
             return handlerStack.bubbleEvent(Utils.isFirefox() ? "click" : "DOMActivate", {
               target: clickEl,
             });
-          } else if (localHintDescriptor.reason === "Open.") {
+          } else if (localHint.reason === "Open.") {
             return clickEl.open = !clickEl.open;
           } else if (DomUtils.isSelectable(clickEl)) {
             window.focus();
@@ -786,7 +786,7 @@ class AlphabetHints {
     let offset = 0;
     while (((hints.length - offset) < linkCount) || (hints.length === 1)) {
       const hint = hints[offset++];
-      for (let ch of this.linkHintCharacters) {
+      for (const ch of this.linkHintCharacters) {
         hints.push(ch + hint);
       }
     }
