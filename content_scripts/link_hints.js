@@ -585,13 +585,12 @@ class LinkHintsMode {
   // Rotate the hints' z-index values so that hidden hints become visible.
   rotateHints() {
     // Get local, visible hint markers.
-    let marker, stack; // TODO(philc): Make these const.
     const localHintMarkers = this.hintMarkers.filter((m) =>
       m.isLocalMarker() && (m.element.style.display !== "none")
     );
 
     // Fill in the markers' rects, if necessary.
-    for (marker of localHintMarkers) {
+    for (const marker of localHintMarkers) {
       if (marker.markerRect == null) {
         marker.markerRect = marker.element.getClientRects()[0];
       }
@@ -599,10 +598,10 @@ class LinkHintsMode {
 
     // Calculate the overlapping groups of hints. We call each group a "stack". This is O(n^2).
     let stacks = [];
-    for (marker of localHintMarkers) {
+    for (const marker of localHintMarkers) {
       let stackForThisMarker = null;
       const results = [];
-      for (stack of stacks) {
+      for (const stack of stacks) {
         const markerOverlapsThisStack = this.markerOverlapsStack(marker, stack);
         if (markerOverlapsThisStack && (stackForThisMarker == null)) {
           // We've found an existing stack for this marker.
@@ -627,12 +626,12 @@ class LinkHintsMode {
     }
 
     // Rotate the z-indexes within each stack.
-    for (stack of stacks) {
+    for (const stack of stacks) {
       if (stack.length > 1) {
         const zIndexes = stack.map((marker) => marker.element.style.zIndex);
         zIndexes.push(zIndexes[0]);
         for (let index = 0; index < stack.length; index++) {
-          marker = stack[index];
+          const marker = stack[index];
           marker.element.style.zIndex = zIndexes[index + 1];
         }
       }
