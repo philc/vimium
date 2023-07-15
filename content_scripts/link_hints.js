@@ -1249,19 +1249,13 @@ const LocalHints = {
   // rects for the whole element.
   //
   getLocalHints(requireHref) {
-    let hint, nonOverlappingElements, rect, visibleElement;
-    let element;
     // We need documentElement to be ready in order to find links.
-    if (!document.documentElement) {
-      return [];
-    }
+    if (!document.documentElement) return [];
 
     // Find all elements, recursing into shadow DOM if present.
-    var getAllElements = function (root, elements) {
-      if (elements == null) {
-        elements = [];
-      }
-      for (element of Array.from(root.querySelectorAll("*"))) {
+    const getAllElements = (root, elements) => {
+      if (elements == null) elements = [];
+      for (const element of Array.from(root.querySelectorAll("*"))) {
         elements.push(element);
         if (element.shadowRoot) {
           getAllElements(element.shadowRoot, elements);
@@ -1279,9 +1273,9 @@ const LocalHints = {
     // NOTE(mrmr1993): Our previous method (combined XPath and DOM traversal for jsaction) couldn't
     // provide this, so it's necessary to check whether elements are clickable in order, as we do
     // below.
-    for (element of Array.from(elements)) {
+    for (const element of Array.from(elements)) {
       if (!requireHref || !!element.href) {
-        visibleElement = this.getVisibleClickable(element);
+        const visibleElement = this.getVisibleClickable(element);
         visibleElements.push(...visibleElement);
       }
     }
@@ -1294,39 +1288,28 @@ const LocalHints = {
     // tend to be close together in the DOM, so - to keep the cost down - we only search nearby
     // elements. NOTE(smblott): The visible elements have already been reversed, so we're visiting
     // descendants before their ancestors.
-    const descendantsToCheck = [1, 2, 3]; // This determines how many descendants we're willing to consider.
-    visibleElements = (() => {
-      const result = [];
-      for (var position = 0; position < visibleElements.length; position++) {
-        // TODO(philc): Pull this function out into a helper function, and/or use Array.some().
-        // The converted code from coffeescript is ugly.
-        element = visibleElements[position];
-        if (
-          element.possibleFalsePositive && (function () {
-            // This determines how far back we're willing to look.
-            let index = Math.max(0, position - 6);
-            while (index < position) {
-              let candidateDescendant = visibleElements[index].element;
-              for (let _ of descendantsToCheck) {
-                candidateDescendant = candidateDescendant != null
-                  ? candidateDescendant.parentElement
-                  : undefined;
-                if (candidateDescendant === element.element) {
-                  return true;
-                }
-              }
-              index += 1;
-            }
+
+    // This determines how many descendants we're willing to consider.
+    const descendantsToCheck = [1, 2, 3];
+
+    visibleElements = visibleElements.filter((element, position) => {
+      if (!element.possibleFalsePositive) return true;
+      // Determine if the clickable element is indeed a false positive.
+      const lookbackWindow = 6;
+      let index = Math.max(0, position - lookbackWindow);
+      while (index < position) {
+        let candidateDescendant = visibleElements[index].element;
+        for (let _ of descendantsToCheck) {
+          candidateDescendant = candidateDescendant?.parentElement;
+          if (candidateDescendant === element.element) {
+            // This is a false positive; exclude it from visibleElements.
             return false;
-          })()
-        ) {
-          // This is not a false positive.
-          continue;
+          }
         }
-        result.push(element);
+        index += 1;
       }
-      return result;
-    })();
+      return true;
+    });
 
     // This loop will check if any corner or center of element is clickable
     // document.elementFromPoint will find an element at a x,y location.
@@ -1334,14 +1317,16 @@ const LocalHints = {
     // === true. If we do not find our element as a descendant of any element we find, assume it's
     // completely covered.
 
-    const localHints = (nonOverlappingElements = []);
+    const nonOverlappingElements = [];
+    const localHints = nonOverlappingElements;
+    let visibleElement;
     while ((visibleElement = visibleElements.pop())) {
       if (visibleElement.secondClassCitizen) {
         continue;
       }
 
-      rect = visibleElement.rect;
-      element = visibleElement.element;
+      const rect = visibleElement.rect;
+      const element = visibleElement.element;
 
       // Check middle of element first, as this is perhaps most likely to return true.
       const elementFromMiddlePoint = LocalHints.getElementFromPoint(
@@ -1387,13 +1372,13 @@ const LocalHints = {
 
     // Position the rects within the window.
     const { top, left } = DomUtils.getViewportTopLeft();
-    for (hint of nonOverlappingElements) {
+    for (const hint of nonOverlappingElements) {
       hint.rect.top += top;
       hint.rect.left += left;
     }
 
     if (Settings.get("filterLinkHints")) {
-      for (hint of localHints) {
+      for (const hint of localHints) {
         Object.assign(hint, this.generateLinkText(hint));
       }
     }
