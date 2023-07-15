@@ -996,16 +996,15 @@ class FilterHints {
 //
 // Make each hint character a span, so that we can highlight the typed characters as you type them.
 //
-var spanWrap = function (hintString) {
+const spanWrap = (hintString) => {
   const innerHTML = [];
-  for (let char of hintString) {
+  for (const char of hintString) {
     innerHTML.push("<span class='vimiumReset'>" + char + "</span>");
   }
-
   return innerHTML.join("");
 };
 
-var LocalHints = {
+const LocalHints = {
   //
   // Determine whether the element is visible and clickable. If it is, find the rect bounding the
   // element in the viewport. There may be more than one part of element which is clickable (for
@@ -1015,8 +1014,7 @@ var LocalHints = {
   getVisibleClickable(element) {
     // Get the tag name. However, `element.tagName` can be an element (not a string, see #2035), so
     // we guard against that.
-    let contentEditable, role;
-    const tagName = (element.tagName.toLowerCase ? element.tagName.toLowerCase() : null) || "";
+    const tagName = element.tagName.toLowerCase?.() || "";
     let isClickable = false;
     let onlyHasTabIndex = false;
     let possibleFalsePositive = false;
@@ -1068,15 +1066,13 @@ var LocalHints = {
       })();
     }
 
-    if (!isClickable) {
-      isClickable = this.checkForAngularJs(element);
-    }
+    if (!isClickable) isClickable = this.checkForAngularJs(element);
 
     if (element.hasAttribute("onclick")) {
       isClickable = true;
-    } else if (
-      ((role = element.getAttribute("role")) != null) &&
-      [
+    } else {
+      const role = element.getAttribute("role");
+      const clickableRoles = [
         "button",
         "tab",
         "link",
@@ -1085,14 +1081,18 @@ var LocalHints = {
         "menuitemcheckbox",
         "menuitemradio",
         "radio",
-      ].includes(role.toLowerCase())
-    ) {
-      isClickable = true;
-    } else if (
-      ((contentEditable = element.getAttribute("contentEditable")) != null) &&
-      ["", "contenteditable", "true"].includes(contentEditable.toLowerCase())
-    ) {
-      isClickable = true;
+      ];
+      if (role != null && clickableRoles.includes(role.toLowerCase())) {
+        isClickable = true;
+      } else {
+        const contentEditable = element.getAttribute("contentEditable");
+        if (
+          contentEditable != null &&
+          ["", "contenteditable", "true"].includes(contentEditable.toLowerCase())
+        ) {
+          isClickable = true;
+        }
+      }
     }
 
     // Check for jsaction event listeners on the element.
