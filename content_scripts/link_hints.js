@@ -13,13 +13,12 @@
 
 // A DOM element that sits on top of a link, showing the key the user should type to select the
 // link.
-// TODO(philc): Is this correct?
 class HintMarker {
   hintDescriptor;
   localHint;
   linkText; // Used in FilterHints
   hintString; // Used in AlphabetHints
-  markerRect;
+  markerRect; // Cached rectangle of the element, used for rotating hints.
   // Element is null if the hint marker reflects a hint that's owned by another frame.
   element;
   // Cached book-keeping when computing a marker's score against a query.
@@ -600,7 +599,7 @@ class LinkHintsMode {
     // Fill in the markers' rects, if necessary.
     for (marker of localHintMarkers) {
       if (marker.markerRect == null) {
-        marker.markerRect = marker.getClientRects()[0];
+        marker.markerRect = marker.element.getClientRects()[0];
       }
     }
 
