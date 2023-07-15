@@ -17,7 +17,6 @@
 class HintMarker {
   hintDescriptor;
   localHint;
-  isLocalMarker; // TODO(philc): Can we remove this property?
   linkText; // Used in FilterHints
   hintString; // Used in AlphabetHints
   showLinkText; // TODO(philc): Possibly remove
@@ -30,6 +29,9 @@ class HintMarker {
   stableSortCount;
   constructor() {
     Object.seal(this);
+  }
+  isLocalMarker() {
+    return this.localHint != null;
   }
 }
 
@@ -398,7 +400,7 @@ class LinkHintsMode {
     // Append these markers as top level children instead of as child nodes to the link itself,
     // because some clickable elements cannot contain children, e.g. submit buttons.
     this.hintMarkerContainingDiv = DomUtils.addElementsToPage(
-      this.hintMarkers.filter((m) => m.isLocalMarker).map((m) => m.element),
+      this.hintMarkers.filter((m) => m.isLocalMarker()).map((m) => m.element),
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" },
     );
 
@@ -458,7 +460,6 @@ class LinkHintsMode {
 
     return Object.assign(marker, {
       hintDescriptor: desc,
-      isLocalMarker,
       linkText: desc.linkText,
       stableSortCount: ++this.stableSortCount,
     });
@@ -597,7 +598,7 @@ class LinkHintsMode {
     // Get local, visible hint markers.
     let marker, stack; // TODO(philc): Make these const.
     const localHintMarkers = this.hintMarkers.filter((m) =>
-      m.isLocalMarker && (m.element.style.display !== "none")
+      m.isLocalMarker() && (m.element.style.display !== "none")
     );
 
     // Fill in the markers' rects, if necessary.
@@ -659,7 +660,7 @@ class LinkHintsMode {
     }
     this.removeHintMarkers();
 
-    if (linkMatched.isLocalMarker) {
+    if (linkMatched.isLocalMarker()) {
       const localHint = linkMatched.localHint;
       clickEl = localHint.element;
       HintCoordinator.onExit.push((isSuccess) => {
@@ -698,7 +699,7 @@ class LinkHintsMode {
 
     // If flash elements are created, then this function can be used later to remove them.
     let removeFlashElements = function () {};
-    if (linkMatched.isLocalMarker) {
+    if (linkMatched.isLocalMarker()) {
       const { top: viewportTop, left: viewportLeft } = DomUtils.getViewportTopLeft();
       const flashElements = Array.from(clickEl.getClientRects()).map((rect) =>
         DomUtils.addFlashRect(Rect.translate(rect, viewportLeft, viewportTop))
@@ -716,7 +717,7 @@ class LinkHintsMode {
           ? new WaitForEnter(callback)
           : new TypingProtector(200, callback);
       }
-    } else if (linkMatched.isLocalMarker) {
+    } else if (linkMatched.isLocalMarker()) {
       Utils.setTimeout(400, removeFlashElements);
       return HintCoordinator.sendMessage("exit", { isSuccess: true });
     }
@@ -726,7 +727,7 @@ class LinkHintsMode {
   // Shows the marker, highlighting matchingCharCount characters.
   //
   showMarker(linkMarker, matchingCharCount) {
-    if (!linkMarker.isLocalMarker) return;
+    if (!linkMarker.isLocalMarker()) return;
 
     linkMarker.element.style.display = "";
     for (let j = 0, end = linkMarker.element.childNodes.length; j < end; j++) {
@@ -739,7 +740,7 @@ class LinkHintsMode {
   }
 
   hideMarker(marker) {
-    if (marker.isLocalMarker) {
+    if (marker.isLocalMarker()) {
       marker.element.style.display = "none";
     }
   }
@@ -771,7 +772,7 @@ class AlphabetHints {
     for (let i = 0; i < hintMarkers.length; i++) {
       const marker = hintMarkers[i];
       marker.hintString = hintStrings[i];
-      if (marker.isLocalMarker) {
+      if (marker.isLocalMarker()) {
         marker.element.innerHTML = spanWrap(marker.hintString.toUpperCase());
       }
     }
@@ -849,14 +850,14 @@ class FilterHints {
       linkText = linkText.slice(0, 33) + "...";
     }
     const caption = marker.hintString + (marker.showLinkText ? ": " + linkText : "");
-    if (marker.isLocalMarker) {
+    if (marker.isLocalMarker()) {
       marker.element.innerHTML = spanWrap(caption);
     }
   }
 
   fillInMarkers(hintMarkers, getNextZIndex) {
     for (const marker of hintMarkers) {
-      if (marker.isLocalMarker) {
+      if (marker.isLocalMarker()) {
         this.renderMarker(marker);
       }
     }
