@@ -35,7 +35,7 @@ class HintMarker {
 
 class LocalHint {
   element; // The clickable element.
-  rect;
+  rect; // The rectangle where the hint should shown, to avoid overlapping with other hints.
   linkText; // Used only by FilterHints.
   showLinkText; // Used only by FilterHints.
   constructor() {
@@ -436,11 +436,8 @@ class LinkHintsMode {
     if (isLocalMarker) {
       const localHint = HintCoordinator.getLocalHint(desc);
       const el = DomUtils.createElement("div");
-      // TODO(philc): Consider putting this on the hint marker since it's not a DOM element property.
-      // Or remove it. Do we need it since its already part of the localHintDescriptor property?
-      el.rect = localHint.rect;
-      el.style.left = el.rect.left + "px";
-      el.style.top = el.rect.top + "px";
+      el.style.left = localHint.rect.left + "px";
+      el.style.top = localHint.rect.top + "px";
       // Each hint marker is assigned a different z-index.
       el.style.zIndex = this.getNextZIndex();
       el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
@@ -1013,8 +1010,8 @@ var LocalHints = {
   //
   // Determine whether the element is visible and clickable. If it is, find the rect bounding the
   // element in the viewport. There may be more than one part of element which is clickable (for
-  // example, if it's an image), therefore we always return a array of element/rect pairs (which may
-  // also be a singleton or empty).
+  // example, if it's an image), therefore we always return an array of element/rect pairs (which
+  // may also be a singleton or empty).
   //
   getVisibleClickable(element) {
     // Get the tag name. However, `element.tagName` can be an element (not a string, see #2035), so
