@@ -504,7 +504,7 @@ class FocusSelector extends Mode {
       },
     });
 
-    this.hintContainingDiv = DomUtils.addElementList(hints, {
+    this.hintContainingDiv = DomUtils.addElementsToPage(hints, {
       id: "vimiumInputMarkerContainer",
       className: "vimiumReset",
     });
