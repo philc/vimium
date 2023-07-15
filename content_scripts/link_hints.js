@@ -839,17 +839,14 @@ class FilterHints {
     return hint.reverse().join("");
   }
 
+  // Populates the marker's element with the correct caption.
   renderMarker(marker) {
-    // TODO(philc): Should we add an assert here that we never call this when !marker.isLocalMarker ?
-    // The code below assuems that marker is local.
     let linkText = marker.linkText;
     if (linkText.length > 35) {
       linkText = linkText.slice(0, 33) + "...";
     }
     const caption = marker.hintString + (marker.localHint.showLinkText ? ": " + linkText : "");
-    if (marker.isLocalMarker()) {
-      marker.element.innerHTML = spanWrap(caption);
-    }
+    marker.element.innerHTML = spanWrap(caption);
   }
 
   fillInMarkers(hintMarkers, getNextZIndex) {
@@ -942,7 +939,7 @@ class FilterHints {
       let linkHintNumber = 1;
       return matchingHintMarkers.map((m) => {
         m.hintString = this.generateHintString(linkHintNumber++);
-        this.renderMarker(m);
+        if (m.isLocalMarker()) this.renderMarker(m);
         return m;
       });
     }
