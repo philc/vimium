@@ -399,7 +399,7 @@ class LinkHintsMode {
 
     // Note(philc): Append these markers as top level children instead of as child nodes to the link
     // itself, because some clickable elements cannot contain children, e.g. submit buttons.
-    this.hintMarkerContainingDiv = DomUtils.addElementList(
+    this.hintMarkerContainingDiv = DomUtils.addElementsToPage(
       this.hintMarkers.filter((m) => m.isLocalMarker).map((m) => m.element),
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" },
     );
