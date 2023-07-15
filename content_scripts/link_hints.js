@@ -353,14 +353,6 @@ class LinkHintsMode {
       return;
     }
 
-    // # TODO(philc): Why do we need a closure here?
-    this.getNextZIndex = (function () {
-      // This is the starting z-index value; it produces z-index values which are greater than all
-      // of the other z-index values used by Vimium.
-      let baseZIndex = 2140000000;
-      return () => baseZIndex += 1;
-    })();
-
     // This count is used to rank equal-scoring hints when sorting, thereby making JavaScript's sort
     // stable.
     this.stableSortCount = 0;
@@ -399,6 +391,16 @@ class LinkHintsMode {
     );
 
     this.setIndicator();
+  }
+
+  // Increments and returns the Z index that should be used for the next hint marker on the page.
+  getNextZIndex() {
+    if (this.currentZIndex == null) {
+      // This is the starting z-index value; it produces z-index values which are greater than all
+      // of the other z-index values used by Vimium.
+      this.currentZIndex = 2140000000;
+    }
+    return ++this.currentZIndex;
   }
 
   setOpenLinkMode(mode, shouldPropagateToOtherFrames) {
