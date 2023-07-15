@@ -34,7 +34,7 @@ class HintMarker {
 }
 
 class LocalHint {
-  element;
+  element; // The clickable element.
   rect;
   linkText; // Used only by FilterHints.
   showLinkText; // Used only by FilterHints.
@@ -45,7 +45,7 @@ class LocalHint {
 
 class HintDescriptor {
   frameId;
-  localIndex;
+  localIndex; // An index into this frame's localHints.
   linkText; // Used only by FilterHints.
   constructor(o) {
     Object.seal(this);
@@ -240,10 +240,7 @@ const HintCoordinator = {
       .map((frame) => frameIdToHintDescriptors[frame])
       .flat(1);
 
-    // TODO(philc): Clean up this logic
-    if (
-      this.cacheAllKeydownEvents != null ? this.cacheAllKeydownEvents.modeIsActive : undefined
-    ) {
+    if (this.cacheAllKeydownEvents?.modeIsActive) {
       this.cacheAllKeydownEvents.exit();
     }
     if (frameId !== originatingFrameId) {
@@ -255,8 +252,7 @@ const HintCoordinator = {
       this.cacheAllKeydownEvents.replayKeydownEvents();
     }
     this.cacheAllKeydownEvents = null;
-    return this.linkHintsMode;
-  }, // Return this (for tests). TODO(philc): Remove?
+  },
 
   // The following messages are exchanged between frames while link-hints mode is active.
   updateKeyState(request) {
