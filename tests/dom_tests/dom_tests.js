@@ -71,10 +71,10 @@ const createGeneralHintTests = (isFilteredMode) => {
     tearDown(() => document.getElementById("test-div").innerHTML = "");
 
     should("create hints when activated, discard them when deactivated", () => {
-      const linkHints = activateLinkHintsMode();
-      assert.isFalse(linkHints.hintMarkerContainingDiv == null);
-      linkHints.deactivateMode();
-      assert.isTrue(linkHints.hintMarkerContainingDiv == null);
+      const mode = activateLinkHintsMode();
+      assert.isFalse(mode.hintMarkerContainingDiv == null);
+      mode.deactivateMode();
+      assert.isTrue(mode.hintMarkerContainingDiv == null);
     });
 
     should("position items correctly", () => {
@@ -83,17 +83,17 @@ const createGeneralHintTests = (isFilteredMode) => {
         assert.equal(element1.getClientRects()[0].top, element2.getClientRects()[0].top);
       };
       stub(document.body.style, "position", "static");
-      let linkHints = activateLinkHintsMode();
-      let hintMarkers = getHintMarkerEls();
-      assertStartPosition(document.getElementsByTagName("a")[0], hintMarkers[0]);
-      assertStartPosition(document.getElementsByTagName("a")[1], hintMarkers[1]);
-      linkHints.deactivateMode();
+      let mode = activateLinkHintsMode();
+      let markerEls = getHintMarkerEls();
+      assertStartPosition(document.getElementsByTagName("a")[0], markerEls[0]);
+      assertStartPosition(document.getElementsByTagName("a")[1], markerEls[1]);
+      mode.deactivateMode();
       stub(document.body.style, "position", "relative");
-      linkHints = activateLinkHintsMode();
-      hintMarkers = getHintMarkerEls();
-      assertStartPosition(document.getElementsByTagName("a")[0], hintMarkers[0]);
-      assertStartPosition(document.getElementsByTagName("a")[1], hintMarkers[1]);
-      linkHints.deactivateMode();
+      mode = activateLinkHintsMode();
+      markerEls = getHintMarkerEls();
+      assertStartPosition(document.getElementsByTagName("a")[0], markerEls[0]);
+      assertStartPosition(document.getElementsByTagName("a")[1], markerEls[1]);
+      mode.deactivateMode();
     });
   });
 };
@@ -438,12 +438,12 @@ context("Filtered link hints", () => {
 <input type='text' id='test-input' value='some value'/> \
 <label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>`;
       document.getElementById("test-div").innerHTML = testContent;
-      this.linkHints = activateLinkHintsMode();
+      mode = activateLinkHintsMode();
     });
 
     tearDown(() => {
       document.getElementById("test-div").innerHTML = "";
-      this.linkHints.deactivateMode();
+      mode.deactivateMode();
     });
 
     should("label the input elements", () => {
@@ -476,17 +476,17 @@ context("Filtered link hints", () => {
         { id: 9, text: "test abc one - longer still" }, // For tab test - 3.
       ].map(({ id, text }) => `<a id=\"${id}\">${text}</a>`).join(" ");
       document.getElementById("test-div").innerHTML = testContent;
-      this.linkHints = activateLinkHintsMode();
+      mode = activateLinkHintsMode();
       this.getActiveHintMarker = () => {
         return HintCoordinator.getLocalHint(
-          this.linkHints.markerMatcher.activeHintMarker.hintDescriptor,
+          mode.markerMatcher.activeHintMarker.hintDescriptor,
         ).element.id;
       };
     });
 
     tearDown(() => {
       document.getElementById("test-div").innerHTML = "";
-      this.linkHints.deactivateMode();
+      mode.deactivateMode();
     });
 
     should("score start-of-word matches highly", () => {
