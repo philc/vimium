@@ -374,12 +374,11 @@ class LinkHintsMode {
 
     this.hintMode.onExit((event) => {
       if (
-        ((event != null ? event.type : undefined) === "click") ||
-        (((event != null ? event.type : undefined) === "keydown") &&
+        (event?.type === "click") ||
+        ((event?.type === "keydown") &&
           (KeyboardUtils.isEscape(event) || KeyboardUtils.isBackspace(event)))
       ) {
-        // TODO(philc): Is this return needed?
-        return HintCoordinator.sendMessage("exit", { isSuccess: false });
+        HintCoordinator.sendMessage("exit", { isSuccess: false });
       }
     });
 
