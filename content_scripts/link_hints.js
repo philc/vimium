@@ -33,19 +33,32 @@ class HintMarker {
   }
 }
 
+// A clickable element in the current frame, plus metadata about how to show a hint marker for it.
 class LocalHint {
   element; // The clickable element.
   rect; // The rectangle where the hint should shown, to avoid overlapping with other hints.
-  linkText; // Used only by FilterHints.
-  showLinkText; // Used only by FilterHints.
-  constructor() {
+  linkText; // Used in FilterHints.
+  showLinkText; // Used in FilterHints.
+  // The reason that an element has a link hint when the reason isn't obvious, e.g. the body of a
+  // frame so that the frame can be focused. This reason is shown to the user in the hint's caption.
+  reason;
+  // "secondClassCitizen" means the element isn't clickable, but does have a tab index. We show
+  // hints for these elements unless their hit box collides with another clickable element.
+  secondClassCitizen;
+  // An element that may be clickable based on our heuristics. It's a "false positive" if one of its
+  // child elements is detected as clickable.
+  possibleFalsePositive;
+  constructor(o) {
     Object.seal(this);
+    if (o) Object.assign(this, o);
   }
 }
 
+// Metadata about each LocalHint which is transferred to other frames in the current tab, so that
+// every frame can be aware of every other frame's local hints.
 class HintDescriptor {
   frameId;
-  localIndex; // An index into this frame's localHints.
+  localIndex; // An index into the frame's localHints, where the frame is indicated by frameId.
   linkText; // Used only by FilterHints.
   constructor(o) {
     Object.seal(this);
@@ -652,7 +665,6 @@ class LinkHintsMode {
       const localHint = linkMatched.localHint;
       clickEl = localHint.element;
       HintCoordinator.onExit.push((isSuccess) => {
-        // TODO(philc): localHint shouldn't have a reason property.
         if (isSuccess) {
           if (localHint.reason === "Frame.") {
             return Utils.nextTick(() => focusThisFrame({ highlight: true }));
@@ -1005,20 +1017,18 @@ const spanWrap = (hintString) => {
 };
 
 const LocalHints = {
-  //
-  // Determine whether the element is visible and clickable. If it is, find the rect bounding the
-  // element in the viewport. There may be more than one part of element which is clickable (for
-  // example, if it's an image), therefore we always return an array of element/rect pairs (which
-  // may also be a singleton or empty).
-  //
-  getVisibleClickable(element) {
+  // Returns an array of LocalHints if the element is visible and clickable, and computes the rect
+  // which bounds this element in the viewport. We return an array because there may be more than
+  // one part of element which is clickable (for example, if it's an image); if so, each LocalHint
+  // represents one of the clickable rectangles of the element.
+  getLocalHintsForElement(element) {
     // Get the tag name. However, `element.tagName` can be an element (not a string, see #2035), so
     // we guard against that.
     const tagName = element.tagName.toLowerCase?.() || "";
     let isClickable = false;
     let onlyHasTabIndex = false;
     let possibleFalsePositive = false;
-    const visibleElements = [];
+    const hints = [];
     let reason = null;
 
     // Insert area elements that provide click functionality to an img.
@@ -1031,7 +1041,8 @@ const LocalHints = {
         if (map && (imgClientRects.length > 0)) {
           const areas = map.getElementsByTagName("area");
           const areasAndRects = DomUtils.getClientRectsForAreas(imgClientRects[0], areas);
-          visibleElements.push(...areasAndRects);
+          // TODO(philc): This isn't correct.
+          hints.push(...areasAndRects);
         }
       }
     }
@@ -1138,7 +1149,7 @@ const LocalHints = {
       case "label":
         if (!isClickable) {
           isClickable = (element.control != null) && !element.control.disabled &&
-            ((this.getVisibleClickable(element.control)).length === 0);
+            ((this.getLocalHintsForElement(element.control)).length === 0);
         }
         break;
       case "body":
@@ -1199,17 +1210,18 @@ const LocalHints = {
     if (isClickable) {
       const clientRect = DomUtils.getVisibleClientRect(element, true);
       if (clientRect !== null) {
-        visibleElements.push({
+        const hint = new LocalHint({
           element,
           rect: clientRect,
           secondClassCitizen: onlyHasTabIndex,
           possibleFalsePositive,
           reason,
         });
+        hints.push(hint);
       }
     }
 
-    return visibleElements;
+    return hints;
   },
 
   //
@@ -1241,13 +1253,11 @@ const LocalHints = {
     return element;
   },
 
-  //
-  // Returns all clickable elements that are not hidden and are in the current viewport, along with
-  // rectangles at which (parts of) the elements are displayed.
+  // Returns an array of LocalHints representing all clickable elements that are not hidden and are
+  // in the current viewport, along with rectangles at which (parts of) the elements are displayed.
   // In the process, we try to find rects where elements do not overlap so that link hints are
   // unambiguous. Because of this, the rects returned will frequently *NOT* be equivalent to the
   // rects for the whole element.
-  //
   getLocalHints(requireHref) {
     // We need documentElement to be ready in order to find links.
     if (!document.documentElement) return [];
@@ -1265,7 +1275,7 @@ const LocalHints = {
     };
 
     const elements = getAllElements(document.documentElement);
-    let visibleElements = [];
+    let localHints = [];
 
     // The order of elements here is important; they should appear in the order they are in the DOM,
     // so that we can work out which element is on top when multiple elements overlap. Detecting
@@ -1275,33 +1285,31 @@ const LocalHints = {
     // below.
     for (const element of Array.from(elements)) {
       if (!requireHref || !!element.href) {
-        const visibleElement = this.getVisibleClickable(element);
-        visibleElements.push(...visibleElement);
+        const hints = this.getLocalHintsForElement(element);
+        localHints.push(...hints);
       }
     }
 
     // Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
-    visibleElements = visibleElements.reverse();
+    localHints = localHints.reverse();
 
     // Filter out suspected false positives. A false positive is taken to be an element marked as a
     // possible false positive for which a close descendant is already clickable. False positives
     // tend to be close together in the DOM, so - to keep the cost down - we only search nearby
     // elements. NOTE(smblott): The visible elements have already been reversed, so we're visiting
     // descendants before their ancestors.
-
     // This determines how many descendants we're willing to consider.
     const descendantsToCheck = [1, 2, 3];
-
-    visibleElements = visibleElements.filter((element, position) => {
-      if (!element.possibleFalsePositive) return true;
+    localHints = localHints.filter((hint, position) => {
+      if (!hint.possibleFalsePositive) return true;
       // Determine if the clickable element is indeed a false positive.
       const lookbackWindow = 6;
       let index = Math.max(0, position - lookbackWindow);
       while (index < position) {
-        let candidateDescendant = visibleElements[index].element;
+        let candidateDescendant = localHints[index].element;
         for (let _ of descendantsToCheck) {
           candidateDescendant = candidateDescendant?.parentElement;
-          if (candidateDescendant === element.element) {
+          if (candidateDescendant === hint.element) {
             // This is a false positive; exclude it from visibleElements.
             return false;
           }
@@ -1311,78 +1319,58 @@ const LocalHints = {
       return true;
     });
 
-    // This loop will check if any corner or center of element is clickable
+    // This loop will check if any corner or center of element is clickable.
     // document.elementFromPoint will find an element at a x,y location.
     // Node.contain checks to see if an element contains another. note: someNode.contains(someNode)
     // === true. If we do not find our element as a descendant of any element we find, assume it's
     // completely covered.
 
-    const nonOverlappingElements = [];
-    const localHints = nonOverlappingElements;
-    let visibleElement;
-    while ((visibleElement = visibleElements.pop())) {
-      if (visibleElement.secondClassCitizen) {
-        continue;
-      }
-
-      const rect = visibleElement.rect;
-      const element = visibleElement.element;
+    const nonOverlappingHints = localHints.filter((hint) => {
+      if (hint.secondClassCitizen) return false;
+      const rect = hint.rect;
 
       // Check middle of element first, as this is perhaps most likely to return true.
       const elementFromMiddlePoint = LocalHints.getElementFromPoint(
         rect.left + (rect.width * 0.5),
         rect.top + (rect.height * 0.5),
       );
-      if (
-        elementFromMiddlePoint &&
-        (element.contains(elementFromMiddlePoint) || elementFromMiddlePoint.contains(element))
-      ) {
-        nonOverlappingElements.push(visibleElement);
-        continue;
-      }
+      const hasIntersection = elementFromMiddlePoint &&
+        (hint.element.contains(elementFromMiddlePoint) ||
+          elementFromMiddlePoint.contains(hint.element));
+      if (hasIntersection) return true;
 
       // If not in middle, try corners.
       // Adjusting the rect by 0.1 towards the upper left, which empirically fixes some cases where
       // another element would've been found instead. NOTE(philc): This isn't well explained.
       // Originated in #2251.
-      const verticalCoordinates = [rect.top + 0.1, rect.bottom - 0.1];
-      const horizontalCoordinates = [rect.left + 0.1, rect.right - 0.1];
+      const verticalCoords = [rect.top + 0.1, rect.bottom - 0.1];
+      const horizontalCoords = [rect.left + 0.1, rect.right - 0.1];
 
-      let foundElement = false;
-      for (let verticalCoordinate of verticalCoordinates) {
-        for (let horizontalCoordinate of horizontalCoordinates) {
-          const elementFromPoint = LocalHints.getElementFromPoint(
-            horizontalCoordinate,
-            verticalCoordinate,
-          );
-          if (
-            elementFromPoint &&
-            (element.contains(elementFromPoint) || elementFromPoint.contains(element))
-          ) {
-            foundElement = true;
-            break;
-          }
-        }
-        if (foundElement) {
-          nonOverlappingElements.push(visibleElement);
-          break;
+      for (const verticalCoord of verticalCoords) {
+        for (const horizontalCoord of horizontalCoords) {
+          const elementFromPoint = LocalHints.getElementFromPoint(horizontalCoord, verticalCoord);
+          const hasIntersection = elementFromPoint &&
+            (hint.element.contains(elementFromPoint) || elementFromPoint.contains(hint.element));
+          if (hasIntersection) return true;
         }
       }
-    }
+    });
+
+    nonOverlappingHints.reverse();
 
     // Position the rects within the window.
     const { top, left } = DomUtils.getViewportTopLeft();
-    for (const hint of nonOverlappingElements) {
+    for (const hint of nonOverlappingHints) {
       hint.rect.top += top;
       hint.rect.left += left;
     }
 
     if (Settings.get("filterLinkHints")) {
-      for (const hint of localHints) {
+      for (const hint of nonOverlappingHints) {
         Object.assign(hint, this.generateLinkText(hint));
       }
     }
-    return localHints;
+    return nonOverlappingHints;
   },
 
   generateLinkText(hint) {
