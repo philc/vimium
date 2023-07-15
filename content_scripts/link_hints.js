@@ -36,6 +36,7 @@ class HintMarker {
 // A clickable element in the current frame, plus metadata about how to show a hint marker for it.
 class LocalHint {
   element; // The clickable element.
+  image; // When element is an <area> (image map), `image` is its associated image.
   rect; // The rectangle where the hint should shown, to avoid overlapping with other hints.
   linkText; // Used in FilterHints.
   showLinkText; // Used in FilterHints.
@@ -1029,6 +1030,7 @@ const LocalHints = {
     let onlyHasTabIndex = false;
     let possibleFalsePositive = false;
     const hints = [];
+    const imageMapAreas = [];
     let reason = null;
 
     // Insert area elements that provide click functionality to an img.
@@ -1039,10 +1041,12 @@ const LocalHints = {
         mapName = mapName.replace(/^#/, "").replace('"', '\\"');
         const map = document.querySelector(`map[name=\"${mapName}\"]`);
         if (map && (imgClientRects.length > 0)) {
+          isClickable = true;
           const areas = map.getElementsByTagName("area");
-          const areasAndRects = DomUtils.getClientRectsForAreas(imgClientRects[0], areas);
-          // TODO(philc): This isn't correct.
-          hints.push(...areasAndRects);
+          let areasAndRects = DomUtils.getClientRectsForAreas(imgClientRects[0], areas);
+          // We use this image property when detecting overlapping links.
+          areasAndRects = areasAndRects.map((o) => Object.assign(o, { image: element }));
+          imageMapAreas.push(...areasAndRects);
         }
       }
     }
@@ -1196,7 +1200,8 @@ const LocalHints = {
     // based only on their class name, we mark them as unreliable.
     const className = element.getAttribute("class");
     if (!isClickable && className && className.toLowerCase().includes("button")) {
-      possibleFalsePositive = isClickable = true;
+      isClickable = true;
+      possibleFalsePositive = true;
     }
 
     // Elements with tabindex are sometimes useful, but usually not. We can treat them as second
@@ -1204,20 +1209,37 @@ const LocalHints = {
     const tabIndexValue = element.getAttribute("tabindex");
     const tabIndex = tabIndexValue ? parseInt(tabIndexValue) : -1;
     if (!isClickable && !(tabIndex < 0) && !isNaN(tabIndex)) {
-      isClickable = onlyHasTabIndex = true;
+      isClickable = true;
+      onlyHasTabIndex = true;
     }
 
     if (isClickable) {
-      const clientRect = DomUtils.getVisibleClientRect(element, true);
-      if (clientRect !== null) {
-        const hint = new LocalHint({
-          element,
-          rect: clientRect,
-          secondClassCitizen: onlyHasTabIndex,
-          possibleFalsePositive,
-          reason,
+      // An image map has multiple clickable areas, and so can represent multiple LocalHints.
+      if (imageMapAreas.length > 0) {
+        const mapHints = imageMapAreas.map((areaAndRect) => {
+          return new LocalHint({
+            element: areaAndRect.element,
+            image: element,
+            // element,
+            rect: areaAndRect.rect,
+            secondClassCitizen: onlyHasTabIndex,
+            possibleFalsePositive,
+            reason,
+          });
         });
-        hints.push(hint);
+        hints.push(...mapHints);
+      } else {
+        const clientRect = DomUtils.getVisibleClientRect(element, true);
+        if (clientRect !== null) {
+          const hint = new LocalHint({
+            element,
+            rect: clientRect,
+            secondClassCitizen: onlyHasTabIndex,
+            possibleFalsePositive,
+            reason,
+          });
+          hints.push(hint);
+        }
       }
     }
 
@@ -1258,6 +1280,8 @@ const LocalHints = {
   // In the process, we try to find rects where elements do not overlap so that link hints are
   // unambiguous. Because of this, the rects returned will frequently *NOT* be equivalent to the
   // rects for the whole element.
+  // - requireHref: true if the hintable element must have an href, because an href is required for
+  //   commands like "LinkHints.activateModeToCopyLinkUrl".
   getLocalHints(requireHref) {
     // We need documentElement to be ready in order to find links.
     if (!document.documentElement) return [];
@@ -1338,6 +1362,11 @@ const LocalHints = {
         (hint.element.contains(elementFromMiddlePoint) ||
           elementFromMiddlePoint.contains(hint.element));
       if (hasIntersection) return true;
+
+      // Handle image maps
+      if (hint.element.localName == "area" && elementFromMiddlePoint == hint.image) {
+        return true;
+      }
 
       // If not in middle, try corners.
       // Adjusting the rect by 0.1 towards the upper left, which empirically fixes some cases where

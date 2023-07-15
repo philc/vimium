@@ -158,6 +158,26 @@ context("jsaction matching", () => {
   });
 });
 
+context("link hints for image maps", () => {
+  setup(() => {
+    const testContent = '<img usemap="#the-map" style="width: 50px; height: 50px">' +
+      '<map name="the-map">' +
+      '<area shape="rect" coords="0,0,20,50" href="#">' +
+      '<area shape="rect" coords="0,30,30,50" href="#">' +
+      "</area>";
+    document.getElementById("test-div").innerHTML = testContent;
+  });
+
+  tearDown(() => document.getElementById("test-div").innerHTML = "");
+
+  should("generate a hint for each area in the image map", () => {
+    const mode = activateLinkHintsMode();
+    const markerEls = getHintMarkerEls();
+    assert.equal(2, markerEls.length);
+    mode.deactivateMode();
+  });
+});
+
 const sendKeyboardEvent = (key, type, extra) => {
   if (type == null) type = "keydown";
   if (extra == null) extra = {};
