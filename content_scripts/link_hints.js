@@ -19,7 +19,6 @@ class HintMarker {
   localHint;
   linkText; // Used in FilterHints
   hintString; // Used in AlphabetHints
-  showLinkText; // TODO(philc): Possibly remove
   markerRect;
   // Element is null if the hint marker reflects a hint that's owned by another frame.
   element;
@@ -452,9 +451,6 @@ class LinkHintsMode {
       Object.assign(marker, {
         element: el,
         localHint,
-        // TODO(philc): Can we remove this "showLinkText" property since it's on the localHint
-        // already?
-        showLinkText: localHint.showLinkText,
       });
     }
 
@@ -845,11 +841,12 @@ class FilterHints {
 
   renderMarker(marker) {
     // TODO(philc): Should we add an assert here that we never call this when !marker.isLocalMarker ?
+    // The code below assuems that marker is local.
     let linkText = marker.linkText;
     if (linkText.length > 35) {
       linkText = linkText.slice(0, 33) + "...";
     }
-    const caption = marker.hintString + (marker.showLinkText ? ": " + linkText : "");
+    const caption = marker.hintString + (marker.localHint.showLinkText ? ": " + linkText : "");
     if (marker.isLocalMarker()) {
       marker.element.innerHTML = spanWrap(caption);
     }
