@@ -58,9 +58,9 @@ class LocalHint {
 // Metadata about each LocalHint which is transferred to other frames in the current tab, so that
 // every frame can be aware of every other frame's local hints.
 class HintDescriptor {
-  frameId;
-  localIndex; // An index into the frame's localHints, where the frame is indicated by frameId.
-  linkText; // Used only by FilterHints.
+  frameId; // The frameId that the hint is local to.
+  localIndex; // An index into the owner frame's localHints.
+  linkText; // The link's text. This is non-null only for FilterHints.
   constructor(o) {
     Object.seal(this);
     if (o) Object.assign(this, o);
@@ -193,6 +193,8 @@ const HintCoordinator = {
     });
     // FIXME(smblott) Global link hints is currently insufficiently reliable. If the mode above is
     // left in place, then Vimium blocks. As a temporary measure, we install a timer to remove it.
+    // TODO(philc): I believe link hints is sufficiently reliable after the manifest V3 port
+    // that this safeguard can now be removed.
     Utils.setTimeout(1000, function () {
       if (cacheAllKeydownEvents && cacheAllKeydownEvents.modeIsActive) {
         cacheAllKeydownEvents.exit();
@@ -207,20 +209,16 @@ const HintCoordinator = {
     });
   },
 
-  // Hint descriptors are global. They include all of the information necessary for each frame to
-  // determine whether and when a hint from *any* frame is selected. They include the following
-  // properties:
-  //   frameId: the frame id of this hint's local frame
-  //   localIndex: the index in @localHints for the full hint descriptor for this hint
-  //   linkText: the link's text for filtered hints (this is null for alphabet hints)
+  // Returns a list of HintDescriptors. Hint descriptors are global. They include all of the
+  // information necessary for each frame to determine whether and when a hint from *any* frame is
+  // selected.
   async getHintDescriptors({ modeIndex, isVimiumHelpDialog }, sender) {
-    let response = [];
-    if (!DomUtils.isReady() || DomUtils.windowIsTooSmall()) return response;
+    if (!DomUtils.isReady() || DomUtils.windowIsTooSmall()) return [];
 
     const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
-    // If link hints is launched within the help dialog, then we only offer hints from that
-    // frame. This improves the usability of the help dialog on the options page (particularly
-    // for selecting command names).
+    // If link hints is launched within the help dialog, then we only offer hints from that frame.
+    // This improves the usability of the help dialog on the options page (particularly for
+    // selecting command names).
     if (isVimiumHelpDialog && !window.isVimiumHelpDialog) {
       this.localHints = [];
     } else {
@@ -233,8 +231,7 @@ const HintCoordinator = {
         linkText,
       })
     ));
-    response = this.localHintDescriptors;
-    return response;
+    return this.localHintDescriptors;
   },
 
   // We activate LinkHintsMode() in every frame and provide every frame with exactly the same hint
@@ -245,14 +242,13 @@ const HintCoordinator = {
     // We do not receive the frame's own hint descritors back from the background page. Instead, we
     // merge them with the hint descriptors from other frames here. Note that
     // this.localHintDescriptors can be null if "getHintDescriptors" failed in this frame when it
-    // last called, or if this frame didn't exist at the time that hints were requested.
+    // was last called, or if this frame didn't exist at the time that hints were requested.
     frameIdToHintDescriptors[frameId] = this.localHintDescriptors || [];
     this.localHintDescriptors = null;
 
     const hintDescriptors = Object.keys(frameIdToHintDescriptors)
       .sort()
-      .map((frame) => frameIdToHintDescriptors[frame])
-      .flat(1);
+      .flatMap((frame) => frameIdToHintDescriptors[frame]);
 
     if (this.cacheAllKeydownEvents?.modeIsActive) {
       this.cacheAllKeydownEvents.exit();
@@ -300,9 +296,8 @@ var LinkHints = {
   activateMode(count, { mode, registryEntry }) {
     if (count == null) count = 1;
     if (mode == null) mode = OPEN_IN_CURRENT_TAB;
-    // Handle modes which are only accessible via command options.
-    const action = registryEntry ? registryEntry.options.action : null;
-    switch (action) {
+
+    switch (registryEntry?.options.action) {
       case "copy-text":
         mode = COPY_LINK_TEXT;
         break;
@@ -315,12 +310,12 @@ var LinkHints = {
     }
 
     if ((count > 0) || (mode === OPEN_WITH_QUEUE)) {
-      return HintCoordinator.prepareToActivateMode(mode, function (isSuccess) {
+      // TODO(philc): Remove these returns
+      HintCoordinator.prepareToActivateMode(mode, function (isSuccess) {
         if (isSuccess) {
           // Wait for the next tick to allow the previous mode to exit. It might yet generate a
           // click event, which would cause our new mode to exit immediately.
           Utils.nextTick(() => LinkHints.activateMode(count - 1, { mode }));
-          return;
         }
       });
     }
@@ -349,9 +344,9 @@ var LinkHints = {
 class LinkHintsMode {
   // @mode: One of the enums listed at the top of this file.
   constructor(hintDescriptors, mode) {
-    // We need documentElement to be ready in order to append links.
     if (mode == null) mode = OPEN_IN_CURRENT_TAB;
     this.mode = mode;
+    // We need documentElement to be ready in order to append links.
     if (!document.documentElement) return;
 
     this.hintMarkerContainingDiv = null;
@@ -387,11 +382,10 @@ class LinkHintsMode {
     });
 
     this.hintMode.onExit((event) => {
-      if (
-        (event?.type === "click") ||
+      const hintsWereCancelled = (event?.type === "click") ||
         ((event?.type === "keydown") &&
-          (KeyboardUtils.isEscape(event) || KeyboardUtils.isBackspace(event)))
-      ) {
+          (KeyboardUtils.isEscape(event) || KeyboardUtils.isBackspace(event)));
+      if (hintsWereCancelled) {
         HintCoordinator.sendMessage("exit", { isSuccess: false });
       }
     });
@@ -441,9 +435,7 @@ class LinkHintsMode {
     }
   }
 
-  //
   // Creates a link marker for the given link.
-  //
   createMarkerFor(desc) {
     const marker = new HintMarker();
     const isLocalMarker = desc.frameId === frameId;
@@ -470,10 +462,7 @@ class LinkHintsMode {
 
   // Handles all keyboard events.
   onKeyDownInMode(event) {
-    let key;
-    if (event.repeat) {
-      return;
-    }
+    if (event.repeat) return;
 
     // NOTE(smblott) The modifier behaviour here applies only to alphabet hints.
     if (
@@ -484,7 +473,7 @@ class LinkHintsMode {
     ) {
       // Toggle whether to open the link in a new or current tab.
       const previousMode = this.mode;
-      key = event.key;
+      const key = event.key;
 
       switch (key) {
         case "Shift":
@@ -588,7 +577,7 @@ class LinkHintsMode {
   }
 
   markerOverlapsStack(marker, stack) {
-    for (let otherMarker of stack) {
+    for (const otherMarker of stack) {
       if (Rect.intersects(marker.markerRect, otherMarker.markerRect)) {
         return true;
       }
@@ -724,9 +713,7 @@ class LinkHintsMode {
     }
   }
 
-  //
   // Shows the marker, highlighting matchingCharCount characters.
-  //
   showMarker(linkMarker, matchingCharCount) {
     if (!linkMarker.isLocalMarker()) return;
 
@@ -748,9 +735,7 @@ class LinkHintsMode {
 
   deactivateMode() {
     this.removeHintMarkers();
-    if (this.hintMode != null) {
-      this.hintMode.exit();
-    }
+    if (this.hintMode != null) this.hintMode.exit();
   }
 
   removeHintMarkers() {
@@ -807,7 +792,7 @@ class AlphabetHints {
   }
 
   pushKeyChar(keyChar) {
-    return this.hintKeystrokeQueue.push(keyChar);
+    this.hintKeystrokeQueue.push(keyChar);
   }
 
   popKeyChar() {
@@ -861,7 +846,7 @@ class FilterHints {
       }
     }
 
-    // We use @getMatchingHints() here (although we know that all of the hints will match) to get an
+    // We use getMatchingHints() here (although we know that all of the hints will match) to get an
     // order on the hints and highlight the first one.
     return this.getMatchingHints(hintMarkers, 0, getNextZIndex);
   }
@@ -955,9 +940,7 @@ class FilterHints {
   scoreLinkHint(linkSearchString) {
     const searchWords = linkSearchString.trim().toLowerCase().split(this.splitRegexp);
     return (linkMarker) => {
-      if (!(searchWords.length > 0)) {
-        return 0;
-      }
+      if (!(searchWords.length > 0)) return 0;
 
       // We only keep non-empty link words. Empty link words cannot be matched, and leading empty
       // link words disrupt the scoring of matches at the start of the text.
@@ -1252,19 +1235,13 @@ const LocalHints = {
   // until we hit an actual element.
   //
   getElementFromPoint(x, y, root, stack) {
-    if (root == null) {
-      root = document;
-    }
-    if (stack == null) {
-      stack = [];
-    }
+    if (root == null) root = document;
+    if (stack == null) stack = [];
     const element = root.elementsFromPoint
       ? root.elementsFromPoint(x, y)[0]
       : root.elementFromPoint(x, y);
 
-    if (stack.includes(element)) {
-      return element;
-    }
+    if (stack.includes(element)) return element;
 
     stack.push(element);
 
