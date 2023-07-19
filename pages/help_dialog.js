@@ -202,7 +202,9 @@ const HelpDialog = {
   },
 };
 
-UIComponentServer.registerHandler(function (event) {
+UIComponentServer.registerHandler(async function (event) {
+  await Settings.onLoaded();
+  await Utils.populateBrowserInfo();
   switch (event.data.name != null ? event.data.name : event.data) {
     case "hide":
       HelpDialog.hide();
