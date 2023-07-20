@@ -224,7 +224,9 @@ class FindMode extends Mode {
     return this.query.regexMatches[this.query.activeRegexIndex];
   }
 
+  // Returns null if no search has been performed yet.
   static getQuery(backwards) {
+    if (!this.query) return;
     // check if the query has been changed by a script in another frame
     const mostRecentQuery = FindModeHistory.getQuery();
     if (mostRecentQuery !== this.query.rawQuery) {
