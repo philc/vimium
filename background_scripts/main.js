@@ -709,7 +709,7 @@ globalThis.runTests = () => open(chrome.runtime.getURL("tests/dom_tests/dom_test
 
 // Show notification on upgrade.
 let showUpgradeMessageIfNecessary;
-showUpgradeMessageIfNecessary = function () {
+showUpgradeMessageIfNecessary = async function () {
   const currentVersion = Utils.getCurrentVersion();
   const previousVersion = Settings.get("previousVersion");
 
@@ -718,43 +718,42 @@ showUpgradeMessageIfNecessary = function () {
   }
   const currentVersionNumbers = currentVersion.split(".");
   const previousVersionNumbers = previousVersion.split(".");
-  if (
-    currentVersionNumbers.slice(0, 2).join(".") === previousVersionNumbers.slice(0, 2).join(".")
-  ) {
-    // We do not show an upgrade message for patch/silent releases. Such releases have the same
-    // major and minor version numbers. We do, however, update the recorded previous version.
-    Settings.set("previousVersion", currentVersion);
-  } else {
+
+  const majorVersionHasChanged =
+    currentVersionNumbers.slice(0, 2).join(".") !== previousVersionNumbers.slice(0, 2).join(".");
+
+  Settings.set("previousVersion", currentVersion);
+
+  // We do not show an upgrade message for patch/silent releases. Such releases have the same
+  // major and minor version numbers. We do, however, update the recorded previous version.
+  if (majorVersionHasChanged) {
+    // NOTE(philc): These notifications use the system notification UI. So, if you don't have
+    // notifications enabled from your browser (e.g. in Notification Settings in OSX, then
+    // chrome.notification.create will succeed, but you won't see it.
     const notificationId = "VimiumUpgradeNotification";
-    const notification = {
-      type: "basic",
-      iconUrl: chrome.runtime.getURL("icons/vimium.png"),
-      title: "Vimium Upgrade",
-      message:
-        `Vimium has been upgraded to version ${currentVersion}. Click here for more information.`,
-      isClickable: true,
-    };
-    if (chrome.notifications && chrome.notifications.create) {
-      chrome.notifications.create(notificationId, notification, function () {
-        if (!chrome.runtime.lastError) {
-          Settings.set("previousVersion", currentVersion);
-          chrome.notifications.onClicked.addListener(function (id) {
-            if (id === notificationId) {
-              chrome.tabs.query({ active: true, currentWindow: true }, function (...args) {
-                const [tab] = args[0];
-                return TabOperations.openUrlInNewTab({
-                  tab,
-                  tabId: tab.id,
-                  url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md",
-                });
-              });
-            }
-          });
-        }
+    const notification = await chrome.notifications.create(
+      notificationId,
+      {
+        type: "basic",
+        iconUrl: chrome.runtime.getURL("icons/vimium.png"),
+        iconUrl: "/icons/vimium.png",
+        title: "Vimium Upgrade",
+        message:
+          `Vimium has been upgraded to version ${currentVersion}. Click here for more information.`,
+        isClickable: true,
+      },
+    );
+    if (!chrome.runtime.lastError) {
+      chrome.notifications.onClicked.addListener(async function (id) {
+        if (id != notificationId) return;
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const tab = tabs[0];
+        return TabOperations.openUrlInNewTab({
+          tab,
+          tabId: tab.id,
+          url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md",
+        });
       });
-    } else {
-      // We need to wait for the user to accept the "notifications" permission.
-      chrome.permissions.onAdded.addListener(showUpgradeMessageIfNecessary);
     }
   }
 };
@@ -826,7 +825,7 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   if (Settings.get("previousVersion") == null) {
     await Settings.set("previousVersion", Utils.getCurrentVersion());
   }
-  showUpgradeMessageIfNecessary();
+  await showUpgradeMessageIfNecessary();
 });
 
 // Note that this event is not fired when an incognito profile is started.

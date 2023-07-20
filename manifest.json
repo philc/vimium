@@ -23,6 +23,7 @@
     "history",
     "storage",
     "sessions",
+    // Notifications are used to show a message when Vimium's major version has been upgraded.
     "notifications",
     // We're using the scripting permission to 1) inject our content scripts and CSS into existing
     // tabs when Vimium is first installed, and 2) inject the user's link hints CSS when a page
