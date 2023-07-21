@@ -224,6 +224,6 @@ const CompletionEngines = [
   DummyCompletionEngine,
 ];
 
-globalThis.CompletionEngines = CompletionEngines;
+globalThis.CompletionEngines = globalThis.BuiltinCompletionEngines = CompletionEngines;
 
-export { Amazon, DuckDuckGo, Qwant, Webster };
+export { Amazon, BaseEngine, DuckDuckGo, Qwant, Webster };
