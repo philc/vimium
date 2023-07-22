@@ -4,42 +4,35 @@
 const Vomnibar = {
   vomnibarUI: null,
 
-  // Extract any additional options from the command's registry entry.
-  extractOptionsFromRegistryEntry(registryEntry, callback) {
-    return callback ? callback(Object.assign({}, registryEntry.options)) : null;
-  },
-
   // sourceFrameId here (and below) is the ID of the frame from which this request originates, which
   // may be different from the current frame.
 
   activate(sourceFrameId, registryEntry) {
-    return this.extractOptionsFromRegistryEntry(registryEntry, (options) => {
-      return this.open(sourceFrameId, Object.assign(options, { completer: "omni" }));
-    });
+    const options = Object.assign({}, registryEntry.options, { completer: "omni" });
+    this.open(sourceFrameId, options);
   },
 
   activateInNewTab(sourceFrameId, registryEntry) {
-    return this.extractOptionsFromRegistryEntry(registryEntry, (options) => {
-      return this.open(sourceFrameId, Object.assign(options, { completer: "omni", newTab: true }));
-    });
+    const options = Object.assign({}, registryEntry.options, { completer: "omni", newTab: true });
+    this.open(sourceFrameId, options);
   },
 
   activateTabSelection(sourceFrameId) {
-    return this.open(sourceFrameId, {
+    this.open(sourceFrameId, {
       completer: "tabs",
       selectFirst: true,
     });
   },
 
   activateBookmarks(sourceFrameId) {
-    return this.open(sourceFrameId, {
+    this.open(sourceFrameId, {
       completer: "bookmarks",
       selectFirst: true,
     });
   },
 
   activateBookmarksInNewTab(sourceFrameId) {
-    return this.open(sourceFrameId, {
+    this.open(sourceFrameId, {
       completer: "bookmarks",
       selectFirst: true,
       newTab: true,
@@ -47,7 +40,7 @@ const Vomnibar = {
   },
 
   activateEditUrl(sourceFrameId) {
-    return this.open(sourceFrameId, {
+    this.open(sourceFrameId, {
       completer: "omni",
       selectFirst: false,
       query: window.location.href,
@@ -55,7 +48,7 @@ const Vomnibar = {
   },
 
   activateEditUrlInNewTab(sourceFrameId) {
-    return this.open(sourceFrameId, {
+    this.open(sourceFrameId, {
       completer: "omni",
       selectFirst: false,
       query: window.location.href,
@@ -78,7 +71,7 @@ const Vomnibar = {
     this.init();
     // The Vomnibar cannot coexist with the help dialog (it causes focus issues).
     HelpDialog.abort();
-    return this.vomnibarUI.activate(
+    this.vomnibarUI.activate(
       Object.assign(options, { name: "activate", sourceFrameId, focus: true }),
     );
   },
