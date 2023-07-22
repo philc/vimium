@@ -32,8 +32,8 @@ the user's current browsing habits.
 4. **Feels native**. Vimium doesn't drastically change the way Chrome looks or behaves.
 5. **Simple**. The core feature set isn't overwhelming. This principle is particularly vulnerable as we add to
    Vimium, so it requires our active effort to maintain this simplicity.
-6. **Code simplicity**. Developers find the Vimium codebase relatively simple and easy to jump into. This
-   provides us an active dev community.
+6. **Code simplicity**. Developers find the Vimium codebase relatively simple and easy to jump into.
+   This allows more people to fix bugs and implement features.
 
 ### Which pull requests get merged?
 
@@ -62,6 +62,21 @@ Tips for preparing a PR:
 * If you want to check with us first before implementing something big, open an issue proposing the idea.
   You'll get feedback from the maintainers as to whether it's something we'll likely merge.
 * Try to keep PRs around 50 LOC or less. Bigger PRs create inertia for review.
+
+Here's the rationale behind this policy:
+
+* Vimium is a volunteer effort. To make it possible to keep the project up-to-date as the web and
+  browsers evolve, the codebase has to remain small and maintainable.
+* If the maintainers don't use a feature, and most other users don't, then the feature will likely
+  get neglected.
+* Every feature, particularly neglected ones, increase the complexity of the codebase and makes it
+  more difficult and less pleasant to work on.
+* Adding a new feature is only part of the work. Once it's added, a feature must be maintained
+  forever.
+* Vimium is a project which suffers from the
+  [stadium model of open source](https://645ventures.com/voices/articles/github-at-scale-and-how-to-help-stadium-model-maintainers):
+  there are many users but unfortunately few maintainers. As a result, there is bandwidth to
+  maintain only a limited number of features in the main repo.
 
 ### Installing From Source
 
