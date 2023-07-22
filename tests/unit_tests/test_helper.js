@@ -1,8 +1,20 @@
-require("../vendor/shoulda.js");
+import * as shoulda from "../vendor/shoulda.js";
+import "./test_chrome_stubs.js";
+import "../../lib/utils.js";
 
-// In a nodejs environment, stub out some essential DOM properties which are required before any of our code
-// can be loaded.
-if (typeof(window) == "undefined")
-  require("./test_chrome_stubs.js")
+const shouldaSubset = {
+  assert: shoulda.assert,
+  context: shoulda.context,
+  ensureCalled: shoulda.ensureCalled,
+  setup: shoulda.setup,
+  should: shoulda.should,
+  shoulda: shoulda,
+  stub: shoulda.stub,
+  returns: shoulda.returns,
+  tearDown: shoulda.tearDown,
+};
 
-require("../../lib/utils.js");
+globalThis.isUnitTests = true;
+
+// Attach shoulda's functions, like setup, context, should, to the global namespace.
+Object.assign(window, shouldaSubset);

@@ -1,3 +1,47 @@
+2.0.0 (unreleased)
+
+- Support manifest v3. Chrome is requiring all extensions support this. This required a partial
+  rewrite and many changes. Please report any issues [here](https://github.com/philc/vimium/issues).
+- Revamped the UI for the action bar, which configures which keys Vimium ignores on a particular
+  site.
+- Remove the use of window.unload handlers, in preparation for Chrome's bfcache.
+
+1.67.7 (2023-07-12)
+
+- Fix an issue where focusing the google search box puts the cursor at the start, rather than end,
+  of the search box. ([#4247](https://github.com/philc/vimium/issues/4247))
+
+1.67.6 (2022-12-19)
+
+- Fix a spurious issue preventing approval on the Mozilla addons site
+  ([#4195](https://github.com/philc/vimium/issues/4195))
+
+1.67.5 (2022-12-17)
+
+- For Firefox only, add back the clipboard read and write permissions. This fixes the Vimium commands which
+  use the clipboard in Firefox ([#4186](https://github.com/philc/vimium/pull/4186))
+
+1.67.4 (2022-12-01)
+
+- Remove clipboard read/write permissions. We no longer need them since 1.67.2 (see #4120).
+- Fix Vimium's dark mode styling, take 2 (see [#4156](https://github.com/philc/vimium/issues/4156),
+  [#4159](https://github.com/philc/vimium/pull/4159))
+
+1.67.3 (2022-10-29)
+
+- Fix copy-to-clipboard issue ([#4147](https://github.com/philc/vimium/issues/4147)) in visual mode.
+- Fix Vimium's dark mode styling in latest Firefox ([#4148](https://github.com/philc/vimium/issues/4148))
+
+1.67.2 (2022-10-17)
+
+- In Firefox, remove use of deprecated InstallTrigger, which was issuing a console warning
+  ([#4033](https://github.com/philc/vimium/issues/4033))
+- Fix the Vimium toolbar icon to accurately reflect whether keys are excluded
+  ([#4118](https://github.com/philc/vimium/pull/4118))
+- Fix usage of deprecated clipboard APIs, which affected commands using copy and paste
+  ([#4120](https://github.com/philc/vimium/issues/4120))
+- Fix bug preventing going into caret mode ([#3877](https://github.com/philc/vimium/pull/3877))
+
 1.67.1 (2022-01-19)
 
 - In Firefox 96+, make link hints open one tab, not two ([#3985](https://github.com/philc/vimium/pull/3985))

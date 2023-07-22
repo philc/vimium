@@ -32,15 +32,14 @@ the user's current browsing habits.
 4. **Feels native**. Vimium doesn't drastically change the way Chrome looks or behaves.
 5. **Simple**. The core feature set isn't overwhelming. This principle is particularly vulnerable as we add to
    Vimium, so it requires our active effort to maintain this simplicity.
-6. **Code simplicity**. Developers find the Vimium codebase relatively simple and easy to jump into. This
-   provides us an active dev community.
+6. **Code simplicity**. Developers find the Vimium codebase relatively simple and easy to jump into.
+   This allows more people to fix bugs and implement features.
 
 ### Which pull requests get merged?
 
 **Goals of the maintainers**
 
-The maintainers of Vimium are @smblott-github and @philc. We have limited bandwidth, which influences which
-PRs we can review and merge.
+The maintainers of Vimium have limited bandwidth, which influences which PRs we can review and merge.
 
 Our goals are generally to keep Vimium small, maintainable, and really nail the broad appeal use cases. This
 is in contrast to adding and maintaining an increasing number of complex or niche features. We recommend those
@@ -64,6 +63,21 @@ Tips for preparing a PR:
   You'll get feedback from the maintainers as to whether it's something we'll likely merge.
 * Try to keep PRs around 50 LOC or less. Bigger PRs create inertia for review.
 
+Here's the rationale behind this policy:
+
+* Vimium is a volunteer effort. To make it possible to keep the project up-to-date as the web and
+  browsers evolve, the codebase has to remain small and maintainable.
+* If the maintainers don't use a feature, and most other users don't, then the feature will likely
+  get neglected.
+* Every feature, particularly neglected ones, increase the complexity of the codebase and makes it
+  more difficult and less pleasant to work on.
+* Adding a new feature is only part of the work. Once it's added, a feature must be maintained
+  forever.
+* Vimium is a project which suffers from the
+  [stadium model of open source](https://645ventures.com/voices/articles/github-at-scale-and-how-to-help-stadium-model-maintainers):
+  there are many users but unfortunately few maintainers. As a result, there is bandwidth to
+  maintain only a limited number of features in the main repo.
+
 ### Installing From Source
 
 Vimium is written in Javascript. To install Vimium from source:
@@ -77,14 +91,10 @@ Vimium is written in Javascript. To install Vimium from source:
 
 **On Firefox:**
 
-For 'local storage' to work while using the temporary addon, you need to add an 'application' section to the
-manifest with an arbitrary ID that is unique for you, for example:
+Firefox needs a modified version of the manifest.json that's used for Chrome. To generate this,
+run
 
-    "applications": {
-      "gecko": {
-        "id": "vimium@example.net"
-      }
-    },
+`./make.js write-firefox-manifest`
 
 After that:
 
@@ -98,8 +108,9 @@ After that:
 Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
 [Puppeteer](https://github.com/puppeteer/puppeteer). To run the tests:
 
- 1. Install [nodejs](https://nodejs.org/) if you don't have it already.
- 1. `npm install puppeteer` to install [Puppeteer](https://github.com/puppeteer/puppeteer).
+ 1. Install [Deno](https://deno.land/) if you don't have it already.
+ 1. `PUPPETEER_PRODUCT=chrome deno run -A --unstable https://deno.land/x/puppeteer@16.2.0/install.ts` to
+    install [Puppeteer](https://github.com/lucacasonato/deno-puppeteer)
  1. `./make.js test` to build the code and run the tests.
 
 ### Coding Style
