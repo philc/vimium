@@ -49,7 +49,7 @@ context("convertToUrl", () => {
     assert.equal("http://[::]:8080", Utils.convertToUrl("[::]:8080"));
     assert.equal("view-source:    0.0.0.0", Utils.convertToUrl("view-source:    0.0.0.0"));
     assert.equal(
-      "javascript:alert('25 % 20 * 25 ');",
+      "javascript:alert('25 % 20 * 25%20');",
       Utils.convertToUrl("javascript:alert('25 % 20 * 25%20');"),
     );
   });
