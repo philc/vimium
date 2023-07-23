@@ -241,7 +241,7 @@ class FindMode extends Mode {
   }
 
   static saveQuery() {
-    return FindModeHistory.saveQuery(this.query.rawQuery);
+    FindModeHistory.saveQuery(this.query.rawQuery);
   }
 
   // :options is an optional dict. valid parameters are 'caseSensitive' and 'backwards'.
