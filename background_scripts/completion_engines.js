@@ -27,7 +27,7 @@
 
 // A base class for common regexp-based matching engines. "options" must define:
 //   options.engineUrl: the URL to use for the completion engine. This must be a string.
-//   options.regexps: one or regular expressions.  This may either a single string or a list of strings.
+//   options.regexps: Regexes matching search URLs this engine handles. List of strings or RegExps.
 //   options.example: an example object containing at least "keyword" and "searchUrl", and optional "description".
 // TODO(philc): This base class is doing very little. We should remove it and use composition.
 class BaseEngine {
@@ -42,6 +42,9 @@ class BaseEngine {
   getUrl(queryTerms) {
     return Utils.createSearchUrl(queryTerms, this.engineUrl);
   }
+  parse(text) {
+    return JSON.parse(text)[1];
+  }
 }
 
 class Google extends BaseEngine {
@@ -54,10 +57,6 @@ class Google extends BaseEngine {
         keyword: "g",
       },
     });
-  }
-
-  parse(text) {
-    return JSON.parse(text)[1];
   }
 }
 
@@ -99,10 +98,6 @@ class Youtube extends BaseEngine {
       },
     });
   }
-
-  parse(text) {
-    return JSON.parse(text)[1];
-  }
 }
 
 class Wikipedia extends BaseEngine {
@@ -116,10 +111,6 @@ class Wikipedia extends BaseEngine {
       },
     });
   }
-
-  parse(text) {
-    return JSON.parse(text)[1];
-  }
 }
 
 class Bing extends BaseEngine {
@@ -132,10 +123,6 @@ class Bing extends BaseEngine {
         keyword: "b",
       },
     });
-  }
-
-  parse(text) {
-    return JSON.parse(text)[1];
   }
 }
 
@@ -237,6 +224,6 @@ const CompletionEngines = [
   DummyCompletionEngine,
 ];
 
-globalThis.CompletionEngines = CompletionEngines;
+globalThis.CompletionEngines = globalThis.BuiltinCompletionEngines = CompletionEngines;
 
-export { Amazon, DuckDuckGo, Qwant, Webster };
+export { Amazon, BaseEngine, DuckDuckGo, Qwant, Webster };

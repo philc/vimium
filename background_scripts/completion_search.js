@@ -45,8 +45,13 @@ class EnginePrefixWrapper {
 const CompletionSearch = {
   debug: false,
   inTransit: {},
-  completionCache: new SimpleCache(2 * 60 * 60 * 1000, 5000), // Two hours, 5000 entries.
-  engineCache: new SimpleCache(1000 * 60 * 60 * 1000), // 1000 hours.
+  completionCache: undefined,
+  engineCache: undefined,
+
+  clearCache() {
+    this.completionCache = new SimpleCache(2 * 60 * 60 * 1000, 5000); // Two hours, 5000 entries.
+    this.engineCache = new SimpleCache(1000 * 60 * 60 * 1000); // 1000 hours.
+  },
 
   // The amount of time to wait for new requests before launching the current request (for example,
   // if the user is still typing).
@@ -221,7 +226,8 @@ const CompletionSearch = {
                   () => this.completionCache.set(completionCacheKey, null),
                 );
                 if (this.debug) {
-                  console.log("fail", url);
+                  console.error("completion failed:", url);
+                  console.error(error);
                 }
               }
 
@@ -255,4 +261,5 @@ const CompletionSearch = {
   },
 };
 
+CompletionSearch.clearCache();
 globalThis.CompletionSearch = CompletionSearch;

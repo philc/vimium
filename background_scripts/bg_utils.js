@@ -1,3 +1,5 @@
+import {BaseEngine} from "./completion_engines.js";
+
 const TIME_DELTA = 500; // Milliseconds.
 
 // TabRecency associates a logical timestamp with each tab id. These are used to provide an initial
@@ -124,12 +126,51 @@ const SearchEngines = {
     if ((this.previousSearchEngines == null) || (searchEngines !== this.previousSearchEngines)) {
       this.previousSearchEngines = searchEngines;
       this.searchEngines = new AsyncDataFetcher(function (callback) {
+        CompletionSearch.clearCache();
         const engines = {};
+        CompletionEngines = [...BuiltinCompletionEngines];
         for (let line of BgUtils.parseLines(searchEngines)) {
           const tokens = line.split(/\s+/);
           if (2 <= tokens.length) {
             const keyword = tokens[0].split(":")[0];
             const searchUrl = tokens[1];
+            // Build and register a new completion engine using the @URL
+            if (3 <= tokens.length && tokens[2].startsWith("@")) {
+              const [_, engineUrl, jsonPath] = tokens[2].split("@");
+              const engineRegexp = "^" + searchUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              class NewCompletionEngine extends BaseEngine {
+                constructor() {
+                  super({
+                    engineUrl: engineUrl,
+                    regexps: [engineRegexp],
+                    example: {
+                      searchUrl: searchUrl,
+                      keyword: keyword,
+                    },
+                  });
+                }
+                parse(text) {
+                  if (!jsonPath) return super.parse(text);
+                  let data = JSON.parse(text);
+                  let star = false;
+                  for (const key of jsonPath.split(".")) {
+                    if (key === "*") {
+                      // TODO when ES2019: Replace with data=data.flat(1)
+                      if (star) data = [].concat.apply([], data);
+                      star = true;
+                    } else if (star && data instanceof Array) {
+                      star = false;
+                      data = data.map(val => val[key]);
+                    } else {
+                      data = data[key];
+                    }
+                  }
+                  return data;
+                }
+              }
+              CompletionEngines.unshift(NewCompletionEngine);
+              tokens.shift();
+            }
             const description = tokens.slice(2).join(" ") || `search (${keyword})`;
             if (Utils.hasFullUrlPrefix(searchUrl) || Utils.hasJavascriptPrefix(searchUrl)) {
               engines[keyword] = { keyword, searchUrl, description };
