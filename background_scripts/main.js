@@ -647,6 +647,18 @@ const sendRequestHandlers = {
       chrome.tabs.reload(tab.id);
     }
   },
+
+  async filterCompletions(request, sender) {
+    const completer = completers[request.completerName];
+    let response = await completer.filter(request);
+
+    // NOTE(smblott): response contains `relevancyFunction` (function) properties which cause
+    // postMessage, below, to fail in Firefox. See #2576. We cannot simply delete these methods,
+    // as they're needed elsewhere. Converting the response to JSON and back is a quick and easy
+    // way to sanitize the object.
+    response = JSON.parse(JSON.stringify(response));
+    return response;
+  },
 };
 
 Utils.addChromeRuntimeOnMessageListener(
