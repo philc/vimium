@@ -404,6 +404,7 @@ class HistoryCompleter {
 // expect to arrive there.
 class DomainCompleter {
   constructor() {
+    // TODO(philc): Move this documentation and field out of the constructor.
     // A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
     // - `entry` is the most recently accessed page in the History within this domain.
     // - `referenceCount` is a count of the number of History entries within this domain.
@@ -411,33 +412,23 @@ class DomainCompleter {
     this.domains = null;
   }
 
-  filter({ queryTerms, query }, onComplete) {
-    // Do not offer completions if the query is empty, or if the user has finished typing the first
-    // word.
-    if ((queryTerms.length === 0) || /\S\s/.test(query)) {
-      return onComplete([]);
-    }
-    if (this.domains) {
-      this.performSearch(queryTerms, onComplete);
-    } else {
-      this.populateDomains(() => this.performSearch(queryTerms, onComplete));
-    }
-  }
+  async filter({ queryTerms, query }) {
+    const isMultiWordQuery = /\S\s/.test(query);
+    if ((queryTerms.length === 0) || isMultiWordQuery) return [];
+    if (!this.domains) await this.populateDomains();
 
-  performSearch(queryTerms, onComplete) {
-    const query = queryTerms[0];
-    let domains = Object.keys(this.domains || []).filter((d) => d.includes(query));
-    domains = this.sortDomainsByRelevancy(queryTerms, domains);
-    onComplete([
-      new Suggestion({
-        queryTerms,
-        type: "domain",
-        url: (domains[0] != null ? domains[0][0] : undefined) != null
-          ? (domains[0] != null ? domains[0][0] : undefined)
-          : "", // This is the URL or an empty string, but not null.
-        relevancy: 2.0,
-      }),
-    ].filter((s) => 0 < s.url.length));
+    // const query = queryTerms[0];
+    const firstTerm = queryTerms[0];
+    const domains = Object.keys(this.domains || []).filter((d) => d.includes(firstTerm));
+    const domainsAndScores = this.sortDomainsByRelevancy(queryTerms, domains);
+    const result = new Suggestion({
+      queryTerms,
+      type: "domain",
+      // This should be the URL or the domain, or an empty string, but not null.
+      url: domainsAndScores[0]?.[0] || "",
+      relevancy: 2.0,
+    });
+    return result.url.length > 0 ? [result] : [];
   }
 
   // Returns a list of domains of the form: [ [domain, relevancy], ... ]
@@ -453,14 +444,12 @@ class DomainCompleter {
     return results;
   }
 
-  populateDomains(onComplete) {
-    HistoryCache.use((history) => {
-      this.domains = {};
-      history.forEach((entry) => this.onPageVisited(entry));
-      chrome.history.onVisited.addListener(this.onPageVisited.bind(this));
-      chrome.history.onVisitRemoved.addListener(this.onVisitRemoved.bind(this));
-      onComplete();
-    });
+  async populateDomains() {
+    await HistoryCache.onLoaded();
+    this.domains = {};
+    HistoryCache.history.forEach((entry) => this.onPageVisited(entry));
+    chrome.history.onVisited.addListener(this.onPageVisited.bind(this));
+    chrome.history.onVisitRemoved.addListener(this.onVisitRemoved.bind(this));
   }
 
   onPageVisited(newPage) {
