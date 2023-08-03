@@ -767,95 +767,24 @@ class MultiCompleter {
 
   async filter(request, onComplete) {
     Utils.assert(onComplete == null, "completer.filter called with a callback");
-    // Allow only one query to run at a time.
-    // TODO(philc): Revisit this
-    // if (this.filterInProgress) {
-    //   this.mostRecentQuery = arguments;
-    //   return;
-    // }
 
-    // Provide each completer with an opportunity to see (and possibly alter) the request before it is
-    // launched.
-    for (let completer of this.completers) {
-      if (completer.preprocessRequest) {
-        completer.preprocessRequest(request);
-      }
+    // Provide each completer with an opportunity to see (and possibly alter) the request before it
+    // is launched.
+    for (const completer of this.completers) {
+      completer.preprocessRequest?.(request);
     }
 
     RegexpCache.clear();
     const queryTerms = request.queryTerms;
 
     this.mostRecentQuery = null;
-    this.filterInProgress = true;
-    let suggestions = [];
-    const continuations = [];
-    const filters = [];
 
-    // Run each of the completers (asynchronously).
-    let jobs = new JobRunner(this.completers.map((completer) => {
-      return (callback) => {
-        completer.filter(request, function (newSuggestions, param) {
-          if (newSuggestions == null) {
-            newSuggestions = [];
-          }
-          if (param == null) {
-            param = {};
-          }
-          const { continuation, filter } = param;
-          suggestions.push(...newSuggestions);
-          if (continuation != null) {
-            continuations.push(continuation);
-          }
-          if (filter != null) {
-            filters.push(filter);
-          }
-          callback();
-        });
-      };
-    }));
-
-    // Once all completers have finished, process the results and post them, and run any
-    // continuations or a pending query.
-    jobs.onReady(() => {
-      let filter;
-      for (filter of filters) {
-        suggestions = filter(suggestions);
-      }
-      const shouldRunContinuations = (0 < continuations.length) && (this.mostRecentQuery == null);
-
-      // Post results, unless there are none and we will be running a continuation. This avoids
-      // collapsing the vomnibar briefly before expanding it again, which looks ugly.
-      if ((suggestions.length !== 0) || !shouldRunContinuations) {
-        suggestions = this.prepareSuggestions(request, queryTerms, suggestions);
-        onComplete({ results: suggestions });
-      }
-
-      // Run any continuations (asynchronously); for example, the search-engine completer
-      // (SearchEngineCompleter) uses a continuation to fetch suggestions from completion engines
-      // asynchronously.
-      if (shouldRunContinuations) {
-        jobs = new JobRunner(continuations.map((continuation) => (function (callback) {
-          continuation(function (newSuggestions) {
-            suggestions.push(...newSuggestions);
-            callback();
-          });
-        })));
-
-        jobs.onReady(() => {
-          for (filter of filters) {
-            suggestions = filter(suggestions);
-          }
-          suggestions = this.prepareSuggestions(request, queryTerms, suggestions);
-          onComplete({ results: suggestions });
-        });
-      }
-
-      // Admit subsequent queries and launch any pending query.
-      this.filterInProgress = false;
-      if (this.mostRecentQuery) {
-        return this.filter(...this.mostRecentQuery);
-      }
-    });
+    // TODO(philc): Handle the case of SearchEngineCompletion, which returns param.filter and
+    // param.contiuation.
+    const promises = this.completers.map((c) => c.filter(request));
+    let results = (await Promise.all(promises)).flat(1);
+    results = this.prepareSuggestions(request, queryTerms, results);
+    return results;
   }
 
   prepareSuggestions(request, queryTerms, suggestions) {
