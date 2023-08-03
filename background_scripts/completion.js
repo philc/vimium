@@ -7,12 +7,14 @@
 //
 // A completer is a class which has three functions:
 //  - filter(query, onComplete): "query" will be whatever the user typed into the Vomnibox.
+// TODO(philc): Update this doc
 //  - refresh(): (optional) refreshes the completer's data source (e.g. refetches the list of
 //    bookmarks).
 //  - cancel(): (optional) cancels any pending, cancelable action.
 
 const showRelevancy = false; // Set this to true to render relevancy when debugging the ranking scores.
 
+// TODO(philc): Make this a struct, and probably move out the "computeRelevancy" function.
 class Suggestion {
   constructor(options) {
     // Required options.
@@ -259,30 +261,17 @@ const ignoredTopLevelBookmarks = {
 
 // this.bookmarks are loaded asynchronously when refresh() is called.
 class BookmarkCompleter {
-  filter({ queryTerms }, onComplete) {
-    this.queryTerms = queryTerms;
-    this.onComplete = onComplete;
-    this.currentSearch = { queryTerms: this.queryTerms, onComplete: this.onComplete };
-    if (this.bookmarks) {
-      return this.performSearch();
-    }
-  }
+  async filter({ queryTerms }) {
+    if (!this.bookmarks) await this.refresh();
 
-  onBookmarksLoaded() {
-    if (this.currentSearch) {
-      this.performSearch();
-    }
-  }
-
-  performSearch() {
-    // If the folder separator character the first character in any query term, then we'll use the
-    // bookmark's full path as its title. Otherwise, we'll just use the its regular title.
+    // If the folder separator character is the first character in any query term, then use the
+    // bookmark's full path as its title. Otherwise, just use the its regular title.
     let results;
-    const usePathAndTitle = this.currentSearch.queryTerms.reduce(
+    const usePathAndTitle = queryTerms.reduce(
       (prev, term) => prev || term.startsWith(folderSeparator),
       false,
     );
-    if (this.currentSearch.queryTerms.length > 0) {
+    if (queryTerms.length > 0) {
       results = this.bookmarks.filter((bookmark) => {
         const suggestionTitle = usePathAndTitle ? bookmark.pathAndTitle : bookmark.title;
         if (bookmark.hasJavascriptPrefix == null) {
@@ -292,14 +281,14 @@ class BookmarkCompleter {
           bookmark.shortUrl = "javascript:...";
         }
         const suggestionUrl = bookmark.shortUrl != null ? bookmark.shortUrl : bookmark.url;
-        return RankingUtils.matches(this.currentSearch.queryTerms, suggestionUrl, suggestionTitle);
+        return RankingUtils.matches(queryTerms, suggestionUrl, suggestionTitle);
       });
     } else {
       results = [];
     }
     const suggestions = results.map((bookmark) => {
       return new Suggestion({
-        queryTerms: this.currentSearch.queryTerms,
+        queryTerms,
         type: "bookmark",
         url: bookmark.url,
         title: usePathAndTitle ? bookmark.pathAndTitle : bookmark.title,
@@ -308,17 +297,22 @@ class BookmarkCompleter {
         deDuplicate: (bookmark.shortUrl == null),
       });
     });
-    const onComplete = this.currentSearch.onComplete;
-    this.currentSearch = null;
-    onComplete(suggestions);
+    return suggestions;
   }
 
-  refresh() {
-    this.bookmarks = null;
-    chrome.bookmarks.getTree((bookmarks) => {
-      this.bookmarks = this.traverseBookmarks(bookmarks).filter((bookmark) => bookmark.url != null);
-      this.onBookmarksLoaded();
-    });
+  async refresh() {
+    // In case refresh() is called multiple times before chrome.bookmarks.getTree() completes, only
+    // call chrome.bookmarks.getTree() once.
+    if (this.bookmarksTreePromise) {
+      await this.bookmarksTreePromise;
+      return;
+    }
+
+    this.bookmarksTreePromise = chrome.bookmarks.getTree();
+    const bookmarksTree = await this.bookmarksTreePromise;
+    this.bookmarks = this.traverseBookmarks(bookmarksTree)
+      .filter((b) => b.url != null);
+    this.bookmarksTreePromise = null;
   }
 
   // Traverses the bookmark hierarchy, and returns a flattened list of all bookmarks.
@@ -784,12 +778,14 @@ class MultiCompleter {
     }
   }
 
-  filter(request, onComplete) {
+  async filter(request, onComplete) {
+    Utils.assert(onComplete == null, "completer.filter called with a callback");
     // Allow only one query to run at a time.
-    if (this.filterInProgress) {
-      this.mostRecentQuery = arguments;
-      return;
-    }
+    // TODO(philc): Revisit this
+    // if (this.filterInProgress) {
+    //   this.mostRecentQuery = arguments;
+    //   return;
+    // }
 
     // Provide each completer with an opportunity to see (and possibly alter) the request before it is
     // launched.
