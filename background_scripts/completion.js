@@ -353,35 +353,34 @@ class BookmarkCompleter {
 }
 
 class HistoryCompleter {
-  filter({ queryTerms, seenTabToOpenCompletionList }, onComplete) {
-    if ((queryTerms.length === 0) && !seenTabToOpenCompletionList) {
-      onComplete([]);
-      // Prime the history cache so that it will (hopefully) be available on the user's next
-      // keystroke.
-      Utils.nextTick(() => HistoryCache.use(function () {}));
+  // - seenTabToOpenCompletionList: true if the user has typed only <Tab>, and nothing else.
+  //   We interpret this to mean that they want to see all of their history in the Vomnibar, sorted
+  //   by recency.
+  async filter({ queryTerms, seenTabToOpenCompletionList }) {
+    await HistoryCache.onLoaded();
+
+    let results;
+    if (queryTerms.length > 0) {
+      results = HistoryCache.history
+        .filter((entry) => RankingUtils.matches(queryTerms, entry.url, entry.title));
+    } else if (seenTabToOpenCompletionList) {
+      // The user has typed <Tab> to open the entire history (sorted by recency).
+      results = HistoryCache.history;
     } else {
-      HistoryCache.use((history) => {
-        let results;
-        if (0 < queryTerms.length) {
-          results = history.filter((entry) =>
-            RankingUtils.matches(queryTerms, entry.url, entry.title)
-          );
-        } else {
-          // The user has typed <Tab> to open the entire history (sorted by recency).
-          results = history;
-        }
-        onComplete(results.map((entry) => {
-          return new Suggestion({
-            queryTerms,
-            type: "history",
-            url: entry.url,
-            title: entry.title,
-            relevancyFunction: this.computeRelevancy,
-            relevancyData: entry,
-          });
-        }));
-      });
+      results = [];
     }
+
+    const suggestions = results.map((entry) => {
+      return new Suggestion({
+        queryTerms,
+        type: "history",
+        url: entry.url,
+        title: entry.title,
+        relevancyFunction: this.computeRelevancy,
+        relevancyData: entry,
+      });
+    });
+    return suggestions;
   }
 
   computeRelevancy(suggestion) {
@@ -1081,51 +1080,47 @@ const RegexpCache = {
 
 // Provides cached access to Chrome's history. As the user browses to new pages, we add those pages
 // to this history cache.
-var HistoryCache = {
+const HistoryCache = {
   size: 20000,
-  history: null, // An array of History items returned from Chrome.
+  // An array of History items returned from Chrome.
+  history: null,
 
   reset() {
     this.history = null;
-    this.callbacks = null;
   },
 
-  use(callback) {
-    // TODO(philc): Are these return statements required?
-    if (this.history != null) {
-      return callback(this.history);
-    } else {
-      return this.fetchHistory(callback);
-    }
+  async onLoaded() {
+    if (this.history) return;
+    await this.fetchHistory();
   },
 
-  fetchHistory(callback) {
-    if (this.callbacks) {
-      this.callbacks.push(callback);
+  async fetchHistory() {
+    if (this.chromeHistoryPromise) {
+      await this.chromeHistoryPromise;
       return;
     }
-    this.callbacks = [callback];
-    return chrome.history.search({ text: "", maxResults: this.size, startTime: 0 }, (history) => {
-      // On Firefox, some history entries do not have titles.
-      history.map((entry) => entry.title != null ? entry.title : (entry.title = ""));
-      history.sort(this.compareHistoryByUrl);
-      this.history = history;
-      chrome.history.onVisited.addListener(this.onPageVisited.bind(this));
-      chrome.history.onVisitRemoved.addListener(this.onVisitRemoved.bind(this));
-      for (callback of this.callbacks) {
-        callback(this.history);
-      }
-      this.callbacks = null;
+    this.chromeHistoryPromise = chrome.history.search({
+      text: "",
+      maxResults: this.size,
+      startTime: 0,
     });
+
+    const history = await this.chromeHistoryPromise;
+
+    // On Firefox, some history entries do not have titles.
+    for (const entry of history) {
+      if (entry.title == null) entry.title = "";
+    }
+    history.sort(this.compareHistoryByUrl);
+    this.history = history;
+    chrome.history.onVisited.addListener(this.onPageVisited.bind(this));
+    chrome.history.onVisitRemoved.addListener(this.onVisitRemoved.bind(this));
+    this.chromeHistoryPromise = null;
   },
 
   compareHistoryByUrl(a, b) {
-    if (a.url === b.url) {
-      return 0;
-    }
-    if (a.url > b.url) {
-      return 1;
-    }
+    if (a.url === b.url) return 0;
+    if (a.url > b.url) return 1;
     return -1;
   },
 

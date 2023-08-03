@@ -138,7 +138,7 @@ class VomnibarUI {
     // For suggestions for custom search engines, we copy the suggested text into the input when the
     // item is selected, and revert when it is not. This allows the user to select a suggestion and
     // then continue typing.
-    if ((0 <= this.selection) && (this.completions[this.selection].insertText != null)) {
+    if ((this.selection >= 0) && (this.completions[this.selection].insertText != null)) {
       if (this.previousInputValue == null) this.previousInputValue = this.input.value;
       this.input.value = this.completions[this.selection].insertText;
     } else if (this.previousInputValue != null) {
@@ -438,6 +438,8 @@ class BackgroundCompleter {
       handler: "filterCompletions",
       completerName: this.name,
       queryTerms,
+      query: request.query,
+      seenTabToOpenCompletionList: request.seenTabToOpenCompletionList,
     });
     // Ensure that no new filter requests have gone out while waiting for this result.
     if (this.latestMessageId != id) return;
