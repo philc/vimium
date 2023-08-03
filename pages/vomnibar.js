@@ -189,6 +189,14 @@ class VomnibarUI {
     return null;
   }
 
+  openCompletion(completion, openInNewTab) {
+    if (completion.type == "tab") {
+      chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: completion.tabId });
+    } else {
+      Vomnibar.getCompleter().launchUrl(completion.url, openInNewTab);
+    }
+  }
+
   onKeyEvent(event) {
     let action, completion;
     this.lastAction = action = this.actionFromKeyEvent(event);
@@ -251,7 +259,7 @@ class VomnibarUI {
         this.hide(() => Vomnibar.getCompleter().launchUrl(query, openInNewTab));
       } else {
         completion = this.completions[this.selection];
-        this.hide(() => completion.performAction(openInNewTab));
+        this.hide(() => this.openCompletion(completion, openInNewTab));
       }
     } else if (action === "ctrl-enter") {
       // Populate the vomnibar with the current selection's URL.
@@ -404,14 +412,6 @@ class BackgroundCompleter {
   constructor(name) {
     // These are the actions we can perform when the user selects a result.
     this.name = name;
-    this.completionActions = {
-      navigateToUrl(url) {
-        return (openInNewTab) => Vomnibar.getCompleter().launchUrl(url, openInNewTab);
-      },
-      switchToTab(tabId) {
-        return () => chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: tabId });
-      },
-    };
 
     this.port = chrome.runtime.connect({ name: "completions" });
     this.messageId = null;
@@ -422,24 +422,6 @@ class BackgroundCompleter {
         case "keywords":
           this.keywords = msg.keywords;
           return this.lastUI.setKeywords(this.keywords);
-        case "completions":
-          if (msg.id === this.messageId) {
-            // The result objects coming from the background page will be of the form:
-            //   { html: "", type: "", url: "", ... }
-            // Type will be one of [tab, bookmark, history, domain, search], or a custom search
-            // engine description.
-            for (let result of msg.results) {
-              Object.assign(result, {
-                performAction: result.type === "tab"
-                  ? this.completionActions.switchToTab(result.tabId)
-                  : this.completionActions.navigateToUrl(result.url),
-              });
-            }
-
-            // Handle the message, but only if it hasn't arrived too late.
-            return this.mostRecentCallback(msg);
-          }
-          break;
       }
     });
     this.port.onDisconnect.addListener((port) => {
