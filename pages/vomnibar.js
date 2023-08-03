@@ -447,18 +447,20 @@ class BackgroundCompleter {
     });
   }
 
-  filter(request) {
-    const { query, callback } = request;
-    this.mostRecentCallback = callback;
+  async filter(request) {
+    const id = Utils.createUniqueId();
+    this.latestMessageId = id;
 
-    this.port.postMessage(Object.assign(request, {
-      handler: "filter",
-      name: this.name,
-      id: (this.messageId = Utils.createUniqueId()),
-      queryTerms: query.trim().split(/\s+/).filter((s) => 0 < s.length),
-      // We don't send these keys.
-      callback: null,
-    }));
+    const queryTerms = request.query.trim().split(/\s+/).filter((s) => s.length > 0);
+    const results = await chrome.runtime.sendMessage({
+      handler: "filterCompletions",
+      completerName: this.name,
+      queryTerms,
+    });
+    // Ensure that no new filter requests have gone out while waiting for this result.
+    if (this.latestMessageId != id) return;
+
+    request.callback(results);
   }
 
   reset() {
