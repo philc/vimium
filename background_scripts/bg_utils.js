@@ -114,47 +114,47 @@ const BgUtils = {
   },
 };
 
-// Utility for parsing and using the custom search-engine configuration. We re-use the previous
-// parse if the search-engine configuration is unchanged.
-const SearchEngines = {
-  previousSearchEngines: null,
-  searchEngines: null,
+// A struct representing a search engine entry in the "searchEngine" setting.
+class UserSearchEngine {
+  keyword;
+  url;
+  description;
+  constructor(o) {
+    Object.seal(this);
+    if (o) Object.assign(this, o);
+  }
+}
 
-  refresh(searchEngines) {
-    if ((this.previousSearchEngines == null) || (searchEngines !== this.previousSearchEngines)) {
-      this.previousSearchEngines = searchEngines;
-      this.searchEngines = new AsyncDataFetcher(function (callback) {
-        const engines = {};
-        for (let line of BgUtils.parseLines(searchEngines)) {
-          const tokens = line.split(/\s+/);
-          if (2 <= tokens.length) {
-            const keyword = tokens[0].split(":")[0];
-            const searchUrl = tokens[1];
-            const description = tokens.slice(2).join(" ") || `search (${keyword})`;
-            if (Utils.hasFullUrlPrefix(searchUrl) || Utils.hasJavascriptPrefix(searchUrl)) {
-              engines[keyword] = { keyword, searchUrl, description };
-            }
-          }
-        }
+// Parses a user's search engine configuration from Settings, and stores the parsed results.
+// TODO(philc): Should this be responsible for updating itself when Settings changes, rather than
+// the callers doing so? Or, remove this class and re-parse the configuration every keystroke in
+// Vomnibar, so we don't introduce another layer of caching in the code.
+const UserSearchEngines = {
+  keywordToEngine: {},
 
-        callback(engines);
-      });
+  parseConfig(configText) {
+    const results = {};
+    for (const line of BgUtils.parseLines(configText)) {
+      const tokens = line.split(/\s+/);
+      if (tokens.length < 2) continue;
+      if (!tokens[0].includes(":")) continue;
+      const keyword = tokens[0].split(":")[0];
+      const url = tokens[1];
+      const description = tokens.length > 2 ? tokens.slice(2).join(" ") : `search (${keyword})`;
+      if (Utils.hasFullUrlPrefix(url) || Utils.hasJavascriptPrefix(url)) {
+        results[keyword] = new UserSearchEngine({ keyword, url, description });
+      }
     }
+    return results;
   },
 
-  // Use the parsed search-engine configuration, possibly asynchronously.
-  use(callback) {
-    this.searchEngines.use(callback);
-  },
-
-  // Both set (refresh) the search-engine configuration and use it at the same time.
-  refreshAndUse(searchEngines, callback) {
-    this.refresh(searchEngines);
-    this.use(callback);
+  set(searchEnginesConfigText) {
+    this.keywordToEngine = this.parseConfig(searchEnginesConfigText);
   },
 };
 
 BgUtils.TIME_DELTA = TIME_DELTA; // Referenced by our tests.
 
-globalThis.SearchEngines = SearchEngines;
+globalThis.UserSearchEngines = UserSearchEngines;
+globalThis.UserSearchEngine = UserSearchEngine;
 globalThis.BgUtils = BgUtils;
