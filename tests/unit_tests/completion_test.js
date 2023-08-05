@@ -6,13 +6,11 @@ import "../../background_scripts/completion.js";
 const hours = (n) => 1000 * 60 * 60 * n;
 
 // A convenience wrapper around completer.filter() so it can be called synchronously in tests.
-const filterCompleter = (completer, queryTerms) => {
-  let results = [];
-  completer.filter(
-    { queryTerms, query: queryTerms.join(" ") },
-    (completionResults) => results = completionResults,
-  );
-  return results;
+const filterCompleter = async (completer, queryTerms) => {
+  return await completer.filter({
+    queryTerms,
+    query: queryTerms.join(" "),
+  });
 };
 
 context("bookmark completer", () => {
@@ -22,48 +20,47 @@ context("bookmark completer", () => {
   let completer;
 
   setup(() => {
-    window.chrome.bookmarks = { getTree: (callback) => callback([bookmark1]) };
-
+    stub(window.chrome.bookmarks, "getTree", () => [bookmark1]);
     completer = new BookmarkCompleter();
   });
 
-  should("flatten a list of bookmarks with inorder traversal", () => {
-    const result = completer.traverseBookmarks([bookmark1, bookmark3]);
+  should("flatten a list of bookmarks with inorder traversal", async () => {
+    const result = await completer.traverseBookmarks([bookmark1, bookmark3]);
     assert.equal([bookmark1, bookmark2, bookmark3], result);
   });
 
-  should("return matching bookmarks when searching", () => {
+  should("return matching bookmarks when searching", async () => {
     completer.refresh();
-    const results = filterCompleter(completer, ["mark2"]);
+    const results = await filterCompleter(completer, ["mark2"]);
     assert.equal([bookmark2.url], results.map((suggestion) => suggestion.url));
   });
 
-  should("return *no* matching bookmarks when there is no match", () => {
+  should("return *no* matching bookmarks when there is no match", async () => {
     completer.refresh();
-    const results = filterCompleter(completer, ["does-not-match"]);
+    const results = await filterCompleter(completer, ["does-not-match"]);
     assert.equal([], results.map((suggestion) => suggestion.url));
   });
 
-  should("construct bookmark paths correctly", () => {
+  should("construct bookmark paths correctly", async () => {
     completer.refresh();
-    const results = filterCompleter(completer, ["mark2"]);
+    const results = await filterCompleter(completer, ["mark2"]);
     assert.equal("/bookmark1/bookmark2", bookmark2.pathAndTitle);
   });
 
   should(
     "return matching bookmark *titles* when searching *without* the folder separator character",
-    () => {
+    async () => {
       completer.refresh();
-      const results = filterCompleter(completer, ["mark2"]);
+      const results = await filterCompleter(completer, ["mark2"]);
       assert.equal(["bookmark2"], results.map((suggestion) => suggestion.title));
     },
   );
 
   should(
     "return matching bookmark *paths* when searching with the folder separator character",
-    () => {
+    async () => {
       completer.refresh();
-      const results = filterCompleter(completer, ["/bookmark1", "mark2"]);
+      const results = await filterCompleter(completer, ["/bookmark1", "mark2"]);
       assert.equal(["/bookmark1/bookmark2"], results.map((suggestion) => suggestion.title));
     },
   );
@@ -105,79 +102,71 @@ context("HistoryCache", () => {
     const history2 = { url: "a.com", lastVisitTime: 10 };
     let onVisitedListener, onVisitRemovedListener, results;
 
-    setup(() => {
+    setup(async () => {
       const history = [history1, history2];
+      // const history = [history2, history1];
       onVisitedListener = null;
       onVisitRemovedListener = null;
 
-      window.chrome.history = {
-        search(options, callback) {
-          return callback(history);
-        },
+      stub(window.chrome, "history", {
+        search: (options) => history,
         onVisited: {
-          addListener: (newListener) => {
-            onVisitedListener = newListener;
+          addListener(listener) {
+            onVisitedListener = listener;
           },
+          removeListener() {},
         },
         onVisitRemoved: {
-          addListener: (newListener) => {
-            onVisitRemovedListener = newListener;
+          addListener(listener) {
+            onVisitRemovedListener = listener;
           },
+          removeListener() {},
         },
-      };
+      });
+
       HistoryCache.reset();
+      await HistoryCache.fetchHistory();
     });
 
-    should("store visits sorted by url ascending", () => {
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([history2, history1], results);
+    should("store visits sorted by url ascending", async () => {
+      assert.equal([history2, history1], HistoryCache.history);
     });
 
-    should("add new visits to the history", () => {
-      HistoryCache.use(() => {});
+    should("add new visits to the history", async () => {
       const newSite = { url: "ab.com" };
       onVisitedListener(newSite);
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([history2, newSite, history1], results);
+      assert.equal([history2, newSite, history1], HistoryCache.history);
     });
 
-    should("replace new visits in the history", () => {
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([history2, history1], results);
+    should("replace new visits in the history", async () => {
+      assert.equal([history2, history1], HistoryCache.history);
       const newSite = { url: "a.com", lastVisitTime: 15 };
       onVisitedListener(newSite);
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([newSite, history1], results);
+      assert.equal([newSite, history1], HistoryCache.history);
     });
 
     should(
       "(not) remove page from the history, when page is not in history (it should be a no-op)",
-      () => {
-        HistoryCache.use((newResults) => results = newResults);
-        assert.equal([history2, history1], results);
+      async () => {
+        assert.equal([history2, history1], HistoryCache.history);
         const toRemove = { urls: ["x.com"], allHistory: false };
         onVisitRemovedListener(toRemove);
-        HistoryCache.use((newResults) => results = newResults);
-        assert.equal([history2, history1], results);
+        assert.equal([history2, history1], HistoryCache.history);
       },
     );
 
-    should("remove pages from the history", () => {
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([history2, history1], results);
+    should("remove pages from the history", async () => {
+      assert.equal([history2, history1], HistoryCache.history);
       const toRemove = { urls: ["a.com"], allHistory: false };
       onVisitRemovedListener(toRemove);
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([history1], results);
+      assert.equal([history1], HistoryCache.history);
     });
 
-    should("remove all pages from the history", () => {
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([history2, history1], results);
+    should("remove all pages from the history", async () => {
+      assert.equal([history2, history1], HistoryCache.history);
       const toRemove = { allHistory: true };
       onVisitRemovedListener(toRemove);
-      HistoryCache.use((newResults) => results = newResults);
-      assert.equal([], results);
+      assert.equal([], HistoryCache.history);
     });
   });
 });
@@ -189,21 +178,22 @@ context("history completer", () => {
 
   setup(() => {
     completer = new HistoryCompleter();
-    window.chrome.history = {
-      search: (options, callback) => callback([history1, history2]),
-      onVisited: { addListener() {} },
-      onVisitRemoved: { addListener() {} },
-    };
+    stub(window.chrome, "history", {
+      search: (options) => [history1, history2],
+      onVisited: { addListener() {}, removeListener() {} },
+      onVisitRemoved: { addListener() {}, removeListener() {} },
+    });
     HistoryCache.reset();
   });
 
-  should("return matching history entries when searching", () => {
-    assert.equal([history1.url], filterCompleter(completer, ["story1"]).map((entry) => entry.url));
+  should("return matching history entries when searching", async () => {
+    const results = await filterCompleter(completer, ["story1"]);
+    assert.equal([history1.url], results.map((s) => s.url));
   });
 
-  should("rank recent results higher than nonrecent results", () => {
+  should("rank recent results higher than nonrecent results", async () => {
     stub(Date, "now", returns(hours(24)));
-    const results = filterCompleter(completer, ["hist"]);
+    const results = await filterCompleter(completer, ["hist"]);
     results.forEach((result) => result.computeRelevancy());
     results.sort((a, b) => b.relevancy - a.relevancy);
     assert.equal([history2.url, history1.url], results.map((result) => result.url));
@@ -217,37 +207,41 @@ context("domain completer", () => {
   let completer = null;
 
   setup(() => {
-    stub(HistoryCache, "use", (onComplete) => onComplete([history1, history2, undef]));
-    window.chrome.history = {
-      onVisited: { addListener() {} },
-      onVisitRemoved: { addListener() {} },
-    };
+    stub(window.chrome, "history", {
+      search: (options) => [history1, history2, undef],
+      onVisited: { addListener() {}, removeListener() {} },
+      onVisitRemoved: { addListener() {}, removeListener() {} },
+    });
     stub(Date, "now", returns(hours(24)));
 
     completer = new DomainCompleter();
+    HistoryCache.reset();
   });
 
-  should("return only a single matching domain", () => {
-    const results = filterCompleter(completer, ["story"]);
-    assert.equal(["http://history1.com"], results.map((result) => result.url));
+  should("return only a single matching domain", async () => {
+    const results = await filterCompleter(completer, ["story"]);
+    assert.equal(["http://history1.com"], results.map((r) => r.url));
   });
 
-  should("pick domains which are more recent", () => {
+  should("pick domains which are more recent", async () => {
     // These domains are the same except for their last visited time.
-    assert.equal("http://history1.com", filterCompleter(completer, ["story"])[0].url);
+    let result = await filterCompleter(completer, ["story"]);
+    assert.equal("http://history1.com", result[0].url);
+
     history2.lastVisitTime = hours(3);
-    assert.equal("http://history2.com", filterCompleter(completer, ["story"])[0].url);
+    result = await filterCompleter(completer, ["story"]);
+    assert.equal("http://history2.com", result[0].url);
   });
 
   should(
     "returns no results when there's more than one query term, because clearly it's not a domain",
-    () => {
-      assert.equal([], filterCompleter(completer, ["his", "tory"]));
+    async () => {
+      assert.equal([], await filterCompleter(completer, ["his", "tory"]));
     },
   );
 
-  should("not return any results for empty queries", () => {
-    assert.equal([], filterCompleter(completer, []));
+  should("not return any results for empty queries", async () => {
+    assert.equal([], await filterCompleter(completer, []));
   });
 });
 
@@ -261,58 +255,67 @@ context("domain completer (removing entries)", () => {
   };
   let onVisitedListener, onVisitRemovedListener, completer;
 
-  setup(() => {
-    stub(HistoryCache, "use", (onComplete) => onComplete([history1, history2, history3]));
+  setup(async () => {
     onVisitedListener = null;
     onVisitRemovedListener = null;
-    window.chrome.history = {
+    stub(window.chrome, "history", {
+      search: (options) => [history1, history2, history3],
       onVisited: {
-        addListener: (newListener) => {
-          onVisitedListener = newListener;
+        addListener(listener) {
+          onVisitedListener = listener;
         },
       },
       onVisitRemoved: {
-        addListener: (newListener) => {
-          onVisitRemovedListener = newListener;
+        addListener(listener) {
+          onVisitRemovedListener = listener;
         },
       },
-    };
+    });
+
     stub(Date, "now", returns(hours(24)));
 
     completer = new DomainCompleter();
     // Force installation of listeners.
-    filterCompleter(completer, ["story"]);
+    await filterCompleter(completer, ["story"]);
   });
 
-  should("remove 1 entry for domain with reference count of 1", () => {
+  should("remove 1 entry for domain with reference count of 1", async () => {
     onVisitRemovedListener({ allHistory: false, urls: [history1.url] });
-    assert.equal("http://history2.com", filterCompleter(completer, ["story"])[0].url);
-    assert.equal(0, filterCompleter(completer, ["story1"]).length);
+    let result = await filterCompleter(completer, ["story"]);
+    assert.equal("http://history2.com", result[0].url);
+    result = await filterCompleter(completer, ["story1"]);
+    assert.equal(0, result.length);
   });
 
-  should("remove 2 entries for domain with reference count of 2", () => {
+  should("remove 2 entries for domain with reference count of 2", async () => {
     onVisitRemovedListener({ allHistory: false, urls: [history2.url] });
-    assert.equal("http://history2.com", filterCompleter(completer, ["story2"])[0].url);
+    let result = await filterCompleter(completer, ["story2"]);
+    assert.equal("http://history2.com", result[0].url);
     onVisitRemovedListener({ allHistory: false, urls: [history3.url] });
-    assert.equal(0, filterCompleter(completer, ["story2"]).length);
-    assert.equal("http://history1.com", filterCompleter(completer, ["story"])[0].url);
+    result = await filterCompleter(completer, ["story2"]);
+    assert.equal(0, result.length);
+    result = await filterCompleter(completer, ["story"]);
+    assert.equal("http://history1.com", result[0].url);
   });
 
-  should("remove 3 (all) matching domain entries", () => {
+  should("remove 3 (all) matching domain entries", async () => {
     onVisitRemovedListener({ allHistory: false, urls: [history2.url] });
     onVisitRemovedListener({ allHistory: false, urls: [history1.url] });
     onVisitRemovedListener({ allHistory: false, urls: [history3.url] });
-    assert.equal(0, filterCompleter(completer, ["story"]).length);
+    const result = await filterCompleter(completer, ["story"]);
+    assert.equal(0, result.length);
   });
 
-  should("remove 3 (all) matching domain entries, and do it all at once", () => {
+  should("remove 3 (all) matching domain entries, and do it all at once", async () => {
     onVisitRemovedListener({ allHistory: false, urls: [history2.url, history1.url, history3.url] });
-    assert.equal(0, filterCompleter(completer, ["story"]).length);
+    const result = await filterCompleter(completer, ["story"]);
+    assert.equal(0, result.length);
   });
 
-  should("remove *all* domain entries", () => {
+  should("remove *all* domain entries", async () => {
     onVisitRemovedListener({ allHistory: true });
-    assert.equal(0, filterCompleter(completer, ["story"]).length);
+    const result = await filterCompleter(completer, ["story"]);
+    assert.equal(0, result.length);
   });
 });
 
@@ -324,12 +327,12 @@ context("tab completer", () => {
   let completer;
 
   setup(() => {
-    stub(chrome.tabs, "query", (args, onComplete) => onComplete(tabs));
+    stub(chrome.tabs, "query", (args) => tabs);
     completer = new TabCompleter();
   });
 
-  should("return matching tabs", () => {
-    const results = filterCompleter(completer, ["tab2"]);
+  should("return matching tabs", async () => {
+    const results = await filterCompleter(completer, ["tab2"]);
     assert.equal(["tab2.com"], results.map((tab) => tab.url));
     assert.equal([2], results.map((tab) => tab.tabId));
   });
