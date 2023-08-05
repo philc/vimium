@@ -451,12 +451,12 @@ class DomainCompleter {
   async populateDomains() {
     await HistoryCache.onLoaded();
     this.domains = {};
-    HistoryCache.history.forEach((entry) => this.onPageVisited(entry));
-    chrome.history.onVisited.addListener(this.onPageVisited.bind(this));
+    HistoryCache.history.forEach((entry) => this.onVisited(entry));
+    chrome.history.onVisited.addListener(this.onVisited.bind(this));
     chrome.history.onVisitRemoved.addListener(this.onVisitRemoved.bind(this));
   }
 
-  onPageVisited(newPage) {
+  onVisited(newPage) {
     const domain = this.parseDomainAndScheme(newPage.url);
     if (domain) {
       const slot = this.domains[domain] ||
@@ -1008,6 +1008,8 @@ const HistoryCache = {
 
   reset() {
     this.history = null;
+    chrome.history.onVisited.removeListener(this._onVisitedListener);
+    chrome.history.onVisitRemoved.removeListener(this._onVisitRemovedListener);
   },
 
   async onLoaded() {
@@ -1034,8 +1036,8 @@ const HistoryCache = {
     }
     history.sort(this.compareHistoryByUrl);
     this.history = history;
-    chrome.history.onVisited.addListener(this.onPageVisited.bind(this));
-    chrome.history.onVisitRemoved.addListener(this.onVisitRemoved.bind(this));
+    chrome.history.onVisited.addListener(this._onVisitedListener);
+    chrome.history.onVisitRemoved.addListener(this._onVisitRemovedListener);
     this.chromeHistoryPromise = null;
   },
 
@@ -1047,7 +1049,7 @@ const HistoryCache = {
 
   // When a page we've seen before has been visited again, be sure to replace our History item so it
   // has the correct "lastVisitTime". That's crucial for ranking Vomnibar suggestions.
-  onPageVisited(newPage) {
+  onVisited(newPage) {
     // On Firefox, some history entries do not have titles.
     if (newPage.title == null) newPage.title = "";
     const i = HistoryCache.binarySearch(newPage, this.history, this.compareHistoryByUrl);
@@ -1074,6 +1076,9 @@ const HistoryCache = {
     }
   },
 };
+
+HistoryCache._onVisitedListener = HistoryCache.onVisited.bind(HistoryCache);
+HistoryCache._onVisitRemovedListener = HistoryCache.onVisitRemoved.bind(HistoryCache);
 
 // Returns the matching index or the closest matching index if the element is not found. That means
 // you must check the element at the returned index to know whether the element was actually found.

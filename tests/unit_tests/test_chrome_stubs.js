@@ -211,4 +211,8 @@ window.chrome = {
     sync: createStorageAPI("sync"),
     session: createStorageAPI("session"),
   },
+
+  bookmarks: {
+    getTree: () => [],
+  },
 };
