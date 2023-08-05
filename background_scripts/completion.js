@@ -12,7 +12,8 @@
 //    bookmarks).
 //  - cancel(): (optional) cancels any pending, cancelable action.
 
-const showRelevancy = false; // Set this to true to render relevancy when debugging the ranking scores.
+// Set this to true to render relevancy when debugging the ranking scores.
+const showRelevancy = false;
 
 // TODO(philc): Make this a struct, and probably move out the "computeRelevancy" function.
 class Suggestion {
@@ -74,6 +75,8 @@ class Suggestion {
       faviconUrl.searchParams.set("size", "16");
       faviconHtml = `<img class="vimiumReset vomnibarIcon" src="${faviconUrl.toString()}" />`;
     }
+    // TODO(philc): Since the Vomnibar is shown in an iFrame, can't we remove all of these vimiumReset
+    // classes?
     if (request.isCustomSearch) {
       this.html = `\
 <div class="vimiumReset vomnibarTopHalf">
@@ -197,7 +200,8 @@ class Suggestion {
     return mergedRanges;
   }
 
-  // Simplify a suggestion's URL (by removing those parts which aren't useful for display or comparison).
+  // Simplify a suggestion's URL (by removing those parts which aren't useful for display or
+  // comparison).
   shortenUrl() {
     if (this.shortUrl != null) {
       return this.shortUrl;
@@ -226,8 +230,8 @@ class Suggestion {
 
 // Patterns to strip from URLs; of the form [ [ filter, replacements ], [ filter, replacements ], ... ]
 //   - filter is a regexp string; a URL must match this regexp first.
-//   - replacements (itself a list) is a list of regexp objects, each of which is removed from URLs matching
-//     the filter.
+//   - replacements (itself a list) is a list of regexp objects, each of which is removed from URLs
+//     matching the filter.
 //
 // Note. This includes site-specific patterns for very-popular sites with URLs which don't work well
 // in the vomnibar.
