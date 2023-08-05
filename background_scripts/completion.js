@@ -546,7 +546,7 @@ class SearchEngineCompleter {
   // This looks up the custom search engine and, if one is found, notes it and removes its keyword
   // from the query terms.
   preprocessRequest(request) {
-    SearchEngines.use((engines) => {
+    UserSearchEngines.use((engines) => {
       const { queryTerms, query } = request;
       Object.assign(request, { searchEngines: engines, keywords: Object.keys(engines) });
       const keyword = queryTerms[0];
@@ -981,7 +981,8 @@ const RegexpCache = {
   // With their default values, `prefix` and `suffix` have no effect.
   // Example:
   //   - string="go", prefix="\b", suffix=""
-  //   - this returns regexp matching "google", but not "agog" (the "go" must occur at the start of a word)
+  //   - this returns regexp matching "google", but not "agog" (the "go" must occur at the start of
+  //     a word)
   // TODO: `prefix` and `suffix` might be useful in richer word-relevancy scoring.
   get(string, prefix, suffix) {
     if (prefix == null) prefix = "";
