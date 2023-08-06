@@ -29,19 +29,17 @@ const Vomnibar = {
       keyword: null,
     };
     Object.assign(options, userOptions);
-    Object.assign(options, { refreshInterval: options.completer === "omni" ? 150 : 0 });
 
     const completer = this.getCompleter(options.completer);
     if (this.vomnibarUI == null) {
       this.vomnibarUI = new VomnibarUI();
     }
-    completer.refresh(this.vomnibarUI);
+    completer.refresh();
     this.vomnibarUI.setInitialSelectionValue(options.selectFirst ? 0 : -1);
     this.vomnibarUI.setCompleter(completer);
-    this.vomnibarUI.setRefreshInterval(options.refreshInterval);
     this.vomnibarUI.setForceNewTab(options.newTab);
     this.vomnibarUI.setQuery(options.query);
-    this.vomnibarUI.update(true);
+    this.vomnibarUI.update();
   },
 
   hide() {
@@ -62,7 +60,6 @@ class VomnibarUI {
     this.onKeyEvent = this.onKeyEvent.bind(this);
     this.onInput = this.onInput.bind(this);
     this.update = this.update.bind(this);
-    this.refreshInterval = 0;
     this.onHiddenCallback = null;
     this.initDom();
     // The user's custom search engine, if they have prefixed their query with the keyword for one
@@ -76,9 +73,6 @@ class VomnibarUI {
 
   setInitialSelectionValue(initialSelectionValue) {
     this.initialSelectionValue = initialSelectionValue;
-  }
-  setRefreshInterval(refreshInterval) {
-    this.refreshInterval = refreshInterval;
   }
   setForceNewTab(forceNewTab) {
     this.forceNewTab = forceNewTab;
@@ -117,7 +111,6 @@ class VomnibarUI {
   }
 
   reset() {
-    this.clearUpdateTimer();
     this.completionList.style.display = "";
     this.input.value = "";
     this.completions = [];
@@ -125,9 +118,6 @@ class VomnibarUI {
     this.activeUserSearchEngine = null;
     this.selection = this.initialSelectionValue;
     this.seenTabToOpenCompletionList = false;
-    if (this.completer != null) {
-      this.completer.reset();
-    }
   }
 
   updateSelection() {
@@ -215,7 +205,7 @@ class VomnibarUI {
         (this.input.value.trim().length === 0)
       ) {
         this.seenTabToOpenCompletionList = true;
-        this.update(true);
+        this.update();
       } else if (this.completions.length > 0) {
         this.selection += 1;
         if (this.selection === this.completions.length) {
@@ -278,10 +268,10 @@ class VomnibarUI {
         this.input.value = keyword + this.input.value.trimStart();
         this.input.selectionStart = this.input.selectionEnd = keyword.length;
         this.activeUserSearchEngine = null;
-        this.update(true);
+        this.update();
       } else if (this.seenTabToOpenCompletionList && (this.input.value.trim().length === 0)) {
         this.seenTabToOpenCompletionList = false;
-        this.update(true);
+        this.update();
       } else {
         return true; // Do not suppress event.
       }
@@ -334,18 +324,8 @@ class VomnibarUI {
   }
 
   onInput() {
-    let updateSynchronously;
     this.seenTabToOpenCompletionList = false;
     this.completer.cancel();
-
-    // TODO(philc): This updateSynchronously logic needs to be revisited.
-    // if (
-    //   (0 <= this.selection) && this.completions[this.selection].customSearchMode &&
-    //   !this.customSearchMode
-    // ) {
-    //   this.customSearchMode = this.completions[this.selection].customSearchMode;
-    //   updateSynchronously = true;
-    // }
 
     // For custom search engines, we suppress the leading prefix (e.g. the "w" of "w query terms")
     // within the vomnibar input.
@@ -360,14 +340,7 @@ class VomnibarUI {
       this.previousInputValue = null;
       this.selection = -1;
     }
-    return this.update(updateSynchronously);
-  }
-
-  clearUpdateTimer() {
-    if (this.updateTimer != null) {
-      window.clearTimeout(this.updateTimer);
-      this.updateTimer = null;
-    }
+    return this.update();
   }
 
   // Returns the UserSearchEngine for the given Vomnibar input. Returns null if the Vomnibar does
@@ -383,25 +356,8 @@ class VomnibarUI {
     return this.getUserSearchEngineForQuery() != null;
   }
 
-  update(updateSynchronously, callback = null) {
-    // If the query text becomes a custom search (the user enters a search keyword), then we need to
-    // force a synchronous update (so that the state is updated immediately).
-    if (updateSynchronously == null) updateSynchronously = false;
-    if (!updateSynchronously) {
-      updateSynchronously = !this.isUserSearchEngineActive() && this.queryIsCustomSearch();
-    }
-    if (updateSynchronously) {
-      this.clearUpdateTimer();
-      this.updateCompletions(callback);
-    } else if ((this.updateTimer == null)) {
-      // Update asynchronously for a better user experience, and to take some load off the CPU (not
-      // every keystroke will cause a dedicated update).
-      this.updateTimer = Utils.setTimeout(this.refreshInterval, () => {
-        this.updateTimer = null;
-        return this.updateCompletions(callback);
-      });
-    }
-
+  update(callback = null) {
+    this.updateCompletions(callback);
     this.input.focus();
   }
 
