@@ -21,7 +21,7 @@ class Suggestion {
     // Required options.
     this.options = options;
     this.queryTerms = null;
-    this.type = null;
+    this.description = null;
     this.url = null;
     this.relevancyFunction = null;
     // Other options.
@@ -68,7 +68,7 @@ class Suggestion {
     // NOTE(philc): We're using these vimium-specific class names so we don't collide with the
     // page's CSS.
     let faviconHtml = "";
-    if (this.type === "tab" && !BgUtils.isFirefox()) {
+    if (this.description === "tab" && !BgUtils.isFirefox()) {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
       faviconUrl.searchParams.set("pageUrl", this.url);
       faviconUrl.searchParams.set("size", "16");
@@ -79,7 +79,7 @@ class Suggestion {
     if (this.isCustomSearch) {
       this.html = `\
 <div class="vimiumReset vomnibarTopHalf">
-   <span class="vimiumReset vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vimiumReset vomnibarSource">${this.type}</span>
+   <span class="vimiumReset vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vimiumReset vomnibarSource">${this.description}</span>
    <span class="vimiumReset vomnibarTitle">${
         this.highlightQueryTerms(Utils.escapeHtml(this.title))
       }</span>
@@ -89,7 +89,7 @@ class Suggestion {
     } else {
       this.html = `\
 <div class="vimiumReset vomnibarTopHalf">
-   <span class="vimiumReset vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vimiumReset vomnibarSource">${this.type}</span>
+   <span class="vimiumReset vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vimiumReset vomnibarSource">${this.description}</span>
    <span class="vimiumReset vomnibarTitle">${
         this.highlightQueryTerms(Utils.escapeHtml(this.title))
       }</span>
@@ -292,7 +292,7 @@ class BookmarkCompleter {
     const suggestions = results.map((bookmark) => {
       return new Suggestion({
         queryTerms,
-        type: "bookmark",
+        description: "bookmark",
         url: bookmark.url,
         title: usePathAndTitle ? bookmark.pathAndTitle : bookmark.title,
         relevancyFunction: this.computeRelevancy,
@@ -376,7 +376,7 @@ class HistoryCompleter {
     const suggestions = results.map((entry) => {
       return new Suggestion({
         queryTerms,
-        type: "history",
+        description: "history",
         url: entry.url,
         title: entry.title,
         relevancyFunction: this.computeRelevancy,
@@ -426,7 +426,7 @@ class DomainCompleter {
     const domainsAndScores = this.sortDomainsByRelevancy(queryTerms, domains);
     const result = new Suggestion({
       queryTerms,
-      type: "domain",
+      description: "domain",
       // This should be the URL or the domain, or an empty string, but not null.
       url: domainsAndScores[0]?.[0] || "",
       relevancy: 2.0,
@@ -502,7 +502,7 @@ class TabCompleter {
       .map((tab) => {
         const suggestion = new Suggestion({
           queryTerms,
-          type: "tab",
+          description: "tab",
           url: tab.url,
           title: tab.title,
           tabId: tab.id,
@@ -589,9 +589,7 @@ class SearchEngineCompleter {
       const url = Utils.createSearchUrl(query, searchUrl);
       return new Suggestion({
         queryTerms,
-        // TODO(philc): Why are we stuffing the description into `type`? This should probably
-        // be called description. It's passed directly into the results UI.
-        type: userSearchEngine.description,
+        description: userSearchEngine.description,
         url,
         title: query,
         searchUrl,
