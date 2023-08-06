@@ -15,34 +15,48 @@
 // Set this to true to render relevancy when debugging the ranking scores.
 const showRelevancy = false;
 
-// TODO(philc): Make this a struct, and probably move out the "computeRelevancy" function.
+// TODO(philc): Consider moving out the "computeRelevancy" function.
 class Suggestion {
-  constructor(options) {
-    // Required options.
-    this.options = options;
-    this.queryTerms = null;
-    this.description = null;
-    this.url = null;
-    this.relevancyFunction = null;
-    // Other options.
-    this.title = "";
-    // Extra data which will be available to the relevancy function.
-    this.relevancyData = null;
-    // If @autoSelect is truthy, then this suggestion is automatically pre-selected in the vomnibar.
-    // This only affects the suggestion in slot 0 in the vomnibar.
-    this.autoSelect = false;
-    // If @highlightTerms is true, then we highlight matched terms in the title and URL. Otherwise
-    // we don't.
-    this.highlightTerms = true;
-    // @insertText is text to insert into the vomnibar input when the suggestion is selected.
-    this.insertText = null;
-    // @deDuplicate controls whether this suggestion is a candidate for deduplication.
-    this.deDuplicate = true;
+  queryTerms;
+  description;
+  url;
+  // A shortened URL (URI-decoded, protocol removed) suitable for dispaly purposes.
+  shortUrl;
+  title = "";
+  // A computed relevancy value.
+  relevancy;
+  relevancyFunction;
+  relevancyData;
+  // When true, then this suggestion is automatically pre-selected in the vomnibar. This only affects
+  // the suggestion in slot 0 in the vomnibar.
+  autoSelect = false;
+  // When true, we highlight matched terms in the title and URL. Otherwise we don't.
+  highlightTerms = true;
 
-    // Other options set by individual completers include:
-    // - tabId (TabCompleter)
-    // - isSearchSuggestion, customSearchMode (SearchEngineCompleter)
-    Object.assign(this, this.options);
+  // The text to insert into the vomnibar input when this suggestion is selected.
+  insertText;
+  // This controls whether this suggestion is a candidate for deduplication after simplifying
+  // its URL.
+  deDuplicate = true;
+  // The tab represented by this suggestion. Populated by TabCompleter.
+  tabId;
+  // Populated by SearchEngineCompleter. TODO(philc): Can we remove this?
+  isSearchSuggestion;
+  // Whether this is a suggestion provided by a user's custom search engine.
+  isCustomSearch;
+  // The keyword of the user's custom search engine which produced this suggestion.
+  // Populated by SearchEngineCompleter.
+  customSearchMode;
+  // Whether this is meant to be the first suggestion from the user's custom search engine which
+  // represents their query as typed, verbatim.
+  isPrimarySuggestion = false;
+  // The generated HTML string for showing this suggestion in the Vomnibar.
+  html;
+  searchUrl;
+
+  constructor(options) {
+    Object.seal(this);
+    Object.assign(this, options);
   }
 
   // Returns the relevancy score.
