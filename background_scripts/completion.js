@@ -551,7 +551,7 @@ class SearchEngineCompleter {
     return UserSearchEngines.keywordToEngine[keyword];
   }
 
-  refresh(port) {
+  refresh() {
     this.previousSuggestions = {};
     UserSearchEngines.set(Settings.get("searchEngines"));
   }
@@ -675,11 +675,9 @@ class MultiCompleter {
     this.completers = completers;
   }
 
-  refresh(port) {
-    for (let c of this.completers) {
-      if (c.refresh) {
-        c.refresh(port);
-      }
+  refresh() {
+    for (const c of this.completers) {
+      if (c.refresh) c.refresh();
     }
   }
 
