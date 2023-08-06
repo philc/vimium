@@ -542,31 +542,13 @@ class SearchEngineCompleter {
     CompletionSearch.cancel();
   }
 
-  getEngineForQueryPrefix(query) {
+  // TODO(philc): Consider moving to UserSearchEngines
+  getUserSearchEngineForQuery(query) {
     const parts = query.trimStart().split(/\s+/);
     // For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
     if (parts.length <= 1) return;
     const keyword = parts[0];
     return UserSearchEngines.keywordToEngine[keyword];
-  }
-
-  // This looks up the custom search engine and, if one is found, notes it and removes its keyword
-  // from the query terms.
-  preprocessRequest(request) {
-    UserSearchEngines.use((engines) => {
-      const { queryTerms, query } = request;
-      Object.assign(request, { searchEngines: engines, keywords: Object.keys(engines) });
-      const keyword = queryTerms[0];
-      // Note. For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
-      if (keyword && engines[keyword] && ((1 < queryTerms.length) || /\S\s/.test(query))) {
-        Object.assign(request, {
-          queryTerms: queryTerms.slice(1),
-          keyword,
-          engine: engines[keyword],
-          isCustomSearch: true,
-        });
-      }
-    });
   }
 
   refresh(port) {
@@ -575,6 +557,8 @@ class SearchEngineCompleter {
   }
 
   async filter(request) {
+    // TODO(philc): I'm not sure we need this list of previousSuggestions. The expensive search is
+    // the user's custom serach engines, and CompletionSearch already has caching built in.
     let previousSuggestions;
     let suggestion;
     const { queryTerms, query, engine } = request;
@@ -689,8 +673,6 @@ const maxResults = 10;
 class MultiCompleter {
   constructor(completers) {
     this.completers = completers;
-    this.filterInProgress = false;
-    this.mostRecentQuery = null;
   }
 
   refresh(port) {
@@ -712,63 +694,59 @@ class MultiCompleter {
   async filter(request, onComplete) {
     Utils.assert(onComplete == null, "completer.filter called with a callback");
 
-    // Provide each completer with an opportunity to see (and possibly alter) the request before it
-    // is launched.
-    for (const completer of this.completers) {
-      completer.preprocessRequest?.(request);
-    }
-
-    RegexpCache.clear();
+    const searchEngineCompleter = this.completers.find((c) => c instanceof SearchEngineCompleter);
+    const query = request.query;
     const queryTerms = request.queryTerms;
 
-    this.mostRecentQuery = null;
+    const queryMatchesUserSearchEngine = searchEngineCompleter?.getUserSearchEngineForQuery(query);
 
-    // TODO(philc): Handle the case of SearchEngineCompletion, which returns param.filter and
-    // param.contiuation.
-    const promises = this.completers.map((c) => c.filter(request));
+    // If the user's query matches one of their custom search engines, then use only that engine to
+    // provide completions for their query.
+    const completers = queryMatchesUserSearchEngine
+      ? [searchEngineCompleter]
+      : this.completers.filter((c) => c != searchEngineCompleter);
+
+    RegexpCache.clear();
+
+    const promises = completers.map((c) => c.filter(request));
     let results = (await Promise.all(promises)).flat(1);
-    results = this.prepareSuggestions(request, queryTerms, results);
+    results = this.postProcessSuggestions(request, queryTerms, results);
     return results;
   }
 
-  prepareSuggestions(request, queryTerms, suggestions) {
-    // Compute suggestion relevancies and sort.
-    for (let s of suggestions) {
+  // Rank them, simplify the URLs, and de-duplicate suggestions with the same simplified URL.
+  postProcessSuggestions(request, queryTerms, suggestions) {
+    for (const s of suggestions) {
       s.computeRelevancy(queryTerms);
     }
-
     suggestions.sort((a, b) => b.relevancy - a.relevancy);
 
     // Simplify URLs and remove duplicates (duplicate simplified URLs, that is).
     let count = 0;
     const seenUrls = {};
 
-    let newSuggestions = [];
+    let dedupedSuggestions = [];
     for (let s of suggestions) {
       const url = s.shortenUrl();
-      if (s.deDuplicate && seenUrls[url]) {
-        continue;
-      }
-      if (count++ === maxResults) {
-        break;
-      }
+      if (s.deDuplicate && seenUrls[url]) continue;
+      if (count++ === maxResults) break;
       seenUrls[url] = s;
-      newSuggestions.push(s);
+      dedupedSuggestions.push(s);
     }
 
     // Give each completer the opportunity to tweak the suggestions.
-    for (let completer of this.completers) {
+    for (const completer of this.completers) {
       if (completer.postProcessSuggestions) {
-        completer.postProcessSuggestions(request, newSuggestions);
+        completer.postProcessSuggestions(request, dedupedSuggestions);
       }
     }
 
     // Generate HTML for the remaining suggestions and return them.
-    for (let s of newSuggestions) {
+    for (const s of dedupedSuggestions) {
       s.generateHtml(request);
     }
 
-    return newSuggestions;
+    return dedupedSuggestions;
   }
 }
 
