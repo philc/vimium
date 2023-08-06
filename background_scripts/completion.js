@@ -564,7 +564,6 @@ class SearchEngineCompleter {
     const completionEngine = CompletionSearch.lookupEngine(searchUrl);
     if (!completionEngine) return [];
 
-    // TODO(philc): Perform an async request for more results from the search engine.
     const completions = await CompletionSearch.complete(searchUrl, queryTermsWithoutKeyword);
 
     const makeSuggestion = (query) => {
