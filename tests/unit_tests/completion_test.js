@@ -372,7 +372,7 @@ context("suggestions", () => {
   should("escape html in page titles", () => {
     const suggestion = new Suggestion({
       queryTerms: ["queryterm"],
-      type: "tab",
+      description: "tab",
       url: "url",
       title: "title <span>",
       relevancyFunction: returns(1),
@@ -383,7 +383,7 @@ context("suggestions", () => {
   should("highlight query words", () => {
     const suggestion = new Suggestion({
       queryTerms: ["ninj", "words"],
-      type: "tab",
+      description: "tab",
       url: "url",
       title: "ninjawords",
       relevancyFunction: returns(1),
@@ -396,7 +396,7 @@ context("suggestions", () => {
   should("highlight query words correctly when whey they overlap", () => {
     const suggestion = new Suggestion({
       queryTerms: ["ninj", "jaword"],
-      type: "tab",
+      description: "tab",
       url: "url",
       title: "ninjawords",
       relevancyFunction: returns(1),
@@ -408,7 +408,7 @@ context("suggestions", () => {
   should("shorten urls", () => {
     const suggestion = new Suggestion({
       queryTerms: ["queryterm"],
-      type: "history",
+      description: "history",
       url: "http://ninjawords.com",
       title: "ninjawords",
       relevancyFunction: returns(1),
