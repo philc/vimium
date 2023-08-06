@@ -52,7 +52,11 @@ const CompletionSearch = {
   // if the user is still typing).
   delay: 100,
 
-  async get(searchUrl, url, callback) {
+  // This gets incremented each time we make a request to the completion engine. This allows us to
+  // dedupe requets which overlap, which is the case when the user is typing fast.
+  requestId: 0,
+
+  async get(searchUrl, url) {
     const timeoutDuration = 2500;
     const controller = new AbortController();
     let isError = false;
@@ -69,11 +73,7 @@ const CompletionSearch = {
 
     clearTimeout(timer);
 
-    if (isError) {
-      callback(null);
-    } else {
-      callback(responseText);
-    }
+    return isError ? null : responseText;
   },
 
   // Look up the completion engine for this searchUrl. Because of DummyCompletionEngine, we know
@@ -107,151 +107,85 @@ const CompletionSearch = {
   // synchronously (ie. from a cache). In this case we just return the results. Returns null if we
   // cannot service the request synchronously.
   //
-  // TODO(philc): This function is large and nestedand could use refactoring.
-  complete(searchUrl, queryTerms, callback = null) {
+  // TODO(philc): Consider removing the syncOnly behavior. I don't think we need it anymore.
+  async complete(searchUrl, queryTerms, syncOnly) {
     let handler;
     const query = queryTerms.join(" ").toLowerCase();
 
-    const returnResultsOnlyFromCache = callback == null;
-    if (callback == null) {
-      callback = (suggestions) => suggestions;
-    }
-
     // We don't complete queries which are too short: the results are usually useless.
-    if (query.length < 4) {
-      return callback([]);
-    }
+    if (query.length < 4) return [];
 
     // We don't complete regular URLs or Javascript URLs.
-    if (queryTerms.length == 1 && Utils.isUrl(query)) {
-      return callback([]);
-    }
-    if (Utils.hasJavascriptPrefix(query)) {
-      return callback([]);
-    }
+    if (queryTerms.length == 1 && Utils.isUrl(query)) return [];
+    if (Utils.hasJavascriptPrefix(query)) return [];
 
     const completionCacheKey = JSON.stringify([searchUrl, queryTerms]);
     if (this.completionCache.has(completionCacheKey)) {
-      if (this.debug) {
-        console.log("hit", completionCacheKey);
-      }
-      return callback(this.completionCache.get(completionCacheKey));
-    }
-
-    // If the user appears to be typing a continuation of the characters of the most recent query,
-    // then we can sometimes re-use the previous suggestions.
-    if (
-      (this.mostRecentQuery != null) && (this.mostRecentSuggestions != null) &&
-      (this.mostRecentSearchUrl != null)
-    ) {
-      if (searchUrl === this.mostRecentSearchUrl) {
-        const reusePreviousSuggestions = (() => {
-          // Verify that the previous query is a prefix of the current query.
-          if (!query.startsWith(this.mostRecentQuery.toLowerCase())) {
-            return false;
-          }
-          // Verify that every previous suggestion contains the text of the new query.
-          // Note: @mostRecentSuggestions may also be empty, in which case we drop though. The
-          // effect is that previous queries with no suggestions suppress subsequent no-hope HTTP
-          // requests as the user continues to type.
-          for (const suggestion of this.mostRecentSuggestions) {
-            if (!suggestion.includes(query)) {
-              return false;
-            }
-          }
-          // Ok. Re-use the suggestion.
-          return true;
-        })();
-
-        if (reusePreviousSuggestions) {
-          if (this.debug) {
-            console.log(
-              "reuse previous query:",
-              this.mostRecentQuery,
-              this.mostRecentSuggestions.length,
-            );
-          }
-          return callback(this.completionCache.set(completionCacheKey, this.mostRecentSuggestions));
-        }
-      }
+      if (this.debug) console.log("hit", completionCacheKey);
+      return this.completionCache.get(completionCacheKey);
     }
 
     // That's all of the caches we can try. Bail if the caller is only requesting synchronous
     // results. We signal that we haven't found a match by returning null.
-    if (returnResultsOnlyFromCache) {
-      return callback(null);
+    if (syncOnly) return [];
+
+    const createTimeoutPromise = (ms) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve();
+        }, ms);
+      });
+    };
+
+    this.requestId++;
+    const lastRequestId = this.requestId;
+
+    // We delay sending a completion request in case the user is still typing.
+    await createTimeoutPromise(this.delay);
+
+    // If the user has issued a new query while we were waiting, then this query is old; abort it.
+    if (lastRequestId != this.requestId) return [];
+
+    const engine = new EnginePrefixWrapper(searchUrl, this.lookupEngine(searchUrl));
+    const url = engine.getUrl(queryTerms);
+
+    if (this.debug) console.log("GET", url);
+    const responseText = await this.get(searchUrl, url);
+
+    // Parsing the response may fail if we receive an unexpectedly-formatted response. In all cases,
+    // we fall back to the catch clause, below. Therefore, we "fail safe" in the case of incorrect
+    // or out-of-date completion engine implementations.
+    let suggestions = [];
+    let isError = responseText == null;
+    if (!isError) {
+      try {
+        suggestions = engine.parse(responseText)
+          // Make all suggestions lower case. It looks odd when suggestions from one
+          // completion engine are upper case, and those from another are lower case.
+          .map((s) => s.toLowerCase())
+          // Filter out the query itself. It's not adding anything.
+          .filter((s) => s !== query);
+      } catch (error) {
+        if (this.debug) console.log("error:", error);
+        isError = true;
+      }
+    }
+    if (isError) {
+      // We allow failures to be cached too, but remove them after just thirty seconds.
+      Utils.setTimeout(
+        30 * 1000,
+        () => this.completionCache.set(completionCacheKey, null),
+      );
     }
 
-    // We pause in case the user is still typing.
-    Utils.setTimeout(
-      this.delay,
-      handler = this.mostRecentHandler = () => {
-        if (handler !== this.mostRecentHandler) {
-          return;
-        }
-        this.mostRecentHandler = null;
-
-        // Elide duplicate requests. First fetch the suggestions...
-        if (this.inTransit[completionCacheKey] == null) {
-          this.inTransit[completionCacheKey] = new AsyncDataFetcher(async (callback) => {
-            const engine = new EnginePrefixWrapper(searchUrl, this.lookupEngine(searchUrl));
-            const url = engine.getUrl(queryTerms);
-
-            await this.get(searchUrl, url, (responseText) => {
-              // Parsing the response may fail if we receive an unexpected or an
-              // unexpectedly-formatted response. In all cases, we fall back to the catch clause,
-              // below. Therefore, we "fail safe" in the case of incorrect or out-of-date completion
-              // engines.
-              let suggestions;
-              try {
-                suggestions = engine.parse(responseText)
-                  // Make all suggestions lower case. It looks odd when suggestions from one
-                  // completion engine are upper case, and those from another are lower case.
-                  .map((s) => s.toLowerCase())
-                  // Filter out the query itself. It's not adding anything.
-                  .filter((s) => s !== query);
-                if (this.debug) {
-                  console.log("GET", url);
-                }
-              } catch (error) {
-                suggestions = [];
-                // We allow failures to be cached too, but remove them after just thirty seconds.
-                Utils.setTimeout(
-                  30 * 1000,
-                  () => this.completionCache.set(completionCacheKey, null),
-                );
-                if (this.debug) {
-                  console.log("fail", url);
-                }
-              }
-
-              callback(suggestions);
-              delete this.inTransit[completionCacheKey];
-            });
-          });
-        }
-
-        // ... then use the suggestions.
-        this.inTransit[completionCacheKey].use((suggestions) => {
-          this.mostRecentSearchUrl = searchUrl;
-          this.mostRecentQuery = query;
-          this.mostRecentSuggestions = suggestions;
-          // TODO(philc): Is this return necessary?
-          return callback(this.completionCache.set(completionCacheKey, suggestions));
-        });
-      },
-    );
+    this.completionCache.set(completionCacheKey, suggestions);
+    return suggestions;
   },
 
   // Cancel any pending (ie. blocked on @delay) queries. Does not cancel in-flight queries. This is
   // called whenever the user is typing.
   cancel() {
-    if (this.mostRecentHandler != null) {
-      this.mostRecentHandler = null;
-      if (this.debug) {
-        console.log("cancel (user is typing)");
-      }
-    }
+    this.requestId++;
   },
 };
 
