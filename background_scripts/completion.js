@@ -40,8 +40,6 @@ class Suggestion {
   deDuplicate = true;
   // The tab represented by this suggestion. Populated by TabCompleter.
   tabId;
-  // Populated by SearchEngineCompleter. TODO(philc): Can we remove this?
-  isSearchSuggestion;
   // Whether this is a suggestion provided by a user's custom search engine.
   isCustomSearch;
   // The keyword of the user's custom search engine which produced this suggestion.
@@ -600,8 +598,6 @@ class SearchEngineCompleter {
     const primarySuggestion = makeSuggestion(queryTermsWithoutKeyword.join(" "));
     primarySuggestion.relevancy = 2;
     primarySuggestion.isPrimarySuggestion = true;
-    // TODO(philc): I think we can remove this -- it doesn't do anything.
-    primarySuggestion.isSearchSuggestion = true;
     suggestions.unshift(primarySuggestion);
 
     return suggestions;
@@ -616,34 +612,6 @@ class SearchEngineCompleter {
       0.5,
       0.7 * RankingUtils.wordRelevancy(queryTerms, title, title),
     );
-  }
-
-  postProcessSuggestions(request, suggestions) {
-    if (!request.searchEngines) {
-      return;
-    }
-    const engines = Object.values(request.searchEngines);
-    engines.sort((a, b) => b.searchUrl.length - a.searchUrl.length);
-    engines.push({
-      keyword: null,
-      description: "search history",
-      searchUrl: Settings.get("searchUrl"),
-    });
-    for (let suggestion of suggestions) {
-      if (!suggestion.isSearchSuggestion && !suggestion.insertText) {
-        for (let engine of engines) {
-          if (suggestion.insertText = Utils.extractQuery(engine.searchUrl, suggestion.url)) {
-            // suggestion.customSearchMode informs the vomnibar that, if the users edits the text
-            // from this suggestion, then custom search-engine mode should be activated.
-            suggestion.customSearchMode = engine.keyword;
-            if (!suggestion.title) {
-              suggestion.title = suggestion.insertText;
-            }
-            break;
-          }
-        }
-      }
-    }
   }
 }
 
