@@ -294,7 +294,7 @@ class VomnibarUI {
     return prefix + this.input.value;
   }
 
-  updateCompletions(callback = null) {
+  updateCompletions() {
     return this.completer.filter({
       query: this.getInputValueAsQuery(),
       seenTabToOpenCompletionList: this.seenTabToOpenCompletionList,
@@ -316,9 +316,6 @@ class VomnibarUI {
           Math.max(this.initialSelectionValue, this.selection),
         );
         this.updateSelection();
-        if (callback) {
-          return callack();
-        }
       },
     });
   }
@@ -356,8 +353,8 @@ class VomnibarUI {
     return this.getUserSearchEngineForQuery() != null;
   }
 
-  update(callback = null) {
-    this.updateCompletions(callback);
+  update() {
+    this.updateCompletions();
     this.input.focus();
   }
 
@@ -391,7 +388,6 @@ class BackgroundCompleter {
     // These are the actions we can perform when the user selects a result.
     this.name = name;
     this.messageId = null;
-    this.reset();
   }
 
   async filter(request) {
@@ -412,13 +408,7 @@ class BackgroundCompleter {
     request.callback(results);
   }
 
-  reset() {
-    // TODO(philc): Delete
-  }
-
-  refresh(lastUI) {
-    this.lastUI = lastUI;
-    this.reset();
+  refresh() {
     chrome.runtime.sendMessage({
       handler: "refreshCompletions",
       completerName: this.name,
