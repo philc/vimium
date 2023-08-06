@@ -8,14 +8,6 @@ const Vomnibar = {
   getUI() {
     return this.vomnibarUI;
   },
-  completers: {},
-
-  getCompleter(name) {
-    if (!this.completers[name]) {
-      this.completers[name] = new BackgroundCompleter(name);
-    }
-    return this.completers[name];
-  },
 
   async activate(userOptions) {
     await Settings.onLoaded();
@@ -30,13 +22,12 @@ const Vomnibar = {
     };
     Object.assign(options, userOptions);
 
-    const completer = this.getCompleter(options.completer);
     if (this.vomnibarUI == null) {
       this.vomnibarUI = new VomnibarUI();
     }
-    completer.refresh();
+    this.vomnibarUI.setCompleterName(options.completer);
+    this.vomnibarUI.refreshCompletions();
     this.vomnibarUI.setInitialSelectionValue(options.selectFirst ? 0 : -1);
-    this.vomnibarUI.setCompleter(completer);
     this.vomnibarUI.setForceNewTab(options.newTab);
     this.vomnibarUI.setQuery(options.query);
     this.vomnibarUI.update();
@@ -65,6 +56,8 @@ class VomnibarUI {
     // The user's custom search engine, if they have prefixed their query with the keyword for one
     // of their search engines.
     this.activeUserSearchEngine = null;
+    // Used for synchronizing requests and responses to the background page.
+    this.lastRequestId = null;
   }
 
   setQuery(query) {
@@ -77,8 +70,8 @@ class VomnibarUI {
   setForceNewTab(forceNewTab) {
     this.forceNewTab = forceNewTab;
   }
-  setCompleter(completer) {
-    this.completer = completer;
+  setCompleterName(name) {
+    this.completerName = name;
     this.reset();
   }
 
@@ -107,7 +100,7 @@ class VomnibarUI {
       this.onHiddenCallback();
     }
     this.onHiddenCallback = null;
-    return this.reset();
+    this.reset();
   }
 
   reset() {
@@ -118,6 +111,7 @@ class VomnibarUI {
     this.activeUserSearchEngine = null;
     this.selection = this.initialSelectionValue;
     this.seenTabToOpenCompletionList = false;
+    this.lastRequestId = null;
   }
 
   updateSelection() {
@@ -178,14 +172,6 @@ class VomnibarUI {
     return null;
   }
 
-  openCompletion(completion, openInNewTab) {
-    if (completion.type == "tab") {
-      chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: completion.tabId });
-    } else {
-      Vomnibar.getCompleter().launchUrl(completion.url, openInNewTab);
-    }
-  }
-
   onKeyEvent(event) {
     let action, completion;
     this.lastAction = action = this.actionFromKeyEvent(event);
@@ -242,7 +228,7 @@ class VomnibarUI {
         if (isCustomSearchPrimarySuggestion) {
           query = Utils.createSearchUrl(query, c.searchUrl);
         }
-        this.hide(() => Vomnibar.getCompleter().launchUrl(query, openInNewTab));
+        this.hide(() => this.launchUrl(query, openInNewTab));
       } else {
         completion = this.completions[this.selection];
         this.hide(() => this.openCompletion(completion, openInNewTab));
@@ -291,30 +277,54 @@ class VomnibarUI {
     return prefix + this.input.value;
   }
 
-  updateCompletions() {
-    return this.completer.filter({
-      query: this.getInputValueAsQuery(),
+  async updateCompletions() {
+    const requestId = Utils.createUniqueId();
+    this.lastRequestId = requestId;
+    const query = this.getInputValueAsQuery();
+    const queryTerms = query.trim().split(/\s+/).filter((s) => s.length > 0);
+
+    const results = await chrome.runtime.sendMessage({
+      handler: "filterCompletions",
+      completerName: this.completerName,
+      queryTerms,
+      query,
       seenTabToOpenCompletionList: this.seenTabToOpenCompletionList,
-      callback: (results) => {
-        this.completions = results;
-        this.selection = this.completions[0]?.autoSelect ? 0 : this.initialSelectionValue;
-        // Update completion list with the new suggestions.
-        this.completionList.innerHTML = this.completions.map((completion) =>
-          `<li>${completion.html}</li>`
-        ).join("");
-        this.completionList.style.display = this.completions.length > 0 ? "block" : "";
-        this.selection = Math.min(
-          this.completions.length - 1,
-          Math.max(this.initialSelectionValue, this.selection),
-        );
-        this.updateSelection();
-      },
+    });
+
+    // Ensure that no new filter requests have gone out while waiting for this result.
+    if (this.lastRequestId != requestId) return;
+
+    this.completions = results;
+    this.selection = this.completions[0]?.autoSelect ? 0 : this.initialSelectionValue;
+    // Update completion list with the new suggestions.
+    this.completionList.innerHTML = this.completions.map((c) => `<li>${c.html}</li>`).join("");
+    this.completionList.style.display = this.completions.length > 0 ? "block" : "";
+    this.selection = Math.min(
+      this.completions.length - 1,
+      Math.max(this.initialSelectionValue, this.selection),
+    );
+    this.updateSelection();
+  }
+
+  refreshCompletions() {
+    chrome.runtime.sendMessage({
+      handler: "refreshCompletions",
+      completerName: this.completerName,
+    });
+  }
+
+  cancelCompletions() {
+    // Let the background page's completer optionally abandon any pending query, because the user is
+    // typing and another query will arrive soon.
+    chrome.runtime.sendMessage({
+      handler: "cancelCompletions",
+      completerName: this.completerName,
     });
   }
 
   onInput() {
     this.seenTabToOpenCompletionList = false;
-    this.completer.cancel();
+    this.cancelCompletions();
 
     // For custom search engines, we suppress the leading prefix (e.g. the "w" of "w query terms")
     // within the vomnibar input.
@@ -350,6 +360,26 @@ class VomnibarUI {
     this.input.focus();
   }
 
+  openCompletion(completion, openInNewTab) {
+    if (completion.type == "tab") {
+      chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: completion.tabId });
+    } else {
+      this.launchUrl(completion.url, openInNewTab);
+    }
+  }
+
+  launchUrl(url, openInNewTab) {
+    // If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the
+    // current tab.
+    if (openInNewTab) {
+      openInNewTab = !Utils.hasJavascriptPrefix(url);
+    }
+    chrome.runtime.sendMessage({
+      handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
+      url,
+    });
+  }
+
   initDom() {
     this.box = document.getElementById("vomnibar");
 
@@ -368,64 +398,6 @@ class VomnibarUI {
     });
     // A click anywhere else hides the vomnibar.
     document.addEventListener("click", () => this.hide());
-  }
-}
-
-//
-// Sends requests to a Vomnibox completer on the background page.
-//
-class BackgroundCompleter {
-  // The "name" is the background-page completer to connect to: "omni", "tabs", or "bookmarks".
-  constructor(name) {
-    // These are the actions we can perform when the user selects a result.
-    this.name = name;
-    this.messageId = null;
-  }
-
-  async filter(request) {
-    const id = Utils.createUniqueId();
-    this.latestMessageId = id;
-
-    const queryTerms = request.query.trim().split(/\s+/).filter((s) => s.length > 0);
-    const results = await chrome.runtime.sendMessage({
-      handler: "filterCompletions",
-      completerName: this.name,
-      queryTerms,
-      query: request.query,
-      seenTabToOpenCompletionList: request.seenTabToOpenCompletionList,
-    });
-    // Ensure that no new filter requests have gone out while waiting for this result.
-    if (this.latestMessageId != id) return;
-
-    request.callback(results);
-  }
-
-  refresh() {
-    chrome.runtime.sendMessage({
-      handler: "refreshCompletions",
-      completerName: this.name,
-    });
-  }
-
-  cancel() {
-    // Inform the background completer that it may (should it choose to do so) abandon any pending
-    // query (because the user is typing, and there will be another query along soon).
-    chrome.runtime.sendMessage({
-      handler: "cancelCompletions",
-      completerName: this.name,
-    });
-  }
-
-  launchUrl(url, openInNewTab) {
-    // If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the
-    // current tab.
-    if (openInNewTab) {
-      openInNewTab = !Utils.hasJavascriptPrefix(url);
-    }
-    chrome.runtime.sendMessage({
-      handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
-      url,
-    });
   }
 }
 
