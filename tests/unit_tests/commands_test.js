@@ -132,24 +132,3 @@ context("Validate advanced commands", () => {
     }
   });
 });
-
-context("Parse commands", () => {
-  should("omit whitespace", () => {
-    assert.equal(0, BgUtils.parseLines("    \n    \n   ").length);
-  });
-
-  should("omit comments", () => {
-    assert.equal(0, BgUtils.parseLines(' # comment   \n " comment   \n   ').length);
-  });
-
-  should("join lines", () => {
-    assert.equal(1, BgUtils.parseLines("a\\\nb").length);
-    assert.equal("ab", BgUtils.parseLines("a\\\nb")[0]);
-  });
-
-  should("trim lines", () => {
-    assert.equal(2, BgUtils.parseLines("  a  \n  b").length);
-    assert.equal("a", BgUtils.parseLines("  a  \n  b")[0]);
-    assert.equal("b", BgUtils.parseLines("  a  \n  b")[1]);
-  });
-});

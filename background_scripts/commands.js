@@ -25,7 +25,7 @@ const Commands = {
     const configLines = Object.keys(defaultKeyMappings).map((key) =>
       `map ${key} ${defaultKeyMappings[key]}`
     );
-    configLines.push(...BgUtils.parseLines(customKeyMappings));
+    configLines.push(...Utils.parseLines(customKeyMappings));
 
     const seen = {};
     let unmapAll = false;

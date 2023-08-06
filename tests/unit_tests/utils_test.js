@@ -245,3 +245,53 @@ context("pick", () => {
                       ["a", "b", "d"]));
   });
 });
+
+context("parseLines", () => {
+  should("omit whitespace", () => {
+    assert.equal(0, Utils.parseLines("    \n    \n   ").length);
+  });
+
+  should("omit comments", () => {
+    assert.equal(0, Utils.parseLines(' # comment   \n " comment   \n   ').length);
+  });
+
+  should("join lines", () => {
+    assert.equal(1, Utils.parseLines("a\\\nb").length);
+    assert.equal("ab", Utils.parseLines("a\\\nb")[0]);
+  });
+
+  should("trim lines", () => {
+    assert.equal(2, Utils.parseLines("  a  \n  b").length);
+    assert.equal("a", Utils.parseLines("  a  \n  b")[0]);
+    assert.equal("b", Utils.parseLines("  a  \n  b")[1]);
+  });
+});
+
+context("UserSearchEngines", () => {
+  should("parse out search engine text", () => {
+    const config = [
+      "g: http://google.com/%s Google Search",
+      "random line",
+      "# comment",
+      " w: http://wikipedia.org/%s",
+    ].join("\n");
+
+    const results = UserSearchEngines.parseConfig(config);
+
+    assert.equal(
+      {
+        g: new UserSearchEngine({
+          keyword: "g",
+          url: "http://google.com/%s",
+          description: "Google Search",
+        }),
+        w: new UserSearchEngine({
+          keyword: "w",
+          url: "http://wikipedia.org/%s",
+          description: "search (w)",
+        }),
+      },
+      results,
+    );
+  });
+});
