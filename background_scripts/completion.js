@@ -538,10 +538,6 @@ class TabCompleter {
 }
 
 class SearchEngineCompleter {
-  constructor() {
-    this.previousSuggestions = {};
-  }
-
   cancel() {
     CompletionSearch.cancel();
   }
@@ -556,14 +552,10 @@ class SearchEngineCompleter {
   }
 
   refresh() {
-    this.previousSuggestions = {};
     UserSearchEngines.set(Settings.get("searchEngines"));
   }
 
   async filter(request) {
-    // TODO(philc): I'm not sure we need this list of previousSuggestions. The expensive search is
-    // the user's custom serach engines, and CompletionSearch already has caching built in.
-    let previousSuggestions;
     let suggestion;
     const { queryTerms, query, engine } = request;
 
@@ -575,13 +567,8 @@ class SearchEngineCompleter {
 
     const searchUrl = userSearchEngine.url;
 
-    if (this.previousSuggestions[searchUrl] == null) {
-      this.previousSuggestions[searchUrl] = [];
-    }
-
     const haveCompletionEngine = CompletionSearch.haveCompletionEngine(searchUrl);
 
-    // TODO(philc): We should check previousSuggestions for the filter.
     if (!haveCompletionEngine) return [];
 
     const completionEngine = CompletionSearch.lookupEngine(searchUrl);
@@ -607,7 +594,6 @@ class SearchEngineCompleter {
     const suggestions = completions.map((completion) => {
       const s = makeSuggestion(completion);
       s.insertText = completion;
-      this.previousSuggestions[searchUrl][s.url] = s;
       return s;
     });
 
