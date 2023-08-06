@@ -63,7 +63,7 @@ const Vomnibar = {
   },
 
   // This function opens the vomnibar. It accepts options, a map with the values:
-  //   completer   - The completer to fetch results from.
+  //   completer   - The name of the completer to fetch results from.
   //   query       - Optional. Text to prefill the Vomnibar with.
   //   selectFirst - Optional, boolean. Whether to select the first entry.
   //   newTab      - Optional, boolean. Whether to open the result in a new tab.
