@@ -434,14 +434,8 @@ class BackgroundCompleter {
   constructor(name) {
     // These are the actions we can perform when the user selects a result.
     this.name = name;
-
-    this.port = chrome.runtime.connect({ name: "completions" });
     this.messageId = null;
     this.reset();
-
-    this.port.onDisconnect.addListener((port) => {
-      console.log("Vomnibar port disconnected.");
-    });
   }
 
   async filter(request) {
