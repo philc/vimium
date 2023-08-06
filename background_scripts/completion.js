@@ -564,15 +564,7 @@ class SearchEngineCompleter {
 
   refresh(port) {
     this.previousSuggestions = {};
-    SearchEngines.refreshAndUse(Settings.get("searchEngines"), function (engines) {
-      // Let the front-end vomnibar know the search-engine keywords. It needs to know them so that,
-      // when the query goes from "w" to "w ", the vomnibar can synchronously launch the next
-      // filter() request (which avoids an ugly delay/flicker).
-      port.postMessage({
-        handler: "keywords",
-        keywords: Object.keys(engines),
-      });
-    });
+    UserSearchEngines.set(Settings.get("searchEngines"));
   }
 
   filter(request, onComplete) {
