@@ -221,15 +221,12 @@ class VomnibarUI {
       this.updateSelection();
     } else if (action === "enter") {
       const c = this.completions[this.selection];
-      const isCustomSearchPrimarySuggestion = c && c.isPrimarySuggestion &&
-        this.lastResponse.engine && this.lastResponse.engine.searchUrl;
+      const isCustomSearchPrimarySuggestion = c && c.isPrimarySuggestion && c.isCustomSearch;
       if ((this.selection === -1) || isCustomSearchPrimarySuggestion) {
         let query = this.input.value.trim();
         // <Enter> on an empty query is a no-op.
-        if (!(query.length > 0)) {
-          return;
-        }
-        // First case (@selection == -1).
+        if (query.length == 0) return;
+        // First case (selection == -1).
         // If the user types something and hits enter without selecting a completion from the list,
         // then:
         //   - If a search URL has been provided, then use it. This is custom search engine request.
@@ -243,7 +240,7 @@ class VomnibarUI {
         // suggestion. Therefore, to avoid a race condition, we construct the query from the actual
         // contents of the input (query).
         if (isCustomSearchPrimarySuggestion) {
-          query = Utils.createSearchUrl(query, this.lastResponse.engine.searchUrl);
+          query = Utils.createSearchUrl(query, c.searchUrl);
         }
         this.hide(() => Vomnibar.getCompleter().launchUrl(query, openInNewTab));
       } else {
@@ -298,10 +295,7 @@ class VomnibarUI {
     return this.completer.filter({
       query: this.getInputValueAsQuery(),
       seenTabToOpenCompletionList: this.seenTabToOpenCompletionList,
-      callback: (lastResponse) => {
-        // TODO(philc):
-        this.lastResponse = lastResponse;
-        const results = this.lastResponse;
+      callback: (results) => {
         this.completions = results;
         this.selection = (this.completions[0] != null ? this.completions[0].autoSelect : undefined)
           ? 0
