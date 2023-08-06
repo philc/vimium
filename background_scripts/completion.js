@@ -6,8 +6,7 @@
 // turn calls filter() on each these completers.
 //
 // A completer is a class which has three functions:
-//  - filter(query, onComplete): "query" will be whatever the user typed into the Vomnibox.
-// TODO(philc): Update this doc
+//  - filter(query): "query" will be whatever the user typed into the Vomnibox.
 //  - refresh(): (optional) refreshes the completer's data source (e.g. refetches the list of
 //    bookmarks).
 //  - cancel(): (optional) cancels any pending, cancelable action.
@@ -88,9 +87,7 @@ class Suggestion {
       this.html = `\
 <div class="vomnibarTopHalf">
    <span class="vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vomnibarSource">${this.description}</span>
-   <span class="vomnibarTitle">${
-        this.highlightQueryTerms(Utils.escapeHtml(this.title))
-      }</span>
+   <span class="vomnibarTitle">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
    ${relevancyHtml}
  </div>\
 `;
@@ -98,9 +95,7 @@ class Suggestion {
       this.html = `\
 <div class="vomnibarTopHalf">
    <span class="vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vomnibarSource">${this.description}</span>
-   <span class="vomnibarTitle">${
-        this.highlightQueryTerms(Utils.escapeHtml(this.title))
-      }</span>
+   <span class="vomnibarTitle">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
  </div>
  <div class="vomnibarBottomHalf">
   <span class="vomnibarSource vomnibarNoInsertText">${insertTextIndicator}</span>${faviconHtml}<span class="vomnibarUrl">${
@@ -404,21 +399,17 @@ class HistoryCompleter {
 // This supports the user experience where they quickly type a partial domain, hit tab -> enter, and
 // expect to arrive there.
 class DomainCompleter {
-  constructor() {
-    // TODO(philc): Move this documentation and field out of the constructor.
-    // A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
-    // - `entry` is the most recently accessed page in the History within this domain.
-    // - `referenceCount` is a count of the number of History entries within this domain.
-    //    If `referenceCount` goes to zero, the domain entry can and should be deleted.
-    this.domains = null;
-  }
+  // A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
+  // - `entry` is the most recently accessed page in the History within this domain.
+  // - `referenceCount` is a count of the number of History entries within this domain.
+  //    If `referenceCount` goes to zero, the domain entry can and should be deleted.
+  domains;
 
   async filter({ queryTerms, query }) {
     const isMultiWordQuery = /\S\s/.test(query);
     if ((queryTerms.length === 0) || isMultiWordQuery) return [];
     if (!this.domains) await this.populateDomains();
 
-    // const query = queryTerms[0];
     const firstTerm = queryTerms[0];
     const domains = Object.keys(this.domains || []).filter((d) => d.includes(firstTerm));
     const domainsAndScores = this.sortDomainsByRelevancy(queryTerms, domains);
