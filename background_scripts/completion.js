@@ -79,22 +79,18 @@ class Suggestion {
     if (this.insertText && this.isCustomSearch) {
       this.title = this.insertText;
     }
-    // NOTE(philc): We're using these vimium-specific class names so we don't collide with the
-    // page's CSS.
     let faviconHtml = "";
     if (this.description === "tab" && !BgUtils.isFirefox()) {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
       faviconUrl.searchParams.set("pageUrl", this.url);
       faviconUrl.searchParams.set("size", "16");
-      faviconHtml = `<img class="vimiumReset vomnibarIcon" src="${faviconUrl.toString()}" />`;
+      faviconHtml = `<img class="vomnibarIcon" src="${faviconUrl.toString()}" />`;
     }
-    // TODO(philc): Since the Vomnibar is shown in an iFrame, can't we remove all of these vimiumReset
-    // classes?
     if (this.isCustomSearch) {
       this.html = `\
-<div class="vimiumReset vomnibarTopHalf">
-   <span class="vimiumReset vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vimiumReset vomnibarSource">${this.description}</span>
-   <span class="vimiumReset vomnibarTitle">${
+<div class="vomnibarTopHalf">
+   <span class="vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vomnibarSource">${this.description}</span>
+   <span class="vomnibarTitle">${
         this.highlightQueryTerms(Utils.escapeHtml(this.title))
       }</span>
    ${relevancyHtml}
@@ -102,14 +98,14 @@ class Suggestion {
 `;
     } else {
       this.html = `\
-<div class="vimiumReset vomnibarTopHalf">
-   <span class="vimiumReset vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vimiumReset vomnibarSource">${this.description}</span>
-   <span class="vimiumReset vomnibarTitle">${
+<div class="vomnibarTopHalf">
+   <span class="vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vomnibarSource">${this.description}</span>
+   <span class="vomnibarTitle">${
         this.highlightQueryTerms(Utils.escapeHtml(this.title))
       }</span>
  </div>
- <div class="vimiumReset vomnibarBottomHalf">
-  <span class="vimiumReset vomnibarSource vomnibarNoInsertText">${insertTextIndicator}</span>${faviconHtml}<span class="vimiumReset vomnibarUrl">${
+ <div class="vomnibarBottomHalf">
+  <span class="vomnibarSource vomnibarNoInsertText">${insertTextIndicator}</span>${faviconHtml}<span class="vomnibarUrl">${
         this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
       }</span>
   ${relevancyHtml}
