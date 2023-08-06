@@ -23,7 +23,7 @@ class EnginePrefixWrapper {
       queryTerms = [...terms.split(" "), ...queryTerms];
       const prefix = `${terms} `;
 
-      this.postprocessSuggestions = (suggestions) => {
+      this.transformSuggestionsFn = (suggestions) => {
         return suggestions
           .filter((s) => s.startsWith(prefix))
           .map((s) => s.slice(prefix.length));
@@ -34,11 +34,8 @@ class EnginePrefixWrapper {
   }
 
   parse(responseText) {
-    return this.postprocessSuggestions(this.engine.parse(responseText));
-  }
-
-  postprocessSuggestions(suggestions) {
-    return suggestions;
+    const suggestions = this.engine.parse(responseText);
+    return this.transformSuggestionsFn ? this.transformSuggestionsFn(suggestions) : suggestions;
   }
 }
 
