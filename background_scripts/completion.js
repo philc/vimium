@@ -561,11 +561,8 @@ class SearchEngineCompleter {
 
     const searchUrl = userSearchEngine.url;
 
-    const haveCompletionEngine = CompletionSearch.haveCompletionEngine(searchUrl);
-
-    if (!haveCompletionEngine) return [];
-
     const completionEngine = CompletionSearch.lookupEngine(searchUrl);
+    if (!completionEngine) return [];
 
     // TODO(philc): Perform an async request for more results from the search engine.
     const completions = await CompletionSearch.complete(searchUrl, queryTermsWithoutKeyword);

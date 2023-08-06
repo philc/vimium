@@ -91,11 +91,6 @@ const CompletionSearch = {
     }
   },
 
-  // True if we have a completion engine for this search URL, false otherwise.
-  haveCompletionEngine(searchUrl) {
-    return !this.lookupEngine(searchUrl).dummy;
-  },
-
   // This is the main entry point.
   //  - searchUrl is the search engine's URL, e.g. Settings.get("searchUrl"), or a custom search
   //    engine's URL. This is only used as a key for determining the relevant completion engine.

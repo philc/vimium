@@ -210,18 +210,6 @@ class Qwant extends BaseEngine {
   }
 }
 
-// A dummy search engine which is guaranteed to match any search URL, but never produces
-// completions. This allows the rest of the logic to be written knowing that there will always be a
-// completion engine match.
-class DummyCompletionEngine extends BaseEngine {
-  constructor() {
-    super({
-      regexps: ["."],
-      dummy: true,
-    });
-  }
-}
-
 // On the user-facing documentation page pages/completion_engines.html, these completion search
 // engines will be shown to the user in this order.
 const CompletionEngines = [
@@ -234,7 +222,6 @@ const CompletionEngines = [
   Amazon,
   Webster,
   Qwant,
-  DummyCompletionEngine,
 ];
 
 globalThis.CompletionEngines = CompletionEngines;
