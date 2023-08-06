@@ -657,8 +657,19 @@ const sendRequestHandlers = {
     // as they're needed elsewhere. Converting the response to JSON and back is a quick and easy
     // way to sanitize the object.
     response = JSON.parse(JSON.stringify(response));
+
     return response;
   },
+
+  refreshCompletions(request, sender) {
+    const completer = completers[request.completerName];
+    completer.refresh();
+  },
+
+  cancelCompletions(request, sender) {
+    const completer = completers[request.completerName];
+    completer.cancel();
+  }
 };
 
 Utils.addChromeRuntimeOnMessageListener(

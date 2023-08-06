@@ -469,13 +469,19 @@ class BackgroundCompleter {
   refresh(lastUI) {
     this.lastUI = lastUI;
     this.reset();
-    return this.port.postMessage({ name: this.name, handler: "refresh" });
+    chrome.runtime.sendMessage({
+      handler: "refreshCompletions",
+      completerName: this.name,
+    });
   }
 
   cancel() {
     // Inform the background completer that it may (should it choose to do so) abandon any pending
     // query (because the user is typing, and there will be another query along soon).
-    this.port.postMessage({ name: this.name, handler: "cancel" });
+    chrome.runtime.sendMessage({
+      handler: "cancelCompletions",
+      completerName: this.name,
+    });
   }
 
   launchUrl(url, openInNewTab) {
