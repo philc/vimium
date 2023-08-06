@@ -98,9 +98,7 @@ const CompletionSearch = {
   // If no callback is provided, then we're to provide suggestions only if we can do so
   // synchronously (ie. from a cache). In this case we just return the results. Returns null if we
   // cannot service the request synchronously.
-  //
-  // TODO(philc): Consider removing the syncOnly behavior. I don't think we need it anymore.
-  async complete(searchUrl, queryTerms, syncOnly) {
+  async complete(searchUrl, queryTerms) {
     let handler;
     const query = queryTerms.join(" ").toLowerCase();
 
@@ -116,10 +114,6 @@ const CompletionSearch = {
       if (this.debug) console.log("hit", completionCacheKey);
       return this.completionCache.get(completionCacheKey);
     }
-
-    // That's all of the caches we can try. Bail if the caller is only requesting synchronous
-    // results. We signal that we haven't found a match by returning null.
-    if (syncOnly) return [];
 
     const createTimeoutPromise = (ms) => {
       return new Promise((resolve, reject) => {
