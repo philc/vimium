@@ -38,42 +38,6 @@ const completers = {
   tabs: new MultiCompleter([completionSources.tabs]),
 };
 
-const completionHandlers = {
-  filter(completer, request, port) {
-    // TODO(philc): Do we need any of these return statements?
-    return completer.filter(request, function (response) {
-      // NOTE(smblott): response contains `relevancyFunction` (function) properties which cause
-      // postMessage, below, to fail in Firefox. See #2576. We cannot simply delete these methods,
-      // as they're needed elsewhere. Converting the response to JSON and back is a quick and easy
-      // way to sanitize the object.
-      response = JSON.parse(JSON.stringify(response));
-      // We use try here because this may fail if the sender has already navigated away from the
-      // original page. This can happen, for example, when posting completion suggestions from the
-      // SearchEngineCompleter (which is done asynchronously).
-      try {
-        return port.postMessage(Object.assign(request, response, { handler: "completions" }));
-      } catch (error) {}
-    });
-  },
-
-  refresh(completer, _, port) {
-    completer.refresh(port);
-  },
-  cancel(completer, _, port) {
-    completer.cancel(port);
-  },
-};
-
-const handleCompletions = (sender) => (request, port) =>
-  completionHandlers[request.handler](completers[request.name], request, port);
-
-chrome.runtime.onConnect.addListener(async function (port) {
-  await Settings.onLoaded();
-  if (portHandlers[port.name]) {
-    return port.onMessage.addListener(portHandlers[port.name](port.sender, port));
-  }
-});
-
 const onURLChange = (details) => {
   // sendMessage will throw "Error: Could not establish connection. Receiving end does not exist."
   // if there is no Vimium content script loaded in the given tab. This can occur if the user
@@ -522,12 +486,6 @@ const HintCoordinator = {
     });
     await Promise.all(promises);
   },
-};
-
-// Port handler mapping
-const portHandlers = {
-  // TODO(philc): Migrate this to sendMessage, or rewrite how UIComponents interact with iframes.
-  completions: handleCompletions,
 };
 
 const sendRequestHandlers = {
