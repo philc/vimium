@@ -17,7 +17,10 @@ const Vomnibar = {
     return this.completers[name];
   },
 
-  activate(userOptions) {
+  async activate(userOptions) {
+    await Settings.onLoaded();
+    UserSearchEngines.set(Settings.get("searchEngines"));
+
     const options = {
       completer: "omni",
       query: "",
@@ -38,7 +41,6 @@ const Vomnibar = {
     this.vomnibarUI.setRefreshInterval(options.refreshInterval);
     this.vomnibarUI.setForceNewTab(options.newTab);
     this.vomnibarUI.setQuery(options.query);
-    this.vomnibarUI.setKeyword(options.keyword);
     this.vomnibarUI.update(true);
   },
 
@@ -63,14 +65,15 @@ class VomnibarUI {
     this.refreshInterval = 0;
     this.onHiddenCallback = null;
     this.initDom();
+    // The user's custom search engine, if they have prefixed their query with the keyword for one
+    // of their search engines.
+    this.activeUserSearchEngine = null;
   }
 
   setQuery(query) {
     this.input.value = query;
   }
-  setKeyword(keyword) {
-    this.customSearchMode = keyword;
-  }
+
   setInitialSelectionValue(initialSelectionValue) {
     this.initialSelectionValue = initialSelectionValue;
   }
@@ -84,8 +87,10 @@ class VomnibarUI {
     this.completer = completer;
     this.reset();
   }
-  setKeywords(keywords) {
-    this.keywords = keywords;
+
+  // True if the user has entered the keyword of one of their custom search engines.
+  isUserSearchEngineActive() {
+    return this.activeUserSearchEngine != null;
   }
 
   // The sequence of events when the vomnibar is hidden is as follows:
@@ -117,9 +122,8 @@ class VomnibarUI {
     this.input.value = "";
     this.completions = [];
     this.previousInputValue = null;
-    this.customSearchMode = null;
+    this.activeUserSearchEngine = null;
     this.selection = this.initialSelectionValue;
-    this.keywords = [];
     this.seenTabToOpenCompletionList = false;
     if (this.completer != null) {
       this.completer.reset();
@@ -127,20 +131,15 @@ class VomnibarUI {
   }
 
   updateSelection() {
-    // For custom search engines, we suppress the leading term (e.g. the "w" of "w query terms")
-    // within the vomnibar input.
-    if (this.lastResponse.isCustomSearch && (this.customSearchMode == null)) {
-      const queryTerms = this.input.value.trim().split(/\s+/);
-      this.customSearchMode = queryTerms[0];
-      this.input.value = queryTerms.slice(1).join(" ");
-    }
-
-    // For suggestions for custom search engines, we copy the suggested text into the input when the
-    // item is selected, and revert when it is not. This allows the user to select a suggestion and
-    // then continue typing.
-    if ((this.selection >= 0) && (this.completions[this.selection].insertText != null)) {
+    // For suggestions from custom search engines, we copy the suggestion's text into the input when
+    // the suggestion is selected, and revert when it is not. This allows the user to select a
+    // suggestion and then continue typing.
+    const completion = this.completions[this.selection];
+    const shouldReplaceInputWithSuggestion = this.selection >= 0 &&
+      completion.insertText != null;
+    if (shouldReplaceInputWithSuggestion) {
       if (this.previousInputValue == null) this.previousInputValue = this.input.value;
-      this.input.value = this.completions[this.selection].insertText;
+      this.input.value = completion.insertText;
     } else if (this.previousInputValue != null) {
       this.input.value = this.previousInputValue;
       this.previousInputValue = null;
@@ -263,7 +262,7 @@ class VomnibarUI {
       }
     } else if (action === "ctrl-enter") {
       // Populate the vomnibar with the current selection's URL.
-      if (!this.customSearchMode && (this.selection >= 0)) {
+      if (!this.isUserSearchEngineActive() && (this.selection >= 0)) {
         if (this.previousInputValue == null) this.previousInputValue = this.input.value;
         this.input.value = this.completions[this.selection] != null
           ? this.completions[this.selection].url
@@ -271,13 +270,14 @@ class VomnibarUI {
         this.input.scrollLeft = this.input.scrollWidth;
       }
     } else if (action === "delete") {
-      if (this.customSearchMode && (this.input.selectionEnd === 0)) {
-        // Normally, with custom search engines, the keyword (e,g, the "w" of "w query terms") is
+      if (this.isUserSearchEngineActive() && (this.input.selectionEnd === 0)) {
+        // Normally, with custom search engines, the keyword (e.g. the "w" of "w query terms") is
         // suppressed. If the cursor is at the start of the input, then reinstate the keyword (the
         // "w").
-        this.input.value = this.customSearchMode + this.input.value.trimStart();
-        this.input.selectionStart = this.input.selectionEnd = this.customSearchMode.length;
-        this.customSearchMode = null;
+        const keyword = this.activeUserSearchEngine.keyword;
+        this.input.value = keyword + this.input.value.trimStart();
+        this.input.selectionStart = this.input.selectionEnd = keyword.length;
+        this.activeUserSearchEngine = null;
         this.update(true);
       } else if (this.seenTabToOpenCompletionList && (this.input.value.trim().length === 0)) {
         this.seenTabToOpenCompletionList = false;
@@ -300,7 +300,8 @@ class VomnibarUI {
   // reinstate any search engine keyword which is currently being suppressed, and strip any prompted
   // text.
   getInputValueAsQuery() {
-    return ((this.customSearchMode != null) ? this.customSearchMode + " " : "") + this.input.value;
+    const prefix = this.isUserSearchEngineActive() ? this.activeUserSearchEngine.keyword + " " : "";
+    return prefix + this.input.value;
   }
 
   updateCompletions(callback = null) {
@@ -308,8 +309,9 @@ class VomnibarUI {
       query: this.getInputValueAsQuery(),
       seenTabToOpenCompletionList: this.seenTabToOpenCompletionList,
       callback: (lastResponse) => {
+        // TODO(philc):
         this.lastResponse = lastResponse;
-        const { results } = this.lastResponse;
+        const results = this.lastResponse;
         this.completions = results;
         this.selection = (this.completions[0] != null ? this.completions[0].autoSelect : undefined)
           ? 0
@@ -335,13 +337,24 @@ class VomnibarUI {
     let updateSynchronously;
     this.seenTabToOpenCompletionList = false;
     this.completer.cancel();
-    if (
-      (0 <= this.selection) && this.completions[this.selection].customSearchMode &&
-      !this.customSearchMode
-    ) {
-      this.customSearchMode = this.completions[this.selection].customSearchMode;
-      updateSynchronously = true;
+
+    // TODO(philc): This updateSynchronously logic needs to be revisited.
+    // if (
+    //   (0 <= this.selection) && this.completions[this.selection].customSearchMode &&
+    //   !this.customSearchMode
+    // ) {
+    //   this.customSearchMode = this.completions[this.selection].customSearchMode;
+    //   updateSynchronously = true;
+    // }
+
+    // For custom search engines, we suppress the leading prefix (e.g. the "w" of "w query terms")
+    // within the vomnibar input.
+    if (!this.isUserSearchEngineActive() && this.getUserSearchEngineForQuery() != null) {
+      this.activeUserSearchEngine = this.getUserSearchEngineForQuery();
+      const queryTerms = this.input.value.trim().split(/\s+/);
+      this.input.value = queryTerms.slice(1).join(" ");
     }
+
     // If the user types, then don't reset any previous text, and reset the selection.
     if (this.previousInputValue != null) {
       this.previousInputValue = null;
@@ -357,17 +370,26 @@ class VomnibarUI {
     }
   }
 
-  shouldActivateCustomSearchMode() {
-    const queryTerms = this.input.value.trimStart().split(/\s+/);
-    return (1 < queryTerms.length) && Array.from(this.keywords).includes(queryTerms[0]) &&
-      !this.customSearchMode;
+  // Returns the UserSearchEngine for the given Vomnibar input. Returns null if the Vomnibar does
+  // not start with a keyword from one of the user's search engines.
+  getUserSearchEngineForQuery() {
+    // This logic is duplicated from SearchEngineCompleter.getEngineForQueryPrefix
+    const parts = this.input.value.trimStart().split(/\s+/);
+    const keyword = parts[0];
+    return parts.length > 1 ? UserSearchEngines.keywordToEngine[keyword] : null;
+  }
+
+  queryIsCustomSearch() {
+    return this.getUserSearchEngineForQuery() != null;
   }
 
   update(updateSynchronously, callback = null) {
     // If the query text becomes a custom search (the user enters a search keyword), then we need to
     // force a synchronous update (so that the state is updated immediately).
     if (updateSynchronously == null) updateSynchronously = false;
-    if (!updateSynchronously) updateSynchronously = this.shouldActivateCustomSearchMode();
+    if (!updateSynchronously) {
+      updateSynchronously = !this.isUserSearchEngineActive() && this.queryIsCustomSearch();
+    }
     if (updateSynchronously) {
       this.clearUpdateTimer();
       this.updateCompletions(callback);
@@ -417,13 +439,6 @@ class BackgroundCompleter {
     this.messageId = null;
     this.reset();
 
-    this.port.onMessage.addListener((msg) => {
-      switch (msg.handler) {
-        case "keywords":
-          this.keywords = msg.keywords;
-          return this.lastUI.setKeywords(this.keywords);
-      }
-    });
     this.port.onDisconnect.addListener((port) => {
       console.log("Vomnibar port disconnected.");
     });
@@ -448,7 +463,7 @@ class BackgroundCompleter {
   }
 
   reset() {
-    this.keywords = [];
+    // TODO(philc): Delete
   }
 
   refresh(lastUI) {
