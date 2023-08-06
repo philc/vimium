@@ -96,7 +96,7 @@ class Suggestion {
  </div>
  <div class="vimiumReset vomnibarBottomHalf">
   <span class="vimiumReset vomnibarSource vomnibarNoInsertText">${insertTextIndicator}</span>${faviconHtml}<span class="vimiumReset vomnibarUrl">${
-        this.highlightUrlTerms(Utils.escapeHtml(this.shortenUrl()))
+        this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
       }</span>
   ${relevancyHtml}
 </div>\
@@ -151,9 +151,7 @@ class Suggestion {
 
   // Wraps each occurence of the query terms in the given string in a <span>.
   highlightQueryTerms(string) {
-    if (!this.highlightTerms) {
-      return string;
-    }
+    if (!this.highlightTerms) return string;
     let ranges = [];
     const escapedTerms = this.queryTerms.map((term) => Utils.escapeHtml(term));
     for (let term of escapedTerms) {
@@ -173,14 +171,6 @@ class Suggestion {
         string.substring(end);
     }
     return string;
-  }
-
-  highlightUrlTerms(string) {
-    if (this.highlightTermsExcludeUrl) {
-      return string;
-    } else {
-      return this.highlightQueryTerms(string);
-    }
   }
 
   // Merges the given list of ranges such that any overlapping regions are combined. E.g.
@@ -594,7 +584,6 @@ class SearchEngineCompleter {
         title: query,
         searchUrl,
         highlightTerms: false,
-        highlightTermsExcludeUrl: true,
         isCustomSearch: true,
         relevancy: null,
         relevancyFunction: this.computeRelevancy,
