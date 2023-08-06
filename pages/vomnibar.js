@@ -297,9 +297,7 @@ class VomnibarUI {
       seenTabToOpenCompletionList: this.seenTabToOpenCompletionList,
       callback: (results) => {
         this.completions = results;
-        this.selection = (this.completions[0] != null ? this.completions[0].autoSelect : undefined)
-          ? 0
-          : this.initialSelectionValue;
+        this.selection = this.completions[0]?.autoSelect ? 0 : this.initialSelectionValue;
         // Update completion list with the new suggestions.
         this.completionList.innerHTML = this.completions.map((completion) =>
           `<li>${completion.html}</li>`

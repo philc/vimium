@@ -595,6 +595,7 @@ class SearchEngineCompleter {
     const primarySuggestion = makeSuggestion(queryTermsWithoutKeyword.join(" "));
     primarySuggestion.relevancy = 2;
     primarySuggestion.isPrimarySuggestion = true;
+    primarySuggestion.autoSelect = true;
     suggestions.unshift(primarySuggestion);
 
     return suggestions;
@@ -918,8 +919,7 @@ const HistoryCache = {
     // On Firefox, some history entries do not have titles.
     if (newPage.title == null) newPage.title = "";
     const i = HistoryCache.binarySearch(newPage, this.history, this.compareHistoryByUrl);
-    const pageWasFound =
-      (this.history[i] != null ? this.history[i].url : undefined) === newPage.url;
+    const pageWasFound = this.history[i]?.url == newPage.url;
     if (pageWasFound) {
       this.history[i] = newPage;
     } else {
