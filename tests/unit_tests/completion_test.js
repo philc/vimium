@@ -1,6 +1,7 @@
 import "./test_helper.js";
 import "../../background_scripts/bg_utils.js";
 import "../../background_scripts/completion_engines.js";
+import "../../background_scripts/completion_search.js";
 import "../../background_scripts/completion.js";
 
 const hours = (n) => 1000 * 60 * 60 * n;
@@ -335,6 +336,31 @@ context("tab completer", () => {
     const results = await filterCompleter(completer, ["tab2"]);
     assert.equal(["tab2.com"], results.map((tab) => tab.url));
     assert.equal([2], results.map((tab) => tab.tabId));
+  });
+});
+
+context("SearchEngineCompleter", () => {
+  const googleSearchUrl = "http://www.google.com/search?q=";
+  let completer;
+
+  const createResponse = (responseText) => {
+    return { text: () => responseText };
+  };
+
+  setup(() => {
+    completer = new SearchEngineCompleter();
+    const searchEngineConfig = `g: ${googleSearchUrl}%s`;
+    UserSearchEngines.set(searchEngineConfig);
+  });
+
+  should("complete search results using the given completer", async () => {
+    const googleResults = ["blue", ["blue1", "blue2"]];
+    stub(window, "fetch", () => createResponse(JSON.stringify(googleResults)));
+    const results = await filterCompleter(completer, ["g", "blue"]);
+    assert.equal(
+      [googleSearchUrl + "blue", googleSearchUrl + "blue1", googleSearchUrl + "blue2"],
+      results.map((suggestion) => suggestion.url),
+    );
   });
 });
 
