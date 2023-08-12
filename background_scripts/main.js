@@ -821,3 +821,7 @@ Object.assign(globalThis, {
   HintCoordinator,
   BackgroundCommands,
 });
+
+// The chrome.runtime.onStartup and onInstalled events are not fired when disabling and then
+// re-enabling the extension in developer mode, so we also initialize the extension here.
+initializeExtension();
