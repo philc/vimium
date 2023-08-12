@@ -1,6 +1,37 @@
+// A specification for a command, as defined by the default key bindings, or as it
+// appears in the user's keymapping settings.
+class RegistryEntry {
+  // Array of keys.
+  keySequence;
+  // Name of the command.
+  command;
+  description;
+  // Whether this command can be used with a count key prefix.
+  noRepeat;
+  // The maximum number of allow repetitions of this command, to avoid user error.
+  repeatLimit;
+  // Whether this command has to be run by the background page.
+  background;
+  // Whether this command must be run only in the top frame of a page.
+  topFrame;
+  // The map of options for this command. This is a parsed, sanitized version of the user's options
+  // for this command.
+  options;
+  // The (optional) raw list of options for this command provided in the user's settings.
+  // E.g. "count=10" in "map j scrollDown count=10".
+  // NOTE(philc): This is used only by the createTab command.
+  optionList;
+
+  constructor(o) {
+    Object.seal(this);
+    if (o) Object.assign(this, o);
+  }
+}
+
 const Commands = {
   availableCommands: {},
   keyToCommandRegistry: null,
+  // A map of keyString => CommandRegistry
   mapKeyRegistry: null,
 
   async init() {
@@ -17,6 +48,7 @@ const Commands = {
     await this.loadKeyMappings(Settings.get("keyMappings"));
   },
 
+  // TODO(philc): Improve this transpiled code.
   async loadKeyMappings(customKeyMappings) {
     let key, command;
     this.keyToCommandRegistry = {};
@@ -40,12 +72,14 @@ const Commands = {
               seen[key] = true;
               const keySequence = this.parseKeySequence(key);
               const options = this.parseCommandOptions(command, optionList);
-              this.keyToCommandRegistry[key] = Object.assign({
-                keySequence,
-                command,
-                options,
-                optionList,
-              }, this.availableCommands[command]);
+              this.keyToCommandRegistry[key] = new RegistryEntry(
+                Object.assign({
+                  keySequence,
+                  command,
+                  options,
+                  optionList,
+                }, this.availableCommands[command]),
+              );
             }
           }
           break;
