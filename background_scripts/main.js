@@ -291,14 +291,14 @@ const BackgroundCommands = {
     });
   },
 
-  closeTabsOnLeft(request) {
-    return removeTabsRelative("before", request);
+  async closeTabsOnLeft(request) {
+    await removeTabsRelative("before", request);
   },
-  closeTabsOnRight(request) {
-    return removeTabsRelative("after", request);
+  async closeTabsOnRight(request) {
+    await removeTabsRelative("after", request);
   },
-  closeOtherTabs(request) {
-    return removeTabsRelative("both", request);
+  async closeOtherTabs(request) {
+    await removeTabsRelative("both", request);
   },
 
   visitPreviousTab({ count, tab }) {
@@ -336,24 +336,26 @@ var forCountTabs = (count, currentTab, callback) =>
   });
 
 // Remove tabs before, after, or either side of the currently active tab
-var removeTabsRelative = (direction, { tab: activeTab }) =>
-  chrome.tabs.query({ currentWindow: true }, function (tabs) {
-    const shouldDelete = (() => {
-      switch (direction) {
-        case "before":
-          return (index) => index < activeTab.index;
-        case "after":
-          return (index) => index > activeTab.index;
-        case "both":
-          return (index) => index !== activeTab.index;
-      }
-    })();
-
-    chrome.tabs.remove(
-      tabs.filter((t) => !t.pinned && shouldDelete(t.index))
-        .map((t) => t.id),
-    );
+const removeTabsRelative = async (direction, { count, tab }) => {
+  const activeTab = tab;
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const toRemove = tabs.filter((tab) => {
+    if (tab.pinned || tab.id == activeTab.id) return false;
+    switch (direction) {
+      case "before":
+        return tab.index < activeTab.index;
+        break;
+      case "after":
+        return tab.index > activeTab.index;
+        break;
+      case "both":
+        return true;
+        break;
+    }
   });
+
+  await chrome.tabs.remove(toRemove.map((t) => t.id));
+};
 
 // Selects a tab before or after the currently selected tab.
 // - direction: "next", "previous", "first" or "last".
@@ -627,7 +629,7 @@ const sendRequestHandlers = {
   cancelCompletions(request, sender) {
     const completer = completers[request.completerName];
     completer.cancel();
-  }
+  },
 };
 
 Utils.addChromeRuntimeOnMessageListener(
