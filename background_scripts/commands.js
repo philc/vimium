@@ -498,8 +498,8 @@ const commandDescriptions = {
   togglePinTab: ["Pin or unpin current tab", { background: true }],
   toggleMuteTab: ["Mute or unmute current tab", { background: true, noRepeat: true }],
 
-  closeTabsOnLeft: ["Close tabs on the left", { background: true, noRepeat: true }],
-  closeTabsOnRight: ["Close tabs on the right", { background: true, noRepeat: true }],
+  closeTabsOnLeft: ["Close tabs on the left", { background: true }],
+  closeTabsOnRight: ["Close tabs on the right", { background: true }],
   closeOtherTabs: ["Close all other tabs", { background: true, noRepeat: true }],
 
   moveTabLeft: ["Move tab to the left", { background: true }],

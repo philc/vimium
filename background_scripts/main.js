@@ -337,16 +337,24 @@ var forCountTabs = (count, currentTab, callback) =>
 
 // Remove tabs before, after, or either side of the currently active tab
 const removeTabsRelative = async (direction, { count, tab }) => {
+  // count is null if the user didn't type a count prefix before issuing this command and didn't
+  // specify a count=n option in their keymapping settings. Interpret this as closing all tabs on
+  // either side.
+  if (count == null) count = 99999;
   const activeTab = tab;
   const tabs = await chrome.tabs.query({ currentWindow: true });
   const toRemove = tabs.filter((tab) => {
-    if (tab.pinned || tab.id == activeTab.id) return false;
+    if (tab.pinned || tab.id == activeTab.id) {
+      return false;
+    }
     switch (direction) {
       case "before":
-        return tab.index < activeTab.index;
+        return tab.index < activeTab.index &&
+          tab.index >= activeTab.index - count;
         break;
       case "after":
-        return tab.index > activeTab.index;
+        return tab.index > activeTab.index &&
+          tab.index <= activeTab.index + count;
         break;
       case "both":
         return true;

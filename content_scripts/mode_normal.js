@@ -25,9 +25,18 @@ class NormalMode extends KeyHandlerMode {
   }
 
   commandHandler({ command: registryEntry, count }) {
-    count *= registryEntry.options.count != null ? registryEntry.options.count : 1;
+    if (registryEntry.options.count) {
+      count = (count ?? 1) * registryEntry.options.count;
+    }
 
-    if (registryEntry.noRepeat) {
+    // closeTabsOnLeft and closeTabsOnRight interpret a null count as "close all tabs in
+    // {direction}", so don't default the count to 1 for those commands. See #2971.
+    const allowNullCount = ["closeTabsOnLeft", "closeTabsOnRight"].includes(registryEntry.command);
+    if (!allowNullCount && count == null) {
+      count = 1;
+    }
+
+    if (registryEntry.noRepeat && count) {
       count = 1;
     }
 
