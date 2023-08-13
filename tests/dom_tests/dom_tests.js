@@ -722,7 +722,8 @@ context("Key mapping", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("z");
     sendKeyboardEvent("m");
-    assert.equal(1, this.handlerCalledCount);
+    assert.equal(true, this.handlerCalled);
+    assert.equal(null, this.handlerCalledCount);
   });
 
   should("accept a count prefix for multi-key command mappings", () => {
@@ -734,15 +735,16 @@ context("Key mapping", () => {
 
   should("cancel a key prefix", () => {
     sendKeyboardEvent("z");
+    assert.equal(false, this.handlerCalled);
     sendKeyboardEvent("m");
-    assert.equal(1, this.handlerCalledCount);
+    assert.equal(true, this.handlerCalled);
   });
 
   should("cancel a count prefix after a prefix key", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("z");
     sendKeyboardEvent("m");
-    assert.equal(1, this.handlerCalledCount);
+    assert.equal(null, this.handlerCalledCount);
   });
 
   should("cancel a prefix key on escape", () => {
@@ -796,11 +798,6 @@ context("Normal mode", () => {
     assert.equal("zp", commandName);
   });
 
-  should("default to a count of 1", () => {
-    sendKeyboardEvent("m");
-    assert.equal(1, commandCount);
-  });
-
   should("accept count prefixes of length 1", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("m");
@@ -817,7 +814,7 @@ context("Normal mode", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("z");
     sendKeyboardEvent("m");
-    assert.equal(1, commandCount);
+    assert.equal(null, commandCount);
   });
 
   should("get the correct count for mixed inputs (multi key)", () => {
@@ -832,7 +829,7 @@ context("Normal mode", () => {
     sendKeyboardEvent("z");
     sendKeyboardEvent("z");
     sendKeyboardEvent("p");
-    assert.equal(1, commandCount);
+    assert.equal(null, commandCount);
   });
 
   should("get the correct count for mixed inputs (with leading mapped keys)", () => {
@@ -853,7 +850,7 @@ context("Normal mode", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("a");
     sendKeyboardEvent("m");
-    assert.equal(1, commandCount);
+    assert.equal(null, commandCount);
   });
 
   should("get the correct count after unmapped keys", () => {
@@ -883,10 +880,10 @@ context("Insert mode", () => {
   });
 
   should("resume normal mode after leaving insert mode", () => {
-    assert.equal(null, commandCount);
+    assert.equal(null, commandName);
     this.insertMode.exit();
     sendKeyboardEvent("m");
-    assert.equal(1, commandCount);
+    assert.equal("m", commandName);
   });
 });
 

@@ -132,7 +132,7 @@ class KeyHandlerMode extends Mode {
 
     if (this.keyState[0].command != null) {
       const command = this.keyState[0];
-      const count = this.countPrefix > 0 ? this.countPrefix : 1;
+      const count = this.countPrefix > 0 ? this.countPrefix : null;
       this.reset();
       this.commandHandler({ command, count });
       if ((this.options.count != null) && (--this.options.count <= 0)) {
