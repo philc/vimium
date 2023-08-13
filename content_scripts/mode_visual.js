@@ -349,6 +349,7 @@ class VisualMode extends KeyHandlerMode {
   }
 
   commandHandler({ command: { command }, count }) {
+    if (count == null) count = 1;
     switch (typeof command) {
       case "string":
         for (let i = 0, end = count; i < end; i++) {
@@ -488,6 +489,7 @@ class VisualLineMode extends VisualMode {
   }
 
   commandHandler({ command: { command }, count }) {
+    if (count == null) count = 1;
     switch (typeof command) {
       case "string":
         for (let i = 0, end = count; i < end; i++) {
