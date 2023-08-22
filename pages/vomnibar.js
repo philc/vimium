@@ -206,31 +206,32 @@ class VomnibarUI {
       }
       this.updateSelection();
     } else if (action === "enter") {
-      const c = this.completions[this.selection];
-      const isCustomSearchPrimarySuggestion = c && c.isPrimarySuggestion && c.isCustomSearch;
-      if ((this.selection === -1) || isCustomSearchPrimarySuggestion) {
-        let query = this.input.value.trim();
+      const isPrimarySearchSuggestion = (c) => c?.isPrimarySuggestion && c?.isCustomSearch;
+      const completion = this.completions[this.selection];
+      let query = this.input.value.trim();
+
+      // If the user types something and hits enter without selecting a completion from the list,
+      // then:
+      //   - If they've activated a custom search engine in the Vomnibar, then launch that search
+      //     using the typed-in query.
+      //   - Otherwise, open the query as a URL or create a default search as appropriate.
+      //
+      //  When launching a query in a custom search engine, the user may have typed more text than
+      //  that which is included in the URL associated with the primary suggestion, because the
+      //  suggestions are updated asynchronously. Therefore, to avoid a race condition, we construct
+      //  the search URL from the actual contents of the input (query).
+      if (this.selection == -1) {
         // <Enter> on an empty query is a no-op.
         if (query.length == 0) return;
-        // First case (selection == -1).
-        // If the user types something and hits enter without selecting a completion from the list,
-        // then:
-        //   - If a search URL has been provided, then use it. This is custom search engine request.
-        //   - Otherwise, send the query to the background page, which will open it as a URL or
-        //     create a default search, as appropriate.
-        //
-        // Second case (isCustomSearchPrimarySuggestion).
-        // Alternatively, the selected completion could be the primary selection for a custom search
-        // engine. Because the the suggestions are updated asynchronously in omni mode, the user may
-        // have typed more text than that which is included in the URL associated with the primary
-        // suggestion. Therefore, to avoid a race condition, we construct the query from the actual
-        // contents of the input (query).
-        if (isCustomSearchPrimarySuggestion) {
-          query = Utils.createSearchUrl(query, c.searchUrl);
+        const firstCompletion = this.completions[0];
+        if (isPrimarySearchSuggestion(firstCompletion)) {
+          query = Utils.createSearchUrl(query, firstCompletion.searchUrl);
         }
         this.hide(() => this.launchUrl(query, openInNewTab));
+      } else if (isPrimarySearchSuggestion(completion)) {
+        query = Utils.createSearchUrl(query, completion.searchUrl);
+        this.hide(() => this.launchUrl(query, openInNewTab));
       } else {
-        completion = this.completions[this.selection];
         this.hide(() => this.openCompletion(completion, openInNewTab));
       }
     } else if (action === "ctrl-enter") {

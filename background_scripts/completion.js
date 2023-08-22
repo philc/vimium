@@ -41,9 +41,6 @@ class Suggestion {
   tabId;
   // Whether this is a suggestion provided by a user's custom search engine.
   isCustomSearch;
-  // The keyword of the user's custom search engine which produced this suggestion.
-  // Populated by SearchEngineCompleter.
-  customSearchMode;
   // Whether this is meant to be the first suggestion from the user's custom search engine which
   // represents their query as typed, verbatim.
   isPrimarySuggestion = false;
@@ -542,7 +539,7 @@ class SearchEngineCompleter {
 
   async filter(request) {
     let suggestion;
-    const { queryTerms, query, engine } = request;
+    const { queryTerms } = request;
 
     const keyword = queryTerms[0];
     const queryTermsWithoutKeyword = queryTerms.slice(1);
@@ -553,7 +550,6 @@ class SearchEngineCompleter {
     const searchUrl = userSearchEngine.url;
 
     const completionEngine = CompletionSearch.lookupEngine(searchUrl);
-    if (!completionEngine) return [];
 
     const completions = await CompletionSearch.complete(searchUrl, queryTermsWithoutKeyword);
 

@@ -73,8 +73,7 @@ const CompletionSearch = {
     return isError ? null : responseText;
   },
 
-  // Look up the completion engine for this searchUrl. Because of DummyCompletionEngine, we know
-  // there will always be a match.
+  // Look up the completion engine for this searchUrl.
   lookupEngine(searchUrl) {
     if (this.engineCache.has(searchUrl)) {
       return this.engineCache.get(searchUrl);
@@ -109,6 +108,9 @@ const CompletionSearch = {
     if (queryTerms.length == 1 && Utils.isUrl(query)) return [];
     if (Utils.hasJavascriptPrefix(query)) return [];
 
+    const engine = this.lookupEngine(searchUrl);
+    if (!engine) return [];
+
     const completionCacheKey = JSON.stringify([searchUrl, queryTerms]);
     if (this.completionCache.has(completionCacheKey)) {
       if (this.debug) console.log("hit", completionCacheKey);
@@ -132,8 +134,8 @@ const CompletionSearch = {
     // If the user has issued a new query while we were waiting, then this query is old; abort it.
     if (lastRequestId != this.requestId) return [];
 
-    const engine = new EnginePrefixWrapper(searchUrl, this.lookupEngine(searchUrl));
-    const url = engine.getUrl(queryTerms);
+    const engineWrapper = new EnginePrefixWrapper(searchUrl, engine);
+    const url = engineWrapper.getUrl(queryTerms);
 
     if (this.debug) console.log("GET", url);
     const responseText = await this.get(searchUrl, url);
@@ -145,7 +147,7 @@ const CompletionSearch = {
     let isError = responseText == null;
     if (!isError) {
       try {
-        suggestions = engine.parse(responseText)
+        suggestions = engineWrapper.parse(responseText)
           // Make all suggestions lower case. It looks odd when suggestions from one
           // completion engine are upper case, and those from another are lower case.
           .map((s) => s.toLowerCase())
