@@ -613,11 +613,9 @@ class MultiCompleter {
     }
   }
 
-  cancel(port) {
+  cancel() {
     for (const c of this.completers) {
-      if (c.cancel) {
-        c.cancel(port);
-      }
+      c.cancel?.();
     }
   }
 
