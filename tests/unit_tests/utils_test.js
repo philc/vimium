@@ -143,15 +143,6 @@ context("isUrl", () => {
   );
 });
 
-context("Function currying", () => {
-  should("Curry correctly", () => {
-    const foo = (a, b) => `${a},${b}`;
-    assert.equal("1,2", foo.curry()(1, 2));
-    assert.equal("1,2", foo.curry(1)(2));
-    assert.equal("1,2", foo.curry(1, 2)());
-  });
-});
-
 context("compare versions", () => {
   should("compare correctly", () => {
     assert.equal(0, Utils.compareVersions("1.40.1", "1.40.1"));
