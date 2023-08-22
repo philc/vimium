@@ -36,7 +36,7 @@ const Commands = {
 
   async init() {
     await Settings.onLoaded();
-    for (let command of Object.keys(commandDescriptions)) {
+    for (const command of Object.keys(commandDescriptions)) {
       const [description, options] = commandDescriptions[command];
       this.availableCommands[command] = Object.assign(options || {}, { description });
     }
@@ -61,14 +61,15 @@ const Commands = {
 
     const seen = {};
     let unmapAll = false;
-    for (let line of configLines.reverse()) {
+    for (const line of configLines.reverse()) {
       const tokens = line.split(/\s+/);
       switch (tokens[0].toLowerCase()) {
         case "map":
+          // TODO(philc): Improve this transpiled code.
           if ((3 <= tokens.length) && !unmapAll) {
-            var _, optionList, registryEntry;
+            let _, optionList;
             [_, key, command, ...optionList] = tokens;
-            if (!seen[key] && (registryEntry = this.availableCommands[command])) {
+            if (!seen[key] && this.availableCommands[command]) {
               seen[key] = true;
               const keySequence = this.parseKeySequence(key);
               const options = this.parseCommandOptions(command, optionList);
@@ -162,7 +163,7 @@ const Commands = {
   //   key           - a flag
   parseCommandOptions(command, optionList) {
     const options = {};
-    for (let option of Array.from(optionList)) {
+    for (const option of Array.from(optionList)) {
       const parse = option.split("=", 2);
       options[parse[0]] = parse.length === 1 ? true : parse[1];
     }
@@ -182,7 +183,7 @@ const Commands = {
   // mode_key_handler.js.
   async installKeyStateMapping() {
     const keyStateMapping = {};
-    for (let keys of Object.keys(this.keyToCommandRegistry || {})) {
+    for (const keys of Object.keys(this.keyToCommandRegistry || {})) {
       const registryEntry = this.keyToCommandRegistry[keys];
       let currentMapping = keyStateMapping;
       for (let index = 0; index < registryEntry.keySequence.length; index++) {
@@ -198,7 +199,7 @@ const Commands = {
         } else {
           currentMapping[key] = Object.assign({}, registryEntry);
           // We don't need these properties in the content scripts.
-          for (let prop of ["keySequence", "description"]) {
+          for (const prop of ["keySequence", "description"]) {
             delete currentMapping[key][prop];
           }
         }
@@ -216,17 +217,17 @@ const Commands = {
   // storage.
   prepareHelpPageData() {
     const commandToKey = {};
-    for (let key of Object.keys(this.keyToCommandRegistry || {})) {
+    for (const key of Object.keys(this.keyToCommandRegistry || {})) {
       const registryEntry = this.keyToCommandRegistry[key];
       (commandToKey[registryEntry.command] != null
         ? commandToKey[registryEntry.command]
         : (commandToKey[registryEntry.command] = [])).push(key);
     }
     const commandGroups = {};
-    for (let group of Object.keys(this.commandGroups || {})) {
+    for (const group of Object.keys(this.commandGroups || {})) {
       const commands = this.commandGroups[group];
       commandGroups[group] = [];
-      for (let command of commands) {
+      for (const command of commands) {
         commandGroups[group].push({
           command,
           description: this.availableCommands[command].description,

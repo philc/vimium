@@ -11,7 +11,7 @@ const ExclusionRegexpCache = {
       // We use try/catch to ensure that a broken regexp doesn't wholly cripple Vimium.
       try {
         result = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
-      } catch (error) {
+      } catch {
         if (!globalThis.isUnitTests) {
           console.log(`bad regexp in exclusion rule: ${pattern}`);
         }
@@ -41,10 +41,8 @@ const Exclusions = {
       r.pattern && (url.search(ExclusionRegexpCache.get(r.pattern)) >= 0)
     );
     // An absolute exclusion rule (one with no passKeys) takes priority.
-    for (let rule of matchingRules) {
-      if (!rule.passKeys) {
-        return rule;
-      }
+    for (const rule of matchingRules) {
+      if (!rule.passKeys) return rule;
     }
     // Strip whitespace from all matching passKeys strings, and join them together.
     const passKeys = matchingRules.map((r) => r.passKeys.split(/\s+/).join("")).join("");

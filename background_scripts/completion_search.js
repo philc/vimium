@@ -53,7 +53,7 @@ const CompletionSearch = {
   // dedupe requets which overlap, which is the case when the user is typing fast.
   requestId: 0,
 
-  async get(searchUrl, url) {
+  async get(url) {
     const timeoutDuration = 2500;
     const controller = new AbortController();
     let isError = false;
@@ -63,7 +63,7 @@ const CompletionSearch = {
     try {
       const response = await fetch(url, { signal: controller.signal });
       responseText = await response.text();
-    } catch (error) {
+    } catch {
       // Fetch throws an error if the network is unreachable, etc.
       isError = true;
     }
@@ -98,7 +98,6 @@ const CompletionSearch = {
   // synchronously (ie. from a cache). In this case we just return the results. Returns null if we
   // cannot service the request synchronously.
   async complete(searchUrl, queryTerms) {
-    let handler;
     const query = queryTerms.join(" ").toLowerCase();
 
     // We don't complete queries which are too short: the results are usually useless.
@@ -118,7 +117,7 @@ const CompletionSearch = {
     }
 
     const createTimeoutPromise = (ms) => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         setTimeout(() => {
           resolve();
         }, ms);
@@ -138,7 +137,7 @@ const CompletionSearch = {
     const url = engineWrapper.getUrl(queryTerms);
 
     if (this.debug) console.log("GET", url);
-    const responseText = await this.get(searchUrl, url);
+    const responseText = await this.get(url);
 
     // Parsing the response may fail if we receive an unexpectedly-formatted response. In all cases,
     // we fall back to the catch clause, below. Therefore, we "fail safe" in the case of incorrect

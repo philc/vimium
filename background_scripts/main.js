@@ -149,7 +149,7 @@ const moveTab = function ({ count, tab, registryEntry }) {
   });
 };
 
-var mkRepeatCommand = (command) => (function (request) {
+const mkRepeatCommand = (command) => (function (request) {
   request.count--;
   if (request.count >= 0) {
     return command(request, (request) => (mkRepeatCommand(command))(request));
@@ -266,7 +266,7 @@ const BackgroundCommands = {
       let isError = false;
       const status = await (chrome.tabs.sendMessage(tabId, { handler: "getFocusStatus" }, {
         frameId: frameId,
-      }).catch((err) => {
+      }).catch((_) => {
         isError = true;
       }));
       return { frameId, status, isError };
@@ -319,18 +319,18 @@ const BackgroundCommands = {
       })();
       tabs = [...tabs.slice(position), ...tabs.slice(0, position)];
       count = Math.min(count, tabs.length);
-      for (let tab of tabs.slice(0, count)) {
+      for (const tab of tabs.slice(0, count)) {
         chrome.tabs.reload(tab.id, { bypassCache });
       }
     });
   },
 };
 
-var forCountTabs = (count, currentTab, callback) =>
+const forCountTabs = (count, currentTab, callback) =>
   chrome.tabs.query({ currentWindow: true }, function (tabs) {
     const activeTabIndex = currentTab.index;
     const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
-    for (let tab of tabs.slice(startTabIndex, startTabIndex + count)) {
+    for (const tab of tabs.slice(startTabIndex, startTabIndex + count)) {
       callback(tab);
     }
   });
@@ -351,14 +351,11 @@ const removeTabsRelative = async (direction, { count, tab }) => {
       case "before":
         return tab.index < activeTab.index &&
           tab.index >= activeTab.index - count;
-        break;
       case "after":
         return tab.index > activeTab.index &&
           tab.index <= activeTab.index + count;
-        break;
       case "both":
         return true;
-        break;
     }
   });
 
@@ -367,7 +364,7 @@ const removeTabsRelative = async (direction, { count, tab }) => {
 
 // Selects a tab before or after the currently selected tab.
 // - direction: "next", "previous", "first" or "last".
-var selectTab = (direction, { count, tab }) =>
+const selectTab = (direction, { count, tab }) =>
   chrome.tabs.query({ currentWindow: true }, function (tabs) {
     if (tabs.length > 1) {
       const toSelect = (() => {
@@ -616,7 +613,7 @@ const sendRequestHandlers = {
     }
   },
 
-  async filterCompletions(request, sender) {
+  async filterCompletions(request) {
     const completer = completers[request.completerName];
     let response = await completer.filter(request);
 
@@ -629,12 +626,12 @@ const sendRequestHandlers = {
     return response;
   },
 
-  refreshCompletions(request, sender) {
+  refreshCompletions(request) {
     const completer = completers[request.completerName];
     completer.refresh();
   },
 
-  cancelCompletions(request, sender) {
+  cancelCompletions(request) {
     const completer = completers[request.completerName];
     completer.cancel();
   },
@@ -678,10 +675,8 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
     if (items.findModeRawQueryListIncognito) {
       return chrome.windows != null
         ? chrome.windows.getAll(null, function (windows) {
-          for (let window of windows) {
-            if (window.incognito) {
-              return;
-            }
+          for (const window of windows) {
+            if (window.incognito) return;
           }
           // There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.
           return chrome.storage.session.remove("findModeRawQueryListIncognito");
@@ -699,8 +694,7 @@ globalThis.runTests = () => open(chrome.runtime.getURL("tests/dom_tests/dom_test
 //
 
 // Show notification on upgrade.
-let showUpgradeMessageIfNecessary;
-showUpgradeMessageIfNecessary = async function () {
+const showUpgradeMessageIfNecessary = async function () {
   const currentVersion = Utils.getCurrentVersion();
   const previousVersion = Settings.get("previousVersion");
 
@@ -762,7 +756,7 @@ async function injectContentScriptsAndCSSIntoExistingTabs() {
   // noise, we swallow the failures. We could instead try to determine if the tab is scriptable by
   // checking its URL scheme before calling these APIs, but that approach has some nuance to it.
   // This is simpler.
-  const swallowError = (error) => {};
+  const swallowError = (_) => {};
 
   const tabs = await chrome.tabs.query({ status: "complete" });
   for (const tab of tabs) {

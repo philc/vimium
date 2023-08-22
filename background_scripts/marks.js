@@ -48,7 +48,7 @@ const Marks = {
   // another tab with the original URL, and use that. And if we can't find such an existing tab,
   // then we create a new one. Whichever of those we do, we then set the scroll position to the
   // original scroll position.
-  async goto(req, sender) {
+  async goto(req) {
     const vimiumSecret = (await chrome.storage.session.get("vimiumSecret"))["vimiumSecret"];
     const key = this.getLocationKey(req.markName);
     const items = await chrome.storage.local.get(key);
@@ -65,7 +65,9 @@ const Marks = {
       // This will throw an error if the tab doesn't exist.
       try {
         tab = await chrome.tabs.get(markInfo.tabId);
-      } catch (error) {}
+      } catch {
+        // Swallow.
+      }
       const originalTabStillExists = tab?.url && (markInfo.url === this.getBaseUrl(tab.url));
       if (originalTabStillExists) {
         await this.gotoPositionInTab(markInfo);

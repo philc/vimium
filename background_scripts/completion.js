@@ -63,7 +63,7 @@ class Suggestion {
     return this.relevancy;
   }
 
-  generateHtml(request) {
+  generateHtml() {
     if (this.html) return this.html;
     const relevancyHtml = showRelevancy
       ? `<span class='relevancy'>${this.computeRelevancy()}</span>`
@@ -154,7 +154,7 @@ class Suggestion {
     if (!this.highlightTerms) return string;
     let ranges = [];
     const escapedTerms = this.queryTerms.map((term) => Utils.escapeHtml(term));
-    for (let term of escapedTerms) {
+    for (const term of escapedTerms) {
       this.pushMatchingRanges(string, term, ranges);
     }
 
@@ -165,7 +165,7 @@ class Suggestion {
     ranges = this.mergeRanges(ranges.sort((a, b) => a[0] - b[0]));
     // Replace portions of the string from right to left.
     ranges = ranges.sort((a, b) => b[0] - a[0]);
-    for (let [start, end] of ranges) {
+    for (const [start, end] of ranges) {
       string = string.substring(0, start) +
         `<span class='vomnibarMatch'>${string.substring(start, end)}</span>` +
         string.substring(end);
@@ -197,9 +197,9 @@ class Suggestion {
     }
     // We get easier-to-read shortened URLs if we URI-decode them.
     let url = (Utils.decodeURIByParts(this.url) || this.url).toLowerCase();
-    for (let [filter, replacements] of Suggestion.stripPatterns) {
+    for (const [filter, replacements] of Suggestion.stripPatterns) {
       if (new RegExp(filter).test(url)) {
-        for (let replace of replacements) {
+        for (const replace of replacements) {
           url = url.replace(replace, "");
         }
       }
@@ -423,7 +423,7 @@ class DomainCompleter {
   // Returns a list of domains of the form: [ [domain, relevancy], ... ]
   sortDomainsByRelevancy(queryTerms, domainCandidates) {
     const results = [];
-    for (let domain of domainCandidates) {
+    for (const domain of domainCandidates) {
       const recencyScore = RankingUtils.recencyScore(this.domains[domain].entry.lastVisitTime || 0);
       const wordRelevancy = RankingUtils.wordRelevancy(queryTerms, domain, null);
       const score = (wordRelevancy + Math.max(recencyScore, wordRelevancy)) / 2;
@@ -538,7 +538,6 @@ class SearchEngineCompleter {
   }
 
   async filter(request) {
-    let suggestion;
     const { queryTerms } = request;
 
     const keyword = queryTerms[0];
@@ -548,8 +547,6 @@ class SearchEngineCompleter {
     if (!userSearchEngine) return [];
 
     const searchUrl = userSearchEngine.url;
-
-    const completionEngine = CompletionSearch.lookupEngine(searchUrl);
 
     const completions = await CompletionSearch.complete(searchUrl, queryTermsWithoutKeyword);
 
@@ -587,7 +584,7 @@ class SearchEngineCompleter {
     return suggestions;
   }
 
-  computeRelevancy({ relevancyData, queryTerms, title }) {
+  computeRelevancy({ queryTerms, title }) {
     // Tweaks:
     // - Calibration: we boost relevancy scores to try to achieve an appropriate balance between
     //   relevancy scores here, and those provided by other completers.
@@ -617,7 +614,7 @@ class MultiCompleter {
   }
 
   cancel(port) {
-    for (let c of this.completers) {
+    for (const c of this.completers) {
       if (c.cancel) {
         c.cancel(port);
       }
@@ -658,8 +655,8 @@ class MultiCompleter {
     let count = 0;
     const seenUrls = {};
 
-    let dedupedSuggestions = [];
-    for (let s of suggestions) {
+    const dedupedSuggestions = [];
+    for (const s of suggestions) {
       const url = s.shortenUrl();
       if (s.deDuplicate && seenUrls[url]) continue;
       if (count++ === maxResults) break;
@@ -684,22 +681,20 @@ class MultiCompleter {
 }
 
 // Utilities which help us compute a relevancy score for a given item.
-var RankingUtils = {
+const RankingUtils = {
   // Whether the given things (usually URLs or titles) match any one of the query terms.
   // This is used to prune out irrelevant suggestions before we try to rank them, and for
   // calculating word relevancy. Every term must match at least one thing.
   matches(queryTerms, ...things) {
-    for (let term of queryTerms) {
+    for (const term of queryTerms) {
       const regexp = RegexpCache.get(term);
       let matchedTerm = false;
-      for (let thing of things) {
+      for (const thing of things) {
         if (!matchedTerm) {
           matchedTerm = thing.match(regexp);
         }
       }
-      if (!matchedTerm) {
-        return false;
-      }
+      if (!matchedTerm) return false;
     }
     return true;
   },
@@ -748,7 +743,7 @@ var RankingUtils = {
     let urlScore = (titleScore = 0.0);
     let urlCount = (titleCount = 0);
     // Calculate initial scores.
-    for (let term of queryTerms) {
+    for (const term of queryTerms) {
       let [s, c] = RankingUtils.scoreTerm(term, url);
       urlScore += s;
       urlCount += c;
