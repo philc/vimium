@@ -713,15 +713,14 @@ const showUpgradeMessageIfNecessary = async function () {
   // major and minor version numbers. We do, however, update the recorded previous version.
   if (majorVersionHasChanged) {
     // NOTE(philc): These notifications use the system notification UI. So, if you don't have
-    // notifications enabled from your browser (e.g. in Notification Settings in OSX, then
+    // notifications enabled from your browser (e.g. in Notification Settings in OSX), then
     // chrome.notification.create will succeed, but you won't see it.
     const notificationId = "VimiumUpgradeNotification";
-    const notification = await chrome.notifications.create(
+    await chrome.notifications.create(
       notificationId,
       {
         type: "basic",
         iconUrl: chrome.runtime.getURL("icons/vimium.png"),
-        iconUrl: "/icons/vimium.png",
         title: "Vimium Upgrade",
         message:
           `Vimium has been upgraded to version ${currentVersion}. Click here for more information.`,
