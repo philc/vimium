@@ -30,7 +30,7 @@ class NormalMode extends KeyHandlerMode {
     }
 
     // closeTabsOnLeft and closeTabsOnRight interpret a null count as "close all tabs in
-    // {direction}", so don't default the count to 1 for those commands. See #2971.
+    // {direction}", so don't default the count to 1 for those commands. See #4296.
     const allowNullCount = ["closeTabsOnLeft", "closeTabsOnRight"].includes(registryEntry.command);
     if (!allowNullCount && count == null) {
       count = 1;
