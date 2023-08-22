@@ -362,7 +362,7 @@ class VomnibarUI {
   }
 
   openCompletion(completion, openInNewTab) {
-    if (completion.type == "tab") {
+    if (completion.description == "tab") {
       chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: completion.tabId });
     } else {
       this.launchUrl(completion.url, openInNewTab);
