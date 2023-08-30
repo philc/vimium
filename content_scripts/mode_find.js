@@ -194,14 +194,27 @@ class FindMode extends Mode {
       return;
     }
 
-    // innerText will not return the text of hidden elements, and strip out tags while preserving
-    // newlines.
-    // NOTE(mrmr1993): innerText doesn't include the text contents of <input>s and <textarea>s. See
-    // #1118.
-    const text = document.body.innerText;
-    const regexMatches = text.match(pattern);
-    if (this.query.isRegex) {
+    let regexMatches; 
+    if (this.query.isRegex && regexPattern) {
+      const matchedElements = Array.from(document.body.querySelectorAll('*')).filter((element) => {
+        return element.checkVisibility()
+          && !element.childElementCount
+          && element.innerText
+          && element.innerText.match(pattern)
+      });
+      const matches = matchedElements.map(element => element.innerText.match(pattern));
+      regexMatches = matches.flat();
       this.query.regexMatches = regexMatches;
+      this.query.regexPattern = pattern;
+      this.query.regexMatchedElements = matchedElements;
+      this.query.regexMatchesIn2DArray = matches;
+    } else {
+      // innerText will not return the text of hidden elements, and strip out tags while preserving
+      // newlines.
+      // NOTE(mrmr1993): innerText doesn't include the text contents of <input>s and <textarea>s. See
+      // #1118.
+      const text = document.body.innerText;
+      regexMatches = text.match(pattern);
     }
 
     if (this.query.isRegex) {
@@ -263,16 +276,27 @@ class FindMode extends Mode {
     }
 
     try {
-      result = window.find(
-        query,
-        options.caseSensitive,
-        options.backwards,
-        true,
-        false,
-        false,
-        false,
-      );
-    } catch { /* swallow */ } // Failed searches throw on Firefox.
+      if (FindMode.query.isRegex && this.query.hasResults) {
+        const [elementIndex, matchIndex] = calculate2DArrayPosition(this.query.regexMatchesIn2DArray, this.query.activeRegexIndex);
+        const element = this.query.regexMatchedElements[elementIndex];
+        const textContent = element.innerText;
+        const matchIndexes = getRegexMatchIndexes(textContent, this.query.regexPattern);
+        if (matchIndexes.length > 0) {
+          const startIndex = matchIndexes[matchIndex];
+          result = highlight(element, startIndex, query.length);
+        }
+      } else {
+        result = window.find(
+          query,
+          options.caseSensitive,
+          options.backwards,
+          true,
+          false,
+          false,
+          false,
+        );
+      }
+    } catch (error) {} // Failed searches throw on Firefox.
 
     // window.find focuses the |window| that it is called on. This gives us an opportunity to
     // (re-)focus another element/window, if that isn't the behaviour we want.
@@ -400,6 +424,64 @@ const selectFoundInputElement = function () {
     return DomUtils.simulateSelect(document.activeElement);
   }
 };
+
+// Calculate the original row and column indices in a 2D array based on a flattened index.
+var calculate2DArrayPosition = (a2DArray, flattenedIndex) => {
+  let row = 0;
+  let col = flattenedIndex;
+
+  for (let i = 0; i < a2DArray.length; i++) {
+    const currentRow = a2DArray[i];
+
+    if (col < currentRow.length) {
+      break;
+    } else {
+      row++;
+      col -= currentRow.length;
+    }
+  }
+
+  return [row, col];
+}
+
+// Retrieve the starting indexes of all matches of the queried pattern within the given text.
+var getRegexMatchIndexes = (text, regex) => {
+
+  const indexes = [];
+  let match;
+
+  // Find all matches and record their starting indexes
+  while ((match = regex.exec(text)) !== null) {
+    // Ensure a valid match is found before continuing
+    if (!match[0]) {
+      break;
+    }
+    indexes.push(match.index);
+  }
+
+  return indexes;
+}
+
+// Highlights text starting from the given startIndex with the specified length.
+var highlight = (element, startIndex, length) => {
+  if (startIndex === -1) {
+    return false;
+  }
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.setStart(element.firstChild, startIndex);
+  range.setEnd(element.firstChild, startIndex + length);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  // Ensure the highlighted element is visible within the viewport.
+  const elementRect = element.getBoundingClientRect();
+  if (elementRect.top < 0 || elementRect.bottom > window.innerHeight) {
+    element.scrollIntoView({ block: "center" });
+  }
+
+  return true;
+}
 
 window.PostFindMode = PostFindMode;
 window.FindMode = FindMode;
