@@ -5,7 +5,6 @@ const character = "character";
 const word = "word";
 const line = "line";
 const sentence = "sentence";
-const paragraph = "paragraph";
 const vimword = "vimword";
 const lineboundary = "lineboundary";
 
@@ -134,9 +133,9 @@ class Movement {
   getDirection() {
     // Try to move the selection forward or backward, check whether it got bigger or smaller (then
     // restore it).
-    for (let direction of [forward, backward]) {
-      var change;
-      if (change = this.extendByOneCharacter(direction)) {
+    for (const direction of [forward, backward]) {
+      const change = this.extendByOneCharacter(direction);
+      if (change) {
         this.extendByOneCharacter(this.opposite[direction]);
         if (change > 0) {
           return direction;
@@ -222,7 +221,7 @@ class VisualMode extends KeyHandlerMode {
     // Build the key mapping structure required by KeyHandlerMode. This only handles one- and
     // two-key mappings.
     const keyMapping = {};
-    for (let keys of Object.keys(this.movements || {})) {
+    for (const keys of Object.keys(this.movements || {})) {
       movement = this.movements[keys];
       if ("function" === typeof movement) {
         movement = movement.bind(this);
@@ -524,7 +523,7 @@ class VisualLineMode extends VisualMode {
     // TODO(philc): Reformat this to be a plain loop rather than a closure.
     return (() => {
       const result = [];
-      for (let direction of [initialDirection, this.movement.opposite[initialDirection]]) {
+      for (const direction of [initialDirection, this.movement.opposite[initialDirection]]) {
         this.movement.runMovement(direction, lineboundary);
         result.push(this.movement.reverseSelection());
       }

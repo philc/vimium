@@ -3,14 +3,13 @@
 //
 
 let isEnabledForUrl = true;
-const isIncognitoMode = chrome.extension.inIncognitoContext;
 let normalMode = null;
 
 // We track whther the current window has the focus or not.
 const windowIsFocused = (function () {
   let windowHasFocus = null;
   DomUtils.documentReady(() => windowHasFocus = document.hasFocus());
-  window.addEventListener(
+  globalThis.addEventListener(
     "focus",
     forTrusted(function (event) {
       if (event.target === window) {
@@ -20,7 +19,7 @@ const windowIsFocused = (function () {
     }),
     true,
   );
-  window.addEventListener(
+  globalThis.addEventListener(
     "blur",
     forTrusted(function (event) {
       if (event.target === window) {
@@ -171,6 +170,27 @@ const installModes = function () {
   return normalMode;
 };
 
+
+let previousUrl = document.location.href;
+
+// When we're informed by the background page that a URL in this tab has changed, we check if we
+// have the correct enabled state (but only if this frame has the focus).
+const checkEnabledAfterURLChange = forTrusted(function (_request) {
+  // The background page can't tell if the URL has actually changed after a client-side
+  // history.pushState call. To limit log spam, ignore spurious URL change events where the URL
+  // didn't actually change.
+  if (previousUrl == document.location.href) {
+    return;
+  } else {
+    previousUrl = document.location.href;
+  }
+  // The URL changing feels like navigation to the user, so reset the scroller (see #3119).
+  Scroller.reset();
+  if (windowIsFocused()) {
+    checkIfEnabledForUrl();
+  }
+});
+
 //
 // Complete initialization work that should be done prior to DOMReady.
 //
@@ -183,7 +203,7 @@ const initializePreDomReady = async function () {
   checkIfEnabledForUrl(document.hasFocus());
 
   const requestHandlers = {
-    getFocusStatus(request, sender) {
+    getFocusStatus(_request, _sender) {
       return {
         focused: windowIsFocused(),
         focusable: isWindowFocusable(),
@@ -192,7 +212,7 @@ const initializePreDomReady = async function () {
     focusFrame(request) {
       focusThisFrame(request);
     },
-    getScrollPosition(ignoredA, ignoredB) {
+    getScrollPosition(_ignoredA, _ignoredB) {
       if (DomUtils.isTopFrame()) {
         return { scrollX: window.scrollX, scrollY: window.scrollY };
       }
@@ -298,8 +318,8 @@ const onFocus = forTrusted(function (event) {
 
 // We install these listeners directly (that is, we don't use installListener) because we still need
 // to receive events when Vimium is not enabled.
-window.addEventListener("focus", onFocus, true);
-window.addEventListener("hashchange", checkEnabledAfterURLChange, true);
+globalThis.addEventListener("focus", onFocus, true);
+globalThis.addEventListener("hashchange", checkEnabledAfterURLChange, true);
 
 const initializeOnDomReady = () => {
   // Tell the background page we're in the domReady state.
@@ -310,8 +330,8 @@ const onUnload = Utils.makeIdempotent(() => {
   HintCoordinator.exit({ isSuccess: false });
   handlerStack.reset();
   isEnabledForUrl = false;
-  window.removeEventListener("focus", onFocus, true);
-  window.removeEventListener("hashchange", checkEnabledAfterURLChange, true);
+  globalThis.removeEventListener("focus", onFocus, true);
+  globalThis.removeEventListener("hashchange", checkEnabledAfterURLChange, true);
 });
 
 const setScrollPosition = ({ scrollX, scrollY }) =>
@@ -379,7 +399,7 @@ const focusThisFrame = function (request) {
 globalThis.lastFocusedInput = (function () {
   // Track the most recently focused input element.
   let recentlyFocusedElement = null;
-  window.addEventListener(
+  globalThis.addEventListener(
     "focus",
     forTrusted(function (event) {
       if (DomUtils.isEditable(event.target)) {
@@ -419,26 +439,6 @@ const checkIfEnabledForUrl = async (frameIsFocused) => {
   // Hide the HUD if we're not enabled.
   if (!isEnabledForUrl) HUD.hide(true, false);
 };
-
-let previousUrl = document.location.href;
-
-// When we're informed by the background page that a URL in this tab has changed, we check if we
-// have the correct enabled state (but only if this frame has the focus).
-var checkEnabledAfterURLChange = forTrusted(function (request) {
-  // The background page can't tell if the URL has actually changed after a client-side
-  // history.pushState call. To limit log spam, ignore spurious URL change events where the URL
-  // didn't actually change.
-  if (previousUrl == document.location.href) {
-    return;
-  } else {
-    previousUrl = document.location.href;
-  }
-  // The URL changing feels like navigation to the user, so reset the scroller (see #3119).
-  Scroller.reset();
-  if (windowIsFocused()) {
-    checkIfEnabledForUrl();
-  }
-});
 
 // If we are in the help dialog iframe, then HelpDialog is already defined with the necessary
 // functions.

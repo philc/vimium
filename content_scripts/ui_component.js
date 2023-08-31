@@ -74,7 +74,7 @@ class UIComponent {
             switch (eventName) {
               case "uiComponentIsReady":
                 // If this frame receives the focus, then hide the UI component.
-                window.addEventListener(
+                globalThis.addEventListener(
                   "focus",
                   forTrusted((event) => {
                     if ((event.target === window) && this.options && this.options.focus) {
@@ -93,7 +93,6 @@ class UIComponent {
                 break;
               case "hide":
                 return this.hide();
-                break;
               default:
                 this.handleMessage(event);
             }

@@ -50,7 +50,7 @@ const Marks = {
     return shiftKey && !this.previousPositionRegisters.includes(keyChar);
   },
 
-  activateCreateMode(count, { registryEntry }) {
+  activateCreateMode(_count, { registryEntry }) {
     this.currentRegistryEntry = registryEntry;
     this.mode = new Mode();
     this.mode.init({
@@ -87,7 +87,7 @@ const Marks = {
     });
   },
 
-  activateGotoMode(count, { registryEntry }) {
+  activateGotoMode(_count, { registryEntry }) {
     this.currentRegistryEntry = registryEntry;
     this.mode = new Mode();
     this.mode.init({

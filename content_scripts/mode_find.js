@@ -15,7 +15,7 @@ class SuppressPrintable extends Mode {
       _name: `mode-${this.id}/suppress-printable`,
       keydown: handler,
       keypress: handler,
-      keyup: (event) => {
+      keyup: () => {
         // If the selection type has changed (usually, no longer "Range"), then the user is
         // interacting with the input element, so we get out of the way. See discussion of option 5c
         // from #1415.
@@ -35,11 +35,10 @@ class SuppressPrintable extends Mode {
 //      this by inheriting from SuppressPrintable.
 //   3. If the very-next keystroke is Escape, then drop immediately into insert mode.
 //
-var newPostFindMode = function () {
+const newPostFindMode = function () {
   if (!document.activeElement || !DomUtils.isEditable(document.activeElement)) {
     return;
   }
-
   return new PostFindMode();
 };
 
@@ -190,8 +189,9 @@ class FindMode extends Mode {
     // so we can show a the number of results.
     try {
       pattern = new RegExp(regexPattern, `g${this.query.ignoreCase ? "i" : ""}`);
-    } catch (error) {
-      return; // If we catch a SyntaxError, assume the user is not done typing yet and return quietly.
+    } catch {
+      // If we catch a SyntaxError, assume the user is not done typing yet and return quietly.
+      return;
     }
 
     // innerText will not return the text of hidden elements, and strip out tags while preserving
@@ -272,7 +272,7 @@ class FindMode extends Mode {
         false,
         false,
       );
-    } catch (error) {} // Failed searches throw on Firefox.
+    } catch { /* swallow */ } // Failed searches throw on Firefox.
 
     // window.find focuses the |window| that it is called on. This gives us an opportunity to
     // (re-)focus another element/window, if that isn't the behaviour we want.
@@ -352,7 +352,7 @@ FindMode.restoreDefaultSelectionHighlight = forTrusted(() =>
   document.body.classList.remove("vimiumFindMode")
 );
 
-var getCurrentRange = function () {
+const getCurrentRange = function () {
   const selection = getSelection();
   if (DomUtils.getSelectionType(selection) === "None") {
     const range = document.createRange();
@@ -378,7 +378,7 @@ const getLinkFromSelection = function () {
   return null;
 };
 
-var focusFoundLink = function () {
+const focusFoundLink = function () {
   if (FindMode.query.hasResults) {
     const link = getLinkFromSelection();
     if (link) {
@@ -387,7 +387,7 @@ var focusFoundLink = function () {
   }
 };
 
-var selectFoundInputElement = function () {
+const selectFoundInputElement = function () {
   // Since the last focused element might not be the one currently pointed to by find (e.g. the
   // current one might be disabled and therefore unable to receive focus), we use the approximate
   // heuristic of checking that the last anchor node is an ancestor of our element.

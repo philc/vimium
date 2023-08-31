@@ -56,7 +56,7 @@ const Vomnibar = {
     });
   },
 
-  async init() {
+  init() {
     if (!this.vomnibarUI) {
       this.vomnibarUI = new UIComponent("pages/vomnibar.html", "vomnibarFrame", function () {});
     }

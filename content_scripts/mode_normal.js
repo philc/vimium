@@ -75,7 +75,7 @@ const enterNormalMode = function (count) {
   return mode;
 };
 
-var NormalModeCommands = {
+const NormalModeCommands = {
   // Scrolling.
   scrollToBottom() {
     Marks.setPreviousPosition();
@@ -357,7 +357,7 @@ if (typeof Marks !== "undefined") {
 // Should we include the HTML5 date pickers here?
 
 // The corresponding XPath for such elements.
-var textInputXPath = (function () {
+const textInputXPath = (function () {
   const textInputTypes = ["text", "search", "email", "url", "number", "password", "date", "tel"];
   const inputElements = [
     "input[" +
@@ -390,7 +390,7 @@ const followLink = function (linkElement) {
 // means we favor 'next page' over 'the next big thing', and 'more' over 'nextcompany', even if
 // 'next' occurs before 'more' in :linkStrings.
 //
-var findAndFollowLink = function (linkStrings) {
+const findAndFollowLink = function (linkStrings) {
   let link, linkString;
   const linksXPath = DomUtils.makeXPath([
     "a",
@@ -465,7 +465,7 @@ var findAndFollowLink = function (linkStrings) {
     const exactWordRegex = /\b/.test(linkString[0]) || /\b/.test(linkString[linkString.length - 1])
       ? new RegExp("\\b" + linkString + "\\b", "i")
       : new RegExp(linkString, "i");
-    for (let candidateLink of candidateLinks) {
+    for (const candidateLink of candidateLinks) {
       if (
         exactWordRegex.test(candidateLink.innerText) ||
         (candidateLink.value && exactWordRegex.test(candidateLink.value))
@@ -478,11 +478,11 @@ var findAndFollowLink = function (linkStrings) {
   return false;
 };
 
-var findAndFollowRel = function (value) {
+const findAndFollowRel = function (value) {
   const relTags = ["link", "a", "area"];
-  for (let tag of relTags) {
+  for (const tag of relTags) {
     const elements = document.getElementsByTagName(tag);
-    for (let element of Array.from(elements)) {
+    for (const element of Array.from(elements)) {
       if (element.hasAttribute("rel") && (element.rel.toLowerCase() === value)) {
         followLink(element);
         return true;

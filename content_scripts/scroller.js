@@ -131,7 +131,7 @@ const findScrollableElement = function (element, direction, amount, factor) {
 // On some pages, the scrolling element is not actually scrollable. Here, we search the document for
 // the largest visible element which does scroll vertically. This is used to initialize
 // activatedElement. See #1358.
-var firstScrollableElement = function (element = null) {
+const firstScrollableElement = function (element = null) {
   let child;
   if (!element) {
     const scrollingElement = getScrollingElement();
@@ -146,7 +146,7 @@ var firstScrollableElement = function (element = null) {
     return element;
   } else {
     // children = children.filter (c) -> c.rect # Filter out non-visible elements.
-    let children = Array.from(element.children)
+    const children = Array.from(element.children)
       .map((c) => ({ "element": c, "rect": DomUtils.getVisibleClientRect(c) }))
       .filter((child) => child.rect); // Filter out non-visible elements.
     children.map((child) => child.area = child.rect.width * child.rect.height);
@@ -206,7 +206,7 @@ const CoreScroller = {
           this.lastEvent = event;
         });
       },
-      keyup: (event) => {
+      keyup: (_event) => {
         return handlerStack.alwaysContinueBubbling(() => {
           this.keyIsDown = false;
           this.time += 1;
@@ -274,7 +274,7 @@ const CoreScroller = {
     let previousTimestamp = null;
     const cancelEventListener = this.installCanceEventListener();
 
-    var animate = (timestamp) => {
+    const animate = (timestamp) => {
       if (previousTimestamp == null) {
         previousTimestamp = timestamp;
       }
@@ -450,14 +450,14 @@ const Scroller = {
   },
 };
 
-var getSpecialScrollingElement = function () {
+const getSpecialScrollingElement = function () {
   const selector = specialScrollingElementMap[window.location.host];
   if (selector) {
     return document.querySelector(selector);
   }
 };
 
-var specialScrollingElementMap = {
+const specialScrollingElementMap = {
   "twitter.com": "div.permalink-container div.permalink[role=main]",
   "reddit.com": "#overlayScrollContainer",
   "new.reddit.com": "#overlayScrollContainer",

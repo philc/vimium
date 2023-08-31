@@ -19,7 +19,7 @@ class InsertMode extends Mode {
     chrome.storage.session.get("passNextKeyKeys").then((value) => {
       this.passNextKeyKeys = value.passNextKeyKeys || [];
     });
-    chrome.storage.onChanged.addListener(async (changes, areaName) => {
+    chrome.storage.onChanged.addListener(async (_changes, areaName) => {
       if (areaName != "local") return;
       this.passNextKeyKeys = (await chrome.storage.session.get("passNextKeyKeys")) || [];
     });

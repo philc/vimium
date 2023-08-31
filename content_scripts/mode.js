@@ -239,12 +239,12 @@ class Mode {
     this.log("deactivate:", this.id);
     this.modeIsExiting = true;
 
-    for (let handler of this.exitHandlers) {
+    for (const handler of this.exitHandlers) {
       // TODO(philc): Is this array.from necessary?
       handler(...Array.from(args || []));
     }
 
-    for (let handlerId of this.handlers) {
+    for (const handlerId of this.handlers) {
       handlerStack.remove(handlerId);
     }
 
@@ -258,7 +258,7 @@ class Mode {
   logModes() {
     if (Mode.debug) {
       this.log("active modes (top to bottom):");
-      for (let mode of Mode.modes.slice().reverse()) {
+      for (const mode of Mode.modes.slice().reverse()) {
         this.log(" ", mode.id);
       }
     }
@@ -277,7 +277,7 @@ class Mode {
 
   // For tests only.
   static reset() {
-    for (let mode of this.modes) {
+    for (const mode of this.modes) {
       mode.exit();
     }
     this.modes = [];

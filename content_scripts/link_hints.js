@@ -212,7 +212,7 @@ const HintCoordinator = {
   // Returns a list of HintDescriptors. Hint descriptors are global. They include all of the
   // information necessary for each frame to determine whether and when a hint from *any* frame is
   // selected.
-  async getHintDescriptors({ modeIndex, isVimiumHelpDialog }, sender) {
+  getHintDescriptors({ modeIndex, isVimiumHelpDialog }, _sender) {
     if (!DomUtils.isReady() || DomUtils.windowIsTooSmall()) return [];
 
     const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
@@ -292,7 +292,7 @@ const HintCoordinator = {
   },
 };
 
-var LinkHints = {
+const LinkHints = {
   activateMode(count, { mode, registryEntry }) {
     if (count == null) count = 1;
     if (mode == null) mode = OPEN_IN_CURRENT_TAB;
@@ -488,7 +488,7 @@ class LinkHintsMode {
           break;
       }
 
-      const handlerId = this.hintMode.push({
+      this.hintMode.push({
         keyup: (event) => {
           if (event.key === key) {
             handlerStack.remove();
@@ -1049,13 +1049,13 @@ const LocalHints = {
           return () => false;
         } else {
           const ngAttributes = [];
-          for (let prefix of ["", "data-", "x-"]) {
-            for (let separator of ["-", ":", "_"]) {
+          for (const prefix of ["", "data-", "x-"]) {
+            for (const separator of ["-", ":", "_"]) {
               ngAttributes.push(`${prefix}ng${separator}click`);
             }
           }
           return function (element) {
-            for (let attribute of ngAttributes) {
+            for (const attribute of ngAttributes) {
               if (element.hasAttribute(attribute)) return true;
             }
             return false;
@@ -1096,7 +1096,7 @@ const LocalHints = {
     // Check for jsaction event listeners on the element.
     if (!isClickable && element.hasAttribute("jsaction")) {
       const jsactionRules = element.getAttribute("jsaction").split(";");
-      for (let jsactionRule of jsactionRules) {
+      for (const jsactionRule of jsactionRules) {
         const ruleSplit = jsactionRule.trim().split(":");
         if ((ruleSplit.length >= 1) && (ruleSplit.length <= 2)) {
           const [eventType, namespace, actionName] = ruleSplit.length === 1
@@ -1118,9 +1118,8 @@ const LocalHints = {
         if (!isClickable) isClickable = !element.disabled && !element.readOnly;
         break;
       case "input":
-        var type = element.getAttribute("type");
         if (!isClickable) {
-          isClickable = !((type && (type.toLowerCase() === "hidden")) ||
+          isClickable = !((element.getAttribute("type")?.toLowerCase() == "hidden") ||
             element.disabled ||
             (element.readOnly && DomUtils.isSelectable(element)));
         }
@@ -1308,7 +1307,7 @@ const LocalHints = {
       let index = Math.max(0, position - lookbackWindow);
       while (index < position) {
         let candidateDescendant = localHints[index].element;
-        for (let _ of descendantsToCheck) {
+        for (const _ of descendantsToCheck) {
           candidateDescendant = candidateDescendant?.parentElement;
           if (candidateDescendant === hint.element) {
             // This is a false positive; exclude it from visibleElements.
@@ -1440,7 +1439,7 @@ class TypingProtector extends Mode {
 
     this.timer = Utils.setTimeout(delay, () => this.exit());
 
-    var resetExitTimer = (event) => {
+    const resetExitTimer = () => {
       clearTimeout(this.timer);
       this.timer = Utils.setTimeout(delay, () => this.exit());
     };
