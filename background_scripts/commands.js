@@ -30,8 +30,9 @@ class RegistryEntry {
 
 const Commands = {
   availableCommands: {},
-  keyToCommandRegistry: null,
-  // A map of keyString => CommandRegistry
+  // A map of keyString => RegistryEntry
+  keyToRegistryEntry: null,
+  // A map of typed key => key it's mapped to (via the `mapkey` config statement).
   mapKeyRegistry: null,
 
   async init() {
@@ -48,32 +49,24 @@ const Commands = {
     await this.loadKeyMappings(Settings.get("keyMappings"));
   },
 
-  // TODO(philc): Improve this transpiled code.
-  async loadKeyMappings(customKeyMappings) {
-    let key, command;
-    this.keyToCommandRegistry = {};
-    this.mapKeyRegistry = {};
+  // Parses the text supplied by the user in their "keyMappings" setting.
+  // Returns { keyToRegistryEntry, keyToMappedKey }.
+  parseKeyMappingsConfig(configText) {
+    let keyToRegistryEntry = {};
+    let mapKeyRegistry = {};
 
-    const configLines = Object.keys(defaultKeyMappings).map((key) =>
-      `map ${key} ${defaultKeyMappings[key]}`
-    );
-    configLines.push(...Utils.parseLines(customKeyMappings));
+    const configLines = Utils.parseLines(configText);
 
-    const seen = {};
-    let unmapAll = false;
-    for (const line of configLines.reverse()) {
+    for (const line of configLines) {
       const tokens = line.split(/\s+/);
       switch (tokens[0].toLowerCase()) {
         case "map":
-          // TODO(philc): Improve this transpiled code.
-          if ((3 <= tokens.length) && !unmapAll) {
-            let _, optionList;
-            [_, key, command, ...optionList] = tokens;
-            if (!seen[key] && this.availableCommands[command]) {
-              seen[key] = true;
+          if (tokens.length >= 3) {
+            const [_, key, command, ...optionList] = tokens;
+            if (this.availableCommands[command]) {
               const keySequence = this.parseKeySequence(key);
               const options = this.parseCommandOptions(command, optionList);
-              this.keyToCommandRegistry[key] = new RegistryEntry(
+              keyToRegistryEntry[key] = new RegistryEntry(
                 Object.assign({
                   keySequence,
                   command,
@@ -86,26 +79,49 @@ const Commands = {
           break;
         case "unmap":
           if (tokens.length == 2) {
-            seen[tokens[1]] = true;
+            const key = tokens[1];
+            delete keyToRegistryEntry[key];
+            delete mapKeyRegistry[key];
           }
           break;
         case "unmapall":
-          unmapAll = true;
+          keyToRegistryEntry = {};
+          mapKeyRegistry = {};
           break;
         case "mapkey":
           if (tokens.length === 3) {
             const fromChar = this.parseKeySequence(tokens[1]);
             const toChar = this.parseKeySequence(tokens[2]);
-            if (
-              (fromChar.length === toChar.length && toChar.length === 1) &&
-              this.mapKeyRegistry[fromChar[0]] == null
-            ) {
-              this.mapKeyRegistry[fromChar[0]] = toChar[0];
+            // NOTE(philc): I'm not sure why we enforce that the fromChar and toChar have to be
+            // length one. It's been that way since this feature was introduced in 6596e30.
+            if (fromChar.length == toChar.length && toChar.length === 1) {
+              mapKeyRegistry[fromChar[0]] = toChar[0];
             }
           }
           break;
       }
     }
+
+    return {
+      keyToRegistryEntry,
+      keyToMappedKey: mapKeyRegistry,
+    };
+  },
+
+  // Parses the user's keyMapping config text and persists the parsed key mappings into the
+  // extension's storage, for use by the other parts of this extension.
+  async loadKeyMappings(userKeyMappingsConfigText) {
+    let key, command;
+    this.keyToRegistryEntry = {};
+    this.mapKeyRegistry = {};
+
+    const defaultKeyConfig = Object.keys(defaultKeyMappings).map((key) =>
+      `map ${key} ${defaultKeyMappings[key]}`
+    ).join("\n");
+
+    const parsed = this.parseKeyMappingsConfig(defaultKeyConfig + "\n" + userKeyMappingsConfigText);
+    this.mapKeyRegistry = parsed.keyToMappedKey;
+    this.keyToRegistryEntry = parsed.keyToRegistryEntry;
 
     await chrome.storage.session.set({ mapKeyRegistry: this.mapKeyRegistry });
     await this.installKeyStateMapping();
@@ -115,7 +131,7 @@ const Commands = {
     // insert mode. We exclude single-key mappings (that is, printable keys) because when users
     // press printable keys in insert mode they expect the character to be input, not to be droppped
     // into some special Vimium mode.
-    const passNextKeys = Object.entries(this.keyToCommandRegistry)
+    const passNextKeys = Object.entries(this.keyToRegistryEntry)
       .filter((key, v) => key.length > 1 && v.command == "passNextKeys");
     await chrome.storage.session.set({ passNextKeyKeys: passNextKeys });
   },
@@ -183,8 +199,8 @@ const Commands = {
   // mode_key_handler.js.
   async installKeyStateMapping() {
     const keyStateMapping = {};
-    for (const keys of Object.keys(this.keyToCommandRegistry || {})) {
-      const registryEntry = this.keyToCommandRegistry[keys];
+    for (const keys of Object.keys(this.keyToRegistryEntry || {})) {
+      const registryEntry = this.keyToRegistryEntry[keys];
       let currentMapping = keyStateMapping;
       for (let index = 0; index < registryEntry.keySequence.length; index++) {
         const key = registryEntry.keySequence[index];
@@ -217,8 +233,8 @@ const Commands = {
   // storage.
   prepareHelpPageData() {
     const commandToKey = {};
-    for (const key of Object.keys(this.keyToCommandRegistry || {})) {
-      const registryEntry = this.keyToCommandRegistry[key];
+    for (const key of Object.keys(this.keyToRegistryEntry || {})) {
+      const registryEntry = this.keyToRegistryEntry[key];
       (commandToKey[registryEntry.command] != null
         ? commandToKey[registryEntry.command]
         : (commandToKey[registryEntry.command] = [])).push(key);
