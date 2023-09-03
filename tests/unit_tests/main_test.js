@@ -11,9 +11,9 @@ context("HintCoordinator", () => {
       "1": { frameId: 1, localIndex: 456, linkText: null },
     };
 
-    stub(chrome.webNavigation, "getAllFrames", async () => [{ frameId: 0 }, { frameId: 1 }]);
+    stub(chrome.webNavigation, "getAllFrames", () => [{ frameId: 0 }, { frameId: 1 }]);
 
-    stub(chrome.tabs, "sendMessage", async (tabId, message, options) => {
+    stub(chrome.tabs, "sendMessage", async (_tabId, message, options) => {
       if (message.messageType == "getHintDescriptors") {
         return frameIdToHintDescriptors[options.frameId];
       } else if (message.messageType == "activateMode") {
@@ -40,9 +40,9 @@ context("HintCoordinator", () => {
 
 context("Selecting frames", () => {
   should("nextFrame", async () => {
-    let focusedFrames = [];
-    stub(chrome.webNavigation, "getAllFrames", async () => [{ frameId: 1 }, { frameId: 2 }]);
-    stub(chrome.tabs, "sendMessage", async (tabId, message, options) => {
+    const focusedFrames = [];
+    stub(chrome.webNavigation, "getAllFrames", () => [{ frameId: 1 }, { frameId: 2 }]);
+    stub(chrome.tabs, "sendMessage", async (_tabId, message, options) => {
       if (message.handler == "getFocusStatus") {
         return { focused: options.frameId == 2, focusable: true };
       } else if (message.handler == "focusFrame") {

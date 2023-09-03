@@ -8,7 +8,7 @@ context("settings", () => {
     await chrome.storage.sync.set({ scrollStepSize: JSON.stringify(123) });
   });
 
-  tearDown(async () => {
+  tearDown(() => {
     Settings.clear();
   });
 

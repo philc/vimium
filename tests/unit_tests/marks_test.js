@@ -39,7 +39,7 @@ context("marks", () => {
   should("find a new tab if a mark's tab no longer exists", async () => {
     await createMark({ markName: "A" }, { id: 1 });
     const tab = { url: "http://example.com", id: 2 };
-    stub(window.chrome.tabs, "get", (id) => {
+    stub(window.chrome.tabs, "get", (_id) => {
       throw new Error();
     });
     stub(window.chrome.tabs, "query", (_) => [tab]);

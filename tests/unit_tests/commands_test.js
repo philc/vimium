@@ -82,23 +82,23 @@ context("Validate commands and options", () => {
   // TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
   // of the offending command appears in the output, if the test fails?
   should("have either noRepeat or repeatLimit, but not both", () => {
-    for (let command of Object.keys(Commands.availableCommands)) {
+    for (const command of Object.keys(Commands.availableCommands)) {
       const options = Commands.availableCommands[command];
       assert.isTrue(!(options.noRepeat && options.repeatLimit));
     }
   });
 
   should("describe each command", () => {
-    for (let command of Object.keys(Commands.availableCommands)) {
+    for (const command of Object.keys(Commands.availableCommands)) {
       const options = Commands.availableCommands[command];
       assert.equal("string", typeof options.description);
     }
   });
 
   should("define each command in each command group", () => {
-    for (let group of Object.keys(Commands.commandGroups)) {
+    for (const group of Object.keys(Commands.commandGroups)) {
       const commands = Commands.commandGroups[group];
-      for (let command of commands) {
+      for (const command of commands) {
         assert.equal("string", typeof command);
         assert.isTrue(Commands.availableCommands[command]);
       }
@@ -106,7 +106,7 @@ context("Validate commands and options", () => {
   });
 
   should("have valid commands for each advanced command", () => {
-    for (let command of Commands.advancedCommands) {
+    for (const command of Commands.advancedCommands) {
       assert.equal("string", typeof command);
       assert.isTrue(Commands.availableCommands[command]);
     }
@@ -115,7 +115,7 @@ context("Validate commands and options", () => {
   should("have valid commands for each default key mapping", () => {
     const count = Object.keys(Commands.keyToCommandRegistry).length;
     assert.isTrue(0 < count);
-    for (let key of Object.keys(Commands.keyToCommandRegistry)) {
+    for (const key of Object.keys(Commands.keyToCommandRegistry)) {
       const command = Commands.keyToCommandRegistry[key];
       assert.equal("object", typeof command);
       assert.isTrue(Commands.availableCommands[command.command]);
@@ -125,9 +125,9 @@ context("Validate commands and options", () => {
 
 context("Validate advanced commands", () => {
   should("include each advanced command in a command group", () => {
-    let allCommands = Object.keys(Commands.commandGroups).map((k) => Commands.commandGroups[k])
+    const allCommands = Object.keys(Commands.commandGroups).map((k) => Commands.commandGroups[k])
       .flat(1);
-    for (let command of Commands.advancedCommands) {
+    for (const command of Commands.advancedCommands) {
       assert.isTrue(allCommands.includes(command));
     }
   });

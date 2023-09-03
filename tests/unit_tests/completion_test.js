@@ -44,7 +44,7 @@ context("bookmark completer", () => {
 
   should("construct bookmark paths correctly", async () => {
     completer.refresh();
-    const results = await filterCompleter(completer, ["mark2"]);
+    await filterCompleter(completer, ["mark2"]);
     assert.equal("/bookmark1/bookmark2", bookmark2.pathAndTitle);
   });
 
@@ -101,7 +101,7 @@ context("HistoryCache", () => {
   context("fetchHistory", () => {
     const history1 = { url: "b.com", lastVisitTime: 5 };
     const history2 = { url: "a.com", lastVisitTime: 10 };
-    let onVisitedListener, onVisitRemovedListener, results;
+    let onVisitedListener, onVisitRemovedListener;
 
     setup(async () => {
       const history = [history1, history2];
@@ -110,7 +110,7 @@ context("HistoryCache", () => {
       onVisitRemovedListener = null;
 
       stub(window.chrome, "history", {
-        search: (options) => history,
+        search: (_options) => history,
         onVisited: {
           addListener(listener) {
             onVisitedListener = listener;
@@ -129,17 +129,17 @@ context("HistoryCache", () => {
       await HistoryCache.fetchHistory();
     });
 
-    should("store visits sorted by url ascending", async () => {
+    should("store visits sorted by url ascending", () => {
       assert.equal([history2, history1], HistoryCache.history);
     });
 
-    should("add new visits to the history", async () => {
+    should("add new visits to the history", () => {
       const newSite = { url: "ab.com" };
       onVisitedListener(newSite);
       assert.equal([history2, newSite, history1], HistoryCache.history);
     });
 
-    should("replace new visits in the history", async () => {
+    should("replace new visits in the history", () => {
       assert.equal([history2, history1], HistoryCache.history);
       const newSite = { url: "a.com", lastVisitTime: 15 };
       onVisitedListener(newSite);
@@ -148,7 +148,7 @@ context("HistoryCache", () => {
 
     should(
       "(not) remove page from the history, when page is not in history (it should be a no-op)",
-      async () => {
+      () => {
         assert.equal([history2, history1], HistoryCache.history);
         const toRemove = { urls: ["x.com"], allHistory: false };
         onVisitRemovedListener(toRemove);
@@ -156,14 +156,14 @@ context("HistoryCache", () => {
       },
     );
 
-    should("remove pages from the history", async () => {
+    should("remove pages from the history", () => {
       assert.equal([history2, history1], HistoryCache.history);
       const toRemove = { urls: ["a.com"], allHistory: false };
       onVisitRemovedListener(toRemove);
       assert.equal([history1], HistoryCache.history);
     });
 
-    should("remove all pages from the history", async () => {
+    should("remove all pages from the history", () => {
       assert.equal([history2, history1], HistoryCache.history);
       const toRemove = { allHistory: true };
       onVisitRemovedListener(toRemove);
@@ -180,7 +180,7 @@ context("history completer", () => {
   setup(() => {
     completer = new HistoryCompleter();
     stub(window.chrome, "history", {
-      search: (options) => [history1, history2],
+      search: (_options) => [history1, history2],
       onVisited: { addListener() {}, removeListener() {} },
       onVisitRemoved: { addListener() {}, removeListener() {} },
     });
@@ -209,7 +209,7 @@ context("domain completer", () => {
 
   setup(() => {
     stub(window.chrome, "history", {
-      search: (options) => [history1, history2, undef],
+      search: (_options) => [history1, history2, undef],
       onVisited: { addListener() {}, removeListener() {} },
       onVisitRemoved: { addListener() {}, removeListener() {} },
     });
@@ -254,16 +254,15 @@ context("domain completer (removing entries)", () => {
     url: "http://history2.com/something",
     lastVisitTime: hours(0),
   };
-  let onVisitedListener, onVisitRemovedListener, completer;
+
+  let onVisitRemovedListener, completer;
 
   setup(async () => {
-    onVisitedListener = null;
     onVisitRemovedListener = null;
     stub(window.chrome, "history", {
-      search: (options) => [history1, history2, history3],
+      search: (_options) => [history1, history2, history3],
       onVisited: {
-        addListener(listener) {
-          onVisitedListener = listener;
+        addListener(_listener) {
         },
       },
       onVisitRemoved: {
@@ -328,7 +327,7 @@ context("tab completer", () => {
   let completer;
 
   setup(() => {
-    stub(chrome.tabs, "query", (args) => tabs);
+    stub(chrome.tabs, "query", () => tabs);
     completer = new TabCompleter();
   });
 

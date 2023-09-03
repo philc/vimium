@@ -105,7 +105,7 @@ window.chrome = {
   },
 
   tabs: {
-    get(id) {},
+    get(_id) {},
     onUpdated: {
       addListener() {
         return true;
@@ -139,8 +139,8 @@ window.chrome = {
     query() {
       return true;
     },
-    sendMessage(id, properties) {},
-    update(id, properties) {},
+    sendMessage(_id, _properties) {},
+    update(_id, _properties) {},
   },
 
   webNavigation: {
@@ -172,7 +172,7 @@ window.chrome = {
         return true;
       },
     },
-    update(id, properties) {},
+    update(_id, _properties) {},
   },
 
   browserAction: {

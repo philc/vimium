@@ -223,7 +223,7 @@ context("Rect subtraction", () => {
           for (let height = 1; height <= 3; height++) {
             const subtractRect = Rect.create(x, y, x + width, y + height);
             const resultRects = Rect.subtract(rect, subtractRect);
-            for (let resultRect of resultRects) {
+            for (const resultRect of resultRects) {
               assert.isFalse(Rect.intersects(subtractRect, resultRect));
             }
           }
@@ -240,7 +240,7 @@ context("Rect subtraction", () => {
           for (let height = 1; height <= 3; height++) {
             const subtractRect = Rect.create(x, y, x + width, y + height);
             const resultRects = Rect.subtract(rect, subtractRect);
-            for (let resultRect of resultRects) {
+            for (const resultRect of resultRects) {
               assert.isTrue(Rect.intersects(rect, resultRect));
             }
           }
@@ -258,7 +258,7 @@ context("Rect subtraction", () => {
             const subtractRect = Rect.create(x, y, x + width, y + height);
             const resultRects = Rect.subtract(rect, subtractRect);
             let resultComplement = [Rect.copy(rect)];
-            for (var resultRect of resultRects) {
+            for (const resultRect of resultRects) {
               resultComplement = Array.prototype.concat.apply(
                 [],
                 resultComplement.map((rect) => Rect.subtract(rect, resultRect)),

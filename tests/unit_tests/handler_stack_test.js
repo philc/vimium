@@ -84,7 +84,7 @@ context("handlerStack", () => {
   should("restart bubbling on restartBubbling", () => {
     handler1Called = 0;
     handler2Called = 0;
-    var id = handlerStack.push({
+    const id = handlerStack.push({
       keydown: () => {
         handler1Called++;
         handlerStack.remove(id);

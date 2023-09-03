@@ -193,15 +193,14 @@ const sendKeyboardEvent = (key, type, extra) => {
 };
 
 const sendKeyboardEvents = (keys) => {
-  for (let key of keys.split("")) {
+  for (const key of keys.split("")) {
     sendKeyboardEvent(key);
   }
 };
 
-const inputs = [];
-
 // TODO(philc): For some reason, this test corrupts the state linkhints state for other tests, in particular,
 // the alphabet hints tests. I haven't yet dug into why.
+// const inputs = [];
 // context("Test link hints for focusing input elements correctly", () => {
 //   let linkHintsMode;
 
@@ -336,7 +335,7 @@ context("Alphabetical link hints", () => {
 
   should("generate the correct number of alphabet hints", () => {
     const alphabetHints = new AlphabetHints();
-    for (let n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+    for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
       const hintStrings = alphabetHints.hintStrings(n);
       assert.equal(n, hintStrings.length);
     }
@@ -344,10 +343,10 @@ context("Alphabetical link hints", () => {
 
   should("generate non-overlapping alphabet hints", () => {
     const alphabetHints = new AlphabetHints();
-    for (let n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+    for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
       const hintStrings = alphabetHints.hintStrings(n);
-      for (let h1 of hintStrings) {
-        for (let h2 of hintStrings) {
+      for (const h1 of hintStrings) {
+        for (const h2 of hintStrings) {
           if (h1 !== h2) {
             assert.isFalse(0 === h1.indexOf(h2));
           }
@@ -388,7 +387,7 @@ context("Filtered link hints", () => {
       const expectedMarkers = [1, 2, 3, 4].map((m) => m.toString());
       const actualMarkers = [0, 1, 2, 3].map((i) => hintMarkers[i].textContent.toLowerCase());
       assert.equal(expectedMarkers.length, actualMarkers.length);
-      for (let marker of expectedMarkers) {
+      for (const marker of expectedMarkers) {
         assert.isTrue(actualMarkers.includes(marker));
       }
     });
