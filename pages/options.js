@@ -64,11 +64,10 @@ const OptionsPage = {
     };
 
     document.addEventListener("keyup", (event) => {
-      if (event.ctrlKey && (event.keyCode === 13)) {
-        if (document && document.activeElement && document.activeElement.blur) {
-          document.activeElement.blur();
-          this.saveOptions();
-        }
+      const isCtrlEnter = event.ctrlKey && event.keyCode === 13;
+      if (isCtrlEnter) {
+        document.activeElement?.blur?.();
+        this.saveOptions();
       }
     });
 
