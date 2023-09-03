@@ -13,7 +13,7 @@ import "../../content_scripts/vomnibar.js";
 
 await Commands.init();
 
-context("Key mappings", () => {
+context("parseKeySequence", () => {
   const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
     const keySequence = Commands.parseKeySequence(key);
     assert.equal(expectedKeyText, keySequence.join("/"));
@@ -78,6 +78,43 @@ context("Key mappings", () => {
   });
 });
 
+context("parseKeyMappingConfig", () => {
+  should("handle map statements", () => {
+    const { keyToRegistryEntry } = Commands.parseKeyMappingsConfig("map a scrollDown");
+    assert.equal("scrollDown", keyToRegistryEntry["a"]?.command);
+  });
+
+  should("ignore mappings for unknown commands", () => {
+    assert.equal({}, Commands.parseKeyMappingsConfig("map a unknownCommand").keyToRegistryEntry);
+  });
+
+  should("handle mapkey statements", () => {
+    const { keyToMappedKey } = Commands.parseKeyMappingsConfig("mapkey a b");
+    assert.equal({ "a": "b" }, keyToMappedKey);
+  });
+
+  should("handle unmap statements", () => {
+    const input = "mapkey a b \n unmap a";
+    const { keyToMappedKey } = Commands.parseKeyMappingsConfig(input);
+    assert.equal({}, keyToMappedKey);
+  });
+
+  should("handle unmapall statements", () => {
+    const input = "mapkey a b \n unmapall \n mapkey b c";
+    const { keyToMappedKey } = Commands.parseKeyMappingsConfig(input);
+    assert.equal({ "b": "c" }, keyToMappedKey);
+  });
+
+  should("ignore commands with the wrong number of tokens", () => {
+    assert.equal({}, Commands.parseKeyMappingsConfig("mapkey a b c").keyToMappedKey);
+    assert.equal({}, Commands.parseKeyMappingsConfig("map a").keyToRegistryEntry);
+    assert.equal(
+      { "a": "b" },
+      Commands.parseKeyMappingsConfig("mapkey a b \n unmap a a").keyToMappedKey,
+    );
+  });
+});
+
 context("Validate commands and options", () => {
   // TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
   // of the offending command appears in the output, if the test fails?
@@ -113,10 +150,10 @@ context("Validate commands and options", () => {
   });
 
   should("have valid commands for each default key mapping", () => {
-    const count = Object.keys(Commands.keyToCommandRegistry).length;
+    const count = Object.keys(Commands.keyToRegistryEntry).length;
     assert.isTrue(0 < count);
-    for (const key of Object.keys(Commands.keyToCommandRegistry)) {
-      const command = Commands.keyToCommandRegistry[key];
+    for (const key of Object.keys(Commands.keyToRegistryEntry)) {
+      const command = Commands.keyToRegistryEntry[key];
       assert.equal("object", typeof command);
       assert.isTrue(Commands.availableCommands[command.command]);
     }
