@@ -50,55 +50,75 @@ const Commands = {
   },
 
   // Parses the text supplied by the user in their "keyMappings" setting.
+  // - shouldLogWarnings: if true, logs to the console when part of the user's config is invalid.
   // Returns { keyToRegistryEntry, keyToMappedKey }.
-  parseKeyMappingsConfig(configText) {
+  parseKeyMappingsConfig(configText, shouldLogWarnings) {
     let keyToRegistryEntry = {};
     let mapKeyRegistry = {};
 
     const configLines = Utils.parseLines(configText);
+    const logWarning = (...args) => {
+      if (!shouldLogWarnings) return;
+      console.warn.apply(console, args);
+    };
 
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
-      switch (tokens[0].toLowerCase()) {
+      const command = tokens[0].toLowerCase();
+      switch (command) {
         case "map":
           if (tokens.length >= 3) {
             const [_, key, command, ...optionList] = tokens;
-            if (this.availableCommands[command]) {
-              const keySequence = this.parseKeySequence(key);
-              const options = this.parseCommandOptions(command, optionList);
-              keyToRegistryEntry[key] = new RegistryEntry(
-                Object.assign({
-                  keySequence,
-                  command,
-                  options,
-                  optionList,
-                }, this.availableCommands[command]),
-              );
+            if (!this.availableCommands[command]) {
+              logWarning(`"${command}" is not a valid command in the line:`, line);
+              continue;
             }
+            const keySequence = this.parseKeySequence(key);
+            const options = this.parseCommandOptions(command, optionList);
+            keyToRegistryEntry[key] = new RegistryEntry(
+              Object.assign({
+                keySequence,
+                command,
+                options,
+                optionList,
+              }, this.availableCommands[command]),
+            );
           }
           break;
         case "unmap":
-          if (tokens.length == 2) {
-            const key = tokens[1];
-            delete keyToRegistryEntry[key];
-            delete mapKeyRegistry[key];
+          if (tokens.length != 2) {
+            logWarning("Incorrect usage for unmap in the line:", line);
+            continue;
           }
+          const key = tokens[1];
+          delete keyToRegistryEntry[key];
+          delete mapKeyRegistry[key];
           break;
         case "unmapall":
           keyToRegistryEntry = {};
           mapKeyRegistry = {};
           break;
         case "mapkey":
-          if (tokens.length === 3) {
-            const fromChar = this.parseKeySequence(tokens[1]);
-            const toChar = this.parseKeySequence(tokens[2]);
-            // NOTE(philc): I'm not sure why we enforce that the fromChar and toChar have to be
-            // length one. It's been that way since this feature was introduced in 6596e30.
-            if (fromChar.length == toChar.length && toChar.length === 1) {
-              mapKeyRegistry[fromChar[0]] = toChar[0];
-            }
+          if (tokens.length != 3) {
+            logWarning("Incorrect usage for mapkey in the line:", line);
+            continue;
+          }
+          const fromChar = this.parseKeySequence(tokens[1]);
+          const toChar = this.parseKeySequence(tokens[2]);
+          // NOTE(philc): I'm not sure why we enforce that the fromChar and toChar have to be
+          // length one. It's been that way since this feature was introduced in 6596e30.
+          const isValid = fromChar.length == toChar.length && toChar.length === 1;
+          if (isValid) {
+            mapKeyRegistry[fromChar[0]] = toChar[0];
+          } else {
+            logWarning(
+              "mapkey only supports mapping keys which are single characters. Line:",
+              line,
+            );
           }
           break;
+        default:
+          logWarning(`"${command}" is not a valid config command in line:`, line);
       }
     }
 
@@ -119,7 +139,10 @@ const Commands = {
       `map ${key} ${defaultKeyMappings[key]}`
     ).join("\n");
 
-    const parsed = this.parseKeyMappingsConfig(defaultKeyConfig + "\n" + userKeyMappingsConfigText);
+    const parsed = this.parseKeyMappingsConfig(
+      defaultKeyConfig + "\n" + userKeyMappingsConfigText,
+      true,
+    );
     this.mapKeyRegistry = parsed.keyToMappedKey;
     this.keyToRegistryEntry = parsed.keyToRegistryEntry;
 
