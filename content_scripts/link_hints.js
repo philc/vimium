@@ -755,11 +755,16 @@ class AlphabetHints {
 
   fillInMarkers(hintMarkers) {
     const hintStrings = this.hintStrings(hintMarkers.length);
-    for (let i = 0; i < hintMarkers.length; i++) {
-      const marker = hintMarkers[i];
-      marker.hintString = hintStrings[i];
-      if (marker.isLocalMarker()) {
-        marker.element.innerHTML = spanWrap(marker.hintString.toUpperCase());
+    if (hintMarkers.length != hintStrings.length) {
+      // This can only happen if the user's linkHintCharacters setting is empty.
+      console.warn("Unable to generate link hint strings.");
+    } else {
+      for (let i = 0; i < hintMarkers.length; i++) {
+        const marker = hintMarkers[i];
+        marker.hintString = hintStrings[i];
+        if (marker.isLocalMarker()) {
+          marker.element.innerHTML = spanWrap(marker.hintString.toUpperCase());
+        }
       }
     }
   }
@@ -769,6 +774,7 @@ class AlphabetHints {
   // strings may be of different lengths.
   //
   hintStrings(linkCount) {
+    if (this.linkHintCharacters.length == 0) return [];
     let hints = [""];
     let offset = 0;
     while (((hints.length - offset) < linkCount) || (hints.length === 1)) {
