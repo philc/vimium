@@ -57,6 +57,13 @@ const OptionsPage = {
       () => this.onUploadBackupClicked(),
     );
 
+    for (const el of document.querySelectorAll(".reset-link a")) {
+      el.addEventListener("click", (event) => {
+        this.resetInputValue(event);
+        onUpdated();
+      });
+    }
+
     window.onbeforeunload = () => {
       if (!saveOptionsEl.disabled) {
         return "You have unsaved changes to options.";
@@ -76,6 +83,16 @@ const OptionsPage = {
 
     const settings = Settings.getSettings();
     this.setFormFromSettings(settings);
+  },
+
+  // Invoked when the user clicks the "reset" button next to an option's text field.
+  resetInputValue(event) {
+    const parent = event.target.closest("tr");
+    const input = parent.querySelector("input") || parent.querySelector("textarea");
+    const optionName = input.id;
+    const defaultValue = Settings.defaultOptions[optionName];
+    input.value = defaultValue;
+    event.preventDefault();
   },
 
   setFormFromSettings(settings) {

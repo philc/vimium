@@ -92,6 +92,12 @@ table#options{
 .info {
   margin-left: 0px;
 }
+.reset-link {
+  text-align: right;
+}
+.reset-link a {
+  text-decoration: none;
+}
 .caption {
   margin-right: 10px;
   min-width: 130px;
