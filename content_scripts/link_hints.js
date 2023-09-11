@@ -1120,57 +1120,48 @@ const LocalHints = {
         isClickable = true;
         break;
       case "textarea":
-        if (!isClickable) isClickable = !element.disabled && !element.readOnly;
+        isClickable ||= !element.disabled && !element.readOnly;
         break;
       case "input":
-        if (!isClickable) {
-          isClickable = !((element.getAttribute("type")?.toLowerCase() == "hidden") ||
-            element.disabled ||
-            (element.readOnly && DomUtils.isSelectable(element)));
-        }
+        isClickable ||= !((element.getAttribute("type")?.toLowerCase() == "hidden") ||
+          element.disabled ||
+          (element.readOnly && DomUtils.isSelectable(element)));
         break;
       case "button":
       case "select":
-        if (!isClickable) isClickable = !element.disabled;
+        isClickable ||= !element.disabled;
         break;
       case "object":
       case "embed":
         isClickable = true;
         break;
       case "label":
-        if (!isClickable) {
-          isClickable = (element.control != null) && !element.control.disabled &&
-            ((this.getLocalHintsForElement(element.control)).length === 0);
-        }
+        isClickable ||= (element.control != null) &&
+          !element.control.disabled &&
+          ((this.getLocalHintsForElement(element.control)).length === 0);
         break;
       case "body":
-        if (!isClickable) {
-          isClickable = (element === document.body) && !windowIsFocused() &&
-              (window.innerWidth > 3) && (window.innerHeight > 3) &&
-              ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
-                "frameset")
-            ? (reason = "Frame.")
-            : undefined;
-        }
-        if (!isClickable) {
-          isClickable = (element === document.body) && windowIsFocused() &&
-              Scroller.isScrollableElement(element)
-            ? (reason = "Scroll.")
-            : undefined;
-        }
+        isClickable ||= (element === document.body) && !windowIsFocused() &&
+            (window.innerWidth > 3) && (window.innerHeight > 3) &&
+            ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
+              "frameset")
+          ? (reason = "Frame.")
+          : undefined;
+        isClickable ||= (element === document.body) && windowIsFocused() &&
+            Scroller.isScrollableElement(element)
+          ? (reason = "Scroll.")
+          : undefined;
         break;
       case "img":
-        if (!isClickable) isClickable = ["zoom-in", "zoom-out"].includes(element.style.cursor);
+        isClickable ||= ["zoom-in", "zoom-out"].includes(element.style.cursor);
         break;
       case "div":
       case "ol":
       case "ul":
-        if (!isClickable) {
-          isClickable =
-            (element.clientHeight < element.scrollHeight) && Scroller.isScrollableElement(element)
-              ? (reason = "Scroll.")
-              : undefined;
-        }
+        isClickable ||=
+          (element.clientHeight < element.scrollHeight) && Scroller.isScrollableElement(element)
+            ? (reason = "Scroll.")
+            : undefined;
         break;
       case "details":
         isClickable = true;
@@ -1186,7 +1177,7 @@ const LocalHints = {
     // clickables are often wrapped in elements with such class names. So, when we find clickables
     // based only on their class name, we mark them as unreliable.
     const className = element.getAttribute("class");
-    if (!isClickable && className && className.toLowerCase().includes("button")) {
+    if (!isClickable && className?.toLowerCase().includes("button")) {
       isClickable = true;
       possibleFalsePositive = true;
     }
