@@ -138,7 +138,7 @@ const OptionsPage = {
         default:
           throw `Unrecognized option type ${optionType}`;
       }
-      if (value !== null && value !== "") {
+      if (value !== null) {
         settings[optionName] = value;
       }
     }
