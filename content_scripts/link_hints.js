@@ -1182,6 +1182,12 @@ const LocalHints = {
       possibleFalsePositive = true;
     }
 
+    // If the span is clickable but wraps something else that is clickable, we want to instead favor
+    // showing hints for descendants which are clickable. Flag the span as a possible false postive.
+    if (tagName == "span") {
+      possibleFalsePositive = true;
+    }
+
     // Elements with tabindex are sometimes useful, but usually not. We can treat them as second
     // class citizens when it improves UX, so take special note of them.
     const tabIndexValue = element.getAttribute("tabindex");
