@@ -310,7 +310,6 @@ const LinkHints = {
     }
 
     if ((count > 0) || (mode === OPEN_WITH_QUEUE)) {
-      // TODO(philc): Remove these returns
       HintCoordinator.prepareToActivateMode(mode, function (isSuccess) {
         if (isSuccess) {
           // Wait for the next tick to allow the previous mode to exit. It might yet generate a
