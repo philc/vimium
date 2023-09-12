@@ -640,6 +640,15 @@ class LinkHintsMode {
     }
   }
 
+  isGoogleSearchResultsPage() {
+    // NOTE(philc): We're testing here only for the www subdomain. One can conduct a google search
+    // on other subdomains, like images.google.com, but as of 2023-09-11 these all redirect to
+    // www.google.com to show the search results.
+    const hostRegexp = /^(www\.)?google\.[a-zA-Z0-9.-]+$/;
+    if (!hostRegexp.test(document.location.host)) return false;
+    return document.location.pathname == "/search";
+  }
+
   // When only one hint remains, activate it in the appropriate way. The current frame may or may
   // not contain the matched link, and may or may not have the focus. The resulting four cases are
   // accounted for here by selectively pushing the appropriate HintCoordinator.onExit handlers.
@@ -653,6 +662,19 @@ class LinkHintsMode {
     if (linkMatched.isLocalMarker()) {
       const localHint = linkMatched.localHint;
       clickEl = localHint.element;
+
+      // This is a workaround specific to Google's search results page which suddenly became
+      // necessary on 2023-09-11. If the user selects a hint for a span containing an anchor tag,
+      // click on the anchor rather than the span. See #4303 for discussion.
+      if (this.isGoogleSearchResultsPage()) {
+        const isSpanWrappingAnchor = clickEl.tagName?.toLowerCase() == "span" &&
+          clickEl.getAttribute("role") == "link";
+        const anchor = clickEl.querySelector("* > a");
+        if (isSpanWrappingAnchor && anchor) {
+          clickEl = anchor;
+        }
+      }
+
       HintCoordinator.onExit.push((isSuccess) => {
         if (isSuccess) {
           if (localHint.reason === "Frame.") {
