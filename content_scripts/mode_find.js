@@ -194,20 +194,21 @@ class FindMode extends Mode {
       return;
     }
 
-    let regexMatches; 
+    let regexMatches;
     if (this.query.isRegex && regexPattern) {
-      const matchedElements = Array.from(document.body.querySelectorAll('*')).filter((element) => {
-        return element.checkVisibility()
-          && !element.childElementCount
-          && element.innerText
-          && element.innerText.match(pattern)
+      const matchedElements = Array.from(document.body.querySelectorAll("*")).filter((element) => {
+        return element.checkVisibility() &&
+          !element.childElementCount &&
+          element.innerText &&
+          element.innerText.match(pattern);
       });
-      const matches = matchedElements.map(element => element.innerText.match(pattern));
+      const matches = matchedElements.map((element) => element.innerText.match(pattern));
       regexMatches = matches.flat();
       this.query.regexMatches = regexMatches;
       this.query.regexPattern = pattern;
       this.query.regexMatchedElements = matchedElements;
       this.query.regexMatchesIn2DArray = matches;
+      this.query.hasResults = regexMatches.length > 0;
     } else {
       // innerText will not return the text of hidden elements, and strip out tags while preserving
       // newlines.
@@ -277,7 +278,10 @@ class FindMode extends Mode {
 
     try {
       if (FindMode.query.isRegex && this.query.hasResults) {
-        const [elementIndex, matchIndex] = calculate2DArrayPosition(this.query.regexMatchesIn2DArray, this.query.activeRegexIndex);
+        const [elementIndex, matchIndex] = calculate2DArrayPosition(
+          this.query.regexMatchesIn2DArray,
+          this.query.activeRegexIndex,
+        );
         const element = this.query.regexMatchedElements[elementIndex];
         const textContent = element.innerText;
         const matchIndexes = getRegexMatchIndexes(textContent, this.query.regexPattern);
@@ -296,7 +300,7 @@ class FindMode extends Mode {
           false,
         );
       }
-    } catch (error) {} // Failed searches throw on Firefox.
+    } catch { /* swallow */ } // Failed searches throw on Firefox.
 
     // window.find focuses the |window| that it is called on. This gives us an opportunity to
     // (re-)focus another element/window, if that isn't the behaviour we want.
@@ -442,11 +446,10 @@ var calculate2DArrayPosition = (a2DArray, flattenedIndex) => {
   }
 
   return [row, col];
-}
+};
 
 // Retrieve the starting indexes of all matches of the queried pattern within the given text.
 var getRegexMatchIndexes = (text, regex) => {
-
   const indexes = [];
   let match;
 
@@ -460,7 +463,7 @@ var getRegexMatchIndexes = (text, regex) => {
   }
 
   return indexes;
-}
+};
 
 // Highlights text starting from the given startIndex with the specified length.
 var highlight = (element, startIndex, length) => {
@@ -481,7 +484,7 @@ var highlight = (element, startIndex, length) => {
   }
 
   return true;
-}
+};
 
 window.PostFindMode = PostFindMode;
 window.FindMode = FindMode;
