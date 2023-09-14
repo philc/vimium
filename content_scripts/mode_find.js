@@ -42,6 +42,98 @@ const newPostFindMode = function () {
   return new PostFindMode();
 };
 
+// This class manages the highlighting
+// Logic of this feature is from the extension https://github.com/rogershen/chrome-regex-search
+class Highlightings {
+  //TODO: Understand the oo aspect in the project
+  //TODO: Add tests for this new feature
+  /*** CONSTANTS USED FOR HIGHLIGHTING ***/
+  static ELEMENT_NODE_TYPE = 1;
+  static DEFAULT_HIGHLIGHT_COLOR = '#FFFF00';
+  static DEFAULT_SELECTED_COLOR = '#ff9900';
+  static DEFAULT_TEXT_COLOR = '#000000';
+  static DEFAULT_MAX_RESULTS = 500;
+  static UNEXPANDABLE = /(script|style|svg|audio|canvas|figure|video|select|input|textarea)/i;
+  static TEXT_NODE_TYPE = 3;
+  static HIGHLIGHT_TAG = 'highlight-tag';
+  static WRAPPER_TAG = 'span';
+  static HIGHLIGHT_CLASS = 'highlighted';
+  static WRAPPER_CLASS = 'wrapper-span-highlighting';
+  /*** CONSTANTS USED FOR HIGHLIGHTING ***/
+  
+  /*** LIBRARY FUNCTIONS ***/
+  static documentOffsetTop (element) {
+    return element.offsetTop + ( element.offsetParent ? element.offsetParent.documentOffsetTop() : 0 );
+  };
+  static visible (element) {
+      return (!window.getComputedStyle(element) || window.getComputedStyle(element).getPropertyValue('display') == '' || 
+             window.getComputedStyle(element).getPropertyValue('display') != 'none')
+  }
+  /*** LIBRARY FUNCTIONS ***/
+
+  /* Check if the given node is an expandable node that will yield text nodes */
+  static isExpandable(node) {
+    return node && node.nodeType === Highlightings.ELEMENT_NODE_TYPE && node.childNodes && 
+           !Highlightings.UNEXPANDABLE.test(node.tagName) && Highlightings.visible(node);
+  }
+
+  /* Remove all highlights from page */
+  static removeHighlight() {
+    let node;
+    while (node = document.body.querySelector(Highlightings.HIGHLIGHT_TAG + '.' + Highlightings.HIGHLIGHT_CLASS)) {
+      node.outerHTML = node.innerHTML;
+    }
+    while (node = document.body.querySelector(Highlightings.HIGHLIGHT_TAG + '.' + Highlightings.WRAPPER_CLASS)) {
+      node.outerHTML = node.innerHTML;
+    }
+  }
+
+  /* Check if the given node is a text node */
+  static isTextNode(node) {
+    return node && node.nodeType === Highlightings.TEXT_NODE_TYPE;
+  }
+
+  /* Highlight all text that matches regex */
+  static highlight(regex, highlightColor, selectedColor, textColor, maxResults) {
+    Highlightings.removeHighlight();
+    const searchInfo = {};
+    function highlightRecursive(node) {
+      if(searchInfo.length >= maxResults){
+        return;
+      }
+      if (Highlightings.isTextNode(node)) {
+        var index = node.data.search(regex);
+        if (index >= 0 && node.data.length > 0) {
+          var matchedText = node.data.match(regex)[0];
+          var matchedTextNode = node.splitText(index);
+          matchedTextNode.splitText(matchedText.length);
+          var spanNode = document.createElement(Highlightings.HIGHLIGHT_TAG); 
+          spanNode.className = Highlightings.HIGHLIGHT_CLASS;
+          spanNode.style.backgroundColor = highlightColor;
+          spanNode.style.color = textColor;
+          spanNode.appendChild(matchedTextNode.cloneNode(true));
+          matchedTextNode.parentNode.replaceChild(spanNode, matchedTextNode);
+          searchInfo.highlightedNodes = searchInfo.highlightedNodes || [];
+          searchInfo.highlightedNodes.push(spanNode);
+          searchInfo.length += 1;
+          node.parentNode.innerHTML = 
+            `<${Highlightings.WRAPPER_TAG} class="${Highlightings.WRAPPER_CLASS}">${node.parentNode.innerHTML}</${Highlightings.WRAPPER_TAG}>`;
+          return 1;
+        }
+      } else if (Highlightings.isExpandable(node)) {
+          var children = node.childNodes;
+          for (var i = 0; i < children.length; ++i) {
+            var child = children[i];
+            i += highlightRecursive(child);
+          }
+      }
+      return 0;
+    }
+    highlightRecursive(document.getElementsByTagName('body')[0]);
+  }
+
+}
+
 class PostFindMode extends SuppressPrintable {
   constructor() {
     const element = document.activeElement;
@@ -115,6 +207,7 @@ class FindMode extends Mode {
     }));
 
     HUD.showFindMode(this);
+    Highlightings.removeHighlight();
   }
 
   exit(event) {
@@ -206,6 +299,17 @@ class FindMode extends Mode {
 
     if (this.query.isRegex) {
       this.query.activeRegexIndex = 0;
+    }
+
+    if(this.query.rawQuery){
+      Highlightings.highlight(
+        pattern
+        , Highlightings.DEFAULT_HIGHLIGHT_COLOR
+        , Highlightings.DEFAULT_SELECTED_COLOR
+        , Highlightings.DEFAULT_TEXT_COLOR
+        , Highlightings.DEFAULT_MAX_RESULTS);
+    } else {
+      Highlightings.removeHighlight();
     }
 
     return this.query.matchCount = regexMatches != null ? regexMatches.length : null;
