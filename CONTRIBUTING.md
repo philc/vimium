@@ -115,18 +115,11 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
 
 ### Coding Style
 
-- We follow the recommendations from the
+- Run `deno fmt` at the root of the Vimium project to format your code.
+- We generally follow the recommendations from the
   [Airbnb Javascript style guide](https://github.com/airbnb/javascript).
+- We wrap lines at 100 characters.
 - When writing comments, uppercase the first letter of your sentence, and put a period at the end.
-- We follow two major differences from this style guide:
-  - Wrap lines at 110 characters instead of 100, for historical reasons.
-  - We use double-quoted strings by default, for historical reasons.
-  - We allow short, simple if statements to be used without braces, like so:
-
-        if (string.length == 0)
-          return;
-
-        ...
-- We're currently using Javascript language features from ES2018 or earlier. If we desire to use
-  something introduced in a later version of Javascript, we need to remember to update the minimum
+- We're currently using JavaScript language features from ES2018 or earlier. If we desire to use
+  something introduced in a later version of JavaScript, we need to remember to update the minimum
   Chrome and Firefox versions required.
