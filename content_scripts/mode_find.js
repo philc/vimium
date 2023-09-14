@@ -284,9 +284,9 @@ class FindMode extends Mode {
         );
         const element = this.query.regexMatchedElements[elementIndex];
         const textContent = element.innerText;
-        const matchIndexes = getRegexMatchIndexes(textContent, this.query.regexPattern);
-        if (matchIndexes.length > 0) {
-          const startIndex = matchIndexes[matchIndex];
+        const matchindices = getRegexMatchindices(textContent, this.query.regexPattern);
+        if (matchindices.length > 0) {
+          const startIndex = matchindices[matchIndex];
           result = highlight(element, startIndex, query.length);
         }
       } else {
@@ -430,9 +430,9 @@ const selectFoundInputElement = function () {
 };
 
 // Calculate the original row and column indices in a 2D array based on a flattened index.
-var calculate2DArrayPosition = (a2DArray, flattenedIndex) => {
+const calculate2DArrayPosition = (a2DArray, offset) => {
   let row = 0;
-  let col = flattenedIndex;
+  let col = offset;
 
   for (let i = 0; i < a2DArray.length; i++) {
     const currentRow = a2DArray[i];
@@ -448,25 +448,23 @@ var calculate2DArrayPosition = (a2DArray, flattenedIndex) => {
   return [row, col];
 };
 
-// Retrieve the starting indexes of all matches of the queried pattern within the given text.
-var getRegexMatchIndexes = (text, regex) => {
-  const indexes = [];
+// Retrieve the starting indices of all matches of the queried pattern within the given text.
+const getRegexMatchindices = (text, regex) => {
+  const indices = [];
   let match;
 
-  // Find all matches and record their starting indexes
   while ((match = regex.exec(text)) !== null) {
-    // Ensure a valid match is found before continuing
     if (!match[0]) {
       break;
     }
-    indexes.push(match.index);
+    indices.push(match.index);
   }
 
-  return indexes;
+  return indices;
 };
 
 // Highlights text starting from the given startIndex with the specified length.
-var highlight = (element, startIndex, length) => {
+const highlight = (element, startIndex, length) => {
   if (startIndex === -1) {
     return false;
   }
@@ -478,8 +476,8 @@ var highlight = (element, startIndex, length) => {
   selection.addRange(range);
 
   // Ensure the highlighted element is visible within the viewport.
-  const elementRect = element.getBoundingClientRect();
-  if (elementRect.top < 0 || elementRect.bottom > window.innerHeight) {
+  const rect = element.getBoundingClientRect();
+  if (rect.top < 0 || rect.bottom > window.innerHeight) {
     element.scrollIntoView({ block: "center" });
   }
 
