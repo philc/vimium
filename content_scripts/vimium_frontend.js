@@ -170,7 +170,6 @@ const installModes = function () {
   return normalMode;
 };
 
-
 let previousUrl = document.location.href;
 
 // When we're informed by the background page that a URL in this tab has changed, we check if we

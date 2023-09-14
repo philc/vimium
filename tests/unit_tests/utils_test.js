@@ -231,9 +231,7 @@ context("extractQuery", () => {
 
 context("pick", () => {
   should("omit properties", () => {
-    assert.equal({ a: 1, b: 2 },
-                 Utils.pick({ a: 1, b:2, c: 3},
-                      ["a", "b", "d"]));
+    assert.equal({ a: 1, b: 2 }, Utils.pick({ a: 1, b: 2, c: 3 }, ["a", "b", "d"]));
   });
 });
 

@@ -2,7 +2,6 @@ import "./test_helper.js";
 import "../../lib/settings.js";
 
 context("settings", () => {
-
   setup(async () => {
     // Prior to Vimium 2.0.0, the settings values were encoded as JSON strings.
     await chrome.storage.sync.set({ scrollStepSize: JSON.stringify(123) });
