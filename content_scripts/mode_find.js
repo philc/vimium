@@ -183,9 +183,7 @@ class FindMode extends Mode {
       ? this.query.parsedQuery
       : Utils.escapeRegexSpecialCharacters(this.query.parsedQuery);
 
-    // If we are dealing with a regex, grep for all matches in the text, and then call window.find()
-    // on them sequentially so the browser handles the scrolling / text selection.
-    // If we are doing a basic plain string match, we still want to grep for matches of the string,
+    // Grep for all matches in every text node,
     // so we can show a the number of results.
     try {
       pattern = new RegExp(regexPattern, `g${this.query.ignoreCase ? "i" : ""}`);
@@ -194,48 +192,42 @@ class FindMode extends Mode {
       return;
     }
 
-    let regexMatches;
-    if (this.query.isRegex && regexPattern) {
-      const matchedElements = Array.from(document.body.querySelectorAll("*")).filter((element) => {
-        return element.checkVisibility() &&
-          !element.childElementCount &&
-          element.innerText &&
-          element.innerText.match(pattern);
-      });
-      const matches = matchedElements.map((element) => element.innerText.match(pattern));
-      regexMatches = matches.flat();
-      this.query.regexMatches = regexMatches;
-      this.query.regexPattern = pattern;
-      this.query.regexMatchedElements = matchedElements;
-      this.query.regexMatchesIn2DArray = matches;
-      this.query.hasResults = regexMatches.length > 0;
-    } else {
-      // innerText will not return the text of hidden elements, and strip out tags while preserving
-      // newlines.
-      // NOTE(mrmr1993): innerText doesn't include the text contents of <input>s and <textarea>s. See
-      // #1118.
-      const text = document.body.innerText;
-      regexMatches = text.match(pattern);
-    }
+    const textNodes = getAllTextNodes();
+    const matchedNodes = textNodes.filter((node) => {
+      return node.textContent.match(pattern);
+    });
+    const regexMatches = matchedNodes.map((node) => node.textContent.match(pattern));
+    this.query.regexMatches = regexMatches;
+    this.query.regexPattern = pattern;
+    this.query.regexMatchedNodes = matchedNodes;
+    this.query.activeRegexIndices = [0, 0];
 
-    if (this.query.isRegex) {
-      this.query.activeRegexIndex = 0;
-    }
-
-    return this.query.matchCount = regexMatches != null ? regexMatches.length : null;
+    return this.query.matchCount = regexMatches != null ? regexMatches.flat().length : null;
   }
 
   static getNextQueryFromRegexMatches(stepSize) {
     // find()ing an empty query always returns false
-    if (!this.query.regexMatches) {
+    if (!this.query.regexMatches || !this.query.regexMatches.length) {
       return "";
     }
 
-    const totalMatches = this.query.regexMatches.length;
-    this.query.activeRegexIndex += stepSize + totalMatches;
-    this.query.activeRegexIndex %= totalMatches;
+    let [row, col] = this.query.activeRegexIndices;
+    let numRows = this.query.regexMatches.length;
+    col += stepSize;
+    while (col < 0 || col >= this.query.regexMatches[row].length) {
+      if (col < 0) {
+        row += numRows - 1;
+        row %= numRows;
+        col += this.query.regexMatches[row].length;
+      } else {
+        col -= this.query.regexMatches[row].length;
+        row += 1;
+        row %= numRows;
+      }
+    }
+    this.query.activeRegexIndices = [row, col];
 
-    return this.query.regexMatches[this.query.activeRegexIndex];
+    return this.query.regexMatches[row][col];
   }
 
   // Returns null if no search has been performed yet.
@@ -247,11 +239,7 @@ class FindMode extends Mode {
       this.updateQuery(mostRecentQuery);
     }
 
-    if (this.query.isRegex) {
-      return this.getNextQueryFromRegexMatches(backwards ? -1 : 1);
-    } else {
-      return this.query.parsedQuery;
-    }
+    return this.getNextQueryFromRegexMatches(backwards ? -1 : 1);
   }
 
   static saveQuery() {
@@ -276,31 +264,16 @@ class FindMode extends Mode {
       document.removeEventListener("selectionchange", this.restoreDefaultSelectionHighlight, true);
     }
 
-    try {
-      if (FindMode.query.isRegex && this.query.hasResults) {
-        const [elementIndex, matchIndex] = calculate2DArrayPosition(
-          this.query.regexMatchesIn2DArray,
-          this.query.activeRegexIndex,
-        );
-        const element = this.query.regexMatchedElements[elementIndex];
-        const textContent = element.innerText;
-        const matchindices = getRegexMatchindices(textContent, this.query.regexPattern);
-        if (matchindices.length > 0) {
-          const startIndex = matchindices[matchIndex];
-          result = highlight(element, startIndex, query.length);
-        }
-      } else {
-        result = window.find(
-          query,
-          options.caseSensitive,
-          options.backwards,
-          true,
-          false,
-          false,
-          false,
-        );
+    if (this.query.regexMatches && this.query.regexMatches.length) {
+      const [row, col] = this.query.activeRegexIndices;
+      const node = this.query.regexMatchedNodes[row];
+      const text = node.textContent;
+      const matchIndices = getRegexMatchIndices(text, this.query.regexPattern);
+      if (matchIndices.length > 0) {
+        const startIndex = matchIndices[col];
+        result = highlight(node, startIndex, query.length);
       }
-    } catch { /* swallow */ } // Failed searches throw on Firefox.
+    }
 
     // window.find focuses the |window| that it is called on. This gives us an opportunity to
     // (re-)focus another element/window, if that isn't the behaviour we want.
@@ -429,27 +402,8 @@ const selectFoundInputElement = function () {
   }
 };
 
-// Calculate the original row and column indices in a 2D array based on a flattened index.
-const calculate2DArrayPosition = (a2DArray, offset) => {
-  let row = 0;
-  let col = offset;
-
-  for (let i = 0; i < a2DArray.length; i++) {
-    const currentRow = a2DArray[i];
-
-    if (col < currentRow.length) {
-      break;
-    } else {
-      row++;
-      col -= currentRow.length;
-    }
-  }
-
-  return [row, col];
-};
-
 // Retrieve the starting indices of all matches of the queried pattern within the given text.
-const getRegexMatchindices = (text, regex) => {
+const getRegexMatchIndices = (text, regex) => {
   const indices = [];
   let match;
 
@@ -464,24 +418,42 @@ const getRegexMatchindices = (text, regex) => {
 };
 
 // Highlights text starting from the given startIndex with the specified length.
-const highlight = (element, startIndex, length) => {
+const highlight = (textNode, startIndex, length) => {
   if (startIndex === -1) {
     return false;
   }
   const selection = window.getSelection();
   const range = document.createRange();
-  range.setStart(element.firstChild, startIndex);
-  range.setEnd(element.firstChild, startIndex + length);
+  range.setStart(textNode, startIndex);
+  range.setEnd(textNode, startIndex + length);
   selection.removeAllRanges();
   selection.addRange(range);
 
   // Ensure the highlighted element is visible within the viewport.
-  const rect = element.getBoundingClientRect();
+  const rect = textNode.parentElement.getBoundingClientRect();
   if (rect.top < 0 || rect.bottom > window.innerHeight) {
-    element.scrollIntoView({ block: "center" });
+    textNode.parentElement.scrollIntoView({ block: "center" });
   }
 
   return true;
+};
+
+const getAllTextNodes = () => {
+  function getAllTextNodes(node, textNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      textNodes.push(node);
+    } else if (node.nodeType === Node.ELEMENT_NODE && node.checkVisibility()) {
+      const children = node.childNodes;
+      for (const child of children) {
+        getAllTextNodes(child, textNodes);
+      }
+    }
+  }
+
+  const textNodes = [];
+
+  getAllTextNodes(document.body, textNodes);
+  return textNodes;
 };
 
 window.PostFindMode = PostFindMode;
