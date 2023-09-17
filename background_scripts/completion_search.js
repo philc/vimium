@@ -91,12 +91,6 @@ const CompletionSearch = {
   //  - searchUrl is the search engine's URL, e.g. Settings.get("searchUrl"), or a custom search
   //    engine's URL. This is only used as a key for determining the relevant completion engine.
   //  - queryTerms are the query terms.
-  //  - callback will be applied to a list of suggestion strings (which may be an empty list, if
-  //    anything goes wrong).
-  //
-  // If no callback is provided, then we're to provide suggestions only if we can do so
-  // synchronously (ie. from a cache). In this case we just return the results. Returns null if we
-  // cannot service the request synchronously.
   async complete(searchUrl, queryTerms) {
     const query = queryTerms.join(" ").toLowerCase();
 
