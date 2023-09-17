@@ -385,10 +385,10 @@ const followLink = function (linkElement) {
 
 //
 // Find and follow a link which matches any one of a list of strings. If there are multiple such
-// links, they are prioritized for shortness, by their position in :linkStrings, how far down the
+// links, they are prioritized for shortness, by their position in `linkStrings`, how far down the
 // page they are located, and finally by whether the match is exact. Practically speaking, this
 // means we favor 'next page' over 'the next big thing', and 'more' over 'nextcompany', even if
-// 'next' occurs before 'more' in :linkStrings.
+// 'next' occurs before 'more' in `linkStrings`.
 //
 const findAndFollowLink = function (linkStrings) {
   let link, linkString;
@@ -412,36 +412,28 @@ const findAndFollowLink = function (linkStrings) {
     }
 
     const computedStyle = window.getComputedStyle(link, null);
-    if (
-      (computedStyle.getPropertyValue("visibility") !== "visible") ||
-      (computedStyle.getPropertyValue("display") === "none")
-    ) {
-      continue;
-    }
+    const isHidden = computedStyle.getPropertyValue("visibility") != "visible" ||
+      computedStyle.getPropertyValue("display") == "none";
+    if (isHidden) continue;
 
     let linkMatches = false;
     for (linkString of linkStrings) {
-      if (
-        (link.innerText.toLowerCase().indexOf(linkString) !== -1) ||
-        (link.value && link.value.includes && link.value.includes(linkString))
-      ) {
+      const matches = link.innerText.toLowerCase().indexOf(linkString) != -1 ||
+        link.value?.includes?.(linkString);
+      if (matches) {
         linkMatches = true;
         break;
       }
     }
 
-    if (!linkMatches) {
-      continue;
-    }
+    if (!linkMatches) continue;
 
     candidateLinks.push(link);
   }
 
-  if (candidateLinks.length == 0) {
-    return;
-  }
+  if (candidateLinks.length == 0) return;
 
-  for (link of candidateLinks) {
+  for (const link of candidateLinks) {
     link.wordCount = link.innerText.trim().split(/\s+/).length;
   }
 
