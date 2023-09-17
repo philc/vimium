@@ -177,26 +177,29 @@ const BackgroundCommands = {
           request.urls = urlList;
         } else {
           // Otherwise, just create a new tab.
-          const newTabUrl = Settings.get("newTabUrl");
-          if (newTabUrl === "pages/blank.html") {
+          let newTabUrl = Settings.get("newTabUrl");
+          if (newTabUrl == "pages/blank.html") {
             // "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab"
             // instead.
-            request.urls = [
-              request.tab.incognito ? "chrome://newtab" : chrome.runtime.getURL(newTabUrl),
-            ];
-          } else {
-            request.urls = [newTabUrl];
+            newTabUrl =
+              request.tab.incognito
+                ? Settings.defaultOptions.newTabUrl
+                : chrome.runtime.getURL(newTabUrl);
           }
+          request.urls = [newTabUrl];
         }
       }
     }
     if (request.registryEntry.options.incognito || request.registryEntry.options.window) {
+      // Firefox does not allow an incognito window to be created with the URL about:newtab. It
+      // throws this error: "Illegal URL: about:newtab".
+      const urls = request.urls.filter((u) => u != Settings.defaultOptions.newTabUrl);
       const windowConfig = {
-        url: request.urls,
+        url: urls,
         incognito: request.registryEntry.options.incognito || false,
       };
-      const result = await chrome.windows.create(windowConfig);
-      callback(request);
+      await chrome.windows.create(windowConfig);
+      callback(request)
     } else {
       let openNextUrl;
       const urls = request.urls.slice().reverse();
