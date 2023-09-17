@@ -391,7 +391,6 @@ const followLink = function (linkElement) {
 // 'next' occurs before 'more' in `linkStrings`.
 //
 const findAndFollowLink = function (linkStrings) {
-  let link, linkString;
   const linksXPath = DomUtils.makeXPath([
     "a",
     "*[@onclick or @role='link' or contains(@class, 'button')]",
@@ -403,7 +402,7 @@ const findAndFollowLink = function (linkStrings) {
   // links lower in the page are more likely to be the ones we want, so we loop through the snapshot
   // backwards
   for (let i = links.snapshotLength - 1; i >= 0; i--) {
-    link = links.snapshotItem(i);
+    const link = links.snapshotItem(i);
 
     // ensure link is visible (we don't mind if it is scrolled offscreen)
     const boundingClientRect = link.getBoundingClientRect();
@@ -417,9 +416,11 @@ const findAndFollowLink = function (linkStrings) {
     if (isHidden) continue;
 
     let linkMatches = false;
-    for (linkString of linkStrings) {
-      const matches = link.innerText.toLowerCase().indexOf(linkString) != -1 ||
-        link.value?.includes?.(linkString);
+    for (const linkString of linkStrings) {
+      const matches = link.innerText.toLowerCase().includes(linkString) ||
+        link.value?.includes?.(linkString) ||
+        link.getAttribute("title")?.toLowerCase().includes(linkString) ||
+        link.getAttribute("aria-label")?.toLowerCase().includes(linkString);
       if (matches) {
         linkMatches = true;
         break;
@@ -453,14 +454,16 @@ const findAndFollowLink = function (linkStrings) {
     })
     .filter((a) => a.wordCount <= (candidateLinks[0].wordCount + 1));
 
-  for (linkString of linkStrings) {
+  for (const linkString of linkStrings) {
     const exactWordRegex = /\b/.test(linkString[0]) || /\b/.test(linkString[linkString.length - 1])
       ? new RegExp("\\b" + linkString + "\\b", "i")
       : new RegExp(linkString, "i");
     for (const candidateLink of candidateLinks) {
       if (
-        exactWordRegex.test(candidateLink.innerText) ||
-        (candidateLink.value && exactWordRegex.test(candidateLink.value))
+        candidateLink.innerText.match(exactWordRegex) ||
+        candidateLink.value?.match(exactWordRegex) ||
+        candidateLink.getAttribute("title")?.match(exactWordRegex) ||
+        candidateLink.getAttribute("aria-label")?.match(exactWordRegex)
       ) {
         followLink(candidateLink);
         return true;
