@@ -149,9 +149,12 @@ const moveTab = function ({ count, tab, registryEntry }) {
   });
 };
 
+// TODO(philc): Rename to createRepeatCommand.
 const mkRepeatCommand = (command) => (function (request) {
   request.count--;
   if (request.count >= 0) {
+    // TODO(philc): I think we can remove this return statement, and all returns
+    // from commands built using mkRepeatCommand.
     return command(request, (request) => (mkRepeatCommand(command))(request));
   }
 });
@@ -159,10 +162,10 @@ const mkRepeatCommand = (command) => (function (request) {
 // These are commands which are bound to keystrokes which must be handled by the background page.
 // They are mapped in commands.coffee.
 const BackgroundCommands = {
-  // Create a new tab.  Also, with:
+  // Create a new tab. Also, with:
   //     map X createTab http://www.bbc.com/news
   // create a new tab with the given URL.
-  createTab: mkRepeatCommand(function (request, callback) {
+  createTab: mkRepeatCommand(async function (request, callback) {
     if (request.urls == null) {
       if (request.url) {
         // If the request contains a URL, then use it.
@@ -187,13 +190,13 @@ const BackgroundCommands = {
         }
       }
     }
-
     if (request.registryEntry.options.incognito || request.registryEntry.options.window) {
       const windowConfig = {
         url: request.urls,
         incognito: request.registryEntry.options.incognito || false,
       };
-      return chrome.windows.create(windowConfig, () => callback(request));
+      const result = await chrome.windows.create(windowConfig);
+      callback(request);
     } else {
       let openNextUrl;
       const urls = request.urls.slice().reverse();
