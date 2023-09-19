@@ -145,7 +145,7 @@ class FindMode extends Mode {
     // characters. See #1434.
     this.restoreSelection();
     query = FindMode.query.isRegex
-      ? FindMode.getNextQueryFromRegexMatches(0)
+      ? FindMode.getQueryFromRegexMatches()
       : FindMode.query.parsedQuery;
     FindMode.query.hasResults = FindMode.execute(query, options);
   }
@@ -200,16 +200,51 @@ class FindMode extends Mode {
     this.query.regexMatches = regexMatches;
     this.query.regexPattern = pattern;
     this.query.regexMatchedNodes = matchedNodes;
-    this.query.activeRegexIndices = [0, 0];
+    this.updateActiveRegexIndices();
 
     return this.query.matchCount = regexMatches != null ? regexMatches.flat().length : null;
   }
 
-  static getNextQueryFromRegexMatches(stepSize) {
+  // set activeRegexIndices near the latest selection
+  static updateActiveRegexIndices() {
+    let activeNodeIndex = -1;
+    const matchedNodes = this.query.regexMatchedNodes;
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      activeNodeIndex = matchedNodes.indexOf(selection.anchorNode);
+
+      if (activeNodeIndex === -1) {
+        activeNodeIndex = this.query.regexMatchedNodes.findIndex((node) => {
+          const range = selection.getRangeAt(0);
+
+          if (range) {
+            let sourceRange = document.createRange();
+            sourceRange.setStart(node, 0);
+            return range.compareBoundaryPoints(Range.START_TO_START, sourceRange) <= 0;
+          } else {
+            return false;
+          }
+        });
+      }
+    }
+    this.query.activeRegexIndices = [Math.max(activeNodeIndex, 0), 0];
+  }
+
+  static getQueryFromRegexMatches() {
     // find()ing an empty query always returns false
-    if (!this.query.regexMatches || !this.query.regexMatches.length) {
+    if (!this.query.regexMatches?.length) {
       return "";
     }
+    let [row, col] = this.query.activeRegexIndices;
+    return this.query.regexMatches[row][col];
+  }
+
+  static getNextQueryFromRegexMatches(backwards) {
+    // find()ing an empty query always returns false
+    if (!this.query.regexMatches?.length) {
+      return "";
+    }
+    const stepSize = backwards ? -1 : 1;
 
     let [row, col] = this.query.activeRegexIndices;
     let numRows = this.query.regexMatches.length;
@@ -239,7 +274,7 @@ class FindMode extends Mode {
       this.updateQuery(mostRecentQuery);
     }
 
-    return this.getNextQueryFromRegexMatches(backwards ? -1 : 1);
+    return this.getNextQueryFromRegexMatches(backwards);
   }
 
   static saveQuery() {
@@ -264,7 +299,7 @@ class FindMode extends Mode {
       document.removeEventListener("selectionchange", this.restoreDefaultSelectionHighlight, true);
     }
 
-    if (this.query.regexMatches && this.query.regexMatches.length) {
+    if (this.query.regexMatches?.length) {
       const [row, col] = this.query.activeRegexIndices;
       const node = this.query.regexMatchedNodes[row];
       const text = node.textContent;
@@ -439,7 +474,9 @@ const highlight = (textNode, startIndex, length) => {
 };
 
 const getAllTextNodes = () => {
-  function getAllTextNodes(node, textNodes) {
+  const textNodes = [];
+
+  function getAllTextNodes(node) {
     if (node.nodeType === Node.TEXT_NODE) {
       textNodes.push(node);
     } else if (node.nodeType === Node.ELEMENT_NODE && node.checkVisibility()) {
@@ -450,9 +487,7 @@ const getAllTextNodes = () => {
     }
   }
 
-  const textNodes = [];
-
-  getAllTextNodes(document.body, textNodes);
+  getAllTextNodes(document.body);
   return textNodes;
 };
 
