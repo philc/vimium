@@ -38,7 +38,7 @@ class LocalHint {
   element; // The clickable element.
   image; // When element is an <area> (image map), `image` is its associated image.
   rect; // The rectangle where the hint should shown, to avoid overlapping with other hints.
-  zIndex; // Tracking z-Index of parent
+  parentZIndex; // Tracking z-Index of parent.
   linkText; // Used in FilterHints.
   showLinkText; // Used in FilterHints.
   // The reason that an element has a link hint when the reason isn't obvious, e.g. the body of a
@@ -448,7 +448,7 @@ class LinkHintsMode {
       // If a clickable element has zIndex > nextZIndex, we use this z-index + 1.
       // Rotation may not work for these hints in some cases but they are not obscured anymore.
       // This was a long time issue especially with cookie banners.
-      zIndex = Math.max(this.getNextZIndex(), localHint.zIndex + 1)
+      zIndex = Math.max(this.getNextZIndex(), localHint.parentZIndex + 1);
       el.style.zIndex = zIndex;
       el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
       Object.assign(marker, {
@@ -1219,8 +1219,8 @@ const LocalHints = {
     }
 
     if (isClickable) {
-      // Track z-Index to prevent obscuring of link hints
-      zIndex = Utils.findNonAutoZIndex(element)
+      // Track z-Index to prevent obscuring of link hints.
+      zIndex = DomUtils.findNonAutoZIndex(element);
       // An image map has multiple clickable areas, and so can represent multiple LocalHints.
       if (imageMapAreas.length > 0) {
         const mapHints = imageMapAreas.map((areaAndRect) => {
@@ -1229,7 +1229,7 @@ const LocalHints = {
             image: element,
             // element,
             rect: areaAndRect.rect,
-            zIndex: zIndex,
+            parentZIndex: zIndex,
             secondClassCitizen: onlyHasTabIndex,
             possibleFalsePositive,
             reason,
@@ -1242,7 +1242,7 @@ const LocalHints = {
           const hint = new LocalHint({
             element,
             rect: clientRect,
-            zIndex: zIndex,
+            parentZIndex: zIndex,
             secondClassCitizen: onlyHasTabIndex,
             possibleFalsePositive,
             reason,
