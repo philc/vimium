@@ -38,6 +38,7 @@ class LocalHint {
   element; // The clickable element.
   image; // When element is an <area> (image map), `image` is its associated image.
   rect; // The rectangle where the hint should shown, to avoid overlapping with other hints.
+  zIndex; // Tracking z-Index of parent
   linkText; // Used in FilterHints.
   showLinkText; // Used in FilterHints.
   // The reason that an element has a link hint when the reason isn't obvious, e.g. the body of a
@@ -444,7 +445,11 @@ class LinkHintsMode {
       el.style.left = localHint.rect.left + "px";
       el.style.top = localHint.rect.top + "px";
       // Each hint marker is assigned a different z-index.
-      el.style.zIndex = this.getNextZIndex();
+      // If a clickable element has zIndex > nextZIndex, we use this z-index + 1.
+      // Rotation may not work for these hints in some cases but they are not obscured anymore.
+      // This was a long time issue especially with cookie banners.
+      zIndex = Math.max(this.getNextZIndex(), localHint.zIndex + 1)
+      el.style.zIndex = zIndex;
       el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
       Object.assign(marker, {
         element: el,
@@ -1214,6 +1219,8 @@ const LocalHints = {
     }
 
     if (isClickable) {
+      // Track z-Index to prevent obscuring of link hints
+      zIndex = Utils.findNonAutoZIndex(element)
       // An image map has multiple clickable areas, and so can represent multiple LocalHints.
       if (imageMapAreas.length > 0) {
         const mapHints = imageMapAreas.map((areaAndRect) => {
@@ -1222,6 +1229,7 @@ const LocalHints = {
             image: element,
             // element,
             rect: areaAndRect.rect,
+            zIndex: zIndex,
             secondClassCitizen: onlyHasTabIndex,
             possibleFalsePositive,
             reason,
@@ -1234,6 +1242,7 @@ const LocalHints = {
           const hint = new LocalHint({
             element,
             rect: clientRect,
+            zIndex: zIndex,
             secondClassCitizen: onlyHasTabIndex,
             possibleFalsePositive,
             reason,
