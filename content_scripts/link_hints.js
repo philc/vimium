@@ -448,7 +448,7 @@ class LinkHintsMode {
       // If a clickable element has zIndex > nextZIndex, we use this z-index + 1.
       // Rotation may not work for these hints in some cases but they are not obscured anymore.
       // This was a long time issue especially with cookie banners.
-      zIndex = Math.max(this.getNextZIndex(), localHint.parentZIndex + 1);
+      const zIndex = Math.max(this.getNextZIndex(), localHint.parentZIndex + 1);
       el.style.zIndex = zIndex;
       el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
       Object.assign(marker, {
@@ -1220,7 +1220,7 @@ const LocalHints = {
 
     if (isClickable) {
       // Track z-Index to prevent obscuring of link hints.
-      zIndex = DomUtils.findNonAutoZIndex(element);
+      const parentZIndex = DomUtils.findNonAutoZIndex(element);
       // An image map has multiple clickable areas, and so can represent multiple LocalHints.
       if (imageMapAreas.length > 0) {
         const mapHints = imageMapAreas.map((areaAndRect) => {
@@ -1229,7 +1229,7 @@ const LocalHints = {
             image: element,
             // element,
             rect: areaAndRect.rect,
-            parentZIndex: zIndex,
+            parentZIndex: parentZIndex,
             secondClassCitizen: onlyHasTabIndex,
             possibleFalsePositive,
             reason,
@@ -1242,7 +1242,7 @@ const LocalHints = {
           const hint = new LocalHint({
             element,
             rect: clientRect,
-            parentZIndex: zIndex,
+            parentZIndex: parentZIndex,
             secondClassCitizen: onlyHasTabIndex,
             possibleFalsePositive,
             reason,
