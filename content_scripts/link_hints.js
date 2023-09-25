@@ -1220,7 +1220,7 @@ const LocalHints = {
 
     if (isClickable) {
       // Track z-Index to prevent obscuring of link hints.
-      const parentZIndex = DomUtils.findNonAutoZIndex(element);
+      const parentZIndex = DomUtils.findZIndex(element);
       // An image map has multiple clickable areas, and so can represent multiple LocalHints.
       if (imageMapAreas.length > 0) {
         const mapHints = imageMapAreas.map((areaAndRect) => {
