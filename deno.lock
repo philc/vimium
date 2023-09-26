@@ -1,5 +1,9 @@
 {
-  "version": "2",
+  "version": "3",
+  "redirects": {
+    "https://deno.land/std/fs/mod.ts": "https://deno.land/std@0.138.0/fs/mod.ts",
+    "https://deno.land/x/json5/mod.ts": "https://deno.land/x/json5@v1.0.0/mod.ts"
+  },
   "remote": {
     "https://cdn.skypack.dev/-/json5@v2.2.3-595sOcismSLIYZuuBGYo/dist=es2019,mode=imports/optimized/json5.js": "e3902909af865e1bab65bf170d79bc0d6f72f2c3626601aed12d9b0aaee3169c",
     "https://cdn.skypack.dev/json5": "9e731bca7ee24e6532af2f3745357ff72c9be405ebb2b0eba8489e589ba13ee8",
