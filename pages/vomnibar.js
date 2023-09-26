@@ -173,8 +173,7 @@ class VomnibarUI {
   }
 
   onKeyEvent(event) {
-    let action, completion;
-    this.lastAction = action = this.actionFromKeyEvent(event);
+    const action = this.actionFromKeyEvent(event);
     if (!action) {
       return true; // pass through
     }
@@ -260,7 +259,7 @@ class VomnibarUI {
         return true; // Do not suppress event.
       }
     } else if ((action === "remove") && (0 <= this.selection)) {
-      completion = this.completions[this.selection];
+      const completion = this.completions[this.selection];
       console.log(completion);
     }
 
