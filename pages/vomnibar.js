@@ -206,8 +206,13 @@ class VomnibarUI {
       this.updateSelection();
     } else if (action === "enter") {
       const isPrimarySearchSuggestion = (c) => c?.isPrimarySuggestion && c?.isCustomSearch;
-      const completion = this.completions[this.selection];
       let query = this.input.value.trim();
+
+      // Note that it's possible that this.completions is empty. This can happen in practice if the
+      // user hits enter quickly after loading the vomnibar, before the filterCompletions request to
+      // the background page finishes.
+      const waitingOnCompletions = this.completions.length == 0;
+      const completion = this.completions[this.selection];
 
       // If the user types something and hits enter without selecting a completion from the list,
       // then:
@@ -219,12 +224,12 @@ class VomnibarUI {
       //  that which is included in the URL associated with the primary suggestion, because the
       //  suggestions are updated asynchronously. Therefore, to avoid a race condition, we construct
       //  the search URL from the actual contents of the input (query).
-      if (this.selection == -1) {
+      if (waitingOnCompletions || this.selection == -1) {
         // <Enter> on an empty query is a no-op.
         if (query.length == 0) return;
         const firstCompletion = this.completions[0];
         if (isPrimarySearchSuggestion(firstCompletion)) {
-          query = Utils.createSearchUrl(query, firstCompletion.searchUrl);
+          query = Utils.createSearchUrl(query, firstCompletion?.searchUrl);
         }
         this.hide(() => this.launchUrl(query, openInNewTab));
       } else if (isPrimarySearchSuggestion(completion)) {
