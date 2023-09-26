@@ -211,19 +211,21 @@ class Qwant extends BaseEngine {
 }
 
 // Brave is a privacy-friendly search engine.
-class Brave extends BaseEngine{
+class Brave extends BaseEngine {
   constructor() {
     super({
       engineUrl: "https://search.brave.com/api/suggest?rich=false&q=%s",
       regexps: ["^https?://search\\.brave\\.com/"],
       example: {
         searchUrl: "https://search.brave.com/search?q=%s",
-        keyword: "br"
-      }
+        keyword: "br",
+      },
     });
   }
 
-  parse(text) { return JSON.parse(text)[1]; }
+  parse(text) {
+    return JSON.parse(text)[1];
+  }
 }
 
 // On the user-facing documentation page pages/completion_engines.html, these completion search
@@ -238,7 +240,7 @@ const CompletionEngines = [
   Amazon,
   Webster,
   Qwant,
-  Brave
+  Brave,
 ];
 
 globalThis.CompletionEngines = CompletionEngines;

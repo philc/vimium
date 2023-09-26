@@ -181,10 +181,9 @@ const BackgroundCommands = {
           if (newTabUrl == "pages/blank.html") {
             // "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab"
             // instead.
-            newTabUrl =
-              request.tab.incognito
-                ? Settings.defaultOptions.newTabUrl
-                : chrome.runtime.getURL(newTabUrl);
+            newTabUrl = request.tab.incognito
+              ? Settings.defaultOptions.newTabUrl
+              : chrome.runtime.getURL(newTabUrl);
           }
           request.urls = [newTabUrl];
         }
@@ -199,7 +198,7 @@ const BackgroundCommands = {
         incognito: request.registryEntry.options.incognito || false,
       };
       await chrome.windows.create(windowConfig);
-      callback(request)
+      callback(request);
     } else {
       let openNextUrl;
       const urls = request.urls.slice().reverse();
