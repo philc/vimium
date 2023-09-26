@@ -186,7 +186,7 @@ class VomnibarUI {
     } else if (["tab", "down"].includes(action)) {
       if (
         (action === "tab") &&
-        (this.completer.name === "omni") &&
+        (this.completerName === "omni") &&
         !this.seenTabToOpenCompletionList &&
         (this.input.value.trim().length === 0)
       ) {
