@@ -619,9 +619,7 @@ class MultiCompleter {
     }
   }
 
-  async filter(request, onComplete) {
-    Utils.assert(onComplete == null, "completer.filter called with a callback");
-
+  async filter(request) {
     const searchEngineCompleter = this.completers.find((c) => c instanceof SearchEngineCompleter);
     const query = request.query;
     const queryTerms = request.queryTerms;
