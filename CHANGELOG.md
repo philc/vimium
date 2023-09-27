@@ -1,10 +1,25 @@
-2.0.0 (unreleased)
+2.0.0 (2023-09-28 -- partially released to the Chrome store)
 
-- Support manifest v3. Chrome is requiring all extensions support this. This required a partial
-  rewrite and many changes. Please report any issues [here](https://github.com/philc/vimium/issues).
-- Revamped the UI for the action bar, which configures which keys Vimium ignores on a particular
-  site.
+- Support manifest v3, as now required by Chrome. This involved a partial rewrite and many changes.
+  Please report any new issues [here](https://github.com/philc/vimium/issues).
+- The storage format for Vimium's options has changed in v2.x. That means an options backup from
+  Vimium v2.x cannot be loaded on Vimium v1.x installations.
+- Revamp the action bar UI, which configures which keys Vimium ignores on a particular site.
+- Improve Vimium's options UI.
+- Show link hints for image maps. ([#3493](https://github.com/philc/vimium/issues/3493))
 - Remove the use of window.unload handlers, in preparation for Chrome's bfcache.
+  ([#4265](https://github.com/philc/vimium/issues/4265))
+- Allow find mode to work when using only private windows.
+  ([#3614](https://github.com/philc/vimium/issues/3614))
+- Add a count option to closeTabsOnLeft and closeTabsOnRight commands, to allow binding a key to
+  "close just 1 tab on the left/right" rather than closing all tabs, as is the default. E.g. `map cl
+  closeTabsOnLeft count=1`. ([#4296](https://github.com/philc/vimium/pull/4296))
+- Add search completions for Brave Search. ([#3851](https://github.com/philc/vimium/pull/3851))
+- Make regular expressions in find mode work again; other find mode improvements.
+  ([#4261](https://github.com/philc/vimium/issues/4261))
+- Bug fixes. ([#3944](https://github.com/philc/vimium/pull/3944),
+[#3752](https://github.com/philc/vimium/pull/3752),
+[#3675](https://github.com/philc/vimium/pull/3675))
 
 1.67.7 (2023-07-12)
 
