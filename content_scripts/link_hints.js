@@ -620,8 +620,6 @@ class LinkHintsMode {
     const newMarkers = []
     for (let stack of stacks) {
       if (stack.length > 1) {
-        // Push the first element to the end.
-        // stack = stack.concat(stack.splice(0, 1))
         // Push the last element to the beginning.
         stack = stack.splice(-1, 1).concat(stack)
       }
