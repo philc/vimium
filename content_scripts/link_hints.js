@@ -366,7 +366,7 @@ class LinkHintsMode {
     this.stableSortCount = 0;
     this.hintMarkers = hintDescriptors.map((desc) => this.createMarkerFor(desc));
     this.markerMatcher = Settings.get("filterLinkHints") ? new FilterHints() : new AlphabetHints();
-    this.markerMatcher.fillInMarkers(this.hintMarkers, this.getNextZIndex.bind(this));
+    this.markerMatcher.fillInMarkers(this.hintMarkers);
 
     this.hintMode = new Mode();
     this.hintMode.init({
@@ -389,24 +389,17 @@ class LinkHintsMode {
       }
     });
 
+    this.renderHints();
+    this.setIndicator();
+  }
+
+  renderHints() {
     // Append these markers as top level children instead of as child nodes to the link itself,
     // because some clickable elements cannot contain children, e.g. submit buttons.
     this.hintMarkerContainingDiv = DomUtils.addElementsToPage(
       this.hintMarkers.filter((m) => m.isLocalMarker()).map((m) => m.element),
-      { id: "vimiumHintMarkerContainer", className: "vimiumReset" },
+      { id: "vimiumHintMarkerContainer", className: "vimiumReset" }
     );
-
-    this.setIndicator();
-  }
-
-  // Increments and returns the Z index that should be used for the next hint marker on the page.
-  getNextZIndex() {
-    if (this.currentZIndex == null) {
-      // This is the starting z-index value; it produces z-index values which are greater than all
-      // of the other z-index values used by Vimium.
-      this.currentZIndex = 2140000000;
-    }
-    return ++this.currentZIndex;
   }
 
   setOpenLinkMode(mode, shouldPropagateToOtherFrames) {
@@ -444,7 +437,6 @@ class LinkHintsMode {
       el.style.left = localHint.rect.left + "px";
       el.style.top = localHint.rect.top + "px";
       // Each hint marker is assigned a different z-index.
-      el.style.zIndex = this.getNextZIndex();
       el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
       Object.assign(marker, {
         element: el,
@@ -557,7 +549,6 @@ class LinkHintsMode {
     const { linksMatched, userMightOverType } = this.markerMatcher.getMatchingHints(
       this.hintMarkers,
       tabCount,
-      this.getNextZIndex.bind(this),
     );
     if (linksMatched.length === 0) {
       this.deactivateMode();
@@ -590,7 +581,6 @@ class LinkHintsMode {
     const localHintMarkers = this.hintMarkers.filter((m) =>
       m.isLocalMarker() && (m.element.style.display !== "none")
     );
-
     // Fill in the markers' rects, if necessary.
     for (const marker of localHintMarkers) {
       if (marker.markerRect == null) {
@@ -627,17 +617,18 @@ class LinkHintsMode {
       }
     }
 
-    // Rotate the z-indexes within each stack.
-    for (const stack of stacks) {
+    const newMarkers = []
+    for (let stack of stacks) {
       if (stack.length > 1) {
-        const zIndexes = stack.map((marker) => marker.element.style.zIndex);
-        zIndexes.push(zIndexes[0]);
-        for (let index = 0; index < stack.length; index++) {
-          const marker = stack[index];
-          marker.element.style.zIndex = zIndexes[index + 1];
-        }
+        // Push the first element to the end.
+        // stack = stack.concat(stack.splice(0, 1))
+        // Push the last element to the beginning.
+        stack = stack.splice(-1, 1).concat(stack)
       }
+      newMarkers.push(...stack)
     }
+    this.hintMarkers = newMarkers;
+    this.renderHints();
   }
 
   isGoogleSearchResultsPage() {
@@ -866,7 +857,7 @@ class FilterHints {
     marker.element.innerHTML = spanWrap(caption);
   }
 
-  fillInMarkers(hintMarkers, getNextZIndex) {
+  fillInMarkers(hintMarkers) {
     for (const marker of hintMarkers) {
       if (marker.isLocalMarker()) {
         this.renderMarker(marker);
@@ -875,10 +866,10 @@ class FilterHints {
 
     // We use getMatchingHints() here (although we know that all of the hints will match) to get an
     // order on the hints and highlight the first one.
-    return this.getMatchingHints(hintMarkers, 0, getNextZIndex);
+    return this.getMatchingHints(hintMarkers, 0);
   }
 
-  getMatchingHints(hintMarkers, tabCount, getNextZIndex) {
+  getMatchingHints(hintMarkers, tabCount) {
     // At this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the
     // latest input. Use them to filter the link hints accordingly.
     const matchString = this.hintKeystrokeQueue.join("");
@@ -899,7 +890,6 @@ class FilterHints {
 
     if (this.activeHintMarker?.element) {
       this.activeHintMarker.element.classList.add("vimiumActiveHintMarker");
-      this.activeHintMarker.element.style.zIndex = getNextZIndex();
     }
 
     return {
