@@ -79,8 +79,8 @@ async function buildStorePackage() {
     "MIT-LICENSE.txt",
     "dist",
     "make.js",
-    "node_modules",
-    "package-lock.json",
+    "deno.json",
+    "deno.lock",
     "test_harnesses",
     "tests",
   ];
