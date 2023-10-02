@@ -515,4 +515,24 @@ iframe.vimiumNonClickable {
     box-shadow: none;
     color: white;
   }
+
+  /* Dark Mode CSS for Vimium HUD */
+
+  div.vimiumHUD,
+  div.vimiumHUD .vimiumHUDSearchAreaInner,
+  div.vimiumHUD .vimiumUIComponentVisible {
+    background-color: #1d1d1f;
+    border: none;
+    box-shadow: none;
+    color: white;
+  }
+
+  div.vimiumHUD .vimiumHUDSearchArea {
+    border: 1px solid black;
+    background-color: #35363a;
+  }
+
+  div.vimiumHUD span#hud-find-input {
+    color: white !important;
+  }
 }
