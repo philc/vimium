@@ -1,4 +1,8 @@
-2.0.0 (2023-09-28 -- partially released to the Chrome store)
+2.0.1 (2023-10-04)
+
+- Fix exception when migrating some pre-v2.0 settings. ([#4323](https://github.com/philc/vimium/issues/4323))
+
+2.0.0 (2023-09-28 -- partially rolled out to users on the Chrome store)
 
 - Support manifest v3, as now required by Chrome. This involved a partial rewrite and many changes.
   Please report any new issues [here](https://github.com/philc/vimium/issues).
