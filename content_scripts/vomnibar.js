@@ -62,11 +62,12 @@ const Vomnibar = {
     }
   },
 
-  // This function opens the vomnibar. It accepts options, a map with the values:
-  //   completer   - The name of the completer to fetch results from.
-  //   query       - Optional. Text to prefill the Vomnibar with.
-  //   selectFirst - Optional, boolean. Whether to select the first entry.
-  //   newTab      - Optional, boolean. Whether to open the result in a new tab.
+  // Opens the vomnibar.
+  // - options: a map with values
+  //     completer   - The name of the completer to fetch results from.
+  //     query       - Optional. Text to prefill the Vomnibar with.
+  //     selectFirst - Optional, boolean. Whether to select the first entry.
+  //     newTab      - Optional, boolean. Whether to open the result in a new tab.
   open(sourceFrameId, options) {
     this.init();
     // The Vomnibar cannot coexist with the help dialog (it causes focus issues).
