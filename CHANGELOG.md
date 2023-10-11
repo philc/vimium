@@ -1,3 +1,11 @@
+2.0.2 (2023-10-11)
+
+- Fix Vomnibar tab search doesn't get pre-populated with recently visited tabs.
+  ([#4326](https://github.com/philc/vimium/issues/4326))
+- Fix bookmarklets not working when opened from the Vomnibar. This is a partial fix; a full fix is
+  waiting on a new extensions API. See [#4329](https://github.com/philc/vimium/issues/4329) for
+  discussion.
+
 2.0.1 (2023-10-04)
 
 - Fix exception when migrating some pre-v2.0 settings. ([#4323](https://github.com/philc/vimium/issues/4323))
