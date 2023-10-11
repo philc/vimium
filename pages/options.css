@@ -134,9 +134,6 @@ input#previousPatterns, input#nextPatterns {
 input#newTabUrl {
   width: 100%;
 }
-input#searchUrl {
-  width: 100%;
-}
 #status {
   margin-left: 10px;
   font-size: 80%;
