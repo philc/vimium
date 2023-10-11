@@ -509,6 +509,11 @@ const sendRequestHandlers = {
   getCurrentTabUrl({ tab }) {
     return tab.url;
   },
+
+  launch({ query, openInNewTab }) {
+    chrome.search.query({ disposition: openInNewTab ? "NEW_TAB" : "CURRENT_TAB", text: query });
+  },
+
   openUrlInNewTab: mkRepeatCommand((request, callback) =>
     TabOperations.openUrlInNewTab(request, callback)
   ),
