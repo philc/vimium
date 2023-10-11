@@ -331,7 +331,7 @@ context("tab completer", () => {
     completer = new TabCompleter();
   });
 
-  should.only("return tabs by recency when query is empty", async () => {
+  should("return tabs by recency when query is empty", async () => {
     const results = await filterCompleter(completer, []);
     assert.equal(["tab1.com", "tab2.com"], results.map((tab) => tab.url));
   });
