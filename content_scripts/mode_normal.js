@@ -341,6 +341,7 @@ if (typeof Vomnibar !== "undefined") {
     "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind(Vomnibar),
     "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind(Vomnibar),
     "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind(Vomnibar),
+    "Vomnibar.restoreSession": Vomnibar.restoreSession.bind(Vomnibar),
   });
 }
 

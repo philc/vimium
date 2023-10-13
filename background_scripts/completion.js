@@ -39,6 +39,7 @@ class Suggestion {
   deDuplicate = true;
   // The tab represented by this suggestion. Populated by TabCompleter.
   tabId;
+  sessionId;
   // Whether this is a suggestion provided by a user's custom search engine.
   isCustomSearch;
   // Whether this is meant to be the first suggestion from the user's custom search engine which
@@ -517,6 +518,49 @@ class TabCompleter {
   }
 }
 
+class RecentlyClosedTabCompleter {
+  async filter({ queryTerms, completerName }) {
+    if (completerName != "recentlyClosed" && queryTerms.length == 0) return [];
+
+    const tabUrls = (await chrome.tabs.query({})).map((tab) => tab.url);
+    let sessions = (await chrome.sessions.getRecentlyClosed({})).filter(
+        (session) => (session.tab && !tabUrls.includes(session.tab.url) || session.window)
+    );
+    const results = sessions.filter(session => session.tab ? RankingUtils.matches(queryTerms, session.tab.url, session.tab.title) : RankingUtils.matches(queryTerms, ...session.window.tabs.map(t => t.url), ...session.window.tabs.map(t => t.title)));
+    const suggestions = results
+      .map((session) => {
+        const suggestion = new Suggestion({
+          queryTerms,
+          description: "session",
+          url: session.tab ? session.tab.url : session.window.tabs.map(t => t.title).join(", "),
+          title: session.tab ? session.tab.title : `${session.window.tabs.length} tabs`,
+          sessionId: (session.tab || session.window).sessionId,
+          deDuplicate: false,
+        });
+        suggestion.relevancy = this.computeRelevancy(suggestion);
+        return suggestion;
+      })
+      .sort((a, b) => b.relevancy - a.relevancy);
+    suggestions.forEach(function (suggestion, i) {
+        suggestion.relevancy *= 8;
+        suggestion.relevancy /= i / 4 + 1;
+    });
+    return suggestions;
+  }
+
+  computeRelevancy(suggestion) {
+    if (suggestion.queryTerms.length) {
+      return RankingUtils.wordRelevancy(
+          suggestion.queryTerms,
+          suggestion.url,
+          suggestion.title
+      );
+    } else {
+      return BgUtils.tabRecency.recencyScore(suggestion.tabId);
+    }
+  }
+}
+
 class SearchEngineCompleter {
   cancel() {
     CompletionSearch.cancel();
@@ -955,6 +999,7 @@ Object.assign(globalThis, {
   HistoryCompleter,
   DomainCompleter,
   TabCompleter,
+  RecentlyClosedTabCompleter,
   SearchEngineCompleter,
   HistoryCache,
   RankingUtils,
