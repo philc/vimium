@@ -33,7 +33,7 @@ function openUrlInCurrentTab(request) {
       // The MAIN world -- where the webpage runs -- is less privileged than the ISOLATED world.
       // Specifying a world is required for Chrome, but not Firefox.
       // As of Firefox 118, specifying "MAIN" as the world is not yet supported.
-      args.world = "MAIN";
+      scriptingArgs.world = "MAIN";
     }
 
     chrome.scripting.executeScript(scriptingArgs);
