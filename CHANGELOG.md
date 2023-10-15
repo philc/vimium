@@ -1,4 +1,4 @@
-2.0.2 (2023-10-11)
+2.0.2, 2.0.3 (2023-10-11)
 
 - Fix Vomnibar tab search doesn't get pre-populated with recently visited tabs.
   ([#4326](https://github.com/philc/vimium/issues/4326))
