@@ -86,7 +86,7 @@ const assert = {
     else if (typeof object === "string") return '"' + object + '"';
     else {
       try { return JSON.stringify(object, undefined, 2); } // Pretty-prints with indentation.
-      catch (exception) {
+      catch (_) {
         // object might not be stringifiable (e.g. DOM nodes), or JSON.stringify may not exist.
         return object.toString();
       }
@@ -128,7 +128,6 @@ const Context = function(name) {
   this.tearDownMethod = null;
   this.contexts = [];
   this.tests = [];
-  this.testMethods = [];
 };
 
 const contextStack = [];
@@ -212,7 +211,7 @@ const Tests = {
     // must themselves be top level contexts.
     this.testsRun = 0;
     this.testsFailed = 0;
-    for (let context of this.topLevelContexts)
+    for (const context of this.topLevelContexts)
       await this.runContext(context, [], testNameFilter);
     this.printTestSummary();
     return this.testsFailed == 0;
@@ -233,9 +232,8 @@ const Tests = {
    * Run a context. This runs the test methods defined in the context first, and then any nested contexts.
    */
   runContext: async function(context, parentContexts, testNameFilter) {
-    const testMethods = context.tests;
     parentContexts = parentContexts.concat([context]);
-    for (let test of context.tests) {
+    for (const test of context.tests) {
       if (test instanceof Context)
         await this.runContext(test, parentContexts, testNameFilter);
       else
@@ -307,7 +305,7 @@ const Tests = {
   }
 };
 
-const run = async function(testNameFilter) { return Tests.run(testNameFilter); }
+const run = function(testNameFilter) { return Tests.run(testNameFilter); }
 const reset = function() { return Tests.reset(); }
 
 /*
