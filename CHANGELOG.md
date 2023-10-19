@@ -1,3 +1,9 @@
+2.0.4 (2023-10-19)
+
+- Bug fixes: ([#4340](https://github.com/philc/vimium/issues/4340)),
+  ([#4341](https://github.com/philc/vimium/issues/4341)),
+  ([#4342](https://github.com/philc/vimium/issues/4342)).
+
 2.0.2, 2.0.3 (2023-10-11)
 
 - Fix Vomnibar tab search doesn't get pre-populated with recently visited tabs.
@@ -57,7 +63,7 @@
 1.67.3 (2022-10-29)
 
 - Fix copy-to-clipboard issue ([#4147](https://github.com/philc/vimium/issues/4147)) in visual mode.
-- Fix Vimium's dark mode styling in latest Firefox
+- Fix Vimium's dark mode styling in latest Firefox.
   ([#4148](https://github.com/philc/vimium/issues/4148))
 
 1.67.2 (2022-10-17)
