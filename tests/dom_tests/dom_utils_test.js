@@ -107,6 +107,27 @@ context("Check visibility", () => {
   });
 });
 
+context("getClientRectsForAreas", () => {
+  let img, area;
+  setup(() => {
+    img = document.createElement("img");
+    area = document.createElement("area");
+  });
+
+  should("return the associated rect for an image map", () => {
+    area.setAttribute("coords", "1,2,3,4");
+    const result = DomUtils.getClientRectsForAreas(img, [area]);
+    assert.equal([{ element: area, rect: Rect.create(1, 2, 3, 4) }], result);
+  });
+
+  should("skip when a map's coords are malformed", () => {
+    area.setAttribute("coords", "1,2,3"); // This is only 3 coords rather than 4.
+    assert.equal([], DomUtils.getClientRectsForAreas(img, [area]));
+    area.setAttribute("coords", "1,2,3,junk-value");
+    assert.equal([], DomUtils.getClientRectsForAreas(img, [area]));
+  });
+});
+
 // NOTE(philc): This test doesn't pass on puppeteer. It's unclear from the XXX comment if it's
 // supposed to.
 // should("Detect links within SVGs as visible"), () => {
