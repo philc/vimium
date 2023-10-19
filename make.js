@@ -202,8 +202,8 @@ const runDomTests = async () => {
 
     await page.waitForNavigation({ waitUntil: "load" });
 
-    const testsFailed = await page.evaluate(() => {
-      shoulda.run();
+    const testsFailed = await page.evaluate(async () => {
+      await shoulda.run();
       return shoulda.getStats().failed;
     });
 
