@@ -698,51 +698,51 @@ globalThis.runTests = () => open(chrome.runtime.getURL("tests/dom_tests/dom_test
 // Begin initialization.
 //
 
+// True if the major version of Vimium has changed.
+// - previousVersion: this will be null for new installs.
+function majorVersionHasIncreased(previousVersion) {
+  const currentVersion = Utils.getCurrentVersion();
+  if (previousVersion == null) return false;
+  const currentMajorVersion = currentVersion.split(".").slice(0, 2).join(".");
+  const previousMajorVersion = previousVersion.split(".").slice(0, 2).join(".");
+  return Utils.compareVersions(currentMajorVersion, previousMajorVersion) == 1;
+}
+
 // Show notification on upgrade.
 const showUpgradeMessageIfNecessary = async function (onInstalledDetails) {
   const currentVersion = Utils.getCurrentVersion();
-  // previousVersion will be null on new installs.
-  const previousVersion = onInstalledDetails.previousVersion;
-
-  if (!previousVersion || Utils.compareVersions(currentVersion, previousVersion) != 1) {
+  // We do not show an upgrade message for patch/silent releases. Such releases have the same
+  // major and minor version numbers.
+  if (!majorVersionHasIncreased(onInstalledDetails.previousVersion)) {
     return;
   }
-  const currentVersionNumbers = currentVersion.split(".");
-  const previousVersionNumbers = previousVersion.split(".");
 
-  const majorVersionHasChanged =
-    currentVersionNumbers.slice(0, 2).join(".") !== previousVersionNumbers.slice(0, 2).join(".");
-
-  // We do not show an upgrade message for patch/silent releases. Such releases have the same
-  // major and minor version numbers. We do, however, update the recorded previous version.
-  if (majorVersionHasChanged) {
-    // NOTE(philc): These notifications use the system notification UI. So, if you don't have
-    // notifications enabled from your browser (e.g. in Notification Settings in OSX), then
-    // chrome.notification.create will succeed, but you won't see it.
-    const notificationId = "VimiumUpgradeNotification";
-    await chrome.notifications.create(
-      notificationId,
-      {
-        type: "basic",
-        iconUrl: chrome.runtime.getURL("icons/vimium.png"),
-        title: "Vimium Upgrade",
-        message:
-          `Vimium has been upgraded to version ${currentVersion}. Click here for more information.`,
-        isClickable: true,
-      },
-    );
-    if (!chrome.runtime.lastError) {
-      chrome.notifications.onClicked.addListener(async function (id) {
-        if (id != notificationId) return;
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        const tab = tabs[0];
-        return TabOperations.openUrlInNewTab({
-          tab,
-          tabId: tab.id,
-          url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md",
-        });
+  // NOTE(philc): These notifications use the system notification UI. So, if you don't have
+  // notifications enabled from your browser (e.g. in Notification Settings in OSX), then
+  // chrome.notification.create will succeed, but you won't see it.
+  const notificationId = "VimiumUpgradeNotification";
+  await chrome.notifications.create(
+    notificationId,
+    {
+      type: "basic",
+      iconUrl: chrome.runtime.getURL("icons/vimium.png"),
+      title: "Vimium Upgrade",
+      message:
+        `Vimium has been upgraded to version ${currentVersion}. Click here for more information.`,
+      isClickable: true,
+    },
+  );
+  if (!chrome.runtime.lastError) {
+    chrome.notifications.onClicked.addListener(async function (id) {
+      if (id != notificationId) return;
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tab = tabs[0];
+      return TabOperations.openUrlInNewTab({
+        tab,
+        tabId: tab.id,
+        url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md",
       });
-    }
+    });
   }
 };
 
@@ -822,6 +822,7 @@ Object.assign(globalThis, {
   // Exported for tests:
   HintCoordinator,
   BackgroundCommands,
+  majorVersionHasIncreased,
 });
 
 // The chrome.runtime.onStartup and onInstalled events are not fired when disabling and then
