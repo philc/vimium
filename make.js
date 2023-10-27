@@ -2,13 +2,13 @@
 // --unstable is required for Puppeteer.
 // Usage: ./make.js command. Use -l to list commands.
 // This is a set of tasks for building and testing Vimium in development.
-import * as fs from "https://deno.land/std/fs/mod.ts";
+import * as fs from "https://deno.land/std@0.122.0/fs/mod.ts";
 import * as fsCopy from "https://deno.land/std@0.122.0/fs/copy.ts";
 import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
 import { desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 import * as shoulda from "./tests/vendor/shoulda.js";
-import JSON5 from "https://deno.land/x/json5/mod.ts";
+import JSON5 from "https://deno.land/x/json5@v1.0.0/mod.ts";
 
 const projectPath = new URL(".", import.meta.url).pathname;
 
