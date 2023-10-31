@@ -188,7 +188,7 @@ const runDomTests = async () => {
     let shouldaJsContents = (await Deno.readTextFile("./tests/vendor/shoulda.js")) +
       "\n" +
       // Export the module contents to window.shoulda, which is what the tests expect.
-      "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, tearDown};";
+      "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, teardown};";
 
     // Remove the `export` statement from the shoulda.js module. Because we're using document.write
     // to add this, an export statement will cause a JS error and halt further parsing.

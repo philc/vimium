@@ -25,7 +25,7 @@ context("Excluded URLs and pass keys", () => {
     ]);
   });
 
-  tearDown(async () => {
+  teardown(async () => {
     await Settings.clear();
   });
 
