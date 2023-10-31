@@ -16,7 +16,7 @@
   top: 8px;
   left: 8px;
   /*margin: 0 0 0 -40%;*/
-  font-family: sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
   background: #F1F1F1;
   text-align: left;
@@ -28,7 +28,6 @@
 
 #vomnibar input {
   color: #000;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 20px;
   height: 34px;
   margin-bottom: 0;
