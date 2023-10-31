@@ -666,6 +666,14 @@ class MultiCompleter {
     const query = request.query;
     const queryTerms = request.queryTerms;
 
+    // The only UX where we support showing results when there are no query terms is via
+    // Vomnibar.activateTabSelection, where we show the list of open tabs by recency.
+    const isTabCompleter = this.completers.length == 1 &&
+      this.completers[0] instanceof TabCompleter;
+    if (queryTerms.length == 0 && !isTabCompleter) {
+      return [];
+    }
+
     const queryMatchesUserSearchEngine = searchEngineCompleter?.getUserSearchEngineForQuery(query);
 
     // If the user's query matches one of their custom search engines, then use only that engine to

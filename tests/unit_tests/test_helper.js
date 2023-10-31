@@ -11,7 +11,7 @@ const shouldaSubset = {
   shoulda: shoulda,
   stub: shoulda.stub,
   returns: shoulda.returns,
-  tearDown: shoulda.tearDown,
+  teardown: shoulda.teardown,
 };
 
 globalThis.isUnitTests = true;

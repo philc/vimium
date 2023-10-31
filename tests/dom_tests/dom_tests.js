@@ -68,7 +68,7 @@ const createGeneralHintTests = (isFilteredMode) => {
       stub(window, "windowIsFocused", () => true);
     });
 
-    tearDown(() => document.getElementById("test-div").innerHTML = "");
+    teardown(() => document.getElementById("test-div").innerHTML = "");
 
     should("create hints when activated, discard them when deactivated", () => {
       const mode = activateLinkHintsMode();
@@ -111,7 +111,7 @@ context("False positives in link-hint", () => {
     stub(window, "windowIsFocused", () => true);
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = "");
+  teardown(() => document.getElementById("test-div").innerHTML = "");
 
   should("handle false positives", () => {
     const mode = activateLinkHintsMode();
@@ -128,7 +128,7 @@ context("jsaction matching", () => {
     this.element = document.getElementById("test-paragraph");
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = "");
+  teardown(() => document.getElementById("test-div").innerHTML = "");
 
   should("select jsaction elements", () => {
     for (const text of ["click:namespace.actionName", "namespace.actionName"]) {
@@ -168,7 +168,7 @@ context("link hints for image maps", () => {
     document.getElementById("test-div").innerHTML = testContent;
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = "");
+  teardown(() => document.getElementById("test-div").innerHTML = "");
 
   should("generate a hint for each area in the image map", () => {
     const mode = activateLinkHintsMode();
@@ -232,7 +232,7 @@ const sendKeyboardEvents = (keys) => {
 //     inputs.push(input);
 //   });
 
-//   tearDown(() => {
+//   teardown(() => {
 //     document.getElementById("test-div").innerHTML = "";
 //     // linkHintsMode.deactivateMode(); // TODO(philc): I don't think this should be necessary.
 //   });
@@ -269,7 +269,7 @@ context("Test link hints for changing mode", () => {
     this.linkHints = activateLinkHintsMode();
   });
 
-  tearDown(() => {
+  teardown(() => {
     document.getElementById("test-div").innerHTML = "";
     this.linkHints.deactivateMode();
   });
@@ -313,7 +313,7 @@ context("Alphabetical link hints", () => {
     mode = activateLinkHintsMode();
   });
 
-  tearDown(() => {
+  teardown(() => {
     mode.deactivateMode();
     document.getElementById("test-div").innerHTML = "";
   });
@@ -377,7 +377,7 @@ context("Filtered link hints", () => {
       mode = activateLinkHintsMode();
     });
 
-    tearDown(() => {
+    teardown(() => {
       document.getElementById("test-div").innerHTML = "";
       mode.deactivateMode();
     });
@@ -431,7 +431,7 @@ context("Filtered link hints", () => {
       mode = activateLinkHintsMode();
     });
 
-    tearDown(() => {
+    teardown(() => {
       document.getElementById("test-div").innerHTML = "";
       mode.deactivateMode();
     });
@@ -460,7 +460,7 @@ context("Filtered link hints", () => {
       mode = activateLinkHintsMode();
     });
 
-    tearDown(() => {
+    teardown(() => {
       document.getElementById("test-div").innerHTML = "";
       mode.deactivateMode();
     });
@@ -503,7 +503,7 @@ context("Filtered link hints", () => {
       };
     });
 
-    tearDown(() => {
+    teardown(() => {
       document.getElementById("test-div").innerHTML = "";
       mode.deactivateMode();
     });
@@ -547,7 +547,7 @@ context("Input focus", () => {
     document.getElementById("test-div").innerHTML = testContent;
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = ""),
+  teardown(() => document.getElementById("test-div").innerHTML = ""),
     should("focus the first element", () => {
       NormalModeCommands.focusInput(1);
       assert.equal("first", document.activeElement.id);
@@ -914,7 +914,7 @@ context("Triggering insert mode", () => {
     document.getElementById("test-div").innerHTML = testContent;
   });
 
-  tearDown(() => {
+  teardown(() => {
     if (document.activeElement != null) {
       document.activeElement.blur();
     }
@@ -964,7 +964,7 @@ context("Triggering insert mode", () => {
 //     this.initialVisualMode = new VisualMode;
 //   });
 
-//   tearDown(() => document.getElementById("test-div").innerHTML = ""),
+//   teardown(() => document.getElementById("test-div").innerHTML = ""),
 
 //   should("enter caret mode", () => {
 //     assert.isFalse(this.initialVisualMode.modeIsActive);
@@ -1046,7 +1046,7 @@ context("Triggering insert mode", () => {
 //     sendKeyboardEvent("v");
 //   });
 
-//   tearDown(() => document.getElementById("test-div").innerHTML = ""),
+//   teardown(() => document.getElementById("test-div").innerHTML = ""),
 
 //   should("select word with e", () => {
 //     assert.equal("a", getSelection());
@@ -1127,7 +1127,7 @@ context("Mode utilities", () => {
     document.getElementById("test-div").innerHTML = testContent;
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = "");
+  teardown(() => document.getElementById("test-div").innerHTML = "");
 
   should("not have duplicate singletons", () => {
     let mode;
@@ -1194,7 +1194,7 @@ context("PostFindMode", () => {
     this.postFindMode = new PostFindMode();
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = ""),
+  teardown(() => document.getElementById("test-div").innerHTML = ""),
     should("be a singleton", () => {
       assert.isTrue(this.postFindMode.modeIsActive);
       new PostFindMode();
@@ -1265,7 +1265,7 @@ context("GrabBackFocus", () => {
     stubSettings("grabBackFocus", true);
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = ""),
+  teardown(() => document.getElementById("test-div").innerHTML = ""),
     should("blur an already focused input", () => {
       document.getElementById("input").focus();
       assert.isTrue(document.activeElement);

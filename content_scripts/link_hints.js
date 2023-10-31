@@ -1226,9 +1226,8 @@ const LocalHints = {
 
   //
   // Returns element at a given (x,y) with an optional root element.
-  // If the returned element is a shadow root, call the function use that recursively
-  // until we hit an actual element.
-  //
+  // If the returned element is a shadow root, descend into that shadow root recursively until we
+  // hit an actual element.
   getElementFromPoint(x, y, root, stack) {
     if (root == null) root = document;
     if (stack == null) stack = [];

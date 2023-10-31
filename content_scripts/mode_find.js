@@ -465,9 +465,13 @@ const highlight = (textNode, startIndex, length) => {
   selection.addRange(range);
 
   // Ensure the highlighted element is visible within the viewport.
-  const rect = textNode.parentElement.getBoundingClientRect();
+  const rect = range.getBoundingClientRect();
   if (rect.top < 0 || rect.bottom > window.innerHeight) {
-    textNode.parentElement.scrollIntoView({ block: "center" });
+    const screenHeight = window.innerHeight;
+    window.scrollTo({
+      top: window.scrollY + rect.top + rect.height / 2 - screenHeight / 2,
+      behavior: "smooth",
+    });
   }
 
   return true;

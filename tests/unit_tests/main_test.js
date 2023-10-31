@@ -1,4 +1,6 @@
 import "./test_helper.js";
+import "../../lib/settings.js";
+import "../../background_scripts/commands.js";
 import "../../background_scripts/completion.js";
 import "../../background_scripts/marks.js";
 import "../../background_scripts/main.js";
@@ -52,5 +54,15 @@ context("Selecting frames", () => {
 
     await BackgroundCommands.nextFrame(1, 0);
     assert.equal([1], focusedFrames);
+  });
+});
+
+context("majorVersionHasIncreased", () => {
+  should("return whether the major version has changed", () => {
+    assert.equal(false, majorVersionHasIncreased(null));
+    shoulda.stub(Utils, "getCurrentVersion", () => "2.0.1");
+    assert.equal(false, majorVersionHasIncreased("2.0.0"));
+    shoulda.stub(Utils, "getCurrentVersion", () => "2.1.0");
+    assert.equal(true, majorVersionHasIncreased("2.0.0"));
   });
 });
