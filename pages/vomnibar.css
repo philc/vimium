@@ -118,7 +118,6 @@
 #vomnibar li em, #vomnibar li .vomnibarTitle {
   color: black;
   margin-left: 4px;
-  font-weight: normal;
 }
 #vomnibar li em { font-style: italic; }
 #vomnibar li em .vomnibarMatch, #vomnibar li .vomnibarTitle .vomnibarMatch {
@@ -127,7 +126,6 @@
 
 #vomnibar li.vomnibarSelected {
   background-color: #BBCEE9;
-  font-weight: normal;
 }
 
 #vomnibarInput::selection {
