@@ -556,7 +556,7 @@ class RecentlyClosedTabCompleter {
           suggestion.title
       );
     } else {
-      return BgUtils.tabRecency.recencyScore(suggestion.tabId);
+      return BgUtils.tabRecency.recencyScore(suggestion.sessionId);
     }
   }
 }
@@ -668,9 +668,9 @@ class MultiCompleter {
 
     // The only UX where we support showing results when there are no query terms is via
     // Vomnibar.activateTabSelection, where we show the list of open tabs by recency.
-    const isTabCompleter = this.completers.length == 1 &&
-      this.completers[0] instanceof TabCompleter;
-    if (queryTerms.length == 0 && !isTabCompleter) {
+    const showResults = this.completers.length == 1 &&
+      (this.completers[0] instanceof TabCompleter || this.completers[0] instanceof RecentlyClosedTabCompleter);
+    if (queryTerms.length == 0 && !showResults) {
       return [];
     }
 
