@@ -476,12 +476,10 @@ class DomainCompleter {
 }
 
 // Searches through all open tabs, matching on title and URL.
+// If the query is empty, then return a list of open tabs, sorted by recency.
 class TabCompleter {
   async filter({ queryTerms }) {
-    if (queryTerms.length == 0) return [];
-
-    // NOTE(philc): We search all tabs, not just those in the current window. I'm not sure if this
-    // is the correct UX.
+    // We search all tabs, not just those in the current window.
     const tabs = await chrome.tabs.query({});
     const results = tabs.filter((tab) => RankingUtils.matches(queryTerms, tab.url, tab.title));
     const suggestions = results
@@ -511,7 +509,7 @@ class TabCompleter {
   }
 
   computeRelevancy(suggestion) {
-    if (suggestion.queryTerms.length) {
+    if (suggestion.queryTerms.length > 0) {
       return RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title);
     } else {
       return BgUtils.tabRecency.recencyScore(suggestion.tabId);
@@ -619,12 +617,18 @@ class MultiCompleter {
     }
   }
 
-  async filter(request, onComplete) {
-    Utils.assert(onComplete == null, "completer.filter called with a callback");
-
+  async filter(request) {
     const searchEngineCompleter = this.completers.find((c) => c instanceof SearchEngineCompleter);
     const query = request.query;
     const queryTerms = request.queryTerms;
+
+    // The only UX where we support showing results when there are no query terms is via
+    // Vomnibar.activateTabSelection, where we show the list of open tabs by recency.
+    const isTabCompleter = this.completers.length == 1 &&
+      this.completers[0] instanceof TabCompleter;
+    if (queryTerms.length == 0 && !isTabCompleter) {
+      return [];
+    }
 
     const queryMatchesUserSearchEngine = searchEngineCompleter?.getUserSearchEngineForQuery(query);
 

@@ -233,9 +233,6 @@ const initializePreDomReady = async function () {
     showMessage(request) {
       HUD.show(request.message, 2000);
     },
-    executeUserScript(request) {
-      DomUtils.injectUserScript(request.script);
-    },
   };
 
   Utils.addChromeRuntimeOnMessageListener(

@@ -319,6 +319,24 @@ context("domain completer (removing entries)", () => {
   });
 });
 
+context("multi completer", () => {
+  const tabs = [{ url: "tab1.com", title: "tab1", id: 1 },];
+  const tabCompleter = new TabCompleter();
+  let multiCompleter;
+
+  setup(() => {
+    stub(chrome.tabs, "query", () => tabs);
+    multiCompleter = new MultiCompleter([tabCompleter, new DomainCompleter()]);
+  });
+
+  should("return an empty list when the query is empty", async () => {
+    // Even though a TabCompleter returns results when the query is empty, a MultiCompleter which
+    // wraps a TabCompleter should not.
+    assert.equal(1, (await filterCompleter(tabCompleter, [])).length);
+    assert.equal([], (await filterCompleter(multiCompleter, [])));
+  });
+});
+
 context("tab completer", () => {
   const tabs = [
     { url: "tab1.com", title: "tab1", id: 1 },
@@ -329,6 +347,11 @@ context("tab completer", () => {
   setup(() => {
     stub(chrome.tabs, "query", () => tabs);
     completer = new TabCompleter();
+  });
+
+  should("return tabs by recency when query is empty", async () => {
+    const results = await filterCompleter(completer, []);
+    assert.equal(["tab1.com", "tab2.com"], results.map((tab) => tab.url));
   });
 
   should("return matching tabs", async () => {

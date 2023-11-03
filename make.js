@@ -2,13 +2,13 @@
 // --unstable is required for Puppeteer.
 // Usage: ./make.js command. Use -l to list commands.
 // This is a set of tasks for building and testing Vimium in development.
-import * as fs from "https://deno.land/std/fs/mod.ts";
+import * as fs from "https://deno.land/std@0.122.0/fs/mod.ts";
 import * as fsCopy from "https://deno.land/std@0.122.0/fs/copy.ts";
 import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
 import { desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 import * as shoulda from "./tests/vendor/shoulda.js";
-import JSON5 from "https://deno.land/x/json5/mod.ts";
+import JSON5 from "https://deno.land/x/json5@v1.0.0/mod.ts";
 
 const projectPath = new URL(".", import.meta.url).pathname;
 
@@ -79,8 +79,8 @@ async function buildStorePackage() {
     "MIT-LICENSE.txt",
     "dist",
     "make.js",
-    "node_modules",
-    "package-lock.json",
+    "deno.json",
+    "deno.lock",
     "test_harnesses",
     "tests",
   ];
@@ -188,7 +188,7 @@ const runDomTests = async () => {
     let shouldaJsContents = (await Deno.readTextFile("./tests/vendor/shoulda.js")) +
       "\n" +
       // Export the module contents to window.shoulda, which is what the tests expect.
-      "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, tearDown};";
+      "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, teardown};";
 
     // Remove the `export` statement from the shoulda.js module. Because we're using document.write
     // to add this, an export statement will cause a JS error and halt further parsing.
@@ -202,8 +202,8 @@ const runDomTests = async () => {
 
     await page.waitForNavigation({ waitUntil: "load" });
 
-    const testsFailed = await page.evaluate(() => {
-      shoulda.run();
+    const testsFailed = await page.evaluate(async () => {
+      await shoulda.run();
       return shoulda.getStats().failed;
     });
 

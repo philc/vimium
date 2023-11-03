@@ -4,11 +4,39 @@
 // TODO(philc): Convert these to Promise-based APIs.
 
 // Opens the url in the current tab.
+// If the URL is a JavaScript snippet, execute that snippet in the current tab.
 function openUrlInCurrentTab(request) {
+  // Note that when injecting JavaScript, it's subject to the site's CSP. Sites with strict CSPs
+  // (like github.com, developer.mozilla.org) will raise an error when we try to run this code. See
+  // https://github.com/philc/vimium/issues/4331.
   if (Utils.hasJavascriptPrefix(request.url)) {
     const tabId = request.tabId;
-    const frameId = request.frameId;
-    chrome.tabs.sendMessage(tabId, { frameId, handler: "executeUserScript", script: request.url });
+    const scriptingArgs = {
+      target: { tabId: request.tabId },
+      func: (text) => {
+        const prefix = "javascript:";
+        text = text.slice(prefix.length).trim();
+        text = decodeURIComponent(text);
+        try {
+          text = decodeURIComponent(text);
+        } catch {
+          // Swallow
+        }
+        const el = document.createElement("script");
+        el.textContent = text;
+        document.head.appendChild(el);
+      },
+      args: [request.url],
+    };
+
+    if (!BgUtils.isFirefox()) {
+      // The MAIN world -- where the webpage runs -- is less privileged than the ISOLATED world.
+      // Specifying a world is required for Chrome, but not Firefox.
+      // As of Firefox 118, specifying "MAIN" as the world is not yet supported.
+      scriptingArgs.world = "MAIN";
+    }
+
+    chrome.scripting.executeScript(scriptingArgs);
   } else {
     chrome.tabs.update(request.tabId, { url: Utils.convertToUrl(request.url) });
   }

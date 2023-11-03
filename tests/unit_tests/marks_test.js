@@ -14,7 +14,7 @@ context("marks", () => {
     chrome.storage.session.set({ vimiumSecret: "secret" });
   });
 
-  tearDown(() => {
+  teardown(() => {
     chrome.storage.session.clear();
     chrome.storage.local.clear();
   });
