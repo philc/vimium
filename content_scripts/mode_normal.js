@@ -418,7 +418,7 @@ const findAndFollowLink = function (linkStrings) {
     let linkMatches = false;
     for (const linkString of linkStrings) {
       // SVG elements can have a null innerText.
-      const matches = link.innerText?.toLowerCase()?.includes(linkString) ||
+      const matches = link.innerText?.toLowerCase().includes(linkString) ||
         link.value?.includes?.(linkString) ||
         link.getAttribute("title")?.toLowerCase().includes(linkString) ||
         link.getAttribute("aria-label")?.toLowerCase().includes(linkString);
