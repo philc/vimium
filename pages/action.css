@@ -8,6 +8,10 @@ body {
   flex-direction: column;
 }
 
+h1 {
+  font-size: 18px;
+}
+
 #dialogBody {
   padding: var(--padding);
   padding-right: 0;
@@ -16,7 +20,7 @@ body {
   flex-grow: 1;
 }
 
-#vimiumNotEnabledMessage {
+#notEnabledError, #firefoxMissingPermissionsError {
   padding: var(--padding);
 }
 

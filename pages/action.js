@@ -7,11 +7,36 @@ const ActionPage = {
     const activeTab = tabs[0];
     this.tabUrl = activeTab.url;
 
-    if (!await this.isVimiumInstalledInTab(activeTab.id)) {
-      for (const el of Array.from(document.querySelectorAll("body > *"))) {
-        el.style.display = "none";
+    const hideUI = () => {
+      document.querySelector("#dialogBody").style.display = "none";
+      document.querySelector("#footer").style.display = "none";
+    };
+
+    // In Firefox, prompt the user if they haven't enabled the "all hosts" permission. Vimium needs
+    // this permission to work correctly, and as of 2023-11-06, Firefox does not grant this
+    // permission without user consent, and doesn't make it clear that the user needs to do
+    // anything. See #4348 for discussion, and https://stackoverflow.com/q/76083327 for
+    // implementation notes.
+    const permission = { origins: ["<all_urls>"] };
+    if (BgUtils.isFirefox()) {
+      const hasAllHostsPermission = await browser.permissions.contains(permission);
+      if (!hasAllHostsPermission) {
+        hideUI();
+        document.querySelector("#grant-hosts-permission").addEventListener("click", async (e) => {
+          browser.permissions.request(permission);
+          // We close the action page because if the user clicks on this button once, clicks "deny"
+          // on the browser's permissions dialog, and then clicks on the button a second time, the
+          // browser permissions dialog will now be shown *under* the action page!
+          window.close();
+        });
+        document.querySelector("#firefoxMissingPermissionsError").style.display = "block";
+        return;
       }
-      document.querySelector("#vimiumNotEnabledMessage").style.display = "block";
+    }
+
+    if (!await this.isVimiumInstalledInTab(activeTab.id)) {
+      hideUI();
+      document.querySelector("#notEnabledError").style.display = "block";
       return;
     }
 

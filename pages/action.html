@@ -6,6 +6,7 @@
   <link rel="stylesheet" type="text/css" href="action.css">
   <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css">
 
+  <script src="../background_scripts/bg_utils.js"></script>
   <script src="../lib/utils.js"></script>
   <script src="../lib/dom_utils.js"></script>
   <script src="../lib/settings.js"></script>
@@ -16,13 +17,39 @@
 
 <body class="vimiumBody">
 
-  <div id="vimiumNotEnabledMessage" style="display:none">
-    <p>
+  <div id="notEnabledError" style="display:none">
+    <h1>
       Vimium is not allowed to run on this page.
-    </p>
+    </h1>
     <p>
       Your browser does not run web extensions like Vimium on certain pages, usually for security
       reasons.
+    </p>
+  </div>
+
+  <div id="firefoxMissingPermissionsError" style="display:none">
+    <h1>
+      Vimium is missing the "all hosts" permission.
+    </h1>
+    <p>
+      Firefox requires users to manually grant this permission to extensions. You can enable it via
+      the button below:
+    </p>
+
+    <p>
+      <button id="grant-hosts-permission">Enable all hosts permission</button>
+    </p>
+
+    <p>
+      Or by navigating to:
+    </p>
+
+    <p>
+      about:addons > Vimium > Manage (click the 3 dot menu) > Permissions > <br/> Enable the "Access
+      your data for all websites" permission.
+    </p>
+    <p>
+      <a href="#">See here</a> for more info about this permission.
     </p>
   </div>
 
