@@ -1,4 +1,4 @@
-2.0.5 (2023-11-06)
+2.0.5, 2.0.6 (2023-11-06)
 
 - Fix bug where "esc" wouldn't unfocus a textarea like it should.
   ([#4336](https://github.com/philc/vimium/issues/4336)),
