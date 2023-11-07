@@ -150,12 +150,14 @@ const Commands = {
     await this.installKeyStateMapping();
     this.prepareHelpPageData();
 
-    // Push the key mapping for passNextKey into storage so that it's available in the front end for
-    // insert mode. We exclude single-key mappings (that is, printable keys) because when users
-    // press printable keys in insert mode they expect the character to be input, not to be droppped
-    // into some special Vimium mode.
+    // Push the key mappings from any passNextKey commands into storage so that they're's available
+    // to the front end so they can be detected during insert mode. We exclude single-key mappings
+    // for this command (i.e. printable keys) because we're considering that a configuration error:
+    // when users press printable keys in insert mode, they expect that character to be input, not
+    // to be droppped into a special Vimium mode.
     const passNextKeys = Object.entries(this.keyToRegistryEntry)
-      .filter((key, v) => key.length > 1 && v.command == "passNextKeys");
+      .filter(([key, v]) => v.command == "passNextKey" && key.length > 1)
+      .map(([key, v]) => key);
     await chrome.storage.session.set({ passNextKeyKeys: passNextKeys });
   },
 
