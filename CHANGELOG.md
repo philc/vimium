@@ -1,3 +1,9 @@
+2.0.5 (2023-11-06)
+
+- Fix bug where "esc" wouldn't unfocus a textarea like it should.
+  ([#4336](https://github.com/philc/vimium/issues/4336)),
+- Fix passNextKey command.
+
 2.0.4 (2023-10-19)
 
 - Bug fixes: ([#4340](https://github.com/philc/vimium/issues/4340)),
