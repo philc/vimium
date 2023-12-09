@@ -150,13 +150,7 @@ const runUnitTests = async () => {
 const runDomTests = async (port) => {
   const testUrl = `http://localhost:${port}/tests/dom_tests/dom_tests.html`;
 
-  const browser = await puppeteer.launch({
-    // NOTE(philc): "Disabling web security" is required for vomnibar_test.js, because we have a
-    // file:// page accessing an iframe, and Chrome prevents this because it's a cross-origin
-    // request.
-    args: ["--disable-web-security"],
-  });
-
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   let receivedErrorOutput = false;
 
