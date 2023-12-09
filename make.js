@@ -173,27 +173,6 @@ const runDomTests = async (port) => {
     (request) => console.log(console.log(`${request.failure().errorText} ${request.url()}`)),
   );
 
-  // Shoulda.js is an ECMAScript module, and those cannot be loaded over file:/// protocols due to
-  // a Chrome security restriction, and this test suite loads the dom_tests.html page from the
-  // local file system. To (painfully) work around this, we're injecting the contents of
-  // shoulda.js into the page. We munge the file contents and assign it to a string
-  // (`shouldaJsContents`), and then have the page itself document.write that string during load
-  // (the document.write call is in dom_tests.html). Another workaround would be to spin up a
-  // local file server here and load dom_tests from the network.
-  // Discussion: https://bugs.chromium.org/p/chromium/issues/detail?id=824651
-  let shouldaJsContents = (await Deno.readTextFile("./tests/vendor/shoulda.js")) +
-    "\n" +
-    // Export the module contents to window.shoulda, which is what the tests expect.
-    "window.shoulda = {assert, context, ensureCalled, getStats, reset, run, setup, should, stub, teardown};";
-
-  // Remove the `export` statement from the shoulda.js module. Because we're using document.write
-  // to add this, an export statement will cause a JS error and halt further parsing.
-  shouldaJsContents = shouldaJsContents.replace(/export {[^}]+}/, "");
-
-  await page.evaluateOnNewDocument((content) => {
-    window.shouldaJsContents = content;
-  }, shouldaJsContents);
-
   page.goto(testUrl);
 
   await page.waitForNavigation({ waitUntil: "load" });
