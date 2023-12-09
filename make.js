@@ -5,7 +5,7 @@
 import * as fs from "https://deno.land/std@0.122.0/fs/mod.ts";
 import * as fsCopy from "https://deno.land/std@0.122.0/fs/copy.ts";
 import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
-import { desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
+import { abort, desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 import * as shoulda from "./tests/vendor/shoulda.js";
 import JSON5 from "https://deno.land/x/json5@v1.0.0/mod.ts";
@@ -142,7 +142,7 @@ const runUnitTests = async () => {
     }
   }
 
-  await shoulda.run();
+  return await shoulda.run();
 };
 
 const runDomTests = async () => {
@@ -202,9 +202,8 @@ const runDomTests = async () => {
 
   await page.waitForNavigation({ waitUntil: "load" });
 
-  const testsFailed = await page.evaluate(async () => {
-    await shoulda.run();
-    return shoulda.getStats().failed;
+  const success = await page.evaluate(async () => {
+    return await shoulda.run();
   });
 
   // NOTE(philc): At one point in development, I noticed that the output from Deno would suddenly
@@ -214,7 +213,7 @@ const runDomTests = async () => {
   if (receivedErrorOutput) {
     throw "The tests fail because there was a page-level error.";
   }
-  return testsFailed;
+  return success;
 };
 
 desc("Download and parse list of top-level domains (TLDs)");
@@ -232,27 +231,22 @@ task("fetch-tlds", [], async () => {
 
 desc("Run unit tests");
 task("test-unit", [], async () => {
-  const failed = await runUnitTests();
-  if (failed > 0) {
-    console.log("Failed:", failed);
+  const success = await runUnitTests();
+  if (!success) {
+    abort("test-unit failed");
   }
 });
 
 desc("Run DOM tests");
 task("test-dom", [], async () => {
-  const failed = await runDomTests();
-  if (failed > 0) {
-    console.log("Failed:", failed);
+  const port = await getAvailablePort();
+  if (!success) {
+    abort("test-dom failed.");
   }
 });
 
 desc("Run unit and DOM tests");
-task("test", [], async () => {
-  const failed = (await runUnitTests()) + (await runDomTests());
-  if (failed > 0) {
-    console.log("Failed:", failed);
-  }
-});
+task("test", ["test-unit", "test-dom"]);
 
 desc("Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/");
 task("package", [], async () => {
