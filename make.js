@@ -9,6 +9,7 @@ import { desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 import * as shoulda from "./tests/vendor/shoulda.js";
 import JSON5 from "https://deno.land/x/json5@v1.0.0/mod.ts";
+import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
 
 const projectPath = new URL(".", import.meta.url).pathname;
 
@@ -217,6 +218,19 @@ const runDomTests = async () => {
     return testsFailed;
   })();
 };
+
+desc("Download and parse list of top-level domains (TLDs)");
+task("fetch-tlds", [], async () => {
+  const suffixListUrl = "https://www.iana.org/domains/root/db";
+  const response = await fetch(suffixListUrl);
+  const text = await response.text();
+  const doc = new DOMParser().parseFromString(text, "text/html");
+  const els = doc.querySelectorAll("span.domain.tld");
+  // Each span contains a TLD, e.g. ".com". Trim off the leading period.
+  const domains = Array.from(els).map((el) => el.innerText.slice(1));
+  const str = domains.join("\n");
+  await Deno.writeTextFile("./resources/tlds.txt", str);
+});
 
 desc("Run unit tests");
 task("test-unit", [], async () => {
