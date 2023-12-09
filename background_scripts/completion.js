@@ -470,7 +470,7 @@ class DomainCompleter {
 
   // Return something like "http://www.example.com" or false.
   parseDomainAndScheme(url) {
-    return Utils.hasFullUrlPrefix(url) && !Utils.hasChromePrefix(url) &&
+    return UrlUtils.hasFullUrlPrefix(url) && !UrlUtils.hasChromePrefix(url) &&
       url.split("/", 3).join("/");
   }
 }
@@ -549,7 +549,7 @@ class SearchEngineCompleter {
     const completions = await CompletionSearch.complete(searchUrl, queryTermsWithoutKeyword);
 
     const makeSuggestion = (query) => {
-      const url = Utils.createSearchUrl(query, searchUrl);
+      const url = UrlUtils.createSearchUrl(query, searchUrl);
       return new Suggestion({
         queryTerms,
         description: userSearchEngine.description,

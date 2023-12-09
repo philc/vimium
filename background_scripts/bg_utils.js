@@ -107,4 +107,6 @@ const BgUtils = {
 
 BgUtils.TIME_DELTA = TIME_DELTA; // Referenced by our tests.
 
-globalThis.BgUtils = BgUtils;
+Object.assign(globalThis, {
+  BgUtils,
+});

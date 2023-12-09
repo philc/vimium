@@ -172,7 +172,8 @@ const BackgroundCommands = {
         request.urls = [request.url];
       } else {
         // Otherwise, if we have a registryEntry containing URLs, then use them.
-        const urlList = request.registryEntry.optionList.filter((opt) => Utils.isUrl(opt));
+        const urlList = request.registryEntry.optionList
+              .filter(async (opt) => await UrlUtils.isUrl(opt));
         if (urlList.length > 0) {
           request.urls = urlList;
         } else {
@@ -520,8 +521,8 @@ const sendRequestHandlers = {
   openUrlInNewWindow(request) {
     return TabOperations.openUrlInNewWindow(request);
   },
-  openUrlInIncognito(request) {
-    return chrome.windows.create({ incognito: true, url: Utils.convertToUrl(request.url) });
+  async openUrlInIncognito(request) {
+    return chrome.windows.create({ incognito: true, url: await UrlUtils.convertToUrl(request.url) });
   },
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab,
   openOptionsPageInNewTab(request) {

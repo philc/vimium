@@ -5,11 +5,11 @@
 
 // Opens the url in the current tab.
 // If the URL is a JavaScript snippet, execute that snippet in the current tab.
-function openUrlInCurrentTab(request) {
+async function openUrlInCurrentTab(request) {
   // Note that when injecting JavaScript, it's subject to the site's CSP. Sites with strict CSPs
   // (like github.com, developer.mozilla.org) will raise an error when we try to run this code. See
   // https://github.com/philc/vimium/issues/4331.
-  if (Utils.hasJavascriptPrefix(request.url)) {
+  if (UrlUtils.hasJavascriptPrefix(request.url)) {
     const tabId = request.tabId;
     const scriptingArgs = {
       target: { tabId: request.tabId },
@@ -38,17 +38,17 @@ function openUrlInCurrentTab(request) {
 
     chrome.scripting.executeScript(scriptingArgs);
   } else {
-    chrome.tabs.update(request.tabId, { url: Utils.convertToUrl(request.url) });
+    chrome.tabs.update(request.tabId, { url: await UrlUtils.convertToUrl(request.url) });
   }
 }
 
 // Opens request.url in new tab and switches to it.
-function openUrlInNewTab(request, callback) {
+async function openUrlInNewTab(request, callback) {
   if (callback == null) {
     callback = function () {};
   }
   const tabConfig = {
-    url: Utils.convertToUrl(request.url),
+    url: await UrlUtils.convertToUrl(request.url),
     active: true,
     windowId: request.tab.windowId,
   };
@@ -93,12 +93,12 @@ function openUrlInNewTab(request, callback) {
 }
 
 // Opens request.url in new window and switches to it.
-function openUrlInNewWindow(request, callback) {
+async function openUrlInNewWindow(request, callback) {
   if (callback == null) {
     callback = function () {};
   }
   const winConfig = {
-    url: Utils.convertToUrl(request.url),
+    url: await UrlUtils.convertToUrl(request.url),
     active: true,
   };
   if (request.active != null) {
