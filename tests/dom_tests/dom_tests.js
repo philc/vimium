@@ -121,23 +121,25 @@ context("False positives in link-hint", () => {
 });
 
 context("jsaction matching", () => {
+  let element;
+
   setup(() => {
     stubSettings("filterLinkHints", true);
     const testContent = '<p id="test-paragraph">clickable</p>';
     document.getElementById("test-div").innerHTML = testContent;
-    this.element = document.getElementById("test-paragraph");
+    element = document.getElementById("test-paragraph");
   });
 
   teardown(() => document.getElementById("test-div").innerHTML = "");
 
   should("select jsaction elements", () => {
     for (const text of ["click:namespace.actionName", "namespace.actionName"]) {
-      this.element.setAttribute("jsaction", text);
+      element.setAttribute("jsaction", text);
       const mode = activateLinkHintsMode();
       mode.deactivateMode();
       assert.equal(1, mode.hintMarkers.length);
       assert.equal("clickable", mode.hintMarkers[0].linkText);
-      assert.equal(this.element, mode.hintMarkers[0].localHint.element);
+      assert.equal(element, mode.hintMarkers[0].localHint.element);
     }
   });
 
@@ -149,7 +151,7 @@ context("jsaction matching", () => {
       "namespace:_",
     ];
     for (const attribute of attributes) {
-      this.element.setAttribute("jsaction", attribute);
+      element.setAttribute("jsaction", attribute);
       const linkHints = activateLinkHintsMode();
       const hintMarkers = getHintMarkerEls().filter((marker) => marker.linkText !== "Frame.");
       linkHints.deactivateMode();
@@ -262,32 +264,34 @@ const sendKeyboardEvents = (keys) => {
 // });
 
 context("Test link hints for changing mode", () => {
+  let linkHints;
+
   setup(() => {
     initializeModeState();
     const testDiv = document.getElementById("test-div");
     testDiv.innerHTML = "<a>link</a>";
-    this.linkHints = activateLinkHintsMode();
+    linkHints = activateLinkHintsMode();
   });
 
   teardown(() => {
     document.getElementById("test-div").innerHTML = "";
-    this.linkHints.deactivateMode();
+    linkHints.deactivateMode();
   });
 
   should("change mode on shift", () => {
-    assert.equal("curr-tab", this.linkHints.mode.name);
+    assert.equal("curr-tab", linkHints.mode.name);
     sendKeyboardEvent("Shift", "keydown");
-    assert.equal("bg-tab", this.linkHints.mode.name);
+    assert.equal("bg-tab", linkHints.mode.name);
     sendKeyboardEvent("Shift", "keyup");
-    assert.equal("curr-tab", this.linkHints.mode.name);
+    assert.equal("curr-tab", linkHints.mode.name);
   });
 
   should("change mode on ctrl", () => {
-    assert.equal("curr-tab", this.linkHints.mode.name);
+    assert.equal("curr-tab", linkHints.mode.name);
     sendKeyboardEvent("Control", "keydown");
-    assert.equal("fg-tab", this.linkHints.mode.name);
+    assert.equal("fg-tab", linkHints.mode.name);
     sendKeyboardEvent("Control", "keyup");
-    assert.equal("curr-tab", this.linkHints.mode.name);
+    assert.equal("curr-tab", linkHints.mode.name);
   });
 });
 
@@ -480,6 +484,8 @@ context("Filtered link hints", () => {
   });
 
   context("Text hint scoring", () => {
+    let getActiveHintMarker;
+
     setup(() => {
       initializeModeState();
       const testContent = [
@@ -496,7 +502,8 @@ context("Filtered link hints", () => {
       ].map(({ id, text }) => `<a id=\"${id}\">${text}</a>`).join(" ");
       document.getElementById("test-div").innerHTML = testContent;
       mode = activateLinkHintsMode();
-      this.getActiveHintMarker = () => {
+
+      getActiveHintMarker = () => {
         return HintCoordinator.getLocalHint(
           mode.markerMatcher.activeHintMarker.hintDescriptor,
         ).element.id;
@@ -510,31 +517,31 @@ context("Filtered link hints", () => {
 
     should("score start-of-word matches highly", () => {
       sendKeyboardEvents("bu");
-      assert.equal("6", this.getActiveHintMarker());
+      assert.equal("6", getActiveHintMarker());
     });
 
     should("score start-of-text matches highly (br)", () => {
       sendKeyboardEvents("on");
-      assert.equal("2", this.getActiveHintMarker());
+      assert.equal("2", getActiveHintMarker());
     });
 
     should("score whole-word matches highly", () => {
       sendKeyboardEvents("boy");
-      assert.equal("1", this.getActiveHintMarker());
+      assert.equal("1", getActiveHintMarker());
     });
 
     should("score shorter texts more highly", () => {
       sendKeyboardEvents("stood");
-      assert.equal("5", this.getActiveHintMarker());
+      assert.equal("5", getActiveHintMarker());
     });
 
     should("use tab to select the active hint", () => {
       sendKeyboardEvents("abc");
-      assert.equal("8", this.getActiveHintMarker());
+      assert.equal("8", getActiveHintMarker());
       sendKeyboardEvent("Tab", "keydown");
-      assert.equal("7", this.getActiveHintMarker());
+      assert.equal("7", getActiveHintMarker());
       sendKeyboardEvent("Tab", "keydown");
-      assert.equal("9", this.getActiveHintMarker());
+      assert.equal("9", getActiveHintMarker());
     });
   });
 });
@@ -665,108 +672,110 @@ context("Find prev / next links", () => {
 });
 
 context("Key mapping", () => {
+  let normalMode, handlerCalled, handlerCalledCount;
+
   setup(() => {
-    this.normalMode = initializeModeState();
-    this.handlerCalled = false;
-    this.handlerCalledCount = 0;
-    this.normalMode.setCommandHandler(({ count }) => {
-      this.handlerCalled = true;
-      this.handlerCalledCount = count;
+    normalMode = initializeModeState();
+    handlerCalled = false;
+    handlerCalledCount = 0;
+    normalMode.setCommandHandler(({ count }) => {
+      handlerCalled = true;
+      handlerCalledCount = count;
     });
   });
 
   should("recognize first mapped key", () => {
-    assert.isTrue(this.normalMode.isMappedKey("m"));
+    assert.isTrue(normalMode.isMappedKey("m"));
   });
 
   should("recognize second mapped key", () => {
-    assert.isFalse(this.normalMode.isMappedKey("p"));
+    assert.isFalse(normalMode.isMappedKey("p"));
     sendKeyboardEvent("z");
-    assert.isTrue(this.normalMode.isMappedKey("p"));
+    assert.isTrue(normalMode.isMappedKey("p"));
   });
 
   should("recognize pass keys", () => {
-    assert.isTrue(this.normalMode.isPassKey("p"));
+    assert.isTrue(normalMode.isPassKey("p"));
   });
 
   should("not mis-recognize pass keys", () => {
-    assert.isFalse(this.normalMode.isMappedKey("p"));
+    assert.isFalse(normalMode.isMappedKey("p"));
     sendKeyboardEvent("z");
-    assert.isTrue(this.normalMode.isMappedKey("p"));
+    assert.isTrue(normalMode.isMappedKey("p"));
   });
 
   should("recognize initial count keys", () => {
-    assert.isTrue(this.normalMode.isCountKey("1"));
-    assert.isTrue(this.normalMode.isCountKey("9"));
+    assert.isTrue(normalMode.isCountKey("1"));
+    assert.isTrue(normalMode.isCountKey("9"));
   });
 
   should("not recognize '0' as initial count key", () => {
-    assert.isFalse(this.normalMode.isCountKey("0"));
+    assert.isFalse(normalMode.isCountKey("0"));
   });
 
   should("recognize subsequent count keys", () => {
     sendKeyboardEvent("1");
-    assert.isTrue(this.normalMode.isCountKey("0"));
-    assert.isTrue(this.normalMode.isCountKey("9"));
+    assert.isTrue(normalMode.isCountKey("0"));
+    assert.isTrue(normalMode.isCountKey("9"));
   });
 
   should("set and call command handler", () => {
     sendKeyboardEvent("m");
-    assert.isTrue(this.handlerCalled);
+    assert.isTrue(handlerCalled);
   });
 
   should("not call command handler for pass keys", () => {
     sendKeyboardEvent("p");
-    assert.isFalse(this.handlerCalled);
+    assert.isFalse(handlerCalled);
   });
 
   should("accept a count prefix with a single digit", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("m");
-    assert.equal(2, this.handlerCalledCount);
+    assert.equal(2, handlerCalledCount);
   });
 
   should("accept a count prefix with multiple digits", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("0");
     sendKeyboardEvent("m");
-    assert.equal(20, this.handlerCalledCount);
+    assert.equal(20, handlerCalledCount);
   });
 
   should("cancel a count prefix", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("z");
     sendKeyboardEvent("m");
-    assert.equal(true, this.handlerCalled);
-    assert.equal(null, this.handlerCalledCount);
+    assert.equal(true, handlerCalled);
+    assert.equal(null, handlerCalledCount);
   });
 
   should("accept a count prefix for multi-key command mappings", () => {
     sendKeyboardEvent("5");
     sendKeyboardEvent("z");
     sendKeyboardEvent("p");
-    assert.equal(5, this.handlerCalledCount);
+    assert.equal(5, handlerCalledCount);
   });
 
   should("cancel a key prefix", () => {
     sendKeyboardEvent("z");
-    assert.equal(false, this.handlerCalled);
+    assert.equal(false, handlerCalled);
     sendKeyboardEvent("m");
-    assert.equal(true, this.handlerCalled);
+    assert.equal(true, handlerCalled);
   });
 
   should("cancel a count prefix after a prefix key", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("z");
     sendKeyboardEvent("m");
-    assert.equal(null, this.handlerCalledCount);
+    assert.equal(null, handlerCalledCount);
   });
 
   should("cancel a prefix key on escape", () => {
     sendKeyboardEvent("z");
     sendKeyboardEvent("Escape", "keydown");
     sendKeyboardEvent("p");
-    assert.equal(0, this.handlerCalledCount);
+    assert.equal(0, handlerCalledCount);
   });
 });
 
@@ -883,20 +892,22 @@ context("Normal mode", () => {
 });
 
 context("Insert mode", () => {
+  let insertMode;
+
   setup(() => {
     initializeModeState();
-    this.insertMode = new InsertMode({ global: true });
+    insertMode = new InsertMode({ global: true });
   });
 
   should("exit on escape", () => {
-    assert.isTrue(this.insertMode.modeIsActive);
+    assert.isTrue(insertMode.modeIsActive);
     sendKeyboardEvent("Escape", "keydown");
-    assert.isFalse(this.insertMode.modeIsActive);
+    assert.isFalse(insertMode.modeIsActive);
   });
 
   should("resume normal mode after leaving insert mode", () => {
     assert.equal(null, commandName);
-    this.insertMode.exit();
+    insertMode.exit();
     sendKeyboardEvent("m");
     assert.equal("m", commandName);
   });
@@ -1186,19 +1197,21 @@ context("Mode utilities", () => {
 });
 
 context("PostFindMode", () => {
+  let postFindMode;
+
   setup(() => {
     initializeModeState();
     const testContent = "<input type='text' id='first'/>";
     document.getElementById("test-div").innerHTML = testContent;
     document.getElementById("first").focus();
-    this.postFindMode = new PostFindMode();
+    postFindMode = new PostFindMode();
   });
 
   teardown(() => document.getElementById("test-div").innerHTML = ""),
     should("be a singleton", () => {
-      assert.isTrue(this.postFindMode.modeIsActive);
+      assert.isTrue(postFindMode.modeIsActive);
       new PostFindMode();
-      assert.isFalse(this.postFindMode.modeIsActive);
+      assert.isFalse(postFindMode.modeIsActive);
     });
 
   should("suppress unmapped printable keys", () => {
@@ -1208,53 +1221,55 @@ context("PostFindMode", () => {
 
   should("be deactivated on click events", () => {
     handlerStack.bubbleEvent("click", { target: document.activeElement });
-    assert.isFalse(this.postFindMode.modeIsActive);
+    assert.isFalse(postFindMode.modeIsActive);
   });
 
   should("enter insert mode on immediate escape", () => {
     sendKeyboardEvent("Escape", "keydown");
     assert.equal(null, commandCount);
-    assert.isFalse(this.postFindMode.modeIsActive);
+    assert.isFalse(postFindMode.modeIsActive);
   });
 
   should("not enter insert mode on subsequent escapes", () => {
     sendKeyboardEvent("a");
     sendKeyboardEvent("Escape", "keydown");
-    assert.isTrue(this.postFindMode.modeIsActive);
+    assert.isTrue(postFindMode.modeIsActive);
   });
 });
 
 context("WaitForEnter", () => {
+  let isSuccess, waitForEnter;
+
   setup(() => {
     initializeModeState();
-    this.isSuccess = null;
-    this.waitForEnter = new WaitForEnter((isSuccess) => {
-      this.isSuccess = isSuccess;
+    isSuccess = null;
+    waitForEnter = new WaitForEnter((value) => {
+      isSuccess = value;
     });
   });
 
   should("exit with success on Enter", () => {
-    assert.isTrue(this.waitForEnter.modeIsActive);
-    assert.isFalse(this.isSuccess != null);
+    assert.isTrue(waitForEnter.modeIsActive);
+    assert.isFalse(isSuccess != null);
     sendKeyboardEvent("Enter", "keydown");
-    assert.isFalse(this.waitForEnter.modeIsActive);
-    assert.isTrue((this.isSuccess != null) && (this.isSuccess === true));
+    assert.isFalse(waitForEnter.modeIsActive);
+    assert.isTrue((isSuccess != null) && (isSuccess === true));
   });
 
   should("exit without success on Escape", () => {
-    assert.isTrue(this.waitForEnter.modeIsActive);
-    assert.isFalse(this.isSuccess != null);
+    assert.isTrue(waitForEnter.modeIsActive);
+    assert.isFalse(isSuccess != null);
     sendKeyboardEvent("Escape", "keydown");
-    assert.isFalse(this.waitForEnter.modeIsActive);
-    assert.isTrue((this.isSuccess != null) && (this.isSuccess === false));
+    assert.isFalse(waitForEnter.modeIsActive);
+    assert.isTrue((isSuccess != null) && (isSuccess === false));
   });
 
   should("not exit on other keyboard events", () => {
-    assert.isTrue(this.waitForEnter.modeIsActive);
-    assert.isFalse(this.isSuccess != null);
+    assert.isTrue(waitForEnter.modeIsActive);
+    assert.isFalse(isSuccess != null);
     sendKeyboardEvents("abc");
-    assert.isTrue(this.waitForEnter.modeIsActive);
-    assert.isFalse(this.isSuccess != null);
+    assert.isTrue(waitForEnter.modeIsActive);
+    assert.isFalse(isSuccess != null);
   });
 });
 
