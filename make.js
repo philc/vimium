@@ -10,6 +10,8 @@ import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
 import * as shoulda from "./tests/vendor/shoulda.js";
 import JSON5 from "https://deno.land/x/json5@v1.0.0/mod.ts";
 import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
+import * as fileServer from "https://deno.land/std@0.208.0/http/file_server.ts";
+import { getAvailablePort } from "https://deno.land/x/port/mod.ts";
 
 const projectPath = new URL(".", import.meta.url).pathname;
 
@@ -145,8 +147,8 @@ const runUnitTests = async () => {
   return await shoulda.run();
 };
 
-const runDomTests = async () => {
-  const testFile = `${projectPath}/tests/dom_tests/dom_tests.html`;
+const runDomTests = async (port) => {
+  const testUrl = `http://localhost:${port}/tests/dom_tests/dom_tests.html`;
 
   const browser = await puppeteer.launch({
     // NOTE(philc): "Disabling web security" is required for vomnibar_test.js, because we have a
@@ -198,7 +200,7 @@ const runDomTests = async () => {
     window.shouldaJsContents = content;
   }, shouldaJsContents);
 
-  page.goto("file://" + testFile);
+  page.goto(testUrl);
 
   await page.waitForNavigation({ waitUntil: "load" });
 
@@ -240,7 +242,28 @@ task("test-unit", [], async () => {
 desc("Run DOM tests");
 task("test-dom", [], async () => {
   const port = await getAvailablePort();
-  if (!success) {
+  let served404 = false;
+  const httpServer = Deno.serve({ port }, async (req) => {
+    const url = new URL(req.url);
+    let path = decodeURIComponent(url.pathname);
+    if (path.startsWith("/")) {
+      path = "." + path;
+    }
+    if (!(await fs.exists(path))) {
+      console.error("dom-tests: requested missing file (not found):", path);
+      served404 = true;
+      return new Response(null, { status: 404 });
+    } else {
+      return fileServer.serveFile(req, path);
+    }
+  });
+
+  const success = await runDomTests(port);
+  if (served404) {
+    console.log("Tests failed because a background or content script requested a missing file.");
+  }
+  await httpServer.shutdown();
+  if (served404 || !success) {
     abort("test-dom failed.");
   }
 });
