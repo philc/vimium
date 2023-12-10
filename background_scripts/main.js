@@ -254,7 +254,16 @@ const BackgroundCommands = {
       // In Firefox, Ctrl-W will not close a pinned tab, but on Chrome, it will. We try to be
       // consistent with each browser's UX for pinned tabs.
       if (tab.pinned && BgUtils.isFirefox()) return;
-      chrome.tabs.remove(tab.id);
+      if(Settings.get("keepLastTabOpen")){
+        chrome.tabs.query({ currentWindow: true }, function (tabs) {
+          if(tabs.length == 1){
+            chrome.tabs.create({ url: Settings.get("newTabUrl") });
+            chrome.tabs.remove(tabs[0].id);
+          }
+        });
+      } else {
+        chrome.tabs.remove(tab.id);
+      }
     });
   },
   restoreTab: mkRepeatCommand((request, callback) =>
