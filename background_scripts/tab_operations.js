@@ -3,6 +3,8 @@
 //
 // TODO(philc): Convert these to Promise-based APIs.
 
+const chromeNewTabUrl = "about:newtab";
+
 // Opens the url in the current tab.
 // If the URL is a JavaScript snippet, execute that snippet in the current tab.
 async function openUrlInCurrentTab(request) {
@@ -79,7 +81,7 @@ async function openUrlInNewTab(request, callback) {
     tabConfig.active = request.active;
   }
   // Firefox does not support "about:newtab" in chrome.tabs.create.
-  if (tabConfig["url"] === Utils.chromeNewTabUrl) {
+  if (tabConfig["url"] === chromeNewTabUrl) {
     delete tabConfig["url"];
   }
 
@@ -105,7 +107,7 @@ async function openUrlInNewWindow(request, callback) {
     winConfig.active = request.active;
   }
   // Firefox does not support "about:newtab" in chrome.tabs.create.
-  if (tabConfig["url"] === Utils.chromeNewTabUrl) {
+  if (tabConfig["url"] === chromeNewTabUrl) {
     delete winConfig["url"];
   }
   return chrome.windows.create(winConfig, callback);
