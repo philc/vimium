@@ -258,8 +258,8 @@ const BackgroundCommands = {
         chrome.tabs.query({ currentWindow: true }, function (tabs) {
           if(tabs.length == 1){
             chrome.tabs.create({ url: Settings.get("newTabUrl") });
-            chrome.tabs.remove(tabs[0].id);
           }
+          chrome.tabs.remove(tab.id);
         });
       } else {
         chrome.tabs.remove(tab.id);
