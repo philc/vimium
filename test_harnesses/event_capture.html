@@ -1,0 +1,29 @@
+<!--
+  This is a test harness to determine whether a page can install event listeners before Vimium's
+  content scripts can.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Event capture</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <script>
+    window.addEventListener("keydown", (event) => {
+      console.log("Page's received keydown. Vimium in normal mode should not allow this.");
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+  </script>
+  <style type="text/css" media="screen">
+    body {
+      background-color: black;
+    }
+  </style>
+</head>
+
+<body>
+
+</body>
+
+</html>

@@ -6,52 +6,70 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const $ = id => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 const $$ = (element, selector) => element.querySelector(selector);
 
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
-const compareKeys = function(a,b) {
-  a = a.replace("<","~");
+const compareKeys = function (a, b) {
+  a = a.replace("<", "~");
   b = b.replace("<", "~");
-  if (a < b)
+  if (a < b) {
     return -1;
-  else if (b < a)
+  } else if (b < a) {
     return 1;
-  else
+  } else {
     return 0;
+  }
 };
 
-// This overrides the HelpDialog implementation in vimium_frontend.js.  We provide aliases for the two
-// HelpDialog methods required by normalMode (isShowing() and toggle()).
+// This overrides the HelpDialog implementation in vimium_frontend.js. We provide aliases for the
+// two HelpDialog methods required by normalMode (isShowing() and toggle()).
 const HelpDialog = {
   dialogElement: null,
-  isShowing() { return true; },
+  isShowing() {
+    return true;
+  },
 
   // This setting is pulled out of local storage. It's false by default.
-  getShowAdvancedCommands() { return Settings.get("helpDialog_showAdvancedCommands"); },
+  getShowAdvancedCommands() {
+    return Settings.get("helpDialog_showAdvancedCommands");
+  },
 
   init() {
-    if (this.dialogElement != null)
+    if (this.dialogElement != null) {
       return;
+    }
     this.dialogElement = document.getElementById("vimiumHelpDialog");
 
-    this.dialogElement.getElementsByClassName("closeButton")[0].addEventListener("click", clickEvent => {
-      clickEvent.preventDefault();
-      this.hide();
-    }, false);
-
-    document.getElementById("helpDialogOptionsPage").addEventListener("click", function(clickEvent) {
-      clickEvent.preventDefault();
-      chrome.runtime.sendMessage({handler: "openOptionsPageInNewTab"});
-    }, false);
-
-    document.getElementById("toggleAdvancedCommands").
-      addEventListener("click", HelpDialog.toggleAdvancedCommands.bind(HelpDialog), false);
-
-    document.documentElement.addEventListener("click", event => {
-      if (!this.dialogElement.contains(event.target))
+    this.dialogElement.getElementsByClassName("closeButton")[0].addEventListener(
+      "click",
+      (clickEvent) => {
+        clickEvent.preventDefault();
         this.hide();
-    } , false);
+      },
+      false,
+    );
+
+    // "auxclick" handles a click with the middle mouse button.
+    for (let eventName of ["click", "auxclick"]) {
+      document.getElementById("helpDialogOptionsPage").addEventListener(
+        eventName,
+        (event) => {
+          event.preventDefault();
+          chrome.runtime.sendMessage({ handler: "openOptionsPageInNewTab" });
+        },
+        false,
+      );
+    }
+
+    document.getElementById("toggleAdvancedCommands")
+      .addEventListener("click", HelpDialog.toggleAdvancedCommands.bind(HelpDialog), false);
+
+    document.documentElement.addEventListener("click", (event) => {
+      if (!this.dialogElement.contains(event.target)) {
+        this.hide();
+      }
+    }, false);
   },
 
   instantiateHtmlTemplate(parentNode, templateId, callback) {
@@ -61,39 +79,47 @@ const HelpDialog = {
     callback(parentNode.lastElementChild);
   },
 
-  show({showAllCommandDetails}) {
+  show({ showAllCommandDetails }) {
     $("help-dialog-title").textContent = showAllCommandDetails ? "Command Listing" : "Help";
     $("help-dialog-version").textContent = Utils.getCurrentVersion();
 
-    chrome.storage.local.get("helpPageData", ({helpPageData}) => {
+    chrome.storage.session.get("helpPageData", ({ helpPageData }) => {
       for (let group of Object.keys(helpPageData)) {
         const commands = helpPageData[group];
         const container = this.dialogElement.querySelector(`#help-dialog-${group}`);
         container.innerHTML = "";
 
         for (var command of Array.from(commands)) {
-          if (!showAllCommandDetails && command.keys.length == 0)
+          if (!showAllCommandDetails && command.keys.length == 0) {
             continue;
+          }
 
           let keysElement = null;
           let descriptionElement = null;
 
           const useTwoRows = command.keys.join(", ").length >= 12;
           if (!useTwoRows) {
-            this.instantiateHtmlTemplate(container, "#helpDialogEntry", function(element) {
-              if (command.advanced)
+            this.instantiateHtmlTemplate(container, "#helpDialogEntry", function (element) {
+              if (command.advanced) {
                 element.classList.add("advanced");
-              keysElement = (descriptionElement = element);
+              }
+              keysElement = descriptionElement = element;
             });
           } else {
-            this.instantiateHtmlTemplate(container, "#helpDialogEntryBindingsOnly", function(element) {
-              if (command.advanced)
+            this.instantiateHtmlTemplate(
+              container,
+              "#helpDialogEntryBindingsOnly",
+              function (element) {
+                if (command.advanced) {
+                  element.classList.add("advanced");
+                }
+                keysElement = element;
+              },
+            );
+            this.instantiateHtmlTemplate(container, "#helpDialogEntry", function (element) {
+              if (command.advanced) {
                 element.classList.add("advanced");
-              keysElement = element;
-            });
-            this.instantiateHtmlTemplate(container, "#helpDialogEntry", function(element) {
-              if (command.advanced)
-                element.classList.add("advanced");
+              }
               descriptionElement = element;
             });
           }
@@ -103,26 +129,31 @@ const HelpDialog = {
           keysElement = $$(keysElement, ".vimiumKeyBindings");
           let lastElement = null;
           for (var key of command.keys.sort(compareKeys)) {
-            this.instantiateHtmlTemplate(keysElement, "#keysTemplate", function(element) {
+            this.instantiateHtmlTemplate(keysElement, "#keysTemplate", function (element) {
               lastElement = element;
               $$(element, ".vimiumHelpDialogKey").textContent = key;
             });
           }
 
           // And strip off the trailing ", ", if necessary.
-          if (lastElement)
+          if (lastElement) {
             lastElement.removeChild($$(lastElement, ".commaSeparator"));
+          }
 
           if (showAllCommandDetails) {
-            this.instantiateHtmlTemplate($$(descriptionElement, ".vimiumHelpDescription"), "#commandNameTemplate", function(element) {
-              const commandNameElement = $$(element, ".vimiumCopyCommandNameName");
-              commandNameElement.textContent = command.command;
-              commandNameElement.title = `Click to copy \"${command.command}\" to clipboard.`;
-              commandNameElement.addEventListener("click", function() {
-                HUD.copyToClipboard(commandNameElement.textContent);
-                HUD.showForDuration(`Yanked ${commandNameElement.textContent}.`, 2000);
-              });
-            });
+            this.instantiateHtmlTemplate(
+              $$(descriptionElement, ".vimiumHelpDescription"),
+              "#commandNameTemplate",
+              function (element) {
+                const commandNameElement = $$(element, ".vimiumCopyCommandNameName");
+                commandNameElement.textContent = command.command;
+                commandNameElement.title = `Click to copy \"${command.command}\" to clipboard.`;
+                commandNameElement.addEventListener("click", function () {
+                  HUD.copyToClipboard(commandNameElement.textContent);
+                  HUD.show(`Yanked ${commandNameElement.textContent}.`, 2000);
+                });
+              },
+            );
           }
           // }
         }
@@ -155,40 +186,44 @@ const HelpDialog = {
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced);
     // Try to keep the "show advanced commands" button in the same scroll position.
     const scrollHeightDelta = vimiumHelpDialogContainer.scrollHeight - scrollHeightBefore;
-    if (scrollHeightDelta > 0)
+    if (scrollHeightDelta > 0) {
       vimiumHelpDialogContainer.scrollTop += scrollHeightDelta;
+    }
   },
 
   showAdvancedCommands(visible) {
-    document.getElementById("toggleAdvancedCommands").textContent =
-      visible ? "Hide advanced commands" : "Show advanced commands";
+    document.getElementById("toggleAdvancedCommands").textContent = visible
+      ? "Hide advanced commands"
+      : "Show advanced commands";
 
     // Add/remove the showAdvanced class to show/hide advanced commands.
     const addOrRemove = visible ? "add" : "remove";
     HelpDialog.dialogElement.classList[addOrRemove]("showAdvanced");
-  }
+  },
 };
 
-UIComponentServer.registerHandler(function(event) {
+UIComponentServer.registerHandler(async function (event) {
+  await Settings.onLoaded();
+  await Utils.populateBrowserInfo();
   switch (event.data.name != null ? event.data.name : event.data) {
-    case "hide": HelpDialog.hide(); break;
+    case "hide":
+      HelpDialog.hide();
+      break;
     case "activate":
       HelpDialog.init();
       HelpDialog.show(event.data);
-      Frame.postMessage("registerFrame");
       // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
       Mode.setIndicator();
       break;
     case "hidden":
-      // Unregister the frame, so that it's not available for `gf` or link hints.
-      Frame.postMessage("unregisterFrame");
       // Abandon any HUD which might be showing within the help dialog.
       HUD.abandon();
       break;
   }
 });
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async () => {
+  await Settings.onLoaded();
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 

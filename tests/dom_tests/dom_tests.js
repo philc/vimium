@@ -1,8 +1,9 @@
 let commandCount = null;
 let commandName = null;
 
-// Some tests have side effects on the handler stack and the active mode, so these are reset on setup.  Also,
-// some tests affect the focus (e.g. Vomnibar tests), so we make sure the window has the focus.
+// Some tests have side effects on the handler stack and the active mode, so these are reset on
+// setup. Also, some tests affect the focus (e.g. Vomnibar tests), so we make sure the window has
+// the focus.
 const initializeModeState = () => {
   window.focus();
   Mode.reset();
@@ -12,9 +13,9 @@ const initializeModeState = () => {
   normalMode.setKeyMapping({
     m: { options: {}, command: "m" }, // A mapped key.
     p: { options: {}, command: "p" }, // A pass key.
-    z: {p: {options: {}, command: "zp"} } // Not a pass key.
+    z: { p: { options: {}, command: "zp" } }, // Not a pass key.
   });
-  normalMode.setCommandHandler(({command, count}) => {
+  normalMode.setCommandHandler(({ command, count }) => {
     [commandName, commandCount] = [command.command, count];
   });
   commandName = null;
@@ -22,29 +23,31 @@ const initializeModeState = () => {
   return normalMode;
 };
 
-// Tell Settings that it's been loaded.
-Settings.isLoaded = true;
-
 //
 // Retrieve the hint markers as an array object.
 //
-const getHintMarkers = () => {
-  return Array.prototype.slice.call(document.getElementsByClassName("vimiumHintMarker"), 0)
-};
+const getHintMarkerEls = () => Array.from(document.querySelectorAll(".vimiumHintMarker"));
 
-const stubSettings = (key, value) => stub(Settings.cache, key, JSON.stringify(value));
+const stubSettings = (key, value) => stub(Settings._settings, key, value);
 
 HintCoordinator.sendMessage = (name, request) => {
-  if (request == null)
+  if (request == null) {
     request = {};
-  if (HintCoordinator[name])
+  }
+  if (HintCoordinator[name]) {
     HintCoordinator[name](request);
+  }
   return request;
 };
 
 const activateLinkHintsMode = () => {
-  HintCoordinator.getHintDescriptors({modeIndex: 0});
-  return HintCoordinator.activateMode({hintDescriptors: {}, modeIndex: 0, originatingFrameId: frameId});
+  HintCoordinator.getHintDescriptors({ modeIndex: 0 }, {}, () => {});
+  HintCoordinator.activateMode({
+    frameIdToHintDescriptors: {},
+    modeIndex: 0,
+    originatingFrameId: frameId,
+  });
+  return HintCoordinator.linkHintsMode;
 };
 
 //
@@ -55,7 +58,6 @@ const createGeneralHintTests = (isFilteredMode) => {
   window.vimiumOnClickAttributeName = "does-not-matter";
 
   context("Link hints", () => {
-
     setup(() => {
       initializeModeState();
       const testContent = "<a>test</a><a>tress</a>";
@@ -66,13 +68,13 @@ const createGeneralHintTests = (isFilteredMode) => {
       stub(window, "windowIsFocused", () => true);
     });
 
-    tearDown(() => document.getElementById("test-div").innerHTML = "");
+    teardown(() => document.getElementById("test-div").innerHTML = "");
 
     should("create hints when activated, discard them when deactivated", () => {
-      const linkHints = activateLinkHintsMode();
-      assert.isFalse((linkHints.hintMarkerContainingDiv == null));
-      linkHints.deactivateMode();
-      assert.isTrue((linkHints.hintMarkerContainingDiv == null));
+      const mode = activateLinkHintsMode();
+      assert.isFalse(mode.hintMarkerContainingDiv == null);
+      mode.deactivateMode();
+      assert.isTrue(mode.hintMarkerContainingDiv == null);
     });
 
     should("position items correctly", () => {
@@ -81,17 +83,17 @@ const createGeneralHintTests = (isFilteredMode) => {
         assert.equal(element1.getClientRects()[0].top, element2.getClientRects()[0].top);
       };
       stub(document.body.style, "position", "static");
-      let linkHints = activateLinkHintsMode();
-      let hintMarkers = getHintMarkers();
-      assertStartPosition(document.getElementsByTagName("a")[0], hintMarkers[0]);
-      assertStartPosition(document.getElementsByTagName("a")[1], hintMarkers[1]);
-      linkHints.deactivateMode();
+      let mode = activateLinkHintsMode();
+      let markerEls = getHintMarkerEls();
+      assertStartPosition(document.getElementsByTagName("a")[0], markerEls[0]);
+      assertStartPosition(document.getElementsByTagName("a")[1], markerEls[1]);
+      mode.deactivateMode();
       stub(document.body.style, "position", "relative");
-      linkHints = activateLinkHintsMode();
-      hintMarkers = getHintMarkers();
-      assertStartPosition(document.getElementsByTagName("a")[0], hintMarkers[0]);
-      assertStartPosition(document.getElementsByTagName("a")[1], hintMarkers[1]);
-      linkHints.deactivateMode();
+      mode = activateLinkHintsMode();
+      markerEls = getHintMarkerEls();
+      assertStartPosition(document.getElementsByTagName("a")[0], markerEls[0]);
+      assertStartPosition(document.getElementsByTagName("a")[1], markerEls[1]);
+      mode.deactivateMode();
     });
   });
 };
@@ -100,81 +102,107 @@ createGeneralHintTests(false);
 createGeneralHintTests(true);
 
 context("False positives in link-hint", () => {
-
   setup(() => {
-    const testContent = "<span class=\"buttonWrapper\">false positive<a>clickable</a></span>" +
-          "<span class=\"buttonWrapper\">clickable</span>";
+    const testContent = '<span class="buttonWrapper">false positive<a>clickable</a></span>' +
+      '<span class="buttonWrapper">clickable</span>';
     document.getElementById("test-div").innerHTML = testContent;
     stubSettings("filterLinkHints", true);
     stubSettings("linkHintNumbers", "12");
     stub(window, "windowIsFocused", () => true);
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = "");
+  teardown(() => document.getElementById("test-div").innerHTML = "");
 
   should("handle false positives", () => {
-    const linkHints = activateLinkHintsMode();
-    const hintMarkers = getHintMarkers();
-    linkHints.deactivateMode();
-    assert.equal(2, hintMarkers.length);
-    for (let hintMarker of hintMarkers)
-      assert.equal("clickable", hintMarker.linkText);
+    const mode = activateLinkHintsMode();
+    mode.deactivateMode();
+    assert.equal(["clickable", "clickable"], mode.hintMarkers.map((m) => m.linkText));
   });
 });
 
 context("jsaction matching", () => {
+  let element;
+
   setup(() => {
     stubSettings("filterLinkHints", true);
     const testContent = '<p id="test-paragraph">clickable</p>';
     document.getElementById("test-div").innerHTML = testContent;
-    this.element = document.getElementById("test-paragraph");
+    element = document.getElementById("test-paragraph");
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = "");
+  teardown(() => document.getElementById("test-div").innerHTML = "");
 
   should("select jsaction elements", () => {
-    for (let text of ["click:namespace.actionName", "namespace.actionName"]) {
-      this.element.setAttribute("jsaction", text);
-      const linkHints = activateLinkHintsMode();
-      const hintMarkers = getHintMarkers().filter(marker => marker.linkText !== "Frame.");
-      linkHints.deactivateMode();
-      assert.equal(1, hintMarkers.length);
-      assert.equal("clickable", hintMarkers[0].linkText);
-      assert.equal(this.element, hintMarkers[0].localHintDescriptor.element);
+    for (const text of ["click:namespace.actionName", "namespace.actionName"]) {
+      element.setAttribute("jsaction", text);
+      const mode = activateLinkHintsMode();
+      mode.deactivateMode();
+      assert.equal(1, mode.hintMarkers.length);
+      assert.equal("clickable", mode.hintMarkers[0].linkText);
+      assert.equal(element, mode.hintMarkers[0].localHint.element);
     }
   });
 
   should("not select inactive jsaction elements", () => {
-    for (let text of ["mousedown:namespace.actionName", "click:namespace._", "none", "namespace:_"]) {
-      this.element.setAttribute("jsaction", text);
+    const attributes = [
+      "mousedown:namespace.actionName",
+      "click:namespace._",
+      "none",
+      "namespace:_",
+    ];
+    for (const attribute of attributes) {
+      element.setAttribute("jsaction", attribute);
       const linkHints = activateLinkHintsMode();
-      const hintMarkers = getHintMarkers().filter(marker => marker.linkText !== "Frame.");
+      const hintMarkers = getHintMarkerEls().filter((marker) => marker.linkText !== "Frame.");
       linkHints.deactivateMode();
       assert.equal(0, hintMarkers.length);
     }
   });
 });
 
+context("link hints for image maps", () => {
+  setup(() => {
+    const testContent = '<img usemap="#the-map" style="width: 50px; height: 50px">' +
+      '<map name="the-map">' +
+      '<area shape="rect" coords="0,0,20,50" href="#">' +
+      '<area shape="rect" coords="0,30,30,50" href="#">' +
+      "</area>";
+    document.getElementById("test-div").innerHTML = testContent;
+  });
+
+  teardown(() => document.getElementById("test-div").innerHTML = "");
+
+  should("generate a hint for each area in the image map", () => {
+    const mode = activateLinkHintsMode();
+    const markerEls = getHintMarkerEls();
+    assert.equal(2, markerEls.length);
+    mode.deactivateMode();
+  });
+});
+
 const sendKeyboardEvent = (key, type, extra) => {
-  if (type == null) { type = "keydown"; }
-  if (extra == null) { extra = {}; }
-  handlerStack.bubbleEvent(type, Object.assign(extra, {
+  if (type == null) type = "keydown";
+  if (extra == null) extra = {};
+  handlerStack.bubbleEvent(
     type,
-    key,
-    preventDefault() {},
-    stopImmediatePropagation() {}
-  }));
+    Object.assign(extra, {
+      type,
+      key,
+      preventDefault() {},
+      stopImmediatePropagation() {},
+    }),
+  );
 };
 
 const sendKeyboardEvents = (keys) => {
-  for (let key of keys.split(""))
+  for (const key of keys.split("")) {
     sendKeyboardEvent(key);
+  }
 };
-
-const inputs = [];
 
 // TODO(philc): For some reason, this test corrupts the state linkhints state for other tests, in particular,
 // the alphabet hints tests. I haven't yet dug into why.
+// const inputs = [];
 // context("Test link hints for focusing input elements correctly", () => {
 //   let linkHintsMode;
 
@@ -206,7 +234,7 @@ const inputs = [];
 //     inputs.push(input);
 //   });
 
-//   tearDown(() => {
+//   teardown(() => {
 //     document.getElementById("test-div").innerHTML = "";
 //     // linkHintsMode.deactivateMode(); // TODO(philc): I don't think this should be necessary.
 //   });
@@ -222,8 +250,8 @@ const inputs = [];
 //       input.addEventListener("click", activeListener, false);
 
 //       linkHintsMode = activateLinkHintsMode();
-//       const [hint] = getHintMarkers().
-//             filter(hint => input === HintCoordinator.getLocalHintMarker(hint.hintDescriptor).element);
+//       const [hint] = getHintMarkerEls().
+//             filter(hint => input === HintCoordinator.getLocalHint(hint.hintDescriptor).element);
 
 //       for (let char of hint.hintString)
 //         sendKeyboardEvent(char);
@@ -236,36 +264,38 @@ const inputs = [];
 // });
 
 context("Test link hints for changing mode", () => {
+  let linkHints;
+
   setup(() => {
     initializeModeState();
     const testDiv = document.getElementById("test-div");
     testDiv.innerHTML = "<a>link</a>";
-    this.linkHints = activateLinkHintsMode();
+    linkHints = activateLinkHintsMode();
   });
 
-  tearDown(() => {
+  teardown(() => {
     document.getElementById("test-div").innerHTML = "";
-    this.linkHints.deactivateMode();
+    linkHints.deactivateMode();
   });
 
   should("change mode on shift", () => {
-    assert.equal("curr-tab", this.linkHints.mode.name);
+    assert.equal("curr-tab", linkHints.mode.name);
     sendKeyboardEvent("Shift", "keydown");
-    assert.equal("bg-tab", this.linkHints.mode.name);
+    assert.equal("bg-tab", linkHints.mode.name);
     sendKeyboardEvent("Shift", "keyup");
-    assert.equal("curr-tab", this.linkHints.mode.name);
+    assert.equal("curr-tab", linkHints.mode.name);
   });
 
   should("change mode on ctrl", () => {
-    assert.equal("curr-tab", this.linkHints.mode.name);
+    assert.equal("curr-tab", linkHints.mode.name);
     sendKeyboardEvent("Control", "keydown");
-    assert.equal("fg-tab", this.linkHints.mode.name);
+    assert.equal("fg-tab", linkHints.mode.name);
     sendKeyboardEvent("Control", "keyup");
-    assert.equal("curr-tab", this.linkHints.mode.name);
+    assert.equal("curr-tab", linkHints.mode.name);
   });
 });
 
-const createLinks = function(n) {
+const createLinks = function (n) {
   for (let i = 0, end = n; i < end; i++) {
     const link = document.createElement("a");
     link.textContent = "test";
@@ -274,7 +304,7 @@ const createLinks = function(n) {
 };
 
 context("Alphabetical link hints", () => {
-  let linkHints;
+  let mode;
   setup(() => {
     initializeModeState();
     stubSettings("filterLinkHints", false);
@@ -284,55 +314,58 @@ context("Alphabetical link hints", () => {
     document.getElementById("test-div").innerHTML = "";
     // Three hints will trigger double hint chars.
     createLinks(3);
-    linkHints = activateLinkHintsMode();
+    mode = activateLinkHintsMode();
   });
 
-  tearDown(() => {
-    linkHints.deactivateMode();
+  teardown(() => {
+    mode.deactivateMode();
     document.getElementById("test-div").innerHTML = "";
   });
 
   should("label the hints correctly", () => {
-    const hintMarkers = getHintMarkers();
-    const expectedHints = ["aa", "b", "ab"];
-    assert.equal(3, hintMarkers.length);
-    for (let i = 0; i < expectedHints.length; i++) {
-      const hint = expectedHints[i];
-      assert.equal(hint, hintMarkers[i].hintString);
-    }
+    assert.equal(
+      ["aa", "b", "ab"],
+      mode.hintMarkers.map((m) => m.hintString),
+    );
   });
 
   should("narrow the hints", () => {
-    const hintMarkers = getHintMarkers();
     sendKeyboardEvent("a");
-    assert.equal("none", hintMarkers[1].style.display);
-    assert.equal("", hintMarkers[0].style.display);
+    assert.equal(
+      ["", "none", ""],
+      mode.hintMarkers.map((m) => m.element.style.display),
+    );
   });
 
   should("generate the correct number of alphabet hints", () => {
-    const alphabetHints = new AlphabetHints;
-    for (let n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+    const alphabetHints = new AlphabetHints();
+    for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
       const hintStrings = alphabetHints.hintStrings(n);
       assert.equal(n, hintStrings.length);
     }
   });
 
   should("generate non-overlapping alphabet hints", () => {
-    const alphabetHints = new AlphabetHints;
-    for (let n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+    const alphabetHints = new AlphabetHints();
+    for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
       const hintStrings = alphabetHints.hintStrings(n);
-      for (let h1 of hintStrings)
-        for (let h2 of hintStrings)
-          if (h1 !== h2)
+      for (const h1 of hintStrings) {
+        for (const h2 of hintStrings) {
+          if (h1 !== h2) {
             assert.isFalse(0 === h1.indexOf(h2));
+          }
+        }
+      }
     }
-  })
+  });
 });
 
 context("Filtered link hints", () => {
-  // Note. In all of these tests, the order of the elements returned by getHintMarkers() may be different from
-  // the order they are listed in the test HTML content. This is because LinkHints.activateMode() sorts the
-  // elements.
+  // Note. In all of these tests, the order of the elements returned by getHintMarkerEls() may be
+  // different from the order they are listed in the test HTML content. This is because
+  // LinkHints.activateMode() sorts the elements.
+
+  let mode;
 
   setup(() => {
     stubSettings("filterLinkHints", true);
@@ -345,46 +378,49 @@ context("Filtered link hints", () => {
       initializeModeState();
       const testContent = "<a>test</a><a>tress</a><a>trait</a><a>track<img alt='alt text'/></a>";
       document.getElementById("test-div").innerHTML = testContent;
-      this.linkHints = activateLinkHintsMode();
+      mode = activateLinkHintsMode();
     });
 
-    tearDown(() => {
+    teardown(() => {
       document.getElementById("test-div").innerHTML = "";
-      this.linkHints.deactivateMode();
+      mode.deactivateMode();
     });
 
     should("label the hints", () => {
-      const hintMarkers = getHintMarkers();
-      const expectedMarkers = [1, 2, 3, 4].map(m => m.toString());
-      const actualMarkers = [0, 1, 2, 3].map(i => hintMarkers[i].textContent.toLowerCase());
+      const hintMarkers = getHintMarkerEls();
+      const expectedMarkers = [1, 2, 3, 4].map((m) => m.toString());
+      const actualMarkers = [0, 1, 2, 3].map((i) => hintMarkers[i].textContent.toLowerCase());
       assert.equal(expectedMarkers.length, actualMarkers.length);
-      for (let marker of expectedMarkers)
+      for (const marker of expectedMarkers) {
         assert.isTrue(actualMarkers.includes(marker));
+      }
     });
 
     should("narrow the hints", () => {
-      const hintMarkers = getHintMarkers();
       sendKeyboardEvent("t");
       sendKeyboardEvent("r");
-      assert.equal("none", hintMarkers[0].style.display);
-      assert.equal("3", hintMarkers[1].hintString);
-      assert.equal("", hintMarkers[1].style.display);
+      assert.equal(
+        ["none", "", "", ""],
+        mode.hintMarkers.map((m) => m.element.style.display),
+      );
+      assert.equal("3", mode.hintMarkers[1].hintString);
       sendKeyboardEvent("a");
-      assert.equal("1", hintMarkers[3].hintString);
+      assert.equal("1", mode.hintMarkers[3].hintString);
     });
 
-    // This test is the same as above, but with an extra non-matching character.  The effect should be the
-    // same.
+    // This test is the same as above, but with an extra non-matching character. The effect should
+    // be the same.
     should("narrow the hints and ignore typing mistakes", () => {
-      const hintMarkers = getHintMarkers();
       sendKeyboardEvent("t");
       sendKeyboardEvent("r");
       sendKeyboardEvent("x");
-      assert.equal("none", hintMarkers[0].style.display);
-      assert.equal("3", hintMarkers[1].hintString);
-      assert.equal("", hintMarkers[1].style.display);
+      assert.equal(
+        ["none", "", "", ""],
+        mode.hintMarkers.map((m) => m.element.style.display),
+      );
+      assert.equal("3", mode.hintMarkers[1].hintString);
       sendKeyboardEvent("a");
-      assert.equal("1", hintMarkers[3].hintString);
+      assert.equal("1", mode.hintMarkers[3].hintString);
     });
   });
 
@@ -396,18 +432,18 @@ context("Filtered link hints", () => {
         "<a><img title='some title' width='10px' height='10px'/></a>" +
         "<a><img src='' width='320px' height='100px'/></a>";
       document.getElementById("test-div").innerHTML = testContent;
-      this.linkHints = activateLinkHintsMode();
+      mode = activateLinkHintsMode();
     });
 
-    tearDown(() => {
+    teardown(() => {
       document.getElementById("test-div").innerHTML = "";
-      this.linkHints.deactivateMode();
+      mode.deactivateMode();
     });
 
     should("label the images", () => {
-      let hintMarkers = getHintMarkers().map(marker => marker.textContent.toLowerCase());
+      let hintMarkers = getHintMarkerEls().map((m) => m.textContent.toLowerCase());
       // We don't know the actual hint numbers which will be assigned, so we replace them with "N".
-      hintMarkers = hintMarkers.map(str => str.replace(/^[1-4]/, "N"));
+      hintMarkers = hintMarkers.map((str) => str.replace(/^[1-4]/, "N"));
       assert.equal(4, hintMarkers.length);
       assert.isTrue(hintMarkers.includes("N: alt text"));
       assert.isTrue(hintMarkers.includes("N: some title"));
@@ -419,24 +455,25 @@ context("Filtered link hints", () => {
   context("Input hints", () => {
     setup(() => {
       initializeModeState();
-      const testContent = `<input type='text' value='some value'/><input type='password' value='some value'/> \
+      const testContent =
+        `<input type='text' value='some value'/><input type='password' value='some value'/> \
 <textarea>some text</textarea><label for='test-input'/>a label</label> \
 <input type='text' id='test-input' value='some value'/> \
 <label for='test-input-2'/>a label: </label><input type='text' id='test-input-2' value='some value'/>`;
       document.getElementById("test-div").innerHTML = testContent;
-      this.linkHints = activateLinkHintsMode();
+      mode = activateLinkHintsMode();
     });
 
-    tearDown(() => {
+    teardown(() => {
       document.getElementById("test-div").innerHTML = "";
-      this.linkHints.deactivateMode();
+      mode.deactivateMode();
     });
 
     should("label the input elements", () => {
-      let hintMarkers = getHintMarkers();
-      hintMarkers = getHintMarkers().map(marker => marker.textContent.toLowerCase());
+      let hintMarkers = getHintMarkerEls();
+      hintMarkers = getHintMarkerEls().map((m) => m.textContent.toLowerCase());
       // We don't know the actual hint numbers which will be assigned, so we replace them with "N".
-      hintMarkers = hintMarkers.map(str => str.replace(/^[0-9]+/, "N"));
+      hintMarkers = hintMarkers.map((str) => str.replace(/^[0-9]+/, "N"));
       assert.equal(5, hintMarkers.length);
       assert.isTrue(hintMarkers.includes("N"));
       assert.isTrue(hintMarkers.includes("N"));
@@ -447,59 +484,64 @@ context("Filtered link hints", () => {
   });
 
   context("Text hint scoring", () => {
+    let getActiveHintMarker;
+
     setup(() => {
       initializeModeState();
       const testContent = [
-        {id: 0, text: "the xboy stood on the xburning deck"}, // Noise.
-        {id: 1, text: "the boy stood on the xburning deck"},  // Whole word (boy).
-        {id: 2, text: "on the xboy stood the xburning deck"}, // Start of text (on).
-        {id: 3, text: "the xboy stood on the xburning deck"}, // Noise.
-        {id: 4, text: "the xboy stood on the xburning deck"}, // Noise.
-        {id: 5, text: "the xboy stood on the xburning"},      // Shortest text..
-        {id: 6, text: "the xboy stood on the burning xdeck"}, // Start of word (bu)
-        {id: 7, text: "test abc one - longer"},               // For tab test - 2.
-        {id: 8, text: "test abc one"},                        // For tab test - 1.
-        {id: 9, text: "test abc one - longer still"}         // For tab test - 3.
-      ].map(({id,text}) => `<a id=\"${id}\">${text}</a>`).join(" ");
+        { id: 0, text: "the xboy stood on the xburning deck" }, // Noise.
+        { id: 1, text: "the boy stood on the xburning deck" }, // Whole word (boy).
+        { id: 2, text: "on the xboy stood the xburning deck" }, // Start of text (on).
+        { id: 3, text: "the xboy stood on the xburning deck" }, // Noise.
+        { id: 4, text: "the xboy stood on the xburning deck" }, // Noise.
+        { id: 5, text: "the xboy stood on the xburning" }, // Shortest text..
+        { id: 6, text: "the xboy stood on the burning xdeck" }, // Start of word (bu)
+        { id: 7, text: "test abc one - longer" }, // For tab test - 2.
+        { id: 8, text: "test abc one" }, // For tab test - 1.
+        { id: 9, text: "test abc one - longer still" }, // For tab test - 3.
+      ].map(({ id, text }) => `<a id=\"${id}\">${text}</a>`).join(" ");
       document.getElementById("test-div").innerHTML = testContent;
-      this.linkHints = activateLinkHintsMode();
-      this.getActiveHintMarker = () => {
-        return HintCoordinator.getLocalHintMarker(this.linkHints.markerMatcher.activeHintMarker.hintDescriptor).element.id;
+      mode = activateLinkHintsMode();
+
+      getActiveHintMarker = () => {
+        return HintCoordinator.getLocalHint(
+          mode.markerMatcher.activeHintMarker.hintDescriptor,
+        ).element.id;
       };
     });
 
-    tearDown(() => {
+    teardown(() => {
       document.getElementById("test-div").innerHTML = "";
-      this.linkHints.deactivateMode();
+      mode.deactivateMode();
     });
 
     should("score start-of-word matches highly", () => {
       sendKeyboardEvents("bu");
-      assert.equal("6", this.getActiveHintMarker());
+      assert.equal("6", getActiveHintMarker());
     });
 
     should("score start-of-text matches highly (br)", () => {
       sendKeyboardEvents("on");
-      assert.equal("2", this.getActiveHintMarker());
+      assert.equal("2", getActiveHintMarker());
     });
 
     should("score whole-word matches highly", () => {
       sendKeyboardEvents("boy");
-      assert.equal("1", this.getActiveHintMarker());
+      assert.equal("1", getActiveHintMarker());
     });
 
     should("score shorter texts more highly", () => {
       sendKeyboardEvents("stood");
-      assert.equal("5", this.getActiveHintMarker());
+      assert.equal("5", getActiveHintMarker());
     });
 
     should("use tab to select the active hint", () => {
       sendKeyboardEvents("abc");
-      assert.equal("8", this.getActiveHintMarker());
+      assert.equal("8", getActiveHintMarker());
       sendKeyboardEvent("Tab", "keydown");
-      assert.equal("7", this.getActiveHintMarker());
+      assert.equal("7", getActiveHintMarker());
       sendKeyboardEvent("Tab", "keydown");
-      assert.equal("9", this.getActiveHintMarker());
+      assert.equal("9", getActiveHintMarker());
     });
   });
 });
@@ -512,12 +554,11 @@ context("Input focus", () => {
     document.getElementById("test-div").innerHTML = testContent;
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = ""),
-
-  should("focus the first element", () => {
-    NormalModeCommands.focusInput(1);
-    assert.equal("first", document.activeElement.id);
-  });
+  teardown(() => document.getElementById("test-div").innerHTML = ""),
+    should("focus the first element", () => {
+      NormalModeCommands.focusInput(1);
+      assert.equal("first", document.activeElement.id);
+    });
 
   should("focus the nth element", () => {
     NormalModeCommands.focusInput(100);
@@ -547,10 +588,10 @@ context("Input focus", () => {
   });
 });
 
-// TODO: these find prev/next link tests could be refactored into unit tests which invoke a function which has
-// a tighter contract than goNext(), since they test minor aspects of goNext()'s link matching behavior, and we
-// don't need to construct external state many times over just to test that.
-// i.e. these tests should look something like:
+// TODO: these find prev/next link tests could be refactored into unit tests which invoke a function
+// which has a tighter contract than goNext(), since they test minor aspects of goNext()'s link
+// matching behavior, and we don't need to construct external state many times over just to test
+// that. i.e. these tests should look something like:
 // assert.equal(findLink(html("<a href=...">))[0].href, "first")
 // These could then move outside of the dom_tests file.
 context("Find prev / next links", () => {
@@ -566,7 +607,7 @@ context("Find prev / next links", () => {
 `;
     stubSettings("nextPatterns", "next");
     NormalModeCommands.goNext();
-    assert.equal('#second', window.location.hash);
+    assert.equal("#second", window.location.hash);
   });
 
   should("match against non-word patterns", () => {
@@ -575,7 +616,7 @@ context("Find prev / next links", () => {
 `;
     stubSettings("nextPatterns", ">>");
     NormalModeCommands.goNext();
-    assert.equal('#first', window.location.hash);
+    assert.equal("#first", window.location.hash);
   });
 
   should("favor matches with fewer words", () => {
@@ -585,7 +626,7 @@ context("Find prev / next links", () => {
 `;
     stubSettings("nextPatterns", "next");
     NormalModeCommands.goNext();
-    assert.equal('#second', window.location.hash);
+    assert.equal("#second", window.location.hash);
   });
 
   should("find link relation in header", () => {
@@ -593,7 +634,7 @@ context("Find prev / next links", () => {
 <link rel='next' href='#first'>\
 `;
     NormalModeCommands.goNext();
-    assert.equal('#first', window.location.hash);
+    assert.equal("#first", window.location.hash);
   });
 
   should("favor link relation to text matching", () => {
@@ -602,7 +643,7 @@ context("Find prev / next links", () => {
 <a href='#second'>next</a>\
 `;
     NormalModeCommands.goNext();
-    assert.equal('#first', window.location.hash);
+    assert.equal("#first", window.location.hash);
   });
 
   should("match mixed case link relation", () => {
@@ -610,111 +651,131 @@ context("Find prev / next links", () => {
 <link rel='Next' href='#first'>\
 `;
     NormalModeCommands.goNext();
-    assert.equal('#first', window.location.hash);
+    assert.equal("#first", window.location.hash);
+  });
+
+  should("match against the title attribute", () => {
+    document.getElementById("test-div").innerHTML = `\
+<a title='Next page' href='#first'>unhelpful text</a>\
+`;
+    NormalModeCommands.goNext();
+    assert.equal("#first", window.location.hash);
+  });
+
+  should("match against the aria-label attribute", () => {
+    document.getElementById("test-div").innerHTML = `\
+<a aria-label='Next page' href='#first'>unhelpful text</a>\
+`;
+    NormalModeCommands.goNext();
+    assert.equal("#first", window.location.hash);
   });
 });
 
 context("Key mapping", () => {
+  let normalMode, handlerCalled, handlerCalledCount;
+
   setup(() => {
-    this.normalMode = initializeModeState();
-    this.handlerCalled = false;
-    this.handlerCalledCount = 0;
-    this.normalMode.setCommandHandler(({count}) => {
-      this.handlerCalled = true;
-      this.handlerCalledCount = count;
+    normalMode = initializeModeState();
+    handlerCalled = false;
+    handlerCalledCount = 0;
+    normalMode.setCommandHandler(({ count }) => {
+      handlerCalled = true;
+      handlerCalledCount = count;
     });
   });
 
   should("recognize first mapped key", () => {
-    assert.isTrue(this.normalMode.isMappedKey("m"));
+    assert.isTrue(normalMode.isMappedKey("m"));
   });
 
   should("recognize second mapped key", () => {
-    assert.isFalse(this.normalMode.isMappedKey("p"));
+    assert.isFalse(normalMode.isMappedKey("p"));
     sendKeyboardEvent("z");
-    assert.isTrue(this.normalMode.isMappedKey("p"));
+    assert.isTrue(normalMode.isMappedKey("p"));
   });
 
   should("recognize pass keys", () => {
-    assert.isTrue(this.normalMode.isPassKey("p"));
+    assert.isTrue(normalMode.isPassKey("p"));
   });
 
   should("not mis-recognize pass keys", () => {
-    assert.isFalse(this.normalMode.isMappedKey("p"));
+    assert.isFalse(normalMode.isMappedKey("p"));
     sendKeyboardEvent("z");
-    assert.isTrue(this.normalMode.isMappedKey("p"));
+    assert.isTrue(normalMode.isMappedKey("p"));
   });
 
   should("recognize initial count keys", () => {
-    assert.isTrue(this.normalMode.isCountKey("1"));
-    assert.isTrue(this.normalMode.isCountKey("9"));
+    assert.isTrue(normalMode.isCountKey("1"));
+    assert.isTrue(normalMode.isCountKey("9"));
   });
 
   should("not recognize '0' as initial count key", () => {
-    assert.isFalse(this.normalMode.isCountKey("0"));
+    assert.isFalse(normalMode.isCountKey("0"));
   });
 
   should("recognize subsequent count keys", () => {
     sendKeyboardEvent("1");
-    assert.isTrue(this.normalMode.isCountKey("0"));
-    assert.isTrue(this.normalMode.isCountKey("9"));
+    assert.isTrue(normalMode.isCountKey("0"));
+    assert.isTrue(normalMode.isCountKey("9"));
   });
 
   should("set and call command handler", () => {
     sendKeyboardEvent("m");
-    assert.isTrue(this.handlerCalled);
+    assert.isTrue(handlerCalled);
   });
 
   should("not call command handler for pass keys", () => {
     sendKeyboardEvent("p");
-    assert.isFalse(this.handlerCalled);
+    assert.isFalse(handlerCalled);
   });
 
   should("accept a count prefix with a single digit", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("m");
-    assert.equal(2, this.handlerCalledCount);
+    assert.equal(2, handlerCalledCount);
   });
 
   should("accept a count prefix with multiple digits", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("0");
     sendKeyboardEvent("m");
-    assert.equal(20, this.handlerCalledCount);
+    assert.equal(20, handlerCalledCount);
   });
 
   should("cancel a count prefix", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("z");
     sendKeyboardEvent("m");
-    assert.equal(1, this.handlerCalledCount);
+    assert.equal(true, handlerCalled);
+    assert.equal(null, handlerCalledCount);
   });
 
   should("accept a count prefix for multi-key command mappings", () => {
     sendKeyboardEvent("5");
     sendKeyboardEvent("z");
     sendKeyboardEvent("p");
-    assert.equal(5, this.handlerCalledCount);
+    assert.equal(5, handlerCalledCount);
   });
 
   should("cancel a key prefix", () => {
     sendKeyboardEvent("z");
+    assert.equal(false, handlerCalled);
     sendKeyboardEvent("m");
-    assert.equal(1, this.handlerCalledCount);
+    assert.equal(true, handlerCalled);
   });
 
   should("cancel a count prefix after a prefix key", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("z");
     sendKeyboardEvent("m");
-    assert.equal(1, this.handlerCalledCount);
+    assert.equal(null, handlerCalledCount);
   });
 
   should("cancel a prefix key on escape", () => {
     sendKeyboardEvent("z");
     sendKeyboardEvent("Escape", "keydown");
     sendKeyboardEvent("p");
-    assert.equal(0, this.handlerCalledCount);
+    assert.equal(0, handlerCalledCount);
   });
 });
 
@@ -761,11 +822,6 @@ context("Normal mode", () => {
     assert.equal("zp", commandName);
   });
 
-  should("default to a count of 1", () => {
-    sendKeyboardEvent("m");
-    assert.equal(1, commandCount);
-  });
-
   should("accept count prefixes of length 1", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("m");
@@ -782,7 +838,7 @@ context("Normal mode", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("z");
     sendKeyboardEvent("m");
-    assert.equal(1, commandCount);
+    assert.equal(null, commandCount);
   });
 
   should("get the correct count for mixed inputs (multi key)", () => {
@@ -797,7 +853,7 @@ context("Normal mode", () => {
     sendKeyboardEvent("z");
     sendKeyboardEvent("z");
     sendKeyboardEvent("p");
-    assert.equal(1, commandCount);
+    assert.equal(null, commandCount);
   });
 
   should("get the correct count for mixed inputs (with leading mapped keys)", () => {
@@ -818,7 +874,7 @@ context("Normal mode", () => {
     sendKeyboardEvent("2");
     sendKeyboardEvent("a");
     sendKeyboardEvent("m");
-    assert.equal(1, commandCount);
+    assert.equal(null, commandCount);
   });
 
   should("get the correct count after unmapped keys", () => {
@@ -832,27 +888,29 @@ context("Normal mode", () => {
   should("not handle unmapped keys", () => {
     sendKeyboardEvent("u");
     assert.equal(null, commandCount);
-  })
+  });
 });
 
 context("Insert mode", () => {
+  let insertMode;
+
   setup(() => {
     initializeModeState();
-    this.insertMode = new InsertMode({global: true});
+    insertMode = new InsertMode({ global: true });
   });
 
   should("exit on escape", () => {
-    assert.isTrue(this.insertMode.modeIsActive);
+    assert.isTrue(insertMode.modeIsActive);
     sendKeyboardEvent("Escape", "keydown");
-    assert.isFalse(this.insertMode.modeIsActive);
+    assert.isFalse(insertMode.modeIsActive);
   });
 
   should("resume normal mode after leaving insert mode", () => {
-    assert.equal(null, commandCount);
-    this.insertMode.exit();
+    assert.equal(null, commandName);
+    insertMode.exit();
     sendKeyboardEvent("m");
-    assert.equal(1, commandCount);
-  })
+    assert.equal("m", commandName);
+  });
 });
 
 context("Triggering insert mode", () => {
@@ -867,7 +925,7 @@ context("Triggering insert mode", () => {
     document.getElementById("test-div").innerHTML = testContent;
   });
 
-  tearDown(() => {
+  teardown(() => {
     if (document.activeElement != null) {
       document.activeElement.blur();
     }
@@ -899,9 +957,9 @@ context("Triggering insert mode", () => {
   });
 });
 
-// NOTE(philc): I'm disabling the caret and visual mode tests because I think they're fallen into disrepair,
-// or we merged changes to master and neglected to update the tests. We should return to these and
-// fix+re-enable them.
+// NOTE(philc): I'm disabling the caret and visual mode tests because I think they're fallen into
+// disrepair, or we merged changes to master and neglected to update the tests. We should return to
+// these and fix+re-enable them.
 
 // context("Caret mode",
 //   setup(() => {
@@ -917,7 +975,7 @@ context("Triggering insert mode", () => {
 //     this.initialVisualMode = new VisualMode;
 //   });
 
-//   tearDown(() => document.getElementById("test-div").innerHTML = ""),
+//   teardown(() => document.getElementById("test-div").innerHTML = ""),
 
 //   should("enter caret mode", () => {
 //     assert.isFalse(this.initialVisualMode.modeIsActive);
@@ -999,7 +1057,7 @@ context("Triggering insert mode", () => {
 //     sendKeyboardEvent("v");
 //   });
 
-//   tearDown(() => document.getElementById("test-div").innerHTML = ""),
+//   teardown(() => document.getElementById("test-div").innerHTML = ""),
 
 //   should("select word with e", () => {
 //     assert.equal("a", getSelection());
@@ -1080,7 +1138,7 @@ context("Mode utilities", () => {
     document.getElementById("test-div").innerHTML = testContent;
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = ""),
+  teardown(() => document.getElementById("test-div").innerHTML = "");
 
   should("not have duplicate singletons", () => {
     let mode;
@@ -1089,9 +1147,12 @@ context("Mode utilities", () => {
       constructor() {
         count += 1;
         super();
-        super.init({singleton: "test"});
+        super.init({ singleton: "test" });
       }
-      exit() { count -= 1; return super.exit(); }
+      exit() {
+        count -= 1;
+        return super.exit();
+      }
     }
     assert.isTrue(count === 0);
     for (let i = 1; i <= 10; i++) {
@@ -1103,14 +1164,14 @@ context("Mode utilities", () => {
   });
 
   should("exit on escape", () => {
-    const test = createMode({exitOnEscape: true});
+    const test = createMode({ exitOnEscape: true });
     assert.isTrue(test.modeIsActive);
     sendKeyboardEvent("Escape", "keydown");
     assert.isFalse(test.modeIsActive);
   });
 
   should("not exit on escape if not enabled", () => {
-    const test = createMode({exitOnEscape: false});
+    const test = createMode({ exitOnEscape: false });
     assert.isTrue(test.modeIsActive);
     sendKeyboardEvent("Escape", "keydown");
     assert.isTrue(test.modeIsActive);
@@ -1119,7 +1180,7 @@ context("Mode utilities", () => {
   should("exit on blur", () => {
     const element = document.getElementById("first");
     element.focus();
-    const test = createMode({exitOnBlur: element});
+    const test = createMode({ exitOnBlur: element });
     assert.isTrue(test.modeIsActive);
     element.blur();
     assert.isFalse(test.modeIsActive);
@@ -1128,7 +1189,7 @@ context("Mode utilities", () => {
   should("not exit on blur if not enabled", () => {
     const element = document.getElementById("first");
     element.focus();
-    const test = createMode({exitOnBlur: false});
+    const test = createMode({ exitOnBlur: false });
     assert.isTrue(test.modeIsActive);
     element.blur();
     assert.isTrue(test.modeIsActive);
@@ -1136,21 +1197,22 @@ context("Mode utilities", () => {
 });
 
 context("PostFindMode", () => {
+  let postFindMode;
+
   setup(() => {
     initializeModeState();
     const testContent = "<input type='text' id='first'/>";
     document.getElementById("test-div").innerHTML = testContent;
     document.getElementById("first").focus();
-    this.postFindMode = new PostFindMode();
+    postFindMode = new PostFindMode();
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = ""),
-
-  should("be a singleton", () => {
-    assert.isTrue(this.postFindMode.modeIsActive);
-    new PostFindMode();
-    assert.isFalse(this.postFindMode.modeIsActive);
-  });
+  teardown(() => document.getElementById("test-div").innerHTML = ""),
+    should("be a singleton", () => {
+      assert.isTrue(postFindMode.modeIsActive);
+      new PostFindMode();
+      assert.isFalse(postFindMode.modeIsActive);
+    });
 
   should("suppress unmapped printable keys", () => {
     sendKeyboardEvent("a");
@@ -1158,52 +1220,56 @@ context("PostFindMode", () => {
   });
 
   should("be deactivated on click events", () => {
-    handlerStack.bubbleEvent("click", {target: document.activeElement});
-    assert.isFalse(this.postFindMode.modeIsActive);
+    handlerStack.bubbleEvent("click", { target: document.activeElement });
+    assert.isFalse(postFindMode.modeIsActive);
   });
 
   should("enter insert mode on immediate escape", () => {
     sendKeyboardEvent("Escape", "keydown");
     assert.equal(null, commandCount);
-    assert.isFalse(this.postFindMode.modeIsActive);
+    assert.isFalse(postFindMode.modeIsActive);
   });
 
   should("not enter insert mode on subsequent escapes", () => {
     sendKeyboardEvent("a");
     sendKeyboardEvent("Escape", "keydown");
-    assert.isTrue(this.postFindMode.modeIsActive);
-  })
+    assert.isTrue(postFindMode.modeIsActive);
+  });
 });
 
 context("WaitForEnter", () => {
+  let isSuccess, waitForEnter;
+
   setup(() => {
     initializeModeState();
-    this.isSuccess = null;
-    this.waitForEnter = new WaitForEnter(isSuccess => { this.isSuccess = isSuccess; });
+    isSuccess = null;
+    waitForEnter = new WaitForEnter((value) => {
+      isSuccess = value;
+    });
   });
 
   should("exit with success on Enter", () => {
-    assert.isTrue(this.waitForEnter.modeIsActive);
-    assert.isFalse(this.isSuccess != null);
+    assert.isTrue(waitForEnter.modeIsActive);
+    assert.isFalse(isSuccess != null);
     sendKeyboardEvent("Enter", "keydown");
-    assert.isFalse(this.waitForEnter.modeIsActive);
-    assert.isTrue((this.isSuccess != null) && (this.isSuccess === true));
+    assert.isFalse(waitForEnter.modeIsActive);
+    assert.isTrue((isSuccess != null) && (isSuccess === true));
   });
 
   should("exit without success on Escape", () => {
-    assert.isTrue(this.waitForEnter.modeIsActive);
-    assert.isFalse(this.isSuccess != null);
+    assert.isTrue(waitForEnter.modeIsActive);
+    assert.isFalse(isSuccess != null);
     sendKeyboardEvent("Escape", "keydown");
-    assert.isFalse(this.waitForEnter.modeIsActive);
-    assert.isTrue((this.isSuccess != null) && (this.isSuccess === false));
+    assert.isFalse(waitForEnter.modeIsActive);
+    assert.isTrue((isSuccess != null) && (isSuccess === false));
   });
 
   should("not exit on other keyboard events", () => {
-    assert.isTrue(this.waitForEnter.modeIsActive);
-    assert.isFalse(this.isSuccess != null);
+    assert.isTrue(waitForEnter.modeIsActive);
+    assert.isFalse(isSuccess != null);
     sendKeyboardEvents("abc");
-    assert.isTrue(this.waitForEnter.modeIsActive);
-    assert.isFalse(this.isSuccess != null);
+    assert.isTrue(waitForEnter.modeIsActive);
+    assert.isFalse(isSuccess != null);
   });
 });
 
@@ -1214,16 +1280,15 @@ context("GrabBackFocus", () => {
     stubSettings("grabBackFocus", true);
   });
 
-  tearDown(() => document.getElementById("test-div").innerHTML = ""),
-
-  should("blur an already focused input", () => {
-    document.getElementById("input").focus();
-    assert.isTrue(document.activeElement);
-    assert.isTrue(DomUtils.isEditable(document.activeElement));
-    initializeModeState();
-    assert.isTrue(document.activeElement);
-    assert.isFalse(DomUtils.isEditable(document.activeElement));
-  });
+  teardown(() => document.getElementById("test-div").innerHTML = ""),
+    should("blur an already focused input", () => {
+      document.getElementById("input").focus();
+      assert.isTrue(document.activeElement);
+      assert.isTrue(DomUtils.isEditable(document.activeElement));
+      initializeModeState();
+      assert.isTrue(document.activeElement);
+      assert.isFalse(DomUtils.isEditable(document.activeElement));
+    });
 
   should("blur a newly focused input", () => {
     initializeModeState();
@@ -1242,7 +1307,7 @@ context("GrabBackFocus", () => {
 
   should("exit on a mousedown event", () => {
     initializeModeState();
-    handlerStack.bubbleEvent("mousedown", {target: document.body});
+    handlerStack.bubbleEvent("mousedown", { target: document.body });
     document.getElementById("input").focus();
     assert.isTrue(document.activeElement);
     assert.isTrue(DomUtils.isEditable(document.activeElement));

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="options.css">
+  <link rel="stylesheet" type="text/css" href="action.css">
+  <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css">
+
+  <script src="../background_scripts/bg_utils.js"></script>
+  <script src="../lib/utils.js"></script>
+  <script src="../lib/dom_utils.js"></script>
+  <script src="../lib/settings.js"></script>
+
+  <script src="exclusion_rules_editor.js"></script>
+  <script src="action.js"></script>
+</head>
+
+<body class="vimiumBody">
+
+  <div id="notEnabledError" style="display:none">
+    <h1>
+      Vimium is not allowed to run on this page.
+    </h1>
+    <p>
+      Your browser does not run web extensions like Vimium on certain pages, usually for security
+      reasons.
+    </p>
+  </div>
+
+  <div id="firefoxMissingPermissionsError" style="display:none">
+    <h1>
+      Vimium is missing the "all hosts" permission.
+    </h1>
+    <p>
+      Firefox requires users to manually grant this permission to extensions. You can enable it via
+      the button below:
+    </p>
+
+    <p>
+      <button id="grant-hosts-permission">Enable all hosts permission</button>
+    </p>
+
+    <p>
+      Or by navigating to:
+    </p>
+
+    <p>
+      about:addons > Vimium > Manage (click the 3 dot menu) > Permissions > <br/> Enable the "Access
+      your data for all websites" permission.
+    </p>
+    <p>
+      <a href="https://github.com/philc/vimium/wiki/Permissions">See here</a> for more info about
+      this permission.
+    </p>
+  </div>
+
+  <div id="dialogBody">
+
+    <div id="summaryMessage">
+      <span id="howManyEnabled">All</span> Vimium keys are enabled on this page.
+    </div>
+
+    <div id="addFirstRuleContainer">
+      <button id="addFirstRule">Exclude Vimium keys on this page</button>
+    </div>
+
+    <div id="exclusionsContainer" style="display:none">
+      <div id="exclusionScrollBox">
+        <table id="exclusionRules">
+          <thead>
+            <tr>
+              <td><span class="exclusionHeaderText">Patterns matching the current page</span></td>
+              <td><span class="exclusionHeaderText">Keys to exclude</span></td>
+            </tr>
+          </thead>
+        </table>
+      </div>
+
+      <button id="exclusionAddButton">Add rule</button>
+    </div>
+
+  </div>
+
+  <div id="footer">
+    <div class="optionsMessage">
+      See all exclusion rules on the <a id="optionsLink" target="_blank">Options</a> page.
+    </div>
+    <div>
+      <button id="cancel">Cancel</button>
+      <button id="saveOptions" disabled="true">No changes</button>
+    </div>
+  </div>
+
+  <template id="exclusionRuleTemplate">
+    <tr class="rule">
+      <td>
+        <input type="text" name="pattern" spellcheck="false" placeholder="URL pattern" />
+        <div class="validationMessage"></div>
+      </td>
+      <td>
+        <input type="text" name="passKeys" spellcheck="false" placeholder="All" />
+      </td>
+      <td>
+        <input type="button" class="remove" value="&#x2716;" />
+      </td>
+    </tr>
+  </template>
+
+</body>
+
+</html>

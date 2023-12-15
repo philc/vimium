@@ -1,36 +1,55 @@
 class InsertMode extends Mode {
   constructor(options) {
     super();
-    if (options == null)
+    if (options == null) {
       options = {};
+    }
 
-    // There is one permanently-installed instance of InsertMode.  It tracks focus changes and
+    // There is one permanently-installed instance of InsertMode. It tracks focus changes and
     // activates/deactivates itself (by setting @insertModeLock) accordingly.
     this.permanent = options.permanent;
 
     // If truthy, then we were activated by the user (with "i").
     this.global = options.global;
 
-    const handleKeyEvent = event => {
-      if (!this.isActive(event))
-        return this.continueBubbling;
+    this.passNextKeyKeys = [];
 
-      // See comment here: https://github.com/philc/vimium/commit/48c169bd5a61685bb4e67b1e76c939dbf360a658.
+    // This list of keys is parsed from the user's key mapping config by commands.js, and stored in
+    // chrome.storage.session.
+    chrome.storage.session.get("passNextKeyKeys").then((value) => {
+      this.passNextKeyKeys = value.passNextKeyKeys || [];
+    });
+
+    chrome.storage.onChanged.addListener(async (changes, areaName) => {
+      if (areaName != "local") return;
+      if (changes.passNextKeyKeys == null) return;
+      this.passNextKeyKeys = changes.passNextKeyKeys.newValue;
+    });
+
+    const handleKeyEvent = (event) => {
+      if (!this.isActive(event)) {
+        return this.continueBubbling;
+      }
+
+      // See comment here:
+      // https://github.com/philc/vimium/commit/48c169bd5a61685bb4e67b1e76c939dbf360a658.
       const activeElement = this.getActiveElement();
-      if ((activeElement === document.body) && activeElement.isContentEditable)
+      if ((activeElement === document.body) && activeElement.isContentEditable) {
         return this.passEventToPage;
+      }
 
       // Check for a pass-next-key key.
       const keyString = KeyboardUtils.getKeyCharString(event);
-      if (Settings.get("passNextKeyKeys").includes(keyString)) {
+      if (this.passNextKeyKeys.includes(keyString)) {
         new PassNextKeyMode();
-      } else if ((event.type === 'keydown') && KeyboardUtils.isEscape(event)) {
-        if (DomUtils.isFocusable(activeElement))
+      } else if ((event.type === "keydown") && KeyboardUtils.isEscape(event)) {
+        if (DomUtils.isFocusable(activeElement)) {
           activeElement.blur();
+        }
 
-        if (!this.permanent)
+        if (!this.permanent) {
           this.exit();
-
+        }
       } else {
         return this.passEventToPage;
       }
@@ -40,34 +59,41 @@ class InsertMode extends Mode {
 
     const defaults = {
       name: "insert",
-      indicator: !this.permanent && !Settings.get("hideHud")  ? "Insert mode" : null,
+      indicator: !this.permanent && !Settings.get("hideHud") ? "Insert mode" : null,
       keypress: handleKeyEvent,
-      keydown: handleKeyEvent
+      keydown: handleKeyEvent,
     };
 
     super.init(Object.assign(defaults, options));
 
-    // Only for tests.  This gives us a hook to test the status of the permanently-installed instance.
-    if (this.permanent)
+    // Only for tests. This gives us a hook to test the status of the permanently-installed
+    // instance.
+    if (this.permanent) {
       InsertMode.permanentInstance = this;
+    }
   }
 
   isActive(event) {
-    if (event === InsertMode.suppressedEvent)
+    if (event === InsertMode.suppressedEvent) {
       return false;
-    if (this.global)
+    }
+    if (this.global) {
       return true;
+    }
     return DomUtils.isFocusable(this.getActiveElement());
   }
 
   getActiveElement() {
     let activeElement = document.activeElement;
-    while (activeElement && activeElement.shadowRoot && activeElement.shadowRoot.activeElement)
+    while (activeElement && activeElement.shadowRoot && activeElement.shadowRoot.activeElement) {
       activeElement = activeElement.shadowRoot.activeElement;
+    }
     return activeElement;
   }
 
-  static suppressEvent(event) { return this.suppressedEvent = event; }
+  static suppressEvent(event) {
+    return this.suppressedEvent = event;
+  }
 }
 
 // This allows PostFindMode to suppress the permanently-installed InsertMode instance.
@@ -76,8 +102,9 @@ InsertMode.suppressedEvent = null;
 // This implements the pasNexKey command.
 class PassNextKeyMode extends Mode {
   constructor(count) {
-    if (count == null)
+    if (count == null) {
       count = 1;
+    }
     super();
     let seenKeyDown = false;
     let keyDownCount = 0;
@@ -106,7 +133,7 @@ class PassNextKeyMode extends Mode {
           }
         }
         return this.passEventToPage;
-      }
+      },
     });
   }
 }

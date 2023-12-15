@@ -11,7 +11,9 @@ import "../../content_scripts/link_hints.js";
 import "../../content_scripts/marks.js";
 import "../../content_scripts/vomnibar.js";
 
-context("Key mappings", () => {
+await Commands.init();
+
+context("parseKeySequence", () => {
   const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
     const keySequence = Commands.parseKeySequence(key);
     assert.equal(expectedKeyText, keySequence.join("/"));
@@ -76,28 +78,64 @@ context("Key mappings", () => {
   });
 });
 
+context("parseKeyMappingConfig", () => {
+  should("handle map statements", () => {
+    const { keyToRegistryEntry } = Commands.parseKeyMappingsConfig("map a scrollDown");
+    assert.equal("scrollDown", keyToRegistryEntry["a"]?.command);
+  });
+
+  should("ignore mappings for unknown commands", () => {
+    assert.equal({}, Commands.parseKeyMappingsConfig("map a unknownCommand").keyToRegistryEntry);
+  });
+
+  should("handle mapkey statements", () => {
+    const { keyToMappedKey } = Commands.parseKeyMappingsConfig("mapkey a b");
+    assert.equal({ "a": "b" }, keyToMappedKey);
+  });
+
+  should("handle unmap statements", () => {
+    const input = "mapkey a b \n unmap a";
+    const { keyToMappedKey } = Commands.parseKeyMappingsConfig(input);
+    assert.equal({}, keyToMappedKey);
+  });
+
+  should("handle unmapall statements", () => {
+    const input = "mapkey a b \n unmapall \n mapkey b c";
+    const { keyToMappedKey } = Commands.parseKeyMappingsConfig(input);
+    assert.equal({ "b": "c" }, keyToMappedKey);
+  });
+
+  should("ignore commands with the wrong number of tokens", () => {
+    assert.equal({}, Commands.parseKeyMappingsConfig("mapkey a b c").keyToMappedKey);
+    assert.equal({}, Commands.parseKeyMappingsConfig("map a").keyToRegistryEntry);
+    assert.equal(
+      { "a": "b" },
+      Commands.parseKeyMappingsConfig("mapkey a b \n unmap a a").keyToMappedKey,
+    );
+  });
+});
 
 context("Validate commands and options", () => {
   // TODO(smblott) For this and each following test, is there a way to structure the tests such that the name
   // of the offending command appears in the output, if the test fails?
   should("have either noRepeat or repeatLimit, but not both", () => {
-    for (let command of Object.keys(Commands.availableCommands)) {
+    for (const command of Object.keys(Commands.availableCommands)) {
       const options = Commands.availableCommands[command];
       assert.isTrue(!(options.noRepeat && options.repeatLimit));
     }
   });
 
   should("describe each command", () => {
-    for (let command of Object.keys(Commands.availableCommands)) {
+    for (const command of Object.keys(Commands.availableCommands)) {
       const options = Commands.availableCommands[command];
       assert.equal("string", typeof options.description);
     }
   });
 
   should("define each command in each command group", () => {
-    for (let group of Object.keys(Commands.commandGroups)) {
+    for (const group of Object.keys(Commands.commandGroups)) {
       const commands = Commands.commandGroups[group];
-      for (let command of commands) {
+      for (const command of commands) {
         assert.equal("string", typeof command);
         assert.isTrue(Commands.availableCommands[command]);
       }
@@ -105,48 +143,29 @@ context("Validate commands and options", () => {
   });
 
   should("have valid commands for each advanced command", () => {
-    for (let command of Commands.advancedCommands) {
+    for (const command of Commands.advancedCommands) {
       assert.equal("string", typeof command);
       assert.isTrue(Commands.availableCommands[command]);
     }
   });
 
   should("have valid commands for each default key mapping", () => {
-    const count = Object.keys(Commands.keyToCommandRegistry).length;
-    assert.isTrue((0 < count));
-    for (let key of Object.keys(Commands.keyToCommandRegistry)) {
-      const command = Commands.keyToCommandRegistry[key];
+    const count = Object.keys(Commands.keyToRegistryEntry).length;
+    assert.isTrue(0 < count);
+    for (const key of Object.keys(Commands.keyToRegistryEntry)) {
+      const command = Commands.keyToRegistryEntry[key];
       assert.equal("object", typeof command);
       assert.isTrue(Commands.availableCommands[command.command]);
     }
-  })
+  });
 });
 
 context("Validate advanced commands", () => {
   should("include each advanced command in a command group", () => {
-    let allCommands = Object.keys(Commands.commandGroups).map((k) => Commands.commandGroups[k]).flat(1);
-    for (let command of Commands.advancedCommands)
+    const allCommands = Object.keys(Commands.commandGroups).map((k) => Commands.commandGroups[k])
+      .flat(1);
+    for (const command of Commands.advancedCommands) {
       assert.isTrue(allCommands.includes(command));
-  })
-});
-
-context("Parse commands", () => {
-  should("omit whitespace", () => {
-    assert.equal(0, BgUtils.parseLines("    \n    \n   ").length);
+    }
   });
-
-  should("omit comments", () => {
-    assert.equal(0, BgUtils.parseLines(" # comment   \n \" comment   \n   ").length);
-  });
-
-  should("join lines", () => {
-    assert.equal(1, BgUtils.parseLines("a\\\nb").length);
-    assert.equal("ab", BgUtils.parseLines("a\\\nb")[0]);
-  });
-
-  should("trim lines", () => {
-    assert.equal(2, BgUtils.parseLines("  a  \n  b").length);
-    assert.equal("a", BgUtils.parseLines("  a  \n  b")[0]);
-    assert.equal("b", BgUtils.parseLines("  a  \n  b")[1]);
-  })
 });

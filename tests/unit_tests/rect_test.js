@@ -11,7 +11,7 @@ context("Rect", () => {
     assert.equal(rect.bottom, y2);
     assert.equal(rect.width, x2 - x1);
     assert.equal(rect.height, y2 - y1);
-  }),
+  });
 
   should("translate rect horizontally", () => {
     const [x1, y1, x2, y2] = [1, 2, 3, 4];
@@ -41,7 +41,7 @@ context("Rect", () => {
     assert.equal(rect1.height, rect2.height);
     assert.equal(rect1.left, rect2.left);
     assert.equal(rect1.right, rect2.right);
-  })
+  });
 });
 
 context("Rect subtraction", () => {
@@ -124,8 +124,8 @@ context("Rect subtraction", () => {
       assert.equal(rects.length, 1);
       const rect = rects[0];
       assert.isTrue(Rect.equals(rect1, rect));
-    })
-  }),
+    });
+  });
 
   context("unchanged by rects touching", () => {
     should("left, above", () => {
@@ -221,9 +221,9 @@ context("Rect subtraction", () => {
       for (let y = -2; y <= 2; y++) {
         for (let width = 1; width <= 3; width++) {
           for (let height = 1; height <= 3; height++) {
-            const subtractRect = Rect.create(x, y, (x + width), (y + height));
+            const subtractRect = Rect.create(x, y, x + width, y + height);
             const resultRects = Rect.subtract(rect, subtractRect);
-            for (let resultRect of resultRects) {
+            for (const resultRect of resultRects) {
               assert.isFalse(Rect.intersects(subtractRect, resultRect));
             }
           }
@@ -238,9 +238,9 @@ context("Rect subtraction", () => {
       for (let y = -2; y <= 2; y++) {
         for (let width = 1; width <= 3; width++) {
           for (let height = 1; height <= 3; height++) {
-            const subtractRect = Rect.create(x, y, (x + width), (y + height));
+            const subtractRect = Rect.create(x, y, x + width, y + height);
             const resultRects = Rect.subtract(rect, subtractRect);
-            for (let resultRect of resultRects) {
+            for (const resultRect of resultRects) {
               assert.isTrue(Rect.intersects(rect, resultRect));
             }
           }
@@ -255,14 +255,16 @@ context("Rect subtraction", () => {
       for (let y = -2; y <= 2; y++) {
         for (let width = 1; width <= 3; width++) {
           for (let height = 1; height <= 3; height++) {
-            const subtractRect = Rect.create(x, y, (x + width), (y + height));
+            const subtractRect = Rect.create(x, y, x + width, y + height);
             const resultRects = Rect.subtract(rect, subtractRect);
             let resultComplement = [Rect.copy(rect)];
-            for (var resultRect of resultRects) {
-              resultComplement = Array.prototype.concat.apply([],
-                (resultComplement.map(rect => Rect.subtract(rect, resultRect))));
+            for (const resultRect of resultRects) {
+              resultComplement = Array.prototype.concat.apply(
+                [],
+                resultComplement.map((rect) => Rect.subtract(rect, resultRect)),
+              );
             }
-            assert.isTrue(((resultComplement.length === 0) || (resultComplement.length === 1)));
+            assert.isTrue((resultComplement.length === 0) || (resultComplement.length === 1));
             if (resultComplement.length === 1) {
               const complementRect = resultComplement[0];
               assert.isTrue(Rect.intersects(subtractRect, complementRect));
@@ -338,5 +340,5 @@ context("Rect overlaps", () => {
     const rect1 = Rect.create(1, 1, 4, 4);
     const rect2 = Rect.create(2, 2, 3, 3);
     assert.isTrue(Rect.intersectsStrict(rect2, rect1));
-  })
+  });
 });

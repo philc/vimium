@@ -1,5 +1,7 @@
-/* NOTE: This stylesheet is included in both options.html and popup.html.  So changes here affect
-   both of these. */
+/* This stylesheet is included in both options.html and action.html, so changes affect both. */
+:root {
+  --closeButtonWidth: 25px;
+}
 body {
   font: 14px "DejaVu Sans", "Arial", sans-serif;
   color: #303942;
@@ -77,6 +79,9 @@ table#options{
   font-size: 14px;
   position: relative;
   border-spacing: 0 23px;
+  /* This should match the height of the footer, so that the footer UI doesn't sit on top of this
+     options table, covering some of the options UI. */
+  margin-bottom: 50px;
 }
 .example {
   font-size: 12px;
@@ -86,6 +91,12 @@ table#options{
 }
 .info {
   margin-left: 0px;
+}
+.reset-link {
+  text-align: right;
+}
+.reset-link a {
+  text-decoration: none;
 }
 .caption {
   margin-right: 10px;
@@ -136,8 +147,6 @@ input#searchUrl {
   white-space: nowrap;
 }
 #buttonsPanel { width: 100%; }
-#advancedOptions { display: none; }
-#advancedOptionsButton { width: 170px; }
 .help {
   position: absolute;
   right: -320px;
@@ -164,36 +173,64 @@ button:focus, input[type="text"]:focus, textarea:focus {
 }
 /* Boolean options have a tighter form representation than text options. */
 td.booleanOption { font-size: 12px; }
+
 /* Ids and classes for rendering exclusionRules */
+
+#exclusionRulesSection #exclusionScrollBox {
+  /* When there are no rules, we want to enforce a minimum height for this section, or the help text
+     will run together.*/
+  min-height: 45px;
+}
+
 #exclusionScrollBox {
   overflow: scroll;
   overflow-x: hidden;
   overflow-y: auto;
   /* Each exclusion rule is about 30px, so this allows 7 before scrolling */
   max-height: 215px;
-  min-height: 75px;
   border-radius: 2px;
   color: #444;
-  width: 100%
+  width: 100%;
 }
 #exclusionRules {
   width: 100%;
+  border-collapse: collapse;
 }
-.exclusionRulePassKeys {
+#exclusionRules td {
+  vertical-align: top;
+  border: 2px solid transparent;
+}
+#exclusionRules td:nth-of-type(2) {
   width: 33%;
 }
-.exclusionRemove {
-  width: 1px; /* 1px; smaller than the button itself. */
+#exclusionRules td:nth-of-type(3) {
+  /* Make the close button td use only the minimum width needed. */
+  width: var(--closeButtonWidth);
+  padding-top: 3px;
 }
-.exclusionRemoveButton {
+
+#exclusionRules tr.validationError .validationMessage {
+  display: block;
+}
+
+#exclusionRules tr.validationError td:nth-of-type(1) input {
+  border-color: orange;
+}
+
+#exclusionRules .validationMessage {
+  display: block;
+  color: orange;
+  margin-top: 2px;
+  margin-left: 2px;
+}
+#exclusionRules .remove {
   border: none;
-  background-color: #fff;
   color: #979ca0;
 }
-.exclusionRemoveButton:hover {
+#exclusionRules .remove:hover {
   color: #444;
 }
-input.pattern, input.passKeys, .exclusionHeaderText {
+input[name=pattern], input[name=passKeys], .exclusionHeaderText {
   width: 100%;
   font-family: Consolas, "Liberation Mono", Courier, monospace;
   font-size: 14px;
@@ -204,24 +241,22 @@ input.pattern, input.passKeys, .exclusionHeaderText {
 }
 #exclusionAddButton {
   float: right;
-  margin-right: 0px;
-  margin-top: 5px;
+  /* Add the spacing between the table's cells to the right margin of this button. */
+  margin-right: calc(var(--closeButtonWidth) + 4px);
+  margin-top: 10px;
 }
 #footer {
   background: #f5f5f5;
   border-top: 1px solid #979ca0;
   position: fixed;
   bottom: 0px;
+  padding: 15px 0;
   z-index: 10;
 }
 #footer, #footerTable, #footerTableData {
   width: 100%;
 }
-#endSpace {
-  /* Leave space for the fixed footer. */
-  min-height: 30px;
-  max-height: 30px;
-}
+
 #helpText, #versionAndOptions {
   font-size: 12px;
 }

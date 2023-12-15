@@ -1,6 +1,6 @@
 import * as shoulda from "../vendor/shoulda.js";
-import "../../lib/utils.js";
 import "./test_chrome_stubs.js";
+import "../../lib/utils.js";
 
 const shouldaSubset = {
   assert: shoulda.assert,
@@ -11,8 +11,10 @@ const shouldaSubset = {
   shoulda: shoulda,
   stub: shoulda.stub,
   returns: shoulda.returns,
-  tearDown: shoulda.tearDown,
+  teardown: shoulda.teardown,
 };
+
+globalThis.isUnitTests = true;
 
 // Attach shoulda's functions, like setup, context, should, to the global namespace.
 Object.assign(window, shouldaSubset);

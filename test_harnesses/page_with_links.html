@@ -1,11 +1,17 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-  "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
 <head>
   <title>Page with many links</title>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <style type="text/css" media="screen">
+    body {
+      background-color: black;
+      color: #eee;
+    }
     a {
-      background-color:#ccc;
+      background-color:#666;
+      color: #eee;
     }
 
     a:hover {
@@ -13,11 +19,15 @@
     }
 
     a#paddingLink {
-      padding:30px;
+      padding: 30px;
     }
 
     a#paddingLinkTop {
-      padding-top:50px;
+      padding-top: 50px;
+    }
+    #div-a {
+      border: 1px solid #333;
+      padding: 5px;
     }
 
   </style>
@@ -38,12 +48,25 @@
   <a href="#paddingLinkTop" id="paddingLinkTop">This link has a lot of vertical padding on the top</a>
 
   <br/><br/>
-  <br/><br/>
-  <div onclick="alert('hi')">div with an onclick attribute</div>
-
+  <div id="div-a" onclick="alert('hi')">div with an onclick attribute</div>
 
   <br/><br/>
-  <br/><br/>
+
   <a name="anchorSpot">An anchor with just a name</a>
+
+  <br/><br/>
+  <a href="https://www.google.com">Next</a> and <a href="https://www.ninjawords.com">previous</a>
+  links.
+
+  <br/><br/>
+
+  Below is an image map:<br/>
+  <img src="./image_map.png" usemap="#the-image-map">
+
+  <map name="the-image-map">
+    <area shape="rect" coords="0,0,100,50" alt="Section A" href="#section-A">
+    <area shape="rect" coords="200,0,300,50" alt="Section B" href="http://google.com">
+  </map>
+
 </body>
 </html>

@@ -2,72 +2,38 @@
   "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
-    <style type="text/css">
-      body {
-        font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-        width: 800px;
-        margin: 0px auto;
-      }
-      #output-div {
-        white-space: pre-wrap;
-        background-color: #eee;
-        font-family: monospace;
-        margin: 0 0 50px 0;
-        border-style: dashed;
-        border-width: 1px 1px 0 1px;
-        border-color: #999;
-      }
-      .errorPosition {
-        color: #f33;
-        font-weight: bold;
-      }
-      .output-section {
-        padding: 10px 15px 10px 15px;
-        border-bottom: dashed 1px #999;
-      }
-    </style>
     <link rel="stylesheet" type="text/css" href="../../content_scripts/vimium.css" />
-    <script type="text/javascript">
-      // We're injecting the contents of shoulda.js here, rather than loading it from a separate file, because
-      // Chrome security won't allow loading local files as ECMAScript modules. See make.js for more details.
-      document.write(`<script type='text/javascript'>` + window.shouldaJsContents + "</scr" + "ipt>");
-    </script>
-    <script type="text/javascript" src="chrome.js"></script>
-    <script type="text/javascript" src="../../lib/utils.js"></script>
-    <script type="text/javascript" src="../../lib/keyboard_utils.js"></script>
-    <script type="text/javascript" src="../../lib/dom_utils.js"></script>
+    <script src="../../lib/chrome_api_stubs.js"></script>
+    <script src="../../lib/utils.js"></script>
+    <script src="../../lib/keyboard_utils.js"></script>
+    <script src="../../lib/dom_utils.js"></script>
     <!-- For DomUtils.documentReady() tests; see ./dom_utils_test.js. -->
     <script>DomUtils.documentReady(function() {window.documentReadyListenerCalled = true;})</script>
-    <script type="text/javascript" src="../../lib/rect.js"></script>
-    <script type="text/javascript" src="../../lib/handler_stack.js"></script>
-    <script type="text/javascript" src="../../lib/clipboard.js"></script>
-    <script type="text/javascript" src="../../lib/settings.js"></script>
-    <script type="text/javascript" src="../../lib/find_mode_history.js"></script>
-    <script type="text/javascript" src="../../content_scripts/mode.js"></script>
-    <script type="text/javascript" src="../../content_scripts/ui_component.js"></script>
-    <script type="text/javascript" src="../../content_scripts/link_hints.js"></script>
-    <script type="text/javascript" src="../../content_scripts/vomnibar.js"></script>
-    <script type="text/javascript" src="../../content_scripts/scroller.js"></script>
-    <script type="text/javascript" src="../../content_scripts/mode_insert.js"></script>
-    <script type="text/javascript" src="../../content_scripts/mode_find.js"></script>
-    <script type="text/javascript" src="../../content_scripts/mode_key_handler.js"></script>
-    <script type="text/javascript" src="../../content_scripts/mode_visual.js"></script>
-    <script type="text/javascript" src="../../content_scripts/hud.js"></script>
-    <script type="text/javascript" src="../../content_scripts/mode_normal.js"></script>
-    <script type="text/javascript" src="../../content_scripts/vimium_frontend.js"></script>
+    <script src="../../lib/rect.js"></script>
+    <script src="../../lib/handler_stack.js"></script>
+    <script src="../../lib/settings.js"></script>
+    <script src="../../lib/find_mode_history.js"></script>
+    <script src="../../content_scripts/mode.js"></script>
+    <script src="../../content_scripts/ui_component.js"></script>
+    <script src="../../content_scripts/link_hints.js"></script>
+    <script src="../../content_scripts/vomnibar.js"></script>
+    <script src="../../content_scripts/scroller.js"></script>
+    <script src="../../content_scripts/mode_insert.js"></script>
+    <script src="../../content_scripts/mode_find.js"></script>
+    <script src="../../content_scripts/mode_key_handler.js"></script>
+    <script src="../../content_scripts/mode_visual.js"></script>
+    <script src="../../content_scripts/hud.js"></script>
+    <script src="../../content_scripts/mode_normal.js"></script>
+    <script src="../../content_scripts/vimium_frontend.js"></script>
 
-    <script type="text/javascript" src="dom_test_setup.js"></script>
-    <script type="text/javascript" src="dom_tests.js"></script>
-    <script type="text/javascript" src="dom_utils_test.js"></script>
-    <script type="text/javascript" src="vomnibar_test.js"></script>
-    <script type="text/javascript" src="test_runner.js"></script>
+    <script type="module" src="dom_test_setup.js"></script>
+    <script type="module" src="dom_tests.js"></script>
+    <script type="module" src="dom_utils_test.js"></script>
   </head>
   <body>
     <!-- should always be the first element on the page -->
     <div id="test-div"></div>
 
     <h1>Vimium Tests</h1>
-
-    <div id="output-div"></div>
   </body>
 </html>
