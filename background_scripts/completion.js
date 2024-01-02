@@ -487,8 +487,8 @@ class TabCompleter {
         const suggestion = new Suggestion({
           queryTerms,
           description: "tab",
-          url: tab.url,
-          title: tab.title,
+          url: tab.url || "",
+          title: tab.title || "",
           tabId: tab.id,
           deDuplicate: false,
         });
@@ -693,7 +693,7 @@ const RankingUtils = {
       let matchedTerm = false;
       for (const thing of things) {
         if (!matchedTerm) {
-          matchedTerm = thing.match(regexp);
+          matchedTerm = thing?.match(regexp);
         }
       }
       if (!matchedTerm) return false;
