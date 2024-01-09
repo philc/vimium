@@ -92,7 +92,7 @@ async function buildStorePackage() {
   const rsyncOptions = ["-r", ".", "dist/vimium"].concat(
     ...excludeList.map((item) => ["--exclude", item]),
   );
-  const vimiumVersion = chromeManifest["version"];
+  const version = chromeManifest["version"];
   const writeDistManifest = async (manifest) => {
     await Deno.writeTextFile("dist/vimium/manifest.json", JSON.stringify(manifest, null, 2));
   };
@@ -114,13 +114,13 @@ async function buildStorePackage() {
 
   const firefoxManifest = createFirefoxManifest(chromeManifest);
   await writeDistManifest(firefoxManifest);
-  await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${vimiumVersion}.zip .`]);
+  await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${version}.zip .`]);
 
   // Build the Chrome Store package.
   await writeDistManifest(chromeManifest);
   await shell("bash", [
     "-c",
-    `${zipCommand} ../chrome-store/vimium-chrome-store-${vimiumVersion}.zip .`,
+    `${zipCommand} ../chrome-store/vimium-chrome-store-${version}.zip .`,
   ]);
 
   // Build the Chrome Store dev package.
@@ -130,7 +130,7 @@ async function buildStorePackage() {
   }));
   await shell("bash", [
     "-c",
-    `${zipCommand} ../chrome-canary/vimium-canary-${vimiumVersion}.zip .`,
+    `${zipCommand} ../chrome-canary/vimium-canary-${version}.zip .`,
   ]);
 }
 
