@@ -65,10 +65,13 @@ context("convertToUrl", async () => {
     await Settings.load();
     assert.equal("https://www.google.com/search?q=google", await UrlUtils.convertToUrl("google"));
     assert.equal(
-      "https://www.google.com/search?q=go+ogle.com",
+      "https://www.google.com/search?q=go%20ogle.com",
       await UrlUtils.convertToUrl("go ogle.com"),
     );
-    assert.equal("https://www.google.com/search?q=%40twitter", await UrlUtils.convertToUrl("@twitter"));
+    assert.equal(
+      "https://www.google.com/search?q=%40twitter",
+      await UrlUtils.convertToUrl("@twitter"),
+    );
   });
 });
 
