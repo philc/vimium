@@ -378,10 +378,10 @@ class VomnibarUI {
   }
 
   launchUrl(url, openInNewTab) {
-    // If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the
+    // If the URL is a bookmarklet (so, prefixed with "javascript:"), then always open it in the
     // current tab.
-    if (openInNewTab) {
-      openInNewTab = !Utils.hasJavascriptPrefix(url);
+    if (openInNewTab && Utils.hasJavascriptPrefix(url)) {
+      openInNewTab = false;
     }
     chrome.runtime.sendMessage({
       handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
