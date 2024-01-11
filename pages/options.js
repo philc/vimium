@@ -110,7 +110,7 @@ const OptionsPage = {
           el.value = value;
           break;
         default:
-          throw `Unrecognized option type ${optionType}`;
+          throw new Error(`Unrecognized option type ${optionType}`);
       }
     }
 
@@ -136,7 +136,7 @@ const OptionsPage = {
           value = el.value.trim();
           break;
         default:
-          throw `Unrecognized option type ${optionType}`;
+          throw new Error(`Unrecognized option type ${optionType}`);
       }
       if (value !== null) {
         settings[optionName] = value;

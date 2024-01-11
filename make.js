@@ -186,7 +186,7 @@ const runDomTests = async (port) => {
   // occurs again, we may need to add "await delay(200)".
   await browser.close();
   if (receivedErrorOutput) {
-    throw "The tests fail because there was a page-level error.";
+    throw new Error("The tests fail because there was a page-level error.");
   }
   return success;
 };
