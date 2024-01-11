@@ -62,6 +62,7 @@ context("convertToUrl", async () => {
   });
 
   should("convert non-URL terms into search queries", async () => {
+    await Settings.load();
     assert.equal("https://www.google.com/search?q=google", await UrlUtils.convertToUrl("google"));
     assert.equal(
       "https://www.google.com/search?q=go+ogle.com",
