@@ -561,9 +561,10 @@ const sendRequestHandlers = {
 
   async initializeFrame(request, sender) {
     const tabId = sender.tab.id;
-    const enabledState = Exclusions.isEnabledForUrl(request.url);
+    const enabledState = Exclusions.isEnabledForUrl(request.topFrameUrl);
 
-    if (request.frameIsFocused) {
+    const isTopFrame = sender.frameId == 0;
+    if (isTopFrame) {
       let whichIcon;
       if (!enabledState.isEnabledForUrl) {
         whichIcon = "disabled";
