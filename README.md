@@ -34,8 +34,8 @@ Navigating the current page:
     G       scroll to bottom of the page
     d       scroll down half a page
     u       scroll up half a page
-    f       show links and open in the current tab
-    F       show links and open in a new tab
+    f       show shortcuts to visible links and open in the current tab
+    F       show shortcuts to visible links and open in a new tab
     r       reload
     gs      view source
     i       enter insert mode -- all commands will be ignored until you hit Esc to exit
