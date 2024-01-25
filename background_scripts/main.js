@@ -560,8 +560,9 @@ const sendRequestHandlers = {
   },
 
   async initializeFrame(request, sender) {
-    const tabId = sender.tab.id;
-    const enabledState = Exclusions.isEnabledForUrl(request.topFrameUrl);
+    // Check whether the extension is enabled for the top frame's URL, rather than the URL of the
+    // specific frame that sent this request.
+    const enabledState = Exclusions.isEnabledForUrl(sender.tab.url);
 
     const isTopFrame = sender.frameId == 0;
     if (isTopFrame) {
@@ -588,7 +589,7 @@ const sendRequestHandlers = {
           "32": "../icons/action_disabled_32.png",
         },
       };
-      chrome.action.setIcon({ path: iconSet[whichIcon], tabId: tabId });
+      chrome.action.setIcon({ path: iconSet[whichIcon], tabId: sender.tab.id });
     }
 
     const response = Object.assign({

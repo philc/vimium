@@ -409,10 +409,7 @@ globalThis.lastFocusedInput = (function () {
 
 // Checks if Vimium should be enabled or not based on the top frame's URL.
 const checkIfEnabledForUrl = async () => {
-  const response = await chrome.runtime.sendMessage({
-    handler: "initializeFrame",
-    topFrameUrl: window.top.location.toString(),
-  });
+  const response = await chrome.runtime.sendMessage({ handler: "initializeFrame" });
 
   isEnabledForUrl = response.isEnabledForUrl;
 
