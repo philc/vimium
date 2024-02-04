@@ -374,12 +374,12 @@ const textInputXPath = (function () {
 // used by the findAndFollow* functions.
 const followLink = function (linkElement) {
   if (linkElement.nodeName.toLowerCase() === "link") {
-    return window.location.href = linkElement.href;
+    window.location.href = linkElement.href;
   } else {
     // if we can click on it, don't simply set location.href: some next/prev links are meant to
     // trigger AJAX calls, like the 'more' button on GitHub's newsfeed.
     linkElement.scrollIntoView();
-    return DomUtils.simulateClick(linkElement);
+    DomUtils.simulateClick(linkElement);
   }
 };
 
