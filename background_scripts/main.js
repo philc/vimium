@@ -127,13 +127,14 @@ const toggleMuteTab = (request, sender) => {
 //
 // Selects the tab with the ID specified in request.id
 //
-const selectSpecificTab = (request) =>
-  chrome.tabs.get(request.id, function (tab) {
-    if (chrome.windows != null) {
-      chrome.windows.update(tab.windowId, { focused: true });
-    }
-    return chrome.tabs.update(request.id, { active: true });
-  });
+async function selectSpecificTab(request) {
+  const tab = await chrome.tabs.get(request.id);
+  // Focus the tab's window. TODO(philc): Why are we null-checking chrome.windows here?
+  if (chrome.windows != null) {
+    await chrome.windows.update(tab.windowId, { focused: true });
+  }
+  await chrome.tabs.update(request.id, { active: true });
+}
 
 const moveTab = function ({ count, tab, registryEntry }) {
   if (registryEntry.command === "moveTabLeft") {
@@ -173,7 +174,7 @@ const BackgroundCommands = {
       } else {
         // Otherwise, if we have a registryEntry containing URLs, then use them.
         const urlList = request.registryEntry.optionList
-              .filter(async (opt) => await UrlUtils.isUrl(opt));
+          .filter(async (opt) => await UrlUtils.isUrl(opt));
         if (urlList.length > 0) {
           request.urls = urlList;
         } else {
@@ -315,7 +316,7 @@ const BackgroundCommands = {
   visitPreviousTab({ count, tab }) {
     const tabIds = BgUtils.tabRecency.getTabsByRecency().filter((tabId) => tabId !== tab.id);
     if (tabIds.length > 0) {
-      return selectSpecificTab({ id: tabIds[(count - 1) % tabIds.length] });
+      selectSpecificTab({ id: tabIds[(count - 1) % tabIds.length] });
     }
   },
 
@@ -522,7 +523,10 @@ const sendRequestHandlers = {
     return TabOperations.openUrlInNewWindow(request);
   },
   async openUrlInIncognito(request) {
-    return chrome.windows.create({ incognito: true, url: await UrlUtils.convertToUrl(request.url) });
+    return chrome.windows.create({
+      incognito: true,
+      url: await UrlUtils.convertToUrl(request.url),
+    });
   },
   openUrlInCurrentTab: TabOperations.openUrlInCurrentTab,
   openOptionsPageInNewTab(request) {
