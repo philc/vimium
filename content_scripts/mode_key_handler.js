@@ -62,8 +62,8 @@ class KeyHandlerMode extends Mode {
     const isEscape = KeyboardUtils.isEscape(event);
     if (isEscape && ((this.countPrefix !== 0) || (this.keyState.length !== 1))) {
       return DomUtils.consumeKeyup(event, () => this.reset());
-      // If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
     } else if (isEscape && HelpDialog && HelpDialog.isShowing()) {
+      // If the help dialog loses the focus, then Escape should hide it; see point 2 in #2045.
       HelpDialog.toggle();
       return this.suppressEvent;
     } else if (isEscape) {
