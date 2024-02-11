@@ -271,7 +271,6 @@ class VisualMode extends KeyHandlerMode {
     this.onExit((event = null) => {
       // Retain any selection, regardless of how we exit.
       if (this.shouldRetainSelectionOnExit) {
-        null;
         // This mimics vim: when leaving visual mode via Escape, collapse to focus, otherwise
         // collapse to anchor.
       } else if (
