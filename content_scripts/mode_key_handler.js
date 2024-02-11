@@ -67,6 +67,9 @@ class KeyHandlerMode extends Mode {
       HelpDialog.toggle();
       return this.suppressEvent;
     } else if (isEscape) {
+      // Some links stay "open" after clicking, until you mouse off of them, like Wikipedia's link
+      // preview popups. If the user types escape, issue a mouseout event here. See #3073.
+      HintCoordinator.mouseOutOfLastClickedElement();
       return this.continueBubbling;
     } else if (this.isMappedKey(keyChar)) {
       this.handleKeyChar(keyChar);
