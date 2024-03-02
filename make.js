@@ -1,5 +1,4 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-net --allow-run --unstable
-// --unstable is required for Puppeteer.
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-net --allow-run
 // Usage: ./make.js command. Use -l to list commands.
 // This is a set of tasks for building and testing Vimium in development.
 import * as fs from "https://deno.land/std@0.122.0/fs/mod.ts";
