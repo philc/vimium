@@ -486,8 +486,6 @@ class TabCompleter {
       } else {
         // Recently visited tabs get a higher score (except the current tab, which gets a low score).
         const isCurrent = currentTab.id == tab.id;
-        // tab.lastAccessed might be null; it was introduced in Chrome 121.
-        // TODO(philc): remove this "|| 0" check after increasing Chrome's min version to 121.
         return isCurrent ? 0 : tab.lastAccessed || 0;
       }
     };
