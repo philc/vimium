@@ -313,11 +313,14 @@ const BackgroundCommands = {
     await removeTabsRelative("both", request);
   },
 
-  visitPreviousTab({ count, tab }) {
-    const tabIds = BgUtils.tabRecency.getTabsByRecency().filter((tabId) => tabId !== tab.id);
-    if (tabIds.length > 0) {
-      selectSpecificTab({ id: tabIds[(count - 1) % tabIds.length] });
-    }
+  async visitPreviousTab({ count, tab }) {
+    const sortedTabs = (await chrome.tabs.query({}))
+      .filter((t) => t.id != tab.id)
+      // tab.lastAccessed might be null; it was introduced in Chrome 121.
+      // TODO(philc): remove this "|| 0" check after increasing Chrome's min version to 121.
+      .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
+    if (sortedTabs.length == 0) return;
+    selectSpecificTab({ id: sortedTabs[(count - 1) % sortedTabs.length].id });
   },
 
   reload({ count, tabId, registryEntry, tab: { windowId } }) {

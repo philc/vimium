@@ -479,10 +479,23 @@ class DomainCompleter {
 // If the query is empty, then return a list of open tabs, sorted by recency.
 class TabCompleter {
   async filter({ queryTerms }) {
-    // We search all tabs, not just those in the current window.
+    const currentTab = (await chrome.tabs.query({ active: true, lastFocusedWindow: true }))[0];
+    const computeRelevancy = (tab) => {
+      if (queryTerms.length > 0) {
+        return RankingUtils.wordRelevancy(queryTerms, tab.url, tab.title);
+      } else {
+        // Recently visited tabs get a higher score (except the current tab, which gets a low score).
+        const isCurrent = currentTab.id == tab.id;
+        // tab.lastAccessed might be null; it was introduced in Chrome 121.
+        // TODO(philc): remove this "|| 0" check after increasing Chrome's min version to 121.
+        return isCurrent ? 0 : tab.lastAccessed || 0;
+      }
+    };
+
+    // Search all tabs, not just those in the current window.
     const tabs = await chrome.tabs.query({});
-    const results = tabs.filter((tab) => RankingUtils.matches(queryTerms, tab.url, tab.title));
-    const suggestions = results
+    const matchingTabs = tabs.filter((tab) => RankingUtils.matches(queryTerms, tab.url, tab.title));
+    const suggestions = matchingTabs
       .map((tab) => {
         const suggestion = new Suggestion({
           queryTerms,
@@ -491,11 +504,12 @@ class TabCompleter {
           title: tab.title,
           tabId: tab.id,
           deDuplicate: false,
+          relevancy: computeRelevancy(tab),
         });
-        suggestion.relevancy = this.computeRelevancy(suggestion);
         return suggestion;
       })
       .sort((a, b) => b.relevancy - a.relevancy);
+
     // Boost relevancy with a multiplier so a relevant tab doesn't get crowded out by results from
     // competing completers. To prevent tabs from crowding out everything else in turn, penalize
     // them for being further down the results list by scaling on a hyperbola starting at 1 and
@@ -506,14 +520,6 @@ class TabCompleter {
       suggestion.relevancy /= (i / 4) + 1;
     });
     return suggestions;
-  }
-
-  computeRelevancy(suggestion) {
-    if (suggestion.queryTerms.length > 0) {
-      return RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title);
-    } else {
-      return BgUtils.tabRecency.recencyScore(suggestion.tabId);
-    }
   }
 }
 
