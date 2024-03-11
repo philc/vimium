@@ -164,6 +164,10 @@ const HintCoordinator = {
   localHints: null,
   cacheAllKeydownEvents: null,
 
+  // A WeakRef to the last clicked element. We track this so that we can mouse of it if the user
+  // types ESC after clicking on it. See #3073.
+  lastClickedElementRef: null,
+
   // Returns if the HintCoordinator will handle a given LinkHintsMessage.
   // Some messages will not be handled in the case where the help dialog is shown, and is then
   // hidden, but is still receiving link hints messages via broadcastLinkHintsMessage.
@@ -289,6 +293,15 @@ const HintCoordinator = {
       this.onExit.pop()(isSuccess);
     }
     this.linkHintsMode = this.localHints = null;
+  },
+
+  mouseOutOfLastClickedElement() {
+    if (this.lastClickedElementRef == null) return;
+    const el = this.lastClickedElementRef.deref();
+    if (el) {
+      DomUtils.simulateMouseEvent("mouseout", el, null);
+    }
+    this.lastClickedElementRef = null;
   },
 };
 
@@ -680,6 +693,7 @@ class LinkHintsMode {
             if (["input", "select", "object", "embed"].includes(clickEl.nodeName.toLowerCase())) {
               clickEl.focus();
             }
+            HintCoordinator.lastClickedElementRef = new WeakRef(clickEl);
             return linkActivator(clickEl);
           }
         }
