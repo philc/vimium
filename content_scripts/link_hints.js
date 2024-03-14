@@ -459,6 +459,7 @@ class LinkHintsMode {
       // Each hint marker is assigned a different z-index.
       el.style.zIndex = this.getNextZIndex();
       el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
+      el.popover = "manual";
       Object.assign(marker, {
         element: el,
         localHint,
@@ -731,6 +732,9 @@ class LinkHintsMode {
     if (!linkMarker.isLocalMarker()) return;
 
     linkMarker.element.style.display = "";
+    try { 
+      marker.element.showPopover();
+    } catch {}
     for (let j = 0, end = linkMarker.element.childNodes.length; j < end; j++) {
       if (j < matchingCharCount) {
         linkMarker.element.childNodes[j].classList.add("matchingCharacter");
@@ -743,6 +747,9 @@ class LinkHintsMode {
   hideMarker(marker) {
     if (marker.isLocalMarker()) {
       marker.element.style.display = "none";
+      try { 
+        marker.element.hidePopover();
+      } catch {}
     }
   }
 
