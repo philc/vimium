@@ -9,3 +9,6 @@ dist
 jscoverage.json
 tags
 .cake_task_cache
+
+# Visual Studio Code
+.vscode/
