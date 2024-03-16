@@ -49,7 +49,7 @@ const onURLChange = (details) => {
   }, {
     frameId: details.frameId,
   })
-    .catch(() => { });
+    .catch(() => {});
 };
 
 // Re-check whether Vimium is enabled for a frame when the URL changes without a reload.
@@ -398,7 +398,7 @@ const selectTab = (direction, { count, tab }) =>
 chrome.webNavigation.onCommitted.addListener(async ({ tabId, frameId }) => {
   // Vimium can't run on all tabs (e.g. chrome:// URLs). insertCSS will throw an error on such tabs,
   // which is expected, and noise. Swallow that error.
-  const swallowError = () => { };
+  const swallowError = () => {};
   await Settings.onLoaded();
   await chrome.scripting.insertCSS({
     css: Settings.get("userDefinedLinkHintCss"),
@@ -774,7 +774,7 @@ async function injectContentScriptsAndCSSIntoExistingTabs() {
   // noise, we swallow the failures. We could instead try to determine if the tab is scriptable by
   // checking its URL scheme before calling these APIs, but that approach has some nuance to it.
   // This is simpler.
-  const swallowError = (_) => { };
+  const swallowError = (_) => {};
 
   const tabs = await chrome.tabs.query({ status: "complete" });
   for (const tab of tabs) {
