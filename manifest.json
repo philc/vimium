@@ -3,7 +3,11 @@
   "name": "Vimium",
   "version": "2.0.6",
   "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
-  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "minimum_chrome_version": "105.0",
   "background": {
     "service_worker": "background_scripts/background.js",
@@ -16,7 +20,9 @@
     "browser_style": false,
     "open_in_tab": true
   },
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "permissions": [
     "tabs",
     "bookmarks",
@@ -30,11 +36,14 @@
     // loads. This permission was required when moving to manifest V3.
     "scripting",
     "favicon", // The favicon permission is not yet supported by Firefox.
-    "webNavigation"
+    "webNavigation",
+    "search"
   ],
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "<all_urls>"
+      ],
       "js": [
         "lib/utils.js",
         "lib/keyboard_utils.js",
@@ -57,14 +66,21 @@
         "content_scripts/mode_normal.js",
         "content_scripts/vimium_frontend.js"
       ],
-      "css": ["content_scripts/vimium.css"],
+      "css": [
+        "content_scripts/vimium.css"
+      ],
       "run_at": "document_start",
       "all_frames": true,
       "match_about_blank": true
     },
     {
-      "matches": ["file:///", "file:///*/"],
-      "css": ["content_scripts/file_urls.css"],
+      "matches": [
+        "file:///",
+        "file:///*/"
+      ],
+      "css": [
+        "content_scripts/file_urls.css"
+      ],
       "run_at": "document_start",
       "all_frames": true
     }
@@ -100,7 +116,9 @@
         // "pages/reload.html",
         "_favicon/*"
       ],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }
