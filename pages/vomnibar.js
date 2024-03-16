@@ -238,7 +238,13 @@ class VomnibarUI {
         this.hide(() => this.launchUrl(query, openInNewTab));
       } else if (isPrimarySearchSuggestion(completion)) {
         query = UrlUtils.createSearchUrl(query, completion.searchUrl);
-        this.hide(() => this.launchUrl(query, openInNewTab));
+        this.hide(() =>
+          chrome.runtime.sendMessage({
+            handler: "launch",
+            query,
+            openInNewTab,
+          })
+        );
       } else {
         this.hide(() => this.openCompletion(completion, openInNewTab));
       }
