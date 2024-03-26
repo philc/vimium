@@ -17,18 +17,6 @@ const BgUtils = {
   async getFirefoxVersion() {
     return globalThis.browser ? (await browser.runtime.getBrowserInfo()).version : null;
   },
-
-  escapedEntities: {
-    '"': "&quots;",
-    "&": "&amp;",
-    "'": "&apos;",
-    "<": "&lt;",
-    ">": "&gt;",
-  },
-
-  escapeAttribute(string) {
-    return string.replace(/["&'<>]/g, (char) => BgUtils.escapedEntities[char]);
-  },
 };
 
 Object.assign(globalThis, {
