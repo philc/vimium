@@ -19,6 +19,8 @@ const BgUtils = {
   },
 };
 
+BgUtils.tabRecency.init();
+
 Object.assign(globalThis, {
   BgUtils,
 });
