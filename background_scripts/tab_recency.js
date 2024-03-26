@@ -13,13 +13,11 @@ class TabRecency {
       this.register(addedTabId);
     });
 
-    if (chrome.windows != null) {
-      chrome.windows.onFocusChanged.addListener(async (windowId) => {
-        if (windowId == chrome.windows.WINDOW_ID_NONE) return;
-        const tabs = await chrome.tabs.query({ windowId, active: true });
-        if (tabs[0]) this.register(tabs[0].id);
-      });
-    }
+    chrome.windows.onFocusChanged.addListener(async (windowId) => {
+      if (windowId == chrome.windows.WINDOW_ID_NONE) return;
+      const tabs = await chrome.tabs.query({ windowId, active: true });
+      if (tabs[0]) this.register(tabs[0].id);
+    });
   }
 
   register(tabId) {
