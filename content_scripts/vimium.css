@@ -73,6 +73,10 @@ tbody.vimiumReset {
 
 /* Linkhints CSS */
 
+div#vimiumHintMarkerContainer {
+  pointer-events: none;
+}
+
 div.internalVimiumHintMarker {
   position: absolute;
   display: block;
