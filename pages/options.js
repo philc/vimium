@@ -17,6 +17,7 @@ const options = {
   searchUrl: "string",
   settingsVersion: "string", // This is a hidden field.
   userDefinedLinkHintCss: "string",
+  keepLastTabOpen: "boolean",
 };
 
 const OptionsPage = {
