@@ -381,6 +381,7 @@ const Commands = {
     "enterVisualLineMode",
     "toggleViewSource",
     "passNextKey",
+    "hardReload",
   ],
 };
 
@@ -399,6 +400,7 @@ const defaultKeyMappings = {
   "d": "scrollPageDown",
   "u": "scrollPageUp",
   "r": "reload",
+  "R": "hardReload",
   "yy": "copyCurrentUrl",
   "p": "openCopiedUrlInCurrentTab",
   "P": "openCopiedUrlInNewTab",
@@ -485,6 +487,7 @@ const commandDescriptions = {
   scrollFullPageUp: ["Scroll a full page up"],
 
   reload: ["Reload the page", { background: true }],
+  hardReload: ["Hard reload the page", { background: true }],
   toggleViewSource: ["View page source", { noRepeat: true }],
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }],

@@ -90,6 +90,7 @@ Using marks:
 
 Additional advanced browsing commands:
 
+    R       Hard reload the page (i.e. 'ctrl+shift+r')
     ]], [[  Follow the link labeled 'next' or '>' ('previous' or '<')
               - helpful for browsing paginated sites
     <a-f>   open multiple links in a new tab
