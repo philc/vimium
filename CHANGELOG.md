@@ -1,3 +1,7 @@
+2.1.1 (2024-03-29)
+
+- Fix exclusion rule popup not working. ([#4447](https://github.com/philc/vimium/issues/4447))
+
 2.1.0 (2024-03-27)
 
 - Fix Vomnibar doesn't always list tabs by recency.
