@@ -173,8 +173,11 @@ const BackgroundCommands = {
         request.urls = [request.url];
       } else {
         // Otherwise, if we have a registryEntry containing URLs, then use them.
-        const urlList = request.registryEntry.optionList
-          .filter(async (opt) => await UrlUtils.isUrl(opt));
+        // TODO(philc): This would be clearer if we try to detect options (a=b) rather than URLs,
+        // because the syntax for options is well defined ([a-zA-Z]+=\S+).
+        const promises = request.registryEntry.optionList.map((opt) => UrlUtils.isUrl(opt));
+        const isUrl = await Promise.all(promises);
+        const urlList = request.registryEntry.optionList.filter((_, i) => isUrl[i]);
         if (urlList.length > 0) {
           request.urls = urlList;
         } else {
