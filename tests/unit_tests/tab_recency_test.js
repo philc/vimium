@@ -7,13 +7,15 @@ context("TabRecency", () => {
   setup(() => tabRecency = new TabRecency());
 
   context("order", () => {
-    setup(() => {
-      tabRecency.register(1);
-      tabRecency.register(2);
-      tabRecency.register(3);
-      tabRecency.register(4);
-      tabRecency.deregister(4);
-      tabRecency.register(2);
+    setup(async () => {
+      stub(chrome.tabs, "query", () => Promise.resolve([]));
+      await tabRecency.init();
+      tabRecency.queueAction("register", (1));
+      tabRecency.queueAction("register", (2));
+      tabRecency.queueAction("register", (3));
+      tabRecency.queueAction("register", (4));
+      tabRecency.queueAction("deregister", (4));
+      tabRecency.queueAction("register", (2));
     });
 
     should("have the correct entries in the correct order", () => {
@@ -29,11 +31,28 @@ context("TabRecency", () => {
     });
   });
 
+  should("navigate actions are queued until state from storage is loaded", async () => {
+    let onActivated;
+    stub(chrome.tabs.onActivated, "addListener", (fn) => {
+      onActivated = fn;
+    });
+    let resolveStorage;
+    const storagePromise = new Promise((resolve, _) => resolveStorage = resolve);
+    stub(chrome.storage.session, "get", () => storagePromise);
+    tabRecency.init();
+    // Here, chrome.tabs.onActivated listeners have been added by tabrecency, but the
+    // chrome.storage.session data hasn't yet loaded.
+    onActivated({ tabId: 5 });
+    resolveStorage({});
+    await tabRecency.init();
+    assert.equal([5], tabRecency.getTabsByRecency());
+  });
+
   should("loadFromStorage handles empty values", async () => {
     stub(chrome.tabs, "query", () => Promise.resolve([{ id: 1 }]));
 
     stub(chrome.storage.session, "get", () => Promise.resolve({}));
-    await tabRecency.loadFromStorage();
+    await tabRecency.init();
     assert.equal([], tabRecency.getTabsByRecency());
 
     stub(chrome.storage.session, "get", () => Promise.resolve({ tabRecency: {} }));
@@ -41,36 +60,23 @@ context("TabRecency", () => {
     assert.equal([], tabRecency.getTabsByRecency());
   });
 
-  should("loadFromStorage merges in-memory tabs with in-storage tabs", async () => {
+  should("loadFromStorage works", async () => {
     const tabs = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
     stub(chrome.tabs, "query", () => Promise.resolve(tabs));
-
-    tabRecency.register(3);
-    tabRecency.register(4);
 
     const storage = { tabRecency: { 1: 5, 2: 6 } };
     stub(chrome.storage.session, "get", () => Promise.resolve(storage));
 
     // Even though the in-storage tab counters are higher than the in-memory tabs, during
     // loading, the in-memory tab counters are adjusted to be the most recent.
-    await tabRecency.loadFromStorage();
-
-    assert.equal([4, 3, 2, 1], tabRecency.getTabsByRecency());
-  });
-
-  should("loadFromStorage works if there are no in-memory tab tabs", async () => {
-    const tabs = [{ id: 1 }, { id: 2 }];
-    stub(chrome.tabs, "query", () => Promise.resolve(tabs));
-
-    const storage = { tabRecency: { 1: 4, 2: 1 } };
-    stub(chrome.storage.session, "get", () => Promise.resolve(storage));
-
-    await tabRecency.loadFromStorage();
-
-    // This tab's counter should be the max of the tab counters loaded from storage.
-    tabRecency.register(2);
+    await tabRecency.init();
 
     assert.equal([2, 1], tabRecency.getTabsByRecency());
+
+    tabRecency.queueAction("register", (3));
+    tabRecency.queueAction("register", (1));
+
+    assert.equal([1, 3, 2], tabRecency.getTabsByRecency());
   });
 
   should("loadFromStorage prunes out tabs which are no longer active", async () => {
@@ -79,7 +85,7 @@ context("TabRecency", () => {
 
     const storage = { tabRecency: { 1: 5, 2: 6 } };
     stub(chrome.storage.session, "get", () => Promise.resolve(storage));
-    await tabRecency.loadFromStorage();
+    await tabRecency.init();
     assert.equal([1], tabRecency.getTabsByRecency());
   });
 });

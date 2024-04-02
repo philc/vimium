@@ -316,7 +316,8 @@ const BackgroundCommands = {
     await removeTabsRelative("both", request);
   },
 
-  visitPreviousTab({ count, tab }) {
+  async visitPreviousTab({ count, tab }) {
+    await BgUtils.tabRecency.init();
     let tabIds = BgUtils.tabRecency.getTabsByRecency();
     tabIds = tabIds.filter((tabId) => tabId !== tab.id);
     if (tabIds.length > 0) {
