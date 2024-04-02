@@ -317,9 +317,11 @@ const BackgroundCommands = {
   },
 
   visitPreviousTab({ count, tab }) {
-    const tabIds = BgUtils.tabRecency.getTabsByRecency().filter((tabId) => tabId !== tab.id);
+    let tabIds = BgUtils.tabRecency.getTabsByRecency();
+    tabIds = tabIds.filter((tabId) => tabId !== tab.id);
     if (tabIds.length > 0) {
-      selectSpecificTab({ id: tabIds[(count - 1) % tabIds.length] });
+      const id = tabIds[(count - 1) % tabIds.length];
+      selectSpecificTab({ id });
     }
   },
 

@@ -58,6 +58,21 @@ context("TabRecency", () => {
     assert.equal([4, 3, 2, 1], tabRecency.getTabsByRecency());
   });
 
+  should("loadFromStorage works if there are no in-memory tab tabs", async () => {
+    const tabs = [{ id: 1 }, { id: 2 }];
+    stub(chrome.tabs, "query", () => Promise.resolve(tabs));
+
+    const storage = { tabRecency: { 1: 4, 2: 1 } };
+    stub(chrome.storage.session, "get", () => Promise.resolve(storage));
+
+    await tabRecency.loadFromStorage();
+
+    // This tab's counter should be the max of the tab counters loaded from storage.
+    tabRecency.register(2);
+
+    assert.equal([2, 1], tabRecency.getTabsByRecency());
+  });
+
   should("loadFromStorage prunes out tabs which are no longer active", async () => {
     const tabs = [{ id: 1 }];
     stub(chrome.tabs, "query", () => Promise.resolve(tabs));
