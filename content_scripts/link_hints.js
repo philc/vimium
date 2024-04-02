@@ -419,7 +419,9 @@ class LinkHintsMode {
         top: 0,
         left: 0,
         position: "absolute",
-        display: 'block',
+        // This display: block is required to override Github Enterprise's CSS circa 2024-04-01. See
+        // #4446.
+        display: "block",
         width: "100%",
         height: "100%",
         overflow: "visible",
