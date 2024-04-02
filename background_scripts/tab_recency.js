@@ -72,14 +72,6 @@ class TabRecency {
       this.counter = maxCounter;
     }
 
-    // Tabs loaded from storage should be considered accessed less recently than any tab tracked in
-    // memory, so increase all of the in-memory tabs's counters by maxCounter.
-    for (const [id, counter] of Object.entries(this.tabIdToCounter)) {
-      const newCounter = counter + maxCounter;
-      this.tabIdToCounter[id] = newCounter;
-      if (this.counter < newCounter) this.counter = newCounter;
-    }
-
     this.tabIdToCounter = Object.assign({}, storage.tabRecency);
 
     // Remove any tab IDs which aren't currently loaded.
