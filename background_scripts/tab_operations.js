@@ -12,7 +12,6 @@ async function openUrlInCurrentTab(request) {
   // (like github.com, developer.mozilla.org) will raise an error when we try to run this code. See
   // https://github.com/philc/vimium/issues/4331.
   if (UrlUtils.hasJavascriptPrefix(request.url)) {
-    const tabId = request.tabId;
     const scriptingArgs = {
       target: { tabId: request.tabId },
       func: (text) => {
