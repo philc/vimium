@@ -4,7 +4,7 @@
  * the style of our Vimium dialogs.
  *
  * The z-indexes of Vimium elements are very large, because we always want them to show on top. We
- * know that Chrome supports z-index values up to about 2^31. The values we use are large numbers
+ * know that Chrome supports z-index values up to about 2,147,483,648. The values we use are large numbers
  * approaching that bound. However, we must leave headroom for link hints. Hint marker z-indexes
  * start at 2140000001.
  */
@@ -33,7 +33,7 @@ tr.vimiumReset {
   cursor: auto;
   display: inline;
   float: none;
-  font-family : "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   font-size: inherit;
   font-style: normal;
   font-variant: normal;
