@@ -1,3 +1,12 @@
+2.1.2 (2024-04-03)
+
+- Better fix for Vomnibar doesn't always list tabs by recency.
+  ([#4368](https://github.com/philc/vimium/issues/4368))
+- Add a workaround to make link hints work on Github Enterprise.
+  ([#4446](https://github.com/philc/vimium/issues/4446))
+- Fix position=end is ignored in createTab command
+  ([#4450](https://github.com/philc/vimium/issues/4450))
+
 2.1.1 (2024-03-29)
 
 - Fix exclusion rule popup not working. ([#4447](https://github.com/philc/vimium/issues/4447))
