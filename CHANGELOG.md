@@ -1,7 +1,33 @@
+2.1.2 (2024-04-03)
+
+- Better fix for Vomnibar doesn't always list tabs by recency.
+  ([#4368](https://github.com/philc/vimium/issues/4368))
+- Add a workaround to make link hints work on Github Enterprise.
+  ([#4446](https://github.com/philc/vimium/issues/4446))
+- Fix position=end is ignored in createTab command
+  ([#4450](https://github.com/philc/vimium/issues/4450))
+
+2.1.1 (2024-03-29)
+
+- Fix exclusion rule popup not working. ([#4447](https://github.com/philc/vimium/issues/4447))
+
+2.1.0 (2024-03-27)
+
+- Fix Vomnibar doesn't always list tabs by recency.
+  ([#4368](https://github.com/philc/vimium/issues/4368))
+- Better domain detection in the Vomnibar ([#3268](https://github.com/philc/vimium/issues/3268))
+- Exclude keys based on the top frame URL, not a subframe's URL. This fixes many cases where the
+  excluded keys feature didn't seem to work. ([#4402](https://github.com/philc/vimium/issues/4402))
+- After selecting a link, if ESC is pressed, mouse out of the link. With this, Wikipedia's and
+  Github's link preview popups can be dismissed after following a link.
+  ([#3073](https://github.com/philc/vimium/issues/3073))
+- Fix link hints do not appear for links inside of github's popups. This fix is available on Chrome
+  114+, and soon Firefox. ([#4408](https://github.com/philc/vimium/issues/4408))
+
 2.0.5, 2.0.6 (2023-11-06)
 
 - Fix bug where "esc" wouldn't unfocus a textarea like it should.
-  ([#4336](https://github.com/philc/vimium/issues/4336)),
+  ([#4336](https://github.com/philc/vimium/issues/4336))
 - Fix passNextKey command.
 
 2.0.4 (2023-10-19)

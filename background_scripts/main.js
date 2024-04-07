@@ -202,8 +202,11 @@ const BackgroundCommands = {
         request.urls = [request.url];
       } else {
         // Otherwise, if we have a registryEntry containing URLs, then use them.
-        const urlList = request.registryEntry.optionList
-          .filter(async (opt) => await UrlUtils.isUrl(opt));
+        // TODO(philc): This would be clearer if we try to detect options (a=b) rather than URLs,
+        // because the syntax for options is well defined ([a-zA-Z]+=\S+).
+        const promises = request.registryEntry.optionList.map((opt) => UrlUtils.isUrl(opt));
+        const isUrl = await Promise.all(promises);
+        const urlList = request.registryEntry.optionList.filter((_, i) => isUrl[i]);
         if (urlList.length > 0) {
           request.urls = urlList;
         } else {
@@ -355,10 +358,13 @@ const BackgroundCommands = {
     await removeTabsRelative("both", request);
   },
 
-  visitPreviousTab({ count, tab }) {
-    const tabIds = BgUtils.tabRecency.getTabsByRecency().filter((tabId) => tabId !== tab.id);
+  async visitPreviousTab({ count, tab }) {
+    await BgUtils.tabRecency.init();
+    let tabIds = BgUtils.tabRecency.getTabsByRecency();
+    tabIds = tabIds.filter((tabId) => tabId !== tab.id);
     if (tabIds.length > 0) {
-      selectSpecificTab({ id: tabIds[(count - 1) % tabIds.length] });
+      const id = tabIds[(count - 1) % tabIds.length];
+      selectSpecificTab({ id });
     }
   },
 

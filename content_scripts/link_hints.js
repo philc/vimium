@@ -409,6 +409,25 @@ class LinkHintsMode {
       { id: "vimiumHintMarkerContainer", className: "vimiumReset" },
     );
 
+    // TODO(philc): 2024-03-27 Remove this hasPopoverSupport check once Firefox has popover support.
+    // Also move this CSS into vimium.css.
+    const hasPopoverSupport = this.hintMarkerContainingDiv.showPopover != null;
+    if (hasPopoverSupport) {
+      this.hintMarkerContainingDiv.popover = "manual";
+      this.hintMarkerContainingDiv.showPopover();
+      Object.assign(this.hintMarkerContainingDiv.style, {
+        top: 0,
+        left: 0,
+        position: "absolute",
+        // This display: block is required to override Github Enterprise's CSS circa 2024-04-01. See
+        // #4446.
+        display: "block",
+        width: "100%",
+        height: "100%",
+        overflow: "visible",
+      });
+    }
+
     this.setIndicator();
   }
 
