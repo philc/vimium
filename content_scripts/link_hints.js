@@ -361,7 +361,7 @@ class LinkHintsMode {
     // We need documentElement to be ready in order to append links.
     if (!document.documentElement) return;
 
-    this.hintMarkerContainingDiv = null;
+    this.containerEl = null;
     // Function that does the appropriate action on the selected link.
     this.linkActivator = undefined;
     // The link-hints "mode" (in the key-handler, indicator sense).
@@ -407,20 +407,28 @@ class LinkHintsMode {
   }
 
   renderHints() {
+    if (this.containerEl == null) {
+      const div = DomUtils.createElement("div");
+      div.id = "vimiumHintMarkerContainer";
+      div.className = "vimiumReset";
+      this.containerEl = div;
+      document.documentElement.appendChild(div);
+    }
+
     // Append these markers as top level children instead of as child nodes to the link itself,
     // because some clickable elements cannot contain children, e.g. submit buttons.
-    this.hintMarkerContainingDiv = DomUtils.addElementsToPage(
-      this.hintMarkers.filter((m) => m.isLocalMarker()).map((m) => m.element),
-      { id: "vimiumHintMarkerContainer", className: "vimiumReset" }
-    );
+    const markerEls = this.hintMarkers.filter((m) => m.isLocalMarker()).map((m) => m.element);
+    for (const el of markerEls) {
+      this.containerEl.appendChild(el);
+    }
 
     // TODO(philc): 2024-03-27 Remove this hasPopoverSupport check once Firefox has popover support.
     // Also move this CSS into vimium.css.
-    const hasPopoverSupport = this.hintMarkerContainingDiv.showPopover != null;
+    const hasPopoverSupport = this.containerEl.showPopover != null;
     if (hasPopoverSupport) {
-      this.hintMarkerContainingDiv.popover = "manual";
-      this.hintMarkerContainingDiv.showPopover();
-      Object.assign(this.hintMarkerContainingDiv.style, {
+      this.containerEl.popover = "manual";
+      this.containerEl.showPopover();
+      Object.assign(this.containerEl.style, {
         top: 0,
         left: 0,
         position: "absolute",
@@ -762,10 +770,10 @@ class LinkHintsMode {
   }
 
   removeHintMarkers() {
-    if (this.hintMarkerContainingDiv) {
-      DomUtils.removeElement(this.hintMarkerContainingDiv);
+    if (this.containerEl) {
+      DomUtils.removeElement(this.containerEl);
     }
-    this.hintMarkerContainingDiv = null;
+    this.containerEl = null;
   }
 }
 
