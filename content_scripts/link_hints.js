@@ -925,7 +925,7 @@ class FilterHints {
       (keyChar.toLowerCase() !== keyChar) &&
       (this.linkHintNumbers.toLowerCase() !== this.linkHintNumbers.toUpperCase())
     ) {
-      // The the keyChar is upper case and the link hint "numbers" contain characters (e.g.
+      // The keyChar is upper case and the link hint "numbers" contain characters (e.g.
       // [a-zA-Z]). We don't want some upper-case letters matching hints (above) and some matching
       // text (below), so we ignore such keys.
       return;
