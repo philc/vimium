@@ -256,7 +256,7 @@ const NormalModeCommands = {
 
     for (let i = 0, end = resultSet.snapshotLength; i < end; i++) {
       element = resultSet.snapshotItem(i);
-      if (!element.getClientRects(element, true)) {
+      if (!element.getClientRects()[0]) {
         continue;
       }
       visibleInputs.push({ element, index: i, rect: Rect.copy(element.getBoundingClientRect()) });
