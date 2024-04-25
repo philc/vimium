@@ -115,6 +115,9 @@ const NormalModeCommands = {
   scrollRight(count) {
     Scroller.scrollBy("x", Settings.get("scrollStepSize") * count);
   },
+  nextScrollable() {
+    Scroller.nextScrollable();
+  },
 
   // Tab navigation: back, forward.
   goBack(count) {

@@ -659,13 +659,13 @@ class LinkHintsMode {
       }
     }
 
-    const newMarkers = []
+    const newMarkers = [];
     for (let stack of stacks) {
       if (stack.length > 1) {
         // Push the last element to the beginning.
-        stack = stack.splice(-1, 1).concat(stack)
+        stack = stack.splice(-1, 1).concat(stack);
       }
-      newMarkers.push(...stack)
+      newMarkers.push(...stack);
     }
     this.hintMarkers = newMarkers;
     this.renderHints();

@@ -318,6 +318,7 @@ const Commands = {
       "goNext",
       "nextFrame",
       "mainFrame",
+      "nextScrollable",
       "Marks.activateCreateMode",
       "Marks.activateGotoMode",
     ],
@@ -398,6 +399,7 @@ const defaultKeyMappings = {
   "<c-y>": "scrollUp",
   "d": "scrollPageDown",
   "u": "scrollPageUp",
+  "s": "nextScrollable",
   "r": "reload",
   "yy": "copyCurrentUrl",
   "p": "openCopiedUrlInCurrentTab",
@@ -483,6 +485,7 @@ const commandDescriptions = {
   scrollPageUp: ["Scroll a half page up"],
   scrollFullPageDown: ["Scroll a full page down"],
   scrollFullPageUp: ["Scroll a full page up"],
+  nextScrollable: ["Select the next scrollable container"],
 
   reload: ["Reload the page", { background: true }],
   toggleViewSource: ["View page source", { noRepeat: true }],
