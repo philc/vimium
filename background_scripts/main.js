@@ -341,19 +341,17 @@ const BackgroundCommands = {
     // For hard reload set bypassCache to true
     const bypassCache = true;
     return chrome.tabs.query({ windowId }, function (tabs) {
-      const position = (function () {
-        for (let index = 0; index < tabs.length; index++) {
-          const tab = tabs[index];
-          if (tab.id === tabId) return index;
+        let startIndex = tabs.findIndex(tab => tab.id === tabId);
+        if (startIndex === -1) return; // Exit if tabId is not found
+
+        let processed = 0;
+        while (processed < count) {
+            chrome.tabs.reload(tabs[startIndex].id, { bypassCache });
+            processed++;
+            startIndex = (startIndex + 1) % tabs.length; // Wrap around if needed
         }
-      })();
-      tabs = [...tabs.slice(position), ...tabs.slice(0, position)];
-      count = Math.min(count, tabs.length);
-      for (const tab of tabs.slice(0, count)) {
-        chrome.tabs.reload(tab.id, { bypassCache });
-      }
     });
-  },
+  }
 };
 
 const forCountTabs = (count, currentTab, callback) =>
