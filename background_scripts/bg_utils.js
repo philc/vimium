@@ -17,7 +17,7 @@ const BgUtils = {
   // Get a query dictionary for `chrome.tabs.query` that will only return the visible tabs.
   visibleTabs() {
     const visibleTabsQuery = {
-      currentWindow: true
+      currentWindow: true,
     };
     // Only Firefox supports hidden tabs
     if (this.isFirefox()) {
@@ -36,11 +36,11 @@ const BgUtils = {
       // Since we know that all indices are in order, we can do a binary search.
       let l = 0;
       let r = tabs.length - 1;
-      while(l <= r) {
+      while (l <= r) {
         let m = (l + r) >> 1;
         if (tabs[m].index < tab.index) {
           l = m + 1;
-        } else if(tabs[m].index > tab.index) {
+        } else if (tabs[m].index > tab.index) {
           r = m - 1;
         } else {
           return m;
