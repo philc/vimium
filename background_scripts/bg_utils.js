@@ -33,7 +33,19 @@ const BgUtils = {
       return tab.index;
     } else {
       // If it's not where we expect, find its real position.
-      return tabs.findIndex(t => t.index === tab.index);
+      // Since we know that all indices are in order, we can do a binary search.
+      let l = 0;
+      let r = tabs.length - 1;
+      while(l <= r) {
+        let m = (l + r) >> 1;
+        if (tabs[m].index < tab.index) {
+          l = m + 1;
+        } else if(tabs[m].index > tab.index) {
+          r = m - 1;
+        } else {
+          return m;
+        }
+      }
     }
   },
 
