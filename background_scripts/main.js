@@ -584,6 +584,11 @@ const sendRequestHandlers = {
     });
   },
 
+  launchSearchQuery({ query, openInNewTab }) {
+    const disposition = openInNewTab ? "NEW_TAB" : "CURRENT_TAB";
+    chrome.search.query({ disposition, text: query });
+  },
+
   domReady(_, sender) {
     const isTopFrame = sender.frameId == 0;
     if (!isTopFrame) return;

@@ -14,7 +14,6 @@ const options = {
   smoothScroll: "boolean",
   grabBackFocus: "boolean",
   searchEngines: "string",
-  searchUrl: "string",
   settingsVersion: "string", // This is a hidden field.
   userDefinedLinkHintCss: "string",
 };

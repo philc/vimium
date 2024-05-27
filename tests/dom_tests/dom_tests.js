@@ -72,9 +72,9 @@ const createGeneralHintTests = (isFilteredMode) => {
 
     should("create hints when activated, discard them when deactivated", () => {
       const mode = activateLinkHintsMode();
-      assert.isFalse(mode.hintMarkerContainingDiv == null);
+      assert.isFalse(mode.containerEl == null);
       mode.deactivateMode();
-      assert.isTrue(mode.hintMarkerContainingDiv == null);
+      assert.isTrue(mode.containerEl == null);
     });
 
     should("position items correctly", () => {

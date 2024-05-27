@@ -30,7 +30,8 @@
     // loads. This permission was required when moving to manifest V3.
     "scripting",
     "favicon", // The favicon permission is not yet supported by Firefox.
-    "webNavigation"
+    "webNavigation",
+    "search"
   ],
   "content_scripts": [
     {

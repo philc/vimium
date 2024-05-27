@@ -60,19 +60,6 @@ context("convertToUrl", async () => {
       await UrlUtils.convertToUrl("javascript:alert('25 % 20 * 25%20');"),
     );
   });
-
-  should("convert non-URL terms into search queries", async () => {
-    await Settings.load();
-    assert.equal("https://www.google.com/search?q=google", await UrlUtils.convertToUrl("google"));
-    assert.equal(
-      "https://www.google.com/search?q=go%20ogle.com",
-      await UrlUtils.convertToUrl("go ogle.com"),
-    );
-    assert.equal(
-      "https://www.google.com/search?q=%40twitter",
-      await UrlUtils.convertToUrl("@twitter"),
-    );
-  });
 });
 
 context("createSearchUrl", () => {

@@ -509,10 +509,14 @@ class FocusSelector extends Mode {
       },
     });
 
-    this.hintContainingDiv = DomUtils.addElementsToPage(hints, {
-      id: "vimiumInputMarkerContainer",
-      className: "vimiumReset",
-    });
+    const div = DomUtils.createElement("div");
+    div.id = "vimiumInputMarkerContainer";
+    div.className = "vimiumReset";
+    for (const el of hints) {
+      div.appendChild(el);
+    }
+    this.hintContainerEl = div;
+    document.documentElement.appendChild(div);
 
     DomUtils.simulateSelect(visibleInputs[selectedInputIndex].element);
     if (visibleInputs.length === 1) {
@@ -525,7 +529,7 @@ class FocusSelector extends Mode {
 
   exit() {
     super.exit();
-    DomUtils.removeElement(this.hintContainingDiv);
+    DomUtils.removeElement(this.hintContainerEl);
     if (document.activeElement && DomUtils.isEditable(document.activeElement)) {
       return new InsertMode({
         singleton: "post-find-mode/focus-input",

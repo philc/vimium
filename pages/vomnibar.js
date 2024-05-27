@@ -232,10 +232,19 @@ class VomnibarUI {
         // <Enter> on an empty query is a no-op.
         if (query.length == 0) return;
         const firstCompletion = this.completions[0];
+        const isPrimary = isPrimarySearchSuggestion(firstCompletion);
         if (isPrimarySearchSuggestion(firstCompletion)) {
-          query = UrlUtils.createSearchUrl(query, firstCompletion?.searchUrl);
+          query = UrlUtils.createSearchUrl(query, firstCompletion.searchUrl);
+          this.launchUrl(query);
+        } else {
+          this.hide(() =>
+            chrome.runtime.sendMessage({
+              handler: "launchSearchQuery",
+              query,
+              openInNewTab,
+            })
+          );
         }
-        this.hide(() => this.launchUrl(query, openInNewTab));
       } else if (isPrimarySearchSuggestion(completion)) {
         query = UrlUtils.createSearchUrl(query, completion.searchUrl);
         this.hide(() => this.launchUrl(query, openInNewTab));
