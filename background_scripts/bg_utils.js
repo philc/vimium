@@ -14,38 +14,16 @@ const BgUtils = {
       : false;
   },
 
-  // Get a query dictionary for `chrome.tabs.query` that will only return the visible tabs.
-  visibleTabs() {
-    const visibleTabsQuery = {
-      currentWindow: true,
-    };
-    // Only Firefox supports hidden tabs
-    if (this.isFirefox()) {
-      visibleTabsQuery.hidden = false;
-    }
-    return visibleTabsQuery;
-  },
-
   // Find the real tab index in a given tab array.
+  // In Firefox there may be hidden tabs,
+  // so `tab.index` may not be the index in the visible tabs array.
   tabIndex(tab, tabs) {
     // First check if the tab is where we expect it (to save processing).
     if (tabs.length > tab.index && tabs[tab.index].index === tab.index) {
       return tab.index;
     } else {
       // If it's not where we expect, find its real position.
-      // Since we know that all indices are in order, we can do a binary search.
-      let l = 0;
-      let r = tabs.length - 1;
-      while (l <= r) {
-        let m = (l + r) >> 1;
-        if (tabs[m].index < tab.index) {
-          l = m + 1;
-        } else if (tabs[m].index > tab.index) {
-          r = m - 1;
-        } else {
-          return m;
-        }
-      }
+      return tabs.findIndex((t) => t.index === tab.index);
     }
   },
 

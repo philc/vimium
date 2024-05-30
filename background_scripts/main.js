@@ -38,6 +38,13 @@ const completers = {
   tabs: new MultiCompleter([completionSources.tabs]),
 };
 
+// Get a query dictionary for `chrome.tabs.query` that will only return the visible tabs.
+const visibleTabsQueryArgs = { currentWindow: true };
+if (BgUtils.isFirefox()) {
+  // Only Firefox supports hidden tabs.
+  visibleTabsQueryArgs.hidden = false;
+}
+
 const onURLChange = (details) => {
   // sendMessage will throw "Error: Could not establish connection. Receiving end does not exist."
   // if there is no Vimium content script loaded in the given tab. This can occur if the user
@@ -140,7 +147,7 @@ const moveTab = function ({ count, tab, registryEntry }) {
   if (registryEntry.command === "moveTabLeft") {
     count = -count;
   }
-  return chrome.tabs.query(BgUtils.visibleTabs(), function (tabs) {
+  return chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
     const pinnedCount = (tabs.filter((tab) => tab.pinned)).length;
     const minIndex = tab.pinned ? 0 : pinnedCount;
     const maxIndex = (tab.pinned ? pinnedCount : tabs.length) - 1;
@@ -233,7 +240,7 @@ const BackgroundCommands = {
   }),
 
   moveTabToNewWindow({ count, tab }) {
-    chrome.tabs.query(BgUtils.visibleTabs(), function (tabs) {
+    chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
       const activeTabIndex = BgUtils.tabIndex(tab, tabs);
       const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
       [tab, ...tabs] = tabs.slice(startTabIndex, startTabIndex + count);
@@ -347,7 +354,7 @@ const BackgroundCommands = {
 };
 
 const forCountTabs = (count, currentTab, callback) =>
-  chrome.tabs.query(BgUtils.visibleTabs(), function (tabs) {
+  chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
     const activeTabIndex = BgUtils.tabIndex(currentTab, tabs);
     const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
     for (const tab of tabs.slice(startTabIndex, startTabIndex + count)) {
@@ -362,7 +369,7 @@ const removeTabsRelative = async (direction, { count, tab }) => {
   // either side.
   if (count == null) count = 99999;
   const activeTab = tab;
-  const tabs = await chrome.tabs.query(BgUtils.visibleTabs());
+  const tabs = await chrome.tabs.query(visibleTabsQueryArgs);
   const activeIndex = BgUtils.tabIndex(activeTab, tabs);
   const toRemove = tabs.filter((tab, tabIndex) => {
     if (tab.pinned || tab.id == activeTab.id) {
@@ -386,7 +393,7 @@ const removeTabsRelative = async (direction, { count, tab }) => {
 // Selects a tab before or after the currently selected tab.
 // - direction: "next", "previous", "first" or "last".
 const selectTab = (direction, { count, tab }) =>
-  chrome.tabs.query(BgUtils.visibleTabs(), function (tabs) {
+  chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
     if (tabs.length > 1) {
       const toSelect = (() => {
         switch (direction) {
