@@ -38,7 +38,7 @@ const completers = {
   tabs: new MultiCompleter([completionSources.tabs]),
 };
 
-// Get a query dictionary for `chrome.tabs.query` that will only return the visible tabs.
+// A query dictionary for `chrome.tabs.query` that will return only the visible tabs.
 const visibleTabsQueryArgs = { currentWindow: true };
 if (BgUtils.isFirefox()) {
   // Only Firefox supports hidden tabs.
@@ -131,6 +131,17 @@ const toggleMuteTab = (request, sender) => {
   }
 };
 
+// Find a tab's actual index in a given tab array returned by chrome.tabs.query. In Firefox, there
+// may be hidden tabs, so tab.tabIndex may not be the actual index into the array of visible tabs.
+function getTabIndex(tab, tabs) {
+  // First check if the tab is where we expect it, to avoid searching the array.
+  if (tabs.length > tab.index && tabs[tab.index].index === tab.index) {
+    return tab.index;
+  } else {
+    return tabs.findIndex((t) => t.index === tab.index);
+  }
+}
+
 //
 // Selects the tab with the ID specified in request.id
 //
@@ -152,7 +163,7 @@ const moveTab = function ({ count, tab, registryEntry }) {
     const minIndex = tab.pinned ? 0 : pinnedCount;
     const maxIndex = (tab.pinned ? pinnedCount : tabs.length) - 1;
     // The tabs array index of the new position.
-    const moveIndex = Math.max(minIndex, Math.min(maxIndex, BgUtils.tabIndex(tab, tabs) + count));
+    const moveIndex = Math.max(minIndex, Math.min(maxIndex, getTabIndex(tab, tabs) + count));
     return chrome.tabs.move(tab.id, {
       index: tabs[moveIndex].index,
     });
@@ -241,7 +252,7 @@ const BackgroundCommands = {
 
   moveTabToNewWindow({ count, tab }) {
     chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
-      const activeTabIndex = BgUtils.tabIndex(tab, tabs);
+      const activeTabIndex = getTabIndex(tab, tabs);
       const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
       [tab, ...tabs] = tabs.slice(startTabIndex, startTabIndex + count);
       chrome.windows.create({ tabId: tab.id, incognito: tab.incognito }, function (window) {
@@ -353,7 +364,7 @@ const BackgroundCommands = {
 
 const forCountTabs = (count, currentTab, callback) =>
   chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
-    const activeTabIndex = BgUtils.tabIndex(currentTab, tabs);
+    const activeTabIndex = getTabIndex(currentTab, tabs);
     const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
     for (const tab of tabs.slice(startTabIndex, startTabIndex + count)) {
       callback(tab);
@@ -368,7 +379,7 @@ const removeTabsRelative = async (direction, { count, tab }) => {
   if (count == null) count = 99999;
   const activeTab = tab;
   const tabs = await chrome.tabs.query(visibleTabsQueryArgs);
-  const activeIndex = BgUtils.tabIndex(activeTab, tabs);
+  const activeIndex = getTabIndex(activeTab, tabs);
   const toRemove = tabs.filter((tab, tabIndex) => {
     if (tab.pinned || tab.id == activeTab.id) {
       return false;
@@ -396,9 +407,9 @@ const selectTab = (direction, { count, tab }) =>
       const toSelect = (() => {
         switch (direction) {
           case "next":
-            return (BgUtils.tabIndex(tab, tabs) + count) % tabs.length;
+            return (getTabIndex(tab, tabs) + count) % tabs.length;
           case "previous":
-            return ((BgUtils.tabIndex(tab, tabs) - count) + (count * tabs.length)) % tabs.length;
+            return ((getTabIndex(tab, tabs) - count) + (count * tabs.length)) % tabs.length;
           case "first":
             return Math.min(tabs.length - 1, count - 1);
           case "last":
