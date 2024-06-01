@@ -23,6 +23,7 @@ const completionSources = {
   history: new HistoryCompleter(),
   domains: new DomainCompleter(),
   tabs: new TabCompleter(),
+  recentlyClosed: new RecentlyClosedTabCompleter(),
   searchEngines: new SearchEngineCompleter(),
 };
 
@@ -36,6 +37,7 @@ const completers = {
   ]),
   bookmarks: new MultiCompleter([completionSources.bookmarks]),
   tabs: new MultiCompleter([completionSources.tabs]),
+  recentlyClosed: new MultiCompleter([completionSources.recentlyClosed]),
 };
 
 // Get a query dictionary for `chrome.tabs.query` that will only return the visible tabs.
@@ -130,6 +132,11 @@ const toggleMuteTab = (request, sender) => {
     muteTab(currentTab);
   }
 };
+
+//
+// Restore the session with the ID specified in request.id
+//
+const restoreSession = (request) => chrome.sessions.restore(request.id);
 
 //
 // Selects the tab with the ID specified in request.id
@@ -568,6 +575,7 @@ const sendRequestHandlers = {
 
   nextFrame: BackgroundCommands.nextFrame,
   selectSpecificTab,
+  restoreSession,
   createMark: Marks.create.bind(Marks),
   gotoMark: Marks.goto.bind(Marks),
   // Send a message to all frames in the current tab. If request.frameId is provided, then send
