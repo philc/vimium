@@ -131,17 +131,7 @@ const findScrollableElement = function (element, direction, amount, factor) {
 // On some pages, the scrolling element is not actually scrollable. Here, we search the document for
 // the largest visible element which does scroll vertically. This is used to initialize
 // activatedElement. See #1358.
-const firstScrollableElement = function (element = null) {
-  let child;
-  if (!element) {
-    const scrollingElement = getScrollingElement();
-    if (doesScroll(scrollingElement, "y", 1, 1) || doesScroll(scrollingElement, "y", -1, 1)) {
-      return scrollingElement;
-    } else {
-      element = document.body || getScrollingElement();
-    }
-  }
-
+const currentScrollableElement = function (element) {
   if (doesScroll(element, "y", 1, 1) || doesScroll(element, "y", -1, 1)) {
     return element;
   } else {
@@ -150,8 +140,8 @@ const firstScrollableElement = function (element = null) {
       .map((c) => ({ "element": c, "rect": DomUtils.getVisibleClientRect(c) }))
       .filter((child) => child.rect); // Filter out non-visible elements.
     children.map((child) => child.area = child.rect.width * child.rect.height);
-    for (child of children.sort((a, b) => b.area - a.area)) { // Largest to smallest by visible area.
-      const el = firstScrollableElement(child.element);
+    for (let child of children.sort((a, b) => b.area - a.area)) { // Largest to smallest by visible area.
+      const el = currentScrollableElement(child.element);
       if (el) {
         return el;
       }
@@ -375,8 +365,7 @@ const Scroller = {
     }
 
     if (!activatedElement) {
-      activatedElement = (getScrollingElement() && firstScrollableElement()) ||
-        getScrollingElement();
+      activatedElement = currentScrollableElement(getScrollingElement());
     }
     if (!activatedElement) {
       return;
@@ -393,8 +382,7 @@ const Scroller = {
 
   scrollTo(direction, pos) {
     if (!activatedElement) {
-      activatedElement = (getScrollingElement() && firstScrollableElement()) ||
-        getScrollingElement();
+      activatedElement = currentScrollableElement(getScrollingElement());
     }
     if (!activatedElement) {
       return;
@@ -409,8 +397,7 @@ const Scroller = {
   // Is element scrollable and not the activated element?
   isScrollableElement(element) {
     if (!activatedElement) {
-      activatedElement = (getScrollingElement() && firstScrollableElement()) ||
-        getScrollingElement();
+      activatedElement = currentScrollableElement(getScrollingElement());
     }
     return (element !== activatedElement) && isScrollableElement(element);
   },
@@ -419,7 +406,7 @@ const Scroller = {
   // ensure the focus remains visible.
   scrollIntoView(element) {
     if (!activatedElement) {
-      activatedElement = getScrollingElement() && firstScrollableElement();
+      activatedElement = currentScrollableElement(getScrollingElement());
     }
     const rects = element.getClientRects();
     const rect = rects ? rects[0] : undefined;
@@ -447,6 +434,21 @@ const Scroller = {
         CoreScroller.scroll(element, "x", amount, false);
       }
     }
+  },
+  nextScrollable() {
+    const allElements = document.querySelectorAll("*");
+    const elements = Array.from(allElements).filter((element) => isScrollableElement(element));
+
+    const activeIndex = elements.indexOf(activatedElement);
+    const getNextActiveIndex = (index, array) => {
+      const nextIndex = index + 1;
+      if (nextIndex >= array.length) {
+        return 0;
+      }
+      return nextIndex;
+    };
+    const nextActiveIndex = getNextActiveIndex(activeIndex, elements);
+    activatedElement = elements[nextActiveIndex];
   },
 };
 
