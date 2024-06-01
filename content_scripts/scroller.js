@@ -238,7 +238,7 @@ const CoreScroller = {
   calibrationBoundary: 150,
 
   // Scroll element by a relative amount (a number) in some direction.
-  scroll(element, direction, amount, continuous) {
+  scroll(element, direction, amount, continuous, forceRepeat) {
     if (continuous == null) continuous = true;
     if (!amount) {
       return;
@@ -253,7 +253,7 @@ const CoreScroller = {
 
     // We don't activate new animators on keyboard repeats; rather, the most-recently activated
     // animator continues scrolling.
-    if (this.lastEvent != null ? this.lastEvent.repeat : undefined) {
+    if (this.lastEvent != null && this.lastEvent.repeat && !forceRepeat) {
       return;
     }
 
@@ -429,22 +429,22 @@ const Scroller = {
       if (rect.bottom < 0) {
         amount = rect.bottom - Math.min(rect.height, window.innerHeight);
         element = findScrollableElement(element, "y", amount, 1);
-        CoreScroller.scroll(element, "y", amount, false);
+        CoreScroller.scroll(element, "y", amount, false, true);
       } else if (window.innerHeight < rect.top) {
         amount = rect.top + Math.min(rect.height - window.innerHeight, 0);
         element = findScrollableElement(element, "y", amount, 1);
-        CoreScroller.scroll(element, "y", amount, false);
+        CoreScroller.scroll(element, "y", amount, false, true);
       }
 
       // Scroll x axis.
       if (rect.right < 0) {
         amount = rect.right - Math.min(rect.width, window.innerWidth);
         element = findScrollableElement(element, "x", amount, 1);
-        CoreScroller.scroll(element, "x", amount, false);
+        CoreScroller.scroll(element, "x", amount, false, true);
       } else if (window.innerWidth < rect.left) {
         amount = rect.left + Math.min(rect.width - window.innerWidth, 0);
         element = findScrollableElement(element, "x", amount, 1);
-        CoreScroller.scroll(element, "x", amount, false);
+        CoreScroller.scroll(element, "x", amount, false, true);
       }
     }
   },
