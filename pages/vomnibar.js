@@ -232,12 +232,21 @@ class VomnibarUI {
         // <Enter> on an empty query is a no-op.
         if (query.length == 0) return;
         const firstCompletion = this.completions[0];
+        const isPrimary = isPrimarySearchSuggestion(firstCompletion);
         if (isPrimarySearchSuggestion(firstCompletion)) {
-          query = Utils.createSearchUrl(query, firstCompletion?.searchUrl);
+          query = UrlUtils.createSearchUrl(query, firstCompletion.searchUrl);
+          this.launchUrl(query);
+        } else {
+          this.hide(() =>
+            chrome.runtime.sendMessage({
+              handler: "launchSearchQuery",
+              query,
+              openInNewTab,
+            })
+          );
         }
-        this.hide(() => this.launchUrl(query, openInNewTab));
       } else if (isPrimarySearchSuggestion(completion)) {
-        query = Utils.createSearchUrl(query, completion.searchUrl);
+        query = UrlUtils.createSearchUrl(query, completion.searchUrl);
         this.hide(() => this.launchUrl(query, openInNewTab));
       } else {
         this.hide(() => this.openCompletion(completion, openInNewTab));
@@ -378,10 +387,10 @@ class VomnibarUI {
   }
 
   launchUrl(url, openInNewTab) {
-    // If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the
+    // If the URL is a bookmarklet (so, prefixed with "javascript:"), then always open it in the
     // current tab.
-    if (openInNewTab) {
-      openInNewTab = !Utils.hasJavascriptPrefix(url);
+    if (openInNewTab && Utils.hasJavascriptPrefix(url)) {
+      openInNewTab = false;
     }
     chrome.runtime.sendMessage({
       handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",

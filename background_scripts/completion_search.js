@@ -98,8 +98,8 @@ const CompletionSearch = {
     if (query.length < 4) return [];
 
     // We don't complete regular URLs or Javascript URLs.
-    if (queryTerms.length == 1 && Utils.isUrl(query)) return [];
-    if (Utils.hasJavascriptPrefix(query)) return [];
+    if (queryTerms.length == 1 && await UrlUtils.isUrl(query)) return [];
+    if (UrlUtils.hasJavascriptPrefix(query)) return [];
 
     const engine = this.lookupEngine(searchUrl);
     if (!engine) return [];

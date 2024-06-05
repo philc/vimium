@@ -199,7 +199,7 @@ const initializePreDomReady = async function () {
   // NOTE(philc): I'm blocking further Vimium initialization on this, for simplicity. If necessary
   // we could allow other tasks to run concurrently.
   await Settings.onLoaded();
-  checkIfEnabledForUrl(document.hasFocus());
+  checkIfEnabledForUrl();
 
   const requestHandlers = {
     getFocusStatus(_request, _sender) {
@@ -308,7 +308,7 @@ const installListeners = Utils.makeIdempotent(function () {
 // Whenever we get the focus, check if we should be enabled.
 const onFocus = forTrusted(function (event) {
   if (event.target === window) {
-    checkIfEnabledForUrl(true);
+    checkIfEnabledForUrl();
   }
 });
 
@@ -407,18 +407,9 @@ globalThis.lastFocusedInput = (function () {
   return () => recentlyFocusedElement;
 })();
 
-// Checks if Vimium should be enabled or not in this frame. As a side effect, it also informs the
-// background page whether this frame has the focus, allowing the background page to change the
-// Vimium Action icon to indicate whether the curent page is excluded in Vimium.
-const checkIfEnabledForUrl = async (frameIsFocused) => {
-  if (frameIsFocused == null) {
-    frameIsFocused = windowIsFocused();
-  }
-  const response = await chrome.runtime.sendMessage({
-    handler: "initializeFrame",
-    frameIsFocused,
-    url: window.location.toString(),
-  });
+// Checks if Vimium should be enabled or not based on the top frame's URL.
+const checkIfEnabledForUrl = async () => {
+  const response = await chrome.runtime.sendMessage({ handler: "initializeFrame" });
 
   isEnabledForUrl = response.isEnabledForUrl;
 

@@ -100,6 +100,7 @@ After that:
 
 1. Open Firefox
 1. Enter "about:debugging" in the URL bar
+1. Click "This Firefox" on the left side
 1. Click "Load Temporary Add-on"
 1. Open the Vimium directory you've cloned from Github, and select any file inside.
 

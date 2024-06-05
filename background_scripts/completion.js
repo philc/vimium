@@ -470,7 +470,7 @@ class DomainCompleter {
 
   // Return something like "http://www.example.com" or false.
   parseDomainAndScheme(url) {
-    return Utils.hasFullUrlPrefix(url) && !Utils.hasChromePrefix(url) &&
+    return UrlUtils.hasFullUrlPrefix(url) && !UrlUtils.hasChromePrefix(url) &&
       url.split("/", 3).join("/");
   }
 }
@@ -479,6 +479,7 @@ class DomainCompleter {
 // If the query is empty, then return a list of open tabs, sorted by recency.
 class TabCompleter {
   async filter({ queryTerms }) {
+    await BgUtils.tabRecency.init();
     // We search all tabs, not just those in the current window.
     const tabs = await chrome.tabs.query({});
     const results = tabs.filter((tab) => RankingUtils.matches(queryTerms, tab.url, tab.title));
@@ -549,7 +550,7 @@ class SearchEngineCompleter {
     const completions = await CompletionSearch.complete(searchUrl, queryTermsWithoutKeyword);
 
     const makeSuggestion = (query) => {
-      const url = Utils.createSearchUrl(query, searchUrl);
+      const url = UrlUtils.createSearchUrl(query, searchUrl);
       return new Suggestion({
         queryTerms,
         description: userSearchEngine.description,

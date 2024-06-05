@@ -5,14 +5,15 @@ spirit of the Vim editor.
 
 **Installation instructions:**
 
-Install via the
-[Chrome web store](https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb) or
-the [Firefox Addons site](https://addons.mozilla.org/en-GB/firefox/addon/vimium-ff/).
+* Chrome: [Chrome web store](https://chrome.google.com/extensions/detail/dbepggeogbaibhgnhhndojpepiihcmeb)
+* Edge: [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/vimium/djmieaghokpkpjfbpelnlkfgfjapaopa)
+* Firefox: [Firefox Add-ons](https://addons.mozilla.org/en-GB/firefox/addon/vimium-ff/)
 
 To install from source, see [here](CONTRIBUTING.md#installing-from-source).
 
 Vimium's Options page can be reached via a link on the help dialog (type `?`) or via the button next
-to Vimium on the extension pages of Chrome (`chrome://extensions`) or Firefox (`about:addons`).
+to Vimium on the extension pages of Chrome and Edge (`chrome://extensions`), or Firefox
+(`about:addons`).
 
 ## Keyboard Bindings
 
@@ -142,7 +143,7 @@ The following special keys are available for mapping:
 - `<f1>` through `<f12>` for the function keys.
 - `<space>` for the space key.
 - `<tab>`, `<enter>`, `<delete>`, `<backspace>`, `<insert>`, `<home>` and `<end>` for the
-  corresponding non-printable keys (version 1.62 onwards).
+  corresponding non-printable keys.
 
 Shifts are automatically detected so, for example, `<c-&>` corresponds to ctrl+shift+7 on an English
 keyboard.

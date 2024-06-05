@@ -1,6 +1,6 @@
 /*
- * A micro framework for unit testing. Tests are grouped in "contexts", each of which can share
- * common setup functions. See the README at https://github.com/philc/shoulda.js
+ * A unit testing micro framework. Tests are grouped into "contexts", each of which can share common
+ * setup functions.
  */
 
 /*
@@ -31,7 +31,7 @@ const assert = {
     }
   },
 
-  // We cannot name this function simply "throws", because it's a reserved Javascript keyword.
+  // We cannot name this function simply "throws", because it's a reserved JavaScript keyword.
   throwsError: function (expression, errorName) {
     try {
       expression();
@@ -59,17 +59,17 @@ const assert = {
     throw new AssertionError(message);
   },
 
-  /* Used for printing the arguments passed to assertions. */
+  // Used for printing the arguments passed to assertions.
   _print: function (object) {
     if (object === null) return "null";
     else if (object === undefined) return "undefined";
     else if (typeof object === "string") return '"' + object + '"';
     else {
       try {
-        // Pretty-prints with indentation.
+        // Pretty-print with indentation.
         return JSON.stringify(object, undefined, 2);
       } catch (_) {
-        // object might not be stringifiable (e.g. DOM nodes), or JSON.stringify may not exist.
+        // `object` might not be stringifiable (e.g. DOM nodes), or JSON.stringify may not exist.
         return object.toString();
       }
     }
@@ -77,16 +77,16 @@ const assert = {
 };
 
 /*
- * ensureCalled takes a function, and ensures that it gets called by the end of the test case. This
- * is useful when testing APIs that use callbacks.
+ * ensureCalled ensures the given function is called by the end of the test case. This is useful
+ * when testing APIs that use callbacks.
  */
-function ensureCalled(toExecute) {
+function ensureCalled(fn) {
   const wrappedFunction = function () {
     const i = Tests.requiredCallbacks.indexOf(wrappedFunction);
     if (i >= 0) {
       Tests.requiredCallbacks.splice(i, 1); // Delete.
     }
-    if (toExecute) return toExecute.apply(null, arguments);
+    return fn.apply(null, arguments);
   };
   Tests.requiredCallbacks.push(wrappedFunction);
   return wrappedFunction;
@@ -100,8 +100,8 @@ AssertionError.prototype = new Error();
 AssertionError.prototype.constructor = AssertionError;
 
 /*
- * A Context is a named set of test methods and nested contexts, with optional setup and teardown blocks.
- * - contents: an array which can include a setup and teardown method, test methods, and nested contexts.
+ * A Context is a named set of test methods and nested contexts, with optional setup and teardown
+ * blocks.
  */
 function Context(name) {
   this.name = name;
@@ -159,15 +159,15 @@ should.only = (name, fn) => {
 };
 
 /*
- * Tests is used to run tests and keep track of the success and failure counts.
+ * Tests is used to run tests and keep track of the count of successes and failures.
  */
 const Tests = {
   topLevelContexts: [],
   testsRun: 0,
   testsFailed: 0,
 
-  // The list of callbacks that the developer wants to ensure are called by the end of the test.
-  // This is manipulated by the ensureCalled() function.
+  // The list of callbacks to ensure are called by the end of the test. This list is appended to by
+  // `ensureCalled`.
   requiredCallbacks: [],
 
   // True if, during the collection phase, should.only or context.only was used.
@@ -178,10 +178,10 @@ const Tests = {
    * - testNameFilter: a String. If provided, only run tests which match testNameFilter will be run.
    */
   run: async function (testNameFilter) {
-    // Run all of the top level contexts (those not defined within another context) which will in turn run
-    // any nested contexts. We know that the very last context ever added to Tests.testContexts is a top level
-    // context. Also note that any contexts which have not already been run by a previous top level context
-    // must themselves be top level contexts.
+    // Run every top level context (i.e. those not defined within another context). These will in
+    // turn run any nested contexts. The very last context ever added to Tests.testContexts is a top
+    // level context. Note that any contexts which have not already been run by a previous top level
+    // context must themselves be top level contexts.
     this.testsRun = 0;
     this.testsFailed = 0;
     for (const context of this.topLevelContexts) {
@@ -192,9 +192,9 @@ const Tests = {
   },
 
   /*
-   * This resets (clears) the state of shoulda, including the tests which have been defined. This is useful
-   * when running shoulda tests in a REPL environment, to prevent tests from getting defined multiple times
-   * when a file is re-evaluated.
+   * This resets (clears) the state of shoulda, including the tests which have been defined. This is
+   * useful when running shoulda tests in a REPL environment, to prevent tests from getting defined
+   * multiple times when a file is re-evaluated.
    */
   reset: function () {
     this.topLevelContexts = [];
@@ -203,7 +203,8 @@ const Tests = {
   },
 
   /*
-   * Run a context. This runs the test methods defined in the context first, and then any nested contexts.
+   * Run a context. This runs the test methods defined in the context first, and then any nested
+   * contexts.
    */
   runContext: async function (context, parentContexts, testNameFilter) {
     parentContexts = parentContexts.concat([context]);
@@ -217,10 +218,11 @@ const Tests = {
   },
 
   /*
-   * Run a test method. This will run all setup methods in all contexts, and then all teardown methods.
+   * Run a test method. This will run all setup methods in all contexts, and then all teardown
+   * methods.
    * - testMethod: an object with keys name, fn.
-   * - contexts: an array of contexts, ordered outer to inner.
-   * - testNameFilter: A String. If provided, only run the test if it matches the testNameFilter.
+   * - contexts: an array of Contexts, ordered outer to inner.
+   * - testNameFilter: A String. If provided, only run the test if it matches testNameFilter.
    */
   runTest: async function (testMethod, contexts, testNameFilter) {
     if (
@@ -255,8 +257,10 @@ const Tests = {
         }
       }
     } catch (error) {
-      failureMessage = error.message;
-      if (!(error instanceof AssertionError) && error.stack) {
+      // Note that error can be either a String or an Error.
+      const failedAssertion = error instanceof AssertionError;
+      failureMessage = failedAssertion ? error.message : error.toString();
+      if (!failedAssertion && error.stack) {
         failureMessage += "\n" + error.stack;
       }
     }
@@ -325,26 +329,22 @@ function stub(object, propertyName, returnValue) {
 }
 
 /*
- * returns() is useful when you want to stub out a function (instead of a property) and you
- * want to hard code its return value, for example:
- * stub(shoppingCart, "calculateTotal", returns(4.0))
+ * returns creates a function which returns the given value. This is useful for stubbing functions
+ * to return a hardcoded value.
  */
 function returns(value) {
   return () => value;
 }
 
 function clearStubs() {
-  // Restore stubs in the reverse order they were defined in, in case the same property was stubbed twice.
+  // Restore stubs in the reverse order they were defined in, in case the same property was stubbed
+  // twice.
   for (let i = stubbedObjects.length - 1; i >= 0; i--) {
     const stubProperties = stubbedObjects[i];
-    stubProperties.object[stubProperties.propertyName] =
-      stubProperties.original;
+    stubProperties.object[stubProperties.propertyName] = stubProperties.original;
   }
 }
 
-// It's not possible to support CommonJS modules (NodeJS's default module syntax) and ECMAScript modules (the
-// default for Deno, and browsers) in the same file, so we're going with the ECMAScript module syntax, since
-// NodeJS can that as well.
 export {
   assert,
   context,
