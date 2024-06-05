@@ -183,7 +183,6 @@ const mkRepeatCommand = (command) => (function (request) {
 });
 
 async function setZoom(direction, { count, tabId }) {
-  console.log(direction, count, tabId);
   const zoomLevels = [
     0.25,
     0.33,
@@ -207,12 +206,12 @@ async function setZoom(direction, { count, tabId }) {
   switch (direction) {
     case "in":
       // Round down to the nearest zoom index.
-      const floorIndex = zoomLevels.findIndex(level => level > currentZoom) - 1;
+      const floorIndex = zoomLevels.findIndex((level) => level > currentZoom) - 1;
       newZoom = zoomLevels[Math.min(zoomLevels.length - 1, floorIndex + count)];
       break;
     case "out":
       // Round up to the nearest zoom index.
-      const ceilIndex = zoomLevels.findIndex(level => level >= currentZoom);
+      const ceilIndex = zoomLevels.findIndex((level) => level >= currentZoom);
       newZoom = zoomLevels[Math.max(0, ceilIndex - count)];
       break;
     case "reset":
