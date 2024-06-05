@@ -11,7 +11,6 @@ const options = {
   regexFindMode: "boolean",
   ignoreKeyboardLayout: "boolean",
   scrollStepSize: "number",
-  zoomStep: "number",
   smoothScroll: "boolean",
   grabBackFocus: "boolean",
   searchEngines: "string",
