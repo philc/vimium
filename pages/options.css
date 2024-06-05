@@ -123,11 +123,6 @@ input#scrollStepSize {
   margin-right: 3px;
   padding-left: 3px;
 }
-input#zoomStep {
-  width: 70px;
-  margin-right: 3px;
-  padding-left: 3px;
-}
 textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
   width: 100%;;
   min-height: 140px;

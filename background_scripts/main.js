@@ -182,13 +182,46 @@ const mkRepeatCommand = (command) => (function (request) {
   }
 });
 
-const setZoom = (tabId, callback) => {
-  chrome.tabs.getZoom(tabId, (factor) => {
-    chrome.tabs.setZoomSettings(tabId, { scope: "per-tab" }, () => {
-      chrome.tabs.setZoom(tabId, callback(factor));
-    });
-  });
-};
+async function setZoom(direction, { count, tabId }) {
+  console.log(direction, count, tabId);
+  const zoomLevels = [
+    0.25,
+    0.33,
+    0.50,
+    0.75,
+    0.80,
+    0.90,
+    1.00,
+    1.10,
+    1.25,
+    1.50,
+    1.75,
+    2.00,
+    2.50,
+    3.00,
+    4.00,
+    5.00,
+  ];
+  const currentZoom = await chrome.tabs.getZoom(tabId);
+  let newZoom;
+  switch (direction) {
+    case "in":
+      // Round down to the nearest zoom index.
+      const floorIndex = zoomLevels.findIndex(level => level > currentZoom) - 1;
+      newZoom = zoomLevels[Math.min(zoomLevels.length - 1, floorIndex + count)];
+      break;
+    case "out":
+      // Round up to the nearest zoom index.
+      const ceilIndex = zoomLevels.findIndex(level => level >= currentZoom);
+      newZoom = zoomLevels[Math.max(0, ceilIndex - count)];
+      break;
+    case "reset":
+      const zoomSettings = await chrome.tabs.getZoomSettings(tabId);
+      newZoom = zoomSettings?.defaultZoomFactor ?? 1.00;
+      break;
+  }
+  chrome.tabs.setZoom(tabId, newZoom);
+}
 
 // These are commands which are bound to keystrokes which must be handled by the background page.
 // They are mapped in commands.js.
@@ -302,16 +335,14 @@ const BackgroundCommands = {
   toggleMuteTab,
   moveTabLeft: moveTab,
   moveTabRight: moveTab,
-  zoomIn({ tabId, count }) {
-    const step = Settings.get("zoomStep");
-    setZoom(tabId, (factor) => factor + step * count);
+  zoomIn(request) {
+    setZoom("in", request);
   },
-  zoomOut({ tabId, count }) {
-    const step = Settings.get("zoomStep");
-    setZoom(tabId, (factor) => factor - step * count);
+  zoomOut(request) {
+    setZoom("out", request);
   },
-  zoomReset({ tabId }) {
-    setZoom(tabId, () => 1.0);
+  zoomReset(request) {
+    setZoom("reset", request);
   },
 
   async nextFrame({ count, tabId }) {
