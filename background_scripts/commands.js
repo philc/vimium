@@ -498,8 +498,8 @@ const commandDescriptions = {
 
   focusInput: ["Focus the first text input on the page"],
 
-  "LinkHints.activateMode": ["Open a link in the current tab"],
-  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"],
+  "LinkHints.activateMode": ["Show shortcuts to visible links and open in the current tab"],
+  "LinkHints.activateModeToOpenInNewTab": ["Show shortcuts to visible links and open in a new tab"],
   "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it"],
   "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }],
   "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"],
