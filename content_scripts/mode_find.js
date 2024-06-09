@@ -489,7 +489,10 @@ const getAllTextNodes = () => {
   function getAllTextNodes(node) {
     if (node.nodeType === Node.TEXT_NODE) {
       textNodes.push(node);
-    } else if (node.nodeType === Node.ELEMENT_NODE && node.checkVisibility()) {
+    } else if (
+      node.nodeType === Node.ELEMENT_NODE &&
+      (node.checkVisibility() || node.style.display === "contents")
+    ) {
       const children = node.childNodes;
       for (const child of children) {
         getAllTextNodes(child, textNodes);
