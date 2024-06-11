@@ -76,21 +76,21 @@ Vimium is written in Javascript. To install Vimium from source:
     ```
 1. Open chrome and navigate to `chrome://extensions`
 
-    ![alt text](image-3.png)
+    ![alt text](screenshots/image-3.png)
 
 1. Toggle into Developer Mode
 
-    ![alt text](image-4.png)
+    ![alt text](screenshots/image-4.png)
 
 1. Click on "Load Unpacked Extension..."
 
-    ![alt text](image-5.png)
+    ![alt text](screenshots/image-5.png)
 
 1. Select the Vimium directory you've cloned from Github.
 
 #### On Firefox:
 
-1. Clone the [Vimium Repository](https://github.com/philc/vimium/tree/master)
+1. Clone the [Vimium Repository](screenshots/https://github.com/philc/vimium/tree/master)
     ```bash
     git clone https://github.com/philc/vimium.git
     ```
@@ -107,7 +107,7 @@ Vimium is written in Javascript. To install Vimium from source:
 
 1. Click `Load Temporary Add-on`
 
-    ![alt text](image-8.png)
+    ![alt text](screenshots/image-8.png)
 
 1. Open the Vimium directory you've cloned from Github, and select any file inside.
 
