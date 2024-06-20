@@ -266,7 +266,12 @@ class FindMode extends Mode {
   }
 
   // Returns null if no search has been performed yet.
-  static getQuery(backwards) {
+  static getQuery(backwards, query) {
+    if (query) {
+      this.query = {};
+      this.updateQuery(query);
+      this.saveQuery();
+    }
     if (!this.query) return;
     // check if the query has been changed by a script in another frame
     const mostRecentQuery = FindModeHistory.getQuery();
@@ -358,9 +363,9 @@ class FindMode extends Mode {
     return FindMode.saveQuery();
   }
 
-  static findNext(backwards) {
+  static findNext(backwards, query) {
     // Bail out if we don't have any query text.
-    const nextQuery = FindMode.getQuery(backwards);
+    const nextQuery = FindMode.getQuery(backwards, query);
     if (!nextQuery) {
       HUD.show("No query to find.", 1000);
       return;

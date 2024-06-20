@@ -213,6 +213,18 @@ const NormalModeCommands = {
     }
   },
 
+  findSelected() {
+    let selection = window.getSelection().toString();
+    if (!selection) return;
+    return FindMode.findNext(false, selection);
+  },
+
+  findSelectedBackwards() {
+    let selection = window.getSelection().toString();
+    if (!selection) return;
+    return FindMode.findNext(true, selection);
+  },
+
   // Misc.
   mainFrame() {
     return focusThisFrame({ highlight: true, forceFocusThisFrame: true });
