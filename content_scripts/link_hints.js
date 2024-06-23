@@ -1111,6 +1111,7 @@ const LocalHints = {
         "tab",
         "link",
         "checkbox",
+        "menu",
         "menuitem",
         "menuitemcheckbox",
         "menuitemradio",
