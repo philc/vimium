@@ -5,33 +5,56 @@
 // The values are persisted to chrome.storage.session so that they're not lost when the extension's
 // background page is unloaded.
 //
+// Callers must await TabRecency.init before calling recencyScore or getTabsByRecency.
+//
 // In theory, the browser's tab.lastAccessed timestamp field should allow us to sort tabs by
 // recency, but in practice it does not work across several edge cases. See the comments on #4368.
 class TabRecency {
   constructor() {
     this.counter = 1;
     this.tabIdToCounter = {};
+    this.loaded = false;
+    this.queuedActions = [];
   }
 
   // Add listeners to chrome.tabs, and load the index from session storage.
-  // If tabs are accessed before we finish loading chrome.storage.session, the in-memory stage and
-  // the session state is merged.
-  init() {
-    chrome.tabs.onActivated.addListener((activeInfo) => this.register(activeInfo.tabId));
-    chrome.tabs.onRemoved.addListener((tabId) => this.deregister(tabId));
+  async init() {
+    if (this.initPromise) {
+      await this.initPromise;
+      return;
+    }
+    let resolveFn;
+    this.initPromise = new Promise((resolve, _reject) => {
+      resolveFn = resolve;
+    });
+
+    chrome.tabs.onActivated.addListener((activeInfo) => {
+      this.queueAction("register", activeInfo.tabId);
+    });
+    chrome.tabs.onRemoved.addListener((tabId) => {
+      this.queueAction("deregister", tabId);
+    });
 
     chrome.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
-      this.deregister(removedTabId);
-      this.register(addedTabId);
+      this.queueAction("deregister", removedTabId);
+      this.queueAction("register", addedTabId);
     });
 
     chrome.windows.onFocusChanged.addListener(async (windowId) => {
       if (windowId == chrome.windows.WINDOW_ID_NONE) return;
       const tabs = await chrome.tabs.query({ windowId, active: true });
-      if (tabs[0]) this.register(tabs[0].id);
+      if (tabs[0]) {
+        this.queueAction("register", tabs[0].id);
+      }
     });
 
-    this.loadFromStorage();
+    await this.loadFromStorage();
+    while (this.queuedActions.length > 0) {
+      const [action, tabId] = this.queuedActions.shift();
+      this.handleAction(action, tabId);
+    }
+    this.loaded = true;
+    resolveFn();
   }
 
   // Loads the index from session storage.
@@ -45,28 +68,43 @@ class TabRecency {
     for (const counter of Object.values(storage.tabRecency)) {
       if (maxCounter < counter) maxCounter = counter;
     }
-    // Tabs loaded from storage should be considered accessed less recently than any tab tracked in
-    // memory, so increase all of the in-memory tabs's counters by maxCounter.
-    for (const [id, counter] of Object.entries(this.tabIdToCounter)) {
-      const newCounter = counter + maxCounter;
-      this.tabIdToCounter[id] = newCounter;
-      if (this.counter < newCounter) this.counter = newCounter;
+    if (this.counter < maxCounter) {
+      this.counter = maxCounter;
     }
 
-    const combined = Object.assign({}, storage.tabRecency, this.tabIdToCounter);
+    this.tabIdToCounter = Object.assign({}, storage.tabRecency);
 
-    // Remove any tab IDs which may be no longer present.
+    // Remove any tab IDs which aren't currently loaded.
     const tabIds = new Set(tabs.map((t) => t.id));
-    for (const id in combined) {
+    for (const id in this.tabIdToCounter) {
       if (!tabIds.has(parseInt(id))) {
-        delete combined[id];
+        delete this.tabIdToCounter[id];
       }
     }
-    this.tabIdToCounter = combined;
   }
 
   async saveToStorage() {
     await chrome.storage.session.set({ tabRecency: this.tabIdToCounter });
+  }
+
+  // - action: "register" or "unregister".
+  queueAction(action, tabId) {
+    if (!this.loaded) {
+      this.queuedActions.push([action, tabId]);
+    } else {
+      this.handleAction(action, tabId);
+    }
+  }
+
+  // - action: "register" or "unregister".
+  handleAction(action, tabId) {
+    if (action == "register") {
+      this.register(tabId);
+    } else if (action == "deregister") {
+      this.deregister(tabId);
+    } else {
+      throw new Error(`Unexpected action type: ${action}`);
+    }
   }
 
   register(tabId) {
@@ -82,6 +120,7 @@ class TabRecency {
 
   // Recently-visited tabs get a higher score (except the current tab, which gets a low score).
   recencyScore(tabId) {
+    if (!this.loaded) throw new Error("TabRecency hasn't yet been loaded.");
     const tabCounter = this.tabIdToCounter[tabId];
     const isCurrentTab = tabCounter == this.counter;
     if (isCurrentTab) return 0;
@@ -90,6 +129,7 @@ class TabRecency {
 
   // Returns a list of tab Ids sorted by recency, most recent tab first.
   getTabsByRecency() {
+    if (!this.loaded) throw new Error("TabRecency hasn't yet been loaded.");
     const ids = Object.keys(this.tabIdToCounter);
     ids.sort((a, b) => this.tabIdToCounter[b] - this.tabIdToCounter[a]);
     return ids.map((id) => parseInt(id));

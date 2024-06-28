@@ -14,6 +14,19 @@ const BgUtils = {
       : false;
   },
 
+  // Find the real tab index in a given tab array.
+  // In Firefox there may be hidden tabs,
+  // so `tab.index` may not be the index in the visible tabs array.
+  tabIndex(tab, tabs) {
+    // First check if the tab is where we expect it (to save processing).
+    if (tabs.length > tab.index && tabs[tab.index].index === tab.index) {
+      return tab.index;
+    } else {
+      // If it's not where we expect, find its real position.
+      return tabs.findIndex((t) => t.index === tab.index);
+    }
+  },
+
   async getFirefoxVersion() {
     return globalThis.browser ? (await browser.runtime.getBrowserInfo()).version : null;
   },

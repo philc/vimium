@@ -361,7 +361,7 @@ class LinkHintsMode {
     // We need documentElement to be ready in order to append links.
     if (!document.documentElement) return;
 
-    this.hintMarkerContainingDiv = null;
+    this.containerEl = null;
     // Function that does the appropriate action on the selected link.
     this.linkActivator = undefined;
     // The link-hints "mode" (in the key-handler, indicator sense).
@@ -379,7 +379,7 @@ class LinkHintsMode {
     this.stableSortCount = 0;
     this.hintMarkers = hintDescriptors.map((desc) => this.createMarkerFor(desc));
     this.markerMatcher = Settings.get("filterLinkHints") ? new FilterHints() : new AlphabetHints();
-    this.markerMatcher.fillInMarkers(this.hintMarkers, this.getNextZIndex.bind(this));
+    this.markerMatcher.fillInMarkers(this.hintMarkers);
 
     this.hintMode = new Mode();
     this.hintMode.init({
@@ -402,23 +402,39 @@ class LinkHintsMode {
       }
     });
 
+    this.renderHints();
+    this.setIndicator();
+  }
+
+  renderHints() {
+    if (this.containerEl == null) {
+      const div = DomUtils.createElement("div");
+      div.id = "vimiumHintMarkerContainer";
+      div.className = "vimiumReset";
+      this.containerEl = div;
+      document.documentElement.appendChild(div);
+    }
+
     // Append these markers as top level children instead of as child nodes to the link itself,
     // because some clickable elements cannot contain children, e.g. submit buttons.
-    this.hintMarkerContainingDiv = DomUtils.addElementsToPage(
-      this.hintMarkers.filter((m) => m.isLocalMarker()).map((m) => m.element),
-      { id: "vimiumHintMarkerContainer", className: "vimiumReset" },
-    );
+    const markerEls = this.hintMarkers.filter((m) => m.isLocalMarker()).map((m) => m.element);
+    for (const el of markerEls) {
+      this.containerEl.appendChild(el);
+    }
 
     // TODO(philc): 2024-03-27 Remove this hasPopoverSupport check once Firefox has popover support.
     // Also move this CSS into vimium.css.
-    const hasPopoverSupport = this.hintMarkerContainingDiv.showPopover != null;
+    const hasPopoverSupport = this.containerEl.showPopover != null;
     if (hasPopoverSupport) {
-      this.hintMarkerContainingDiv.popover = "manual";
-      this.hintMarkerContainingDiv.showPopover();
-      Object.assign(this.hintMarkerContainingDiv.style, {
+      this.containerEl.popover = "manual";
+      this.containerEl.showPopover();
+      Object.assign(this.containerEl.style, {
         top: 0,
         left: 0,
         position: "absolute",
+        // This display: block is required to override Github Enterprise's CSS circa 2024-04-01. See
+        // #4446.
+        display: "block",
         width: "100%",
         height: "100%",
         overflow: "visible",
@@ -426,16 +442,6 @@ class LinkHintsMode {
     }
 
     this.setIndicator();
-  }
-
-  // Increments and returns the Z index that should be used for the next hint marker on the page.
-  getNextZIndex() {
-    if (this.currentZIndex == null) {
-      // This is the starting z-index value; it produces z-index values which are greater than all
-      // of the other z-index values used by Vimium.
-      this.currentZIndex = 2140000000;
-    }
-    return ++this.currentZIndex;
   }
 
   setOpenLinkMode(mode, shouldPropagateToOtherFrames) {
@@ -473,7 +479,6 @@ class LinkHintsMode {
       el.style.left = localHint.rect.left + "px";
       el.style.top = localHint.rect.top + "px";
       // Each hint marker is assigned a different z-index.
-      el.style.zIndex = this.getNextZIndex();
       el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
       Object.assign(marker, {
         element: el,
@@ -586,7 +591,6 @@ class LinkHintsMode {
     const { linksMatched, userMightOverType } = this.markerMatcher.getMatchingHints(
       this.hintMarkers,
       tabCount,
-      this.getNextZIndex.bind(this),
     );
     if (linksMatched.length === 0) {
       this.deactivateMode();
@@ -619,7 +623,6 @@ class LinkHintsMode {
     const localHintMarkers = this.hintMarkers.filter((m) =>
       m.isLocalMarker() && (m.element.style.display !== "none")
     );
-
     // Fill in the markers' rects, if necessary.
     for (const marker of localHintMarkers) {
       if (marker.markerRect == null) {
@@ -656,17 +659,16 @@ class LinkHintsMode {
       }
     }
 
-    // Rotate the z-indexes within each stack.
-    for (const stack of stacks) {
+    const newMarkers = []
+    for (let stack of stacks) {
       if (stack.length > 1) {
-        const zIndexes = stack.map((marker) => marker.element.style.zIndex);
-        zIndexes.push(zIndexes[0]);
-        for (let index = 0; index < stack.length; index++) {
-          const marker = stack[index];
-          marker.element.style.zIndex = zIndexes[index + 1];
-        }
+        // Push the last element to the beginning.
+        stack = stack.splice(-1, 1).concat(stack)
       }
+      newMarkers.push(...stack)
     }
+    this.hintMarkers = newMarkers;
+    this.renderHints();
   }
 
   // When only one hint remains, activate it in the appropriate way. The current frame may or may
@@ -768,10 +770,10 @@ class LinkHintsMode {
   }
 
   removeHintMarkers() {
-    if (this.hintMarkerContainingDiv) {
-      DomUtils.removeElement(this.hintMarkerContainingDiv);
+    if (this.containerEl) {
+      DomUtils.removeElement(this.containerEl);
     }
-    this.hintMarkerContainingDiv = null;
+    this.containerEl = null;
   }
 }
 
@@ -874,7 +876,7 @@ class FilterHints {
     marker.element.innerHTML = spanWrap(caption);
   }
 
-  fillInMarkers(hintMarkers, getNextZIndex) {
+  fillInMarkers(hintMarkers) {
     for (const marker of hintMarkers) {
       if (marker.isLocalMarker()) {
         this.renderMarker(marker);
@@ -883,10 +885,10 @@ class FilterHints {
 
     // We use getMatchingHints() here (although we know that all of the hints will match) to get an
     // order on the hints and highlight the first one.
-    return this.getMatchingHints(hintMarkers, 0, getNextZIndex);
+    return this.getMatchingHints(hintMarkers, 0);
   }
 
-  getMatchingHints(hintMarkers, tabCount, getNextZIndex) {
+  getMatchingHints(hintMarkers, tabCount) {
     // At this point, linkTextKeystrokeQueue and hintKeystrokeQueue have been updated to reflect the
     // latest input. Use them to filter the link hints accordingly.
     const matchString = this.hintKeystrokeQueue.join("");
@@ -907,7 +909,6 @@ class FilterHints {
 
     if (this.activeHintMarker?.element) {
       this.activeHintMarker.element.classList.add("vimiumActiveHintMarker");
-      this.activeHintMarker.element.style.zIndex = getNextZIndex();
     }
 
     return {
@@ -924,7 +925,7 @@ class FilterHints {
       (keyChar.toLowerCase() !== keyChar) &&
       (this.linkHintNumbers.toLowerCase() !== this.linkHintNumbers.toUpperCase())
     ) {
-      // The the keyChar is upper case and the link hint "numbers" contain characters (e.g.
+      // The keyChar is upper case and the link hint "numbers" contain characters (e.g.
       // [a-zA-Z]). We don't want some upper-case letters matching hints (above) and some matching
       // text (below), so we ignore such keys.
       return;

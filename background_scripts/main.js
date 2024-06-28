@@ -38,6 +38,13 @@ const completers = {
   tabs: new MultiCompleter([completionSources.tabs]),
 };
 
+// Get a query dictionary for `chrome.tabs.query` that will only return the visible tabs.
+const visibleTabsQueryArgs = { currentWindow: true };
+if (BgUtils.isFirefox()) {
+  // Only Firefox supports hidden tabs.
+  visibleTabsQueryArgs.hidden = false;
+}
+
 const onURLChange = (details) => {
   // sendMessage will throw "Error: Could not establish connection. Receiving end does not exist."
   // if there is no Vimium content script loaded in the given tab. This can occur if the user
@@ -140,12 +147,14 @@ const moveTab = function ({ count, tab, registryEntry }) {
   if (registryEntry.command === "moveTabLeft") {
     count = -count;
   }
-  return chrome.tabs.query({ currentWindow: true }, function (tabs) {
+  return chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
     const pinnedCount = (tabs.filter((tab) => tab.pinned)).length;
     const minIndex = tab.pinned ? 0 : pinnedCount;
     const maxIndex = (tab.pinned ? pinnedCount : tabs.length) - 1;
+    // The tabs array index of the new position.
+    const moveIndex = Math.max(minIndex, Math.min(maxIndex, BgUtils.tabIndex(tab, tabs) + count));
     return chrome.tabs.move(tab.id, {
-      index: Math.max(minIndex, Math.min(maxIndex, tab.index + count)),
+      index: tabs[moveIndex].index,
     });
   });
 };
@@ -161,7 +170,7 @@ const mkRepeatCommand = (command) => (function (request) {
 });
 
 // These are commands which are bound to keystrokes which must be handled by the background page.
-// They are mapped in commands.coffee.
+// They are mapped in commands.js.
 const BackgroundCommands = {
   // Create a new tab. Also, with:
   //     map X createTab http://www.bbc.com/news
@@ -173,8 +182,11 @@ const BackgroundCommands = {
         request.urls = [request.url];
       } else {
         // Otherwise, if we have a registryEntry containing URLs, then use them.
-        const urlList = request.registryEntry.optionList
-          .filter(async (opt) => await UrlUtils.isUrl(opt));
+        // TODO(philc): This would be clearer if we try to detect options (a=b) rather than URLs,
+        // because the syntax for options is well defined ([a-zA-Z]+=\S+).
+        const promises = request.registryEntry.optionList.map((opt) => UrlUtils.isUrl(opt));
+        const isUrl = await Promise.all(promises);
+        const urlList = request.registryEntry.optionList.filter((_, i) => isUrl[i]);
         if (urlList.length > 0) {
           request.urls = urlList;
         } else {
@@ -228,8 +240,8 @@ const BackgroundCommands = {
   }),
 
   moveTabToNewWindow({ count, tab }) {
-    chrome.tabs.query({ currentWindow: true }, function (tabs) {
-      const activeTabIndex = tab.index;
+    chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
+      const activeTabIndex = BgUtils.tabIndex(tab, tabs);
       const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
       [tab, ...tabs] = tabs.slice(startTabIndex, startTabIndex + count);
       chrome.windows.create({ tabId: tab.id, incognito: tab.incognito }, function (window) {
@@ -313,10 +325,13 @@ const BackgroundCommands = {
     await removeTabsRelative("both", request);
   },
 
-  visitPreviousTab({ count, tab }) {
-    const tabIds = BgUtils.tabRecency.getTabsByRecency().filter((tabId) => tabId !== tab.id);
+  async visitPreviousTab({ count, tab }) {
+    await BgUtils.tabRecency.init();
+    let tabIds = BgUtils.tabRecency.getTabsByRecency();
+    tabIds = tabIds.filter((tabId) => tabId !== tab.id);
     if (tabIds.length > 0) {
-      selectSpecificTab({ id: tabIds[(count - 1) % tabIds.length] });
+      const id = tabIds[(count - 1) % tabIds.length];
+      selectSpecificTab({ id });
     }
   },
 
@@ -337,8 +352,8 @@ const BackgroundCommands = {
 };
 
 const forCountTabs = (count, currentTab, callback) =>
-  chrome.tabs.query({ currentWindow: true }, function (tabs) {
-    const activeTabIndex = currentTab.index;
+  chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
+    const activeTabIndex = BgUtils.tabIndex(currentTab, tabs);
     const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
     for (const tab of tabs.slice(startTabIndex, startTabIndex + count)) {
       callback(tab);
@@ -352,18 +367,19 @@ const removeTabsRelative = async (direction, { count, tab }) => {
   // either side.
   if (count == null) count = 99999;
   const activeTab = tab;
-  const tabs = await chrome.tabs.query({ currentWindow: true });
-  const toRemove = tabs.filter((tab) => {
+  const tabs = await chrome.tabs.query(visibleTabsQueryArgs);
+  const activeIndex = BgUtils.tabIndex(activeTab, tabs);
+  const toRemove = tabs.filter((tab, tabIndex) => {
     if (tab.pinned || tab.id == activeTab.id) {
       return false;
     }
     switch (direction) {
       case "before":
-        return tab.index < activeTab.index &&
-          tab.index >= activeTab.index - count;
+        return tabIndex < activeIndex &&
+          tabIndex >= activeIndex - count;
       case "after":
-        return tab.index > activeTab.index &&
-          tab.index <= activeTab.index + count;
+        return tabIndex > activeIndex &&
+          tabIndex <= activeIndex + count;
       case "both":
         return true;
     }
@@ -375,14 +391,14 @@ const removeTabsRelative = async (direction, { count, tab }) => {
 // Selects a tab before or after the currently selected tab.
 // - direction: "next", "previous", "first" or "last".
 const selectTab = (direction, { count, tab }) =>
-  chrome.tabs.query({ currentWindow: true }, function (tabs) {
+  chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
     if (tabs.length > 1) {
       const toSelect = (() => {
         switch (direction) {
           case "next":
-            return (tab.index + count) % tabs.length;
+            return (BgUtils.tabIndex(tab, tabs) + count) % tabs.length;
           case "previous":
-            return ((tab.index - count) + (count * tabs.length)) % tabs.length;
+            return ((BgUtils.tabIndex(tab, tabs) - count) + (count * tabs.length)) % tabs.length;
           case "first":
             return Math.min(tabs.length - 1, count - 1);
           case "last":
@@ -532,6 +548,11 @@ const sendRequestHandlers = {
       url: chrome.runtime.getURL("pages/options.html"),
       index: request.tab.index + 1,
     });
+  },
+
+  launchSearchQuery({ query, openInNewTab }) {
+    const disposition = openInNewTab ? "NEW_TAB" : "CURRENT_TAB";
+    chrome.search.query({ disposition, text: query });
   },
 
   domReady(_, sender) {
