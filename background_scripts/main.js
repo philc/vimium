@@ -335,20 +335,18 @@ const BackgroundCommands = {
     }
   },
 
-  reload({ count, tabId, registryEntry, tab: { windowId } }) {
+  reload({ count, tab, registryEntry }) {
     const bypassCache = registryEntry.options.hard != null ? registryEntry.options.hard : false;
-    return chrome.tabs.query({ windowId }, function (tabs) {
-      const position = (function () {
-        for (let index = 0; index < tabs.length; index++) {
-          const tab = tabs[index];
-          if (tab.id === tabId) return index;
-        }
-      })();
-      tabs = [...tabs.slice(position), ...tabs.slice(0, position)];
-      count = Math.min(count, tabs.length);
-      for (const tab of tabs.slice(0, count)) {
-        chrome.tabs.reload(tab.id, { bypassCache });
-      }
+    return forCountTabs(count, tab, (tab) => {
+      chrome.tabs.reload(tab.id, { bypassCache });
+    });
+  },
+
+  hardReload({ count, tab }) {
+    // For hard reload set bypassCache to true
+    const bypassCache = true;
+    return forCountTabs(count, tab, (tab) => {
+      chrome.tabs.reload(tab.id, { bypassCache });
     });
   },
 };
