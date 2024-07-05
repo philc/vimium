@@ -45,19 +45,18 @@ if (BgUtils.isFirefox()) {
   visibleTabsQueryArgs.hidden = false;
 }
 
-const onURLChange = (details) => {
+function onURLChange(details) {
   // sendMessage will throw "Error: Could not establish connection. Receiving end does not exist."
   // if there is no Vimium content script loaded in the given tab. This can occur if the user
   // navigated to a page where Vimium doesn't have permissions, like chrome:// URLs. This error is
   // noisy and mysterious (it usually doesn't have a valid line number), so we silence it.
-  chrome.tabs.sendMessage(details.tabId, {
+  const message = {
     handler: "checkEnabledAfterURLChange",
     silenceLogging: true,
-  }, {
-    frameId: details.frameId,
-  })
+  };
+  chrome.tabs.sendMessage(details.tabId, message, { frameId: details.frameId })
     .catch(() => {});
-};
+}
 
 // Re-check whether Vimium is enabled for a frame when the URL changes without a reload.
 // There's no reliable way to detect when the URL has changed in the content script, so we
@@ -77,8 +76,11 @@ if (!globalThis.isUnitTests) {
   })();
 }
 
-const muteTab = (tab) => chrome.tabs.update(tab.id, { muted: !tab.mutedInfo.muted });
-const toggleMuteTab = (request, sender) => {
+function muteTab(tab) {
+  chrome.tabs.update(tab.id, { muted: !tab.mutedInfo.muted });
+}
+
+function toggleMuteTab(request, sender) {
   const currentTab = request.tab;
   const tabId = request.tabId;
   const registryEntry = request.registryEntry;
@@ -129,7 +131,7 @@ const toggleMuteTab = (request, sender) => {
     }
     muteTab(currentTab);
   }
-};
+}
 
 // Find a tab's actual index in a given tab array returned by chrome.tabs.query. In Firefox, there
 // may be hidden tabs, so tab.tabIndex may not be the actual index into the array of visible tabs.
@@ -154,7 +156,7 @@ async function selectSpecificTab(request) {
   await chrome.tabs.update(request.id, { active: true });
 }
 
-const moveTab = function ({ count, tab, registryEntry }) {
+function moveTab({ count, tab, registryEntry }) {
   if (registryEntry.command === "moveTabLeft") {
     count = -count;
   }
@@ -168,7 +170,7 @@ const moveTab = function ({ count, tab, registryEntry }) {
       index: tabs[moveIndex].index,
     });
   });
-};
+}
 
 // TODO(philc): Rename to createRepeatCommand.
 const mkRepeatCommand = (command) => (function (request) {
@@ -371,7 +373,7 @@ function forCountTabs(count, currentTab, callback) {
 }
 
 // Remove tabs before, after, or either side of the currently active tab
-const removeTabsRelative = async (direction, { count, tab }) => {
+async function removeTabsRelative(direction, { count, tab }) {
   // count is null if the user didn't type a count prefix before issuing this command and didn't
   // specify a count=n option in their keymapping settings. Interpret this as closing all tabs on
   // either side.
@@ -396,11 +398,11 @@ const removeTabsRelative = async (direction, { count, tab }) => {
   });
 
   await chrome.tabs.remove(toRemove.map((t) => t.id));
-};
+}
 
 // Selects a tab before or after the currently selected tab.
 // - direction: "next", "previous", "first" or "last".
-const selectTab = (direction, { count, tab }) =>
+function selectTab(direction, { count, tab }) {
   chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
     if (tabs.length > 1) {
       const toSelect = (() => {
@@ -418,6 +420,7 @@ const selectTab = (direction, { count, tab }) =>
       chrome.tabs.update(tabs[toSelect].id, { active: true });
     }
   });
+}
 
 chrome.webNavigation.onCommitted.addListener(async ({ tabId, frameId }) => {
   // Vimium can't run on all tabs (e.g. chrome:// URLs). insertCSS will throw an error on such tabs,
@@ -750,7 +753,7 @@ function majorVersionHasIncreased(previousVersion) {
 }
 
 // Show notification on upgrade.
-const showUpgradeMessageIfNecessary = async function (onInstalledDetails) {
+async function showUpgradeMessageIfNecessary(onInstalledDetails) {
   const currentVersion = Utils.getCurrentVersion();
   // We do not show an upgrade message for patch/silent releases. Such releases have the same
   // major and minor version numbers.
@@ -785,7 +788,7 @@ const showUpgradeMessageIfNecessary = async function (onInstalledDetails) {
       });
     });
   }
-};
+}
 
 async function injectContentScriptsAndCSSIntoExistingTabs() {
   const manifest = chrome.runtime.getManifest();
