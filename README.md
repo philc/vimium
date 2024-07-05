@@ -90,7 +90,6 @@ Using marks:
 
 Additional advanced browsing commands:
 
-    R       Hard reload the page (i.e. 'ctrl+shift+r')
     ]], [[  Follow the link labeled 'next' or '>' ('previous' or '<')
               - helpful for browsing paginated sites
     <a-f>   open multiple links in a new tab
@@ -103,6 +102,7 @@ Additional advanced browsing commands:
     zL      scroll all the way right
     v       enter visual mode; use p/P to paste-and-go, use y to yank
     V       enter visual line mode
+    R       Hard reload the page (skip the cache)
 
 Vimium supports command repetition so, for example, hitting `5t` will open 5 tabs in rapid
 succession. `<Esc>` (or `<c-[>`) will clear any partial commands in the queue and will also exit

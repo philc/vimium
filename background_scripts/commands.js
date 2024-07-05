@@ -297,6 +297,7 @@ const Commands = {
       "scrollToLeft",
       "scrollToRight",
       "reload",
+      "hardReload",
       "copyCurrentUrl",
       "openCopiedUrlInCurrentTab",
       "openCopiedUrlInNewTab",
