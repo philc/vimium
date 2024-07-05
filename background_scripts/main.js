@@ -274,7 +274,7 @@ const BackgroundCommands = {
     return selectTab("last", request);
   },
   removeTab({ count, tab }) {
-    return forCountTabs(count, tab, (tab) => {
+    forCountTabs(count, tab, (tab) => {
       // In Firefox, Ctrl-W will not close a pinned tab, but on Chrome, it will. We try to be
       // consistent with each browser's UX for pinned tabs.
       if (tab.pinned && BgUtils.isFirefox()) return;
@@ -285,7 +285,7 @@ const BackgroundCommands = {
     chrome.sessions.restore(null, callback(request))
   ),
   togglePinTab({ count, tab }) {
-    return forCountTabs(count, tab, (tab) => chrome.tabs.update(tab.id, { pinned: !tab.pinned }));
+    forCountTabs(count, tab, (tab) => chrome.tabs.update(tab.id, { pinned: !tab.pinned }));
   },
   toggleMuteTab,
   moveTabLeft: moveTab,
@@ -348,19 +348,19 @@ const BackgroundCommands = {
 
   reload({ count, tab, registryEntry }) {
     const bypassCache = registryEntry.options.hard != null ? registryEntry.options.hard : false;
-    return forCountTabs(count, tab, (tab) => {
+    forCountTabs(count, tab, (tab) => {
       chrome.tabs.reload(tab.id, { bypassCache });
     });
   },
 
   hardReload({ count, tab }) {
-    return forCountTabs(count, tab, (tab) => {
+    forCountTabs(count, tab, (tab) => {
       chrome.tabs.reload(tab.id, { bypassCache: true });
     });
   },
 };
 
-const forCountTabs = (count, currentTab, callback) =>
+function forCountTabs(count, currentTab, callback) {
   chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
     const activeTabIndex = getTabIndex(currentTab, tabs);
     const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
@@ -368,6 +368,7 @@ const forCountTabs = (count, currentTab, callback) =>
       callback(tab);
     }
   });
+}
 
 // Remove tabs before, after, or either side of the currently active tab
 const removeTabsRelative = async (direction, { count, tab }) => {
