@@ -182,8 +182,8 @@ const mkRepeatCommand = (command) => (function (request) {
   }
 });
 
-async function setZoom(direction, { count, tabId }) {
-  const zoomLevels = [
+function nextZoomLevel(currentZoom, steps) {
+  const chromeLevels = [ // Chrome's default zoom levels.
     0.25,
     0.33,
     0.50,
@@ -201,25 +201,38 @@ async function setZoom(direction, { count, tabId }) {
     4.00,
     5.00,
   ];
-  const currentZoom = await chrome.tabs.getZoom(tabId);
-  let newZoom;
-  switch (direction) {
-    case "in":
-      // Round down to the nearest zoom index.
-      const floorIndex = zoomLevels.findIndex((level) => level > currentZoom) - 1;
-      newZoom = zoomLevels[Math.min(zoomLevels.length - 1, floorIndex + count)];
-      break;
-    case "out":
-      // Round up to the nearest zoom index.
-      const ceilIndex = zoomLevels.findIndex((level) => level >= currentZoom);
-      newZoom = zoomLevels[Math.max(0, ceilIndex - count)];
-      break;
-    case "reset":
-      const zoomSettings = await chrome.tabs.getZoomSettings(tabId);
-      newZoom = zoomSettings?.defaultZoomFactor ?? 1.00;
-      break;
+  const firefoxLevels = [ // Firefox's default zoom levels.
+    0.30,
+    0.50,
+    0.67,
+    0.80,
+    0.90,
+    1.00,
+    1.20,
+    1.33,
+    1.50,
+    1.70,
+    2.00,
+    2.40,
+    3.00,
+    4.00,
+    5.00,
+  ];
+ 
+  let zoomLevels = chromeLevels; // Chrome by default
+  if (BgUtils.isFirefox()) {
+    zoomLevels = firefoxLevels;
   }
-  chrome.tabs.setZoom(tabId, newZoom);
+
+  if (steps === 0) { // Nothing
+    return currentZoom;
+  } else if (steps > 0) { // In
+    const floorIndex = zoomLevels.findIndex((level) => level > currentZoom) - 1;
+    return zoomLevels[Math.min(zoomLevels.length - 1, floorIndex + steps)];
+  } else if (steps < 0) { // Out
+    const ceilIndex = zoomLevels.findIndex((level) => level >= currentZoom);
+    return zoomLevels[Math.max(0, ceilIndex + steps)];
+  }
 }
 
 // These are commands which are bound to keystrokes which must be handled by the background page.
@@ -334,14 +347,21 @@ const BackgroundCommands = {
   toggleMuteTab,
   moveTabLeft: moveTab,
   moveTabRight: moveTab,
-  zoomIn(request) {
-    setZoom("in", request);
+
+  async zoomIn({ count, tabId }) {
+    const currentZoom = await chrome.tabs.getZoom(tabId);
+    const newZoom = nextZoomLevel(currentZoom, count);
+    chrome.tabs.setZoom(tabId, newZoom);
   },
-  zoomOut(request) {
-    setZoom("out", request);
+  async zoomOut({ count, tabId }) {
+    const currentZoom = await chrome.tabs.getZoom(tabId);
+    const newZoom = nextZoomLevel(currentZoom, -count);
+    chrome.tabs.setZoom(tabId, newZoom);
   },
-  zoomReset(request) {
-    setZoom("reset", request);
+  async zoomReset({ tabId }) {
+    const zoomSettings = await chrome.tabs.getZoomSettings(tabId);
+    newZoom = zoomSettings?.defaultZoomFactor ?? 1.00;
+    chrome.tabs.setZoom(tabId, newZoom);
   },
 
   async nextFrame({ count, tabId }) {
@@ -917,6 +937,7 @@ Object.assign(globalThis, {
   HintCoordinator,
   BackgroundCommands,
   majorVersionHasIncreased,
+  nextZoomLevel,
 });
 
 // The chrome.runtime.onStartup and onInstalled events are not fired when disabling and then
