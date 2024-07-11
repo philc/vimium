@@ -40,6 +40,72 @@ context("HintCoordinator", () => {
   });
 });
 
+context("Next zoom level", () => {
+  // NOTE: All these tests use the Chrome zoom levels, which are the default!
+  should("Zoom in 0 times", async () => {
+    const count = 0;
+    const currentZoom = 1.00;
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(nextZoom, 1.00);
+  });
+
+  should("Zoom in 1", async () => {
+    const count = 1;
+    const currentZoom = 1.00;
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(nextZoom, 1.10);
+  });
+
+  should("Zoom out 1", async () => {
+    const count = -1;
+    const currentZoom = 1.00;
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(0.90, nextZoom);
+  });
+
+  should("Zoom in 2", async () => {
+    const count = 2;
+    const currentZoom = 1.00;
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(1.25, nextZoom);
+  });
+
+  should("Zoom out 2", async () => {
+    const count = -2;
+    const currentZoom = 1.00;
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(0.80, nextZoom);
+  });
+
+  should("Zoom in from between values", async () => {
+    const count = 1;
+    const currentZoom = 1.05;
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(1.10, nextZoom);
+  });
+
+  should("Zoom out from between values", async () => {
+    const count = -1;
+    const currentZoom = 1.05;
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(1.00, nextZoom);
+  });
+
+  should("Zoom in past the maximum", async () => {
+    const count = 15;
+    const currentZoom = 1.00;
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(5.00, nextZoom);
+  });
+
+  should("Zoom out past the minimum", async () => {
+    const count = -15;
+    const currentZoom = 1.00;
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(0.25, nextZoom);
+  });
+});
+
 context("Selecting frames", () => {
   should("nextFrame", async () => {
     const focusedFrames = [];
