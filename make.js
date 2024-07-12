@@ -62,6 +62,18 @@ function createFirefoxManifest(manifest) {
     },
   });
 
+  // Firefox supports SVG icons.
+  Object.assign(manifest, {
+    "icons": {
+        "16": "icons/icon.svg",
+        "32": "icons/icon.svg",
+        "48": "icons/icon.svg",
+        "64": "icons/icon.svg",
+        "96": "icons/icon.svg",
+        "128": "icons/icon.svg"
+    },
+  });
+
   return manifest;
 }
 
