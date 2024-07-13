@@ -104,6 +104,20 @@ context("Next zoom level", () => {
     const nextZoom = await nextZoomLevel(currentZoom, count);
     assert.equal(0.25, nextZoom);
   });
+
+  should("Test Chrome 33% zoom in with float error", async () => {
+    const count = 1;
+    const currentZoom = 0.32999999999999996; // The value chrome actually gives for 33%.
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(0.50, nextZoom);
+  });
+
+  should("Test Chrome 175% zoom in with float error", async () => {
+    const count = 1;
+    const currentZoom = 1.7499999999999998; // The value chrome actually gives for 175%.
+    const nextZoom = await nextZoomLevel(currentZoom, count);
+    assert.equal(2.00, nextZoom);
+  });
 });
 
 context("Selecting frames", () => {
