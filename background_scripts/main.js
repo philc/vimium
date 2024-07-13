@@ -218,7 +218,7 @@ function nextZoomLevel(currentZoom, steps) {
     4.00,
     5.00,
   ];
- 
+
   let zoomLevels = chromeLevels; // Chrome by default
   if (BgUtils.isFirefox()) {
     zoomLevels = firefoxLevels;
