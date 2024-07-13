@@ -227,9 +227,15 @@ function nextZoomLevel(currentZoom, steps) {
   if (steps === 0) { // Nothing
     return currentZoom;
   } else if (steps > 0) { // In
-    const floorIndex = zoomLevels.findIndex((level) => level > currentZoom) - 1;
+    // Chrome sometimes returns values with floating point errors.
+    currentZoom += 0.0000001; // This is needed to solve floating point bugs in Chrome.
+    let floorIndex = zoomLevels.findIndex((level) => level > currentZoom) - 1;
+    // Properly handle index not found (we want not found to be after array, not -1).
+    floorIndex = floorIndex < 0 ? zoomLevels.length : floorIndex;
     return zoomLevels[Math.min(zoomLevels.length - 1, floorIndex + steps)];
   } else if (steps < 0) { // Out
+    // Chrome sometimes returns values with floating point errors.
+    currentZoom -= 0.0000001; // This is needed to solve floating point bugs in Chrome.
     const ceilIndex = zoomLevels.findIndex((level) => level >= currentZoom);
     return zoomLevels[Math.max(0, ceilIndex + steps)];
   }
@@ -360,7 +366,7 @@ const BackgroundCommands = {
   },
   async zoomReset({ tabId }) {
     const zoomSettings = await chrome.tabs.getZoomSettings(tabId);
-    newZoom = zoomSettings?.defaultZoomFactor ?? 1.00;
+    const newZoom = zoomSettings?.defaultZoomFactor ?? 1.00;
     chrome.tabs.setZoom(tabId, newZoom);
   },
 
