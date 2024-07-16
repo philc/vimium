@@ -152,6 +152,9 @@ class FindMode extends Mode {
 
   static updateQuery(query) {
     let pattern;
+    if (!this.query) {
+      this.query = {};
+    }
     this.query.rawQuery = query;
     // the query can be treated differently (e.g. as a plain string versus regex depending on the
     // presence of escape sequences. '\' is the escape character and needs to be escaped itself to
@@ -266,12 +269,7 @@ class FindMode extends Mode {
   }
 
   // Returns null if no search has been performed yet.
-  static getQuery(backwards, query) {
-    if (query) {
-      this.query = {};
-      this.updateQuery(query);
-      this.saveQuery();
-    }
+  static getQuery(backwards) {
     if (!this.query) return;
     // check if the query has been changed by a script in another frame
     const mostRecentQuery = FindModeHistory.getQuery();
@@ -363,9 +361,9 @@ class FindMode extends Mode {
     return FindMode.saveQuery();
   }
 
-  static findNext(backwards, query) {
+  static findNext(backwards) {
     // Bail out if we don't have any query text.
-    const nextQuery = FindMode.getQuery(backwards, query);
+    const nextQuery = FindMode.getQuery(backwards);
     if (!nextQuery) {
       HUD.show("No query to find.", 1000);
       return;
