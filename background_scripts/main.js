@@ -182,6 +182,14 @@ const mkRepeatCommand = (command) => (function (request) {
   }
 });
 
+const setZoom = (tabId, callback) => {
+  chrome.tabs.getZoom(tabId, (factor) => {
+    chrome.tabs.setZoomSettings(tabId, { scope: "per-tab" }, () => {
+      chrome.tabs.setZoom(tabId, callback(factor));
+    });
+  });
+};
+
 // These are commands which are bound to keystrokes which must be handled by the background page.
 // They are mapped in commands.js.
 const BackgroundCommands = {
@@ -294,6 +302,17 @@ const BackgroundCommands = {
   toggleMuteTab,
   moveTabLeft: moveTab,
   moveTabRight: moveTab,
+  zoomIn({ tabId, count }) {
+    const step = Settings.get("zoomStep");
+    setZoom(tabId, (factor) => factor + step * count);
+  },
+  zoomOut({ tabId, count }) {
+    const step = Settings.get("zoomStep");
+    setZoom(tabId, (factor) => factor - step * count);
+  },
+  zoomReset({ tabId }) {
+    setZoom(tabId, () => 1.0);
+  },
 
   async nextFrame({ count, tabId }) {
     // We're assuming that these frames are returned in the order that they appear on the page. This

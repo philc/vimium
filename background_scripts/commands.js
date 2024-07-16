@@ -351,6 +351,9 @@ const Commands = {
       "closeOtherTabs",
       "moveTabLeft",
       "moveTabRight",
+      "zoomIn",
+      "zoomOut",
+      "zoomReset",
     ],
     misc: ["showHelp", "toggleViewSource"],
   },
@@ -383,6 +386,9 @@ const Commands = {
     "toggleViewSource",
     "passNextKey",
     "hardReload",
+    "zoomIn",
+    "zoomOut",
+    "zoomReset",
   ],
 };
 
@@ -457,6 +463,9 @@ const defaultKeyMappings = {
   "X": "restoreTab",
   "<a-p>": "togglePinTab",
   "<a-m>": "toggleMuteTab",
+  "zi": "zoomIn",
+  "zo": "zoomOut",
+  "z0": "zoomReset",
 
   // Marks
   "m": "Marks.activateCreateMode",
@@ -550,6 +559,10 @@ const commandDescriptions = {
 
   moveTabLeft: ["Move tab to the left", { background: true }],
   moveTabRight: ["Move tab to the right", { background: true }],
+
+  zoomIn: ["Increase zoom on current tab", { background: true }],
+  zoomOut: ["Decrease zoom on current tab", { background: true }],
+  zoomReset: ["Reset zoom on current tab", { background: true }],
 
   "Vomnibar.activate": ["Open URL, bookmark or history entry", { topFrame: true }],
   "Vomnibar.activateInNewTab": ["Open URL, bookmark or history entry in a new tab", {
