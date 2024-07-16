@@ -10,12 +10,12 @@ context("TabRecency", () => {
     setup(async () => {
       stub(chrome.tabs, "query", () => Promise.resolve([]));
       await tabRecency.init();
-      tabRecency.queueAction("register", (1));
-      tabRecency.queueAction("register", (2));
-      tabRecency.queueAction("register", (3));
-      tabRecency.queueAction("register", (4));
-      tabRecency.queueAction("deregister", (4));
-      tabRecency.queueAction("register", (2));
+      tabRecency.queueAction("register", 1);
+      tabRecency.queueAction("register", 2);
+      tabRecency.queueAction("register", 3);
+      tabRecency.queueAction("register", 4);
+      tabRecency.queueAction("deregister", 4);
+      tabRecency.queueAction("register", 2);
     });
 
     should("have the correct entries in the correct order", () => {
@@ -73,8 +73,8 @@ context("TabRecency", () => {
 
     assert.equal([2, 1], tabRecency.getTabsByRecency());
 
-    tabRecency.queueAction("register", (3));
-    tabRecency.queueAction("register", (1));
+    tabRecency.queueAction("register", 3);
+    tabRecency.queueAction("register", 1);
 
     assert.equal([1, 3, 2], tabRecency.getTabsByRecency());
   });
