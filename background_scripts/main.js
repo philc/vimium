@@ -183,41 +183,10 @@ const mkRepeatCommand = (command) => (function (request) {
 });
 
 function nextZoomLevel(currentZoom, steps) {
-  const chromeLevels = [ // Chrome's default zoom levels.
-    0.25,
-    0.33,
-    0.50,
-    0.75,
-    0.80,
-    0.90,
-    1.00,
-    1.10,
-    1.25,
-    1.50,
-    1.75,
-    2.00,
-    2.50,
-    3.00,
-    4.00,
-    5.00,
-  ];
-  const firefoxLevels = [ // Firefox's default zoom levels.
-    0.30,
-    0.50,
-    0.67,
-    0.80,
-    0.90,
-    1.00,
-    1.20,
-    1.33,
-    1.50,
-    1.70,
-    2.00,
-    2.40,
-    3.00,
-    4.00,
-    5.00,
-  ];
+  // Chrome's default zoom levels.
+  const chromeLevels = [0.25, 0.33, 0.5, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
+  // Firefox's default zoom levels.
+  const firefoxLevels = [0.3, 0.5, 0.67, 0.8, 0.9, 1, 1.2, 1.33, 1.5, 1.7, 2, 2.4, 3, 4, 5];
 
   let zoomLevels = chromeLevels; // Chrome by default
   if (BgUtils.isFirefox()) {
@@ -228,17 +197,15 @@ function nextZoomLevel(currentZoom, steps) {
     return currentZoom;
   } else if (steps > 0) { // In
     // Chrome sometimes returns values with floating point errors.
+    // Example: Chrome gives 0.32999999999999996 instead of 0.33.
     currentZoom += 0.0000001; // This is needed to solve floating point bugs in Chrome.
     const nextIndex = zoomLevels.findIndex((level) => level > currentZoom);
-    // Properly handle index not found (we want not found to be after array, not -1).
-    const floorIndex = nextIndex < 0 ? zoomLevels.length : nextIndex - 1;
+    const floorIndex = nextIndex == -1 ? zoomLevels.length : nextIndex - 1;
     return zoomLevels[Math.min(zoomLevels.length - 1, floorIndex + steps)];
   } else if (steps < 0) { // Out
-    // Chrome sometimes returns values with floating point errors.
     currentZoom -= 0.0000001; // This is needed to solve floating point bugs in Chrome.
     let ceilIndex = zoomLevels.findIndex((level) => level >= currentZoom);
-    // Properly handle index not found (we want not found to be after array, not -1).
-    ceilIndex = ceilIndex < 0 ? zoomLevels.length : ceilIndex;
+    ceilIndex = ceilIndex == -1 ? zoomLevels.length : ceilIndex;
     return zoomLevels[Math.max(0, ceilIndex + steps)];
   }
 }
