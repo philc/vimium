@@ -229,14 +229,16 @@ function nextZoomLevel(currentZoom, steps) {
   } else if (steps > 0) { // In
     // Chrome sometimes returns values with floating point errors.
     currentZoom += 0.0000001; // This is needed to solve floating point bugs in Chrome.
-    let floorIndex = zoomLevels.findIndex((level) => level > currentZoom) - 1;
+    const nextIndex = zoomLevels.findIndex((level) => level > currentZoom);
     // Properly handle index not found (we want not found to be after array, not -1).
-    floorIndex = floorIndex < 0 ? zoomLevels.length : floorIndex;
+    const floorIndex = nextIndex < 0 ? zoomLevels.length : nextIndex - 1;
     return zoomLevels[Math.min(zoomLevels.length - 1, floorIndex + steps)];
   } else if (steps < 0) { // Out
     // Chrome sometimes returns values with floating point errors.
     currentZoom -= 0.0000001; // This is needed to solve floating point bugs in Chrome.
-    const ceilIndex = zoomLevels.findIndex((level) => level >= currentZoom);
+    let ceilIndex = zoomLevels.findIndex((level) => level >= currentZoom);
+    // Properly handle index not found (we want not found to be after array, not -1).
+    ceilIndex = ceilIndex < 0 ? zoomLevels.length : ceilIndex;
     return zoomLevels[Math.max(0, ceilIndex + steps)];
   }
 }
@@ -354,6 +356,14 @@ const BackgroundCommands = {
   moveTabLeft: moveTab,
   moveTabRight: moveTab,
 
+  async setZoom({ tabId, registryEntry }) {
+    const zoomLevel = registryEntry.optionList[0] ?? 1;
+    const newZoom = parseFloat(zoomLevel);
+    // Chrome breaks on values below 0.01 and 10 or above.
+    if (!isNaN(newZoom) && newZoom >= 0.01 && newZoom < 10) {
+      chrome.tabs.setZoom(tabId, newZoom);
+    }
+  },
   async zoomIn({ count, tabId }) {
     const currentZoom = await chrome.tabs.getZoom(tabId);
     const newZoom = nextZoomLevel(currentZoom, count);
@@ -365,9 +375,7 @@ const BackgroundCommands = {
     chrome.tabs.setZoom(tabId, newZoom);
   },
   async zoomReset({ tabId }) {
-    const zoomSettings = await chrome.tabs.getZoomSettings(tabId);
-    const newZoom = zoomSettings?.defaultZoomFactor ?? 1.00;
-    chrome.tabs.setZoom(tabId, newZoom);
+    chrome.tabs.setZoom(tabId, 0); // setZoom of 0 sets to the tab default.
   },
 
   async nextFrame({ count, tabId }) {
