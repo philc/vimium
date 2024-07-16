@@ -819,7 +819,7 @@ async function showUpgradeMessageIfNecessary(onInstalledDetails) {
     notificationId,
     {
       type: "basic",
-      iconUrl: chrome.runtime.getURL("icons/vimium.png"),
+      iconUrl: chrome.runtime.getURL("icons/icon128.png"),
       title: "Vimium Upgrade",
       message:
         `Vimium has been upgraded to version ${currentVersion}. Click here for more information.`,
