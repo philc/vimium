@@ -326,7 +326,6 @@ const BackgroundCommands = {
   async setZoom({ tabId, registryEntry }) {
     const zoomLevel = registryEntry.optionList[0] ?? 1;
     const newZoom = parseFloat(zoomLevel);
-    // Chrome breaks on values below 0.01 and 10 or above.
     if (!isNaN(newZoom)) {
       chrome.tabs.setZoom(tabId, newZoom);
     }
