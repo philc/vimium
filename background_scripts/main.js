@@ -172,13 +172,12 @@ function moveTab({ count, tab, registryEntry }) {
   });
 }
 
-// TODO(philc): Rename to createRepeatCommand.
-const mkRepeatCommand = (command) => (function (request) {
+const createRepeatCommand = (command) => (function (request) {
   request.count--;
   if (request.count >= 0) {
     // TODO(philc): I think we can remove this return statement, and all returns
-    // from commands built using mkRepeatCommand.
-    return command(request, (request) => (mkRepeatCommand(command))(request));
+    // from commands built using createRepeatCommand.
+    return command(request, (request) => (createRepeatCommand(command))(request));
   }
 });
 
@@ -188,7 +187,7 @@ const BackgroundCommands = {
   // Create a new tab. Also, with:
   //     map X createTab http://www.bbc.com/news
   // create a new tab with the given URL.
-  createTab: mkRepeatCommand(async function (request, callback) {
+  createTab: createRepeatCommand(async function (request, callback) {
     if (request.urls == null) {
       if (request.url) {
         // If the request contains a URL, then use it.
@@ -245,7 +244,7 @@ const BackgroundCommands = {
     }
   }),
 
-  duplicateTab: mkRepeatCommand((request, callback) => {
+  duplicateTab: createRepeatCommand((request, callback) => {
     return chrome.tabs.duplicate(
       request.tabId,
       (tab) => callback(Object.assign(request, { tab, tabId: tab.id })),
@@ -283,7 +282,7 @@ const BackgroundCommands = {
       chrome.tabs.remove(tab.id);
     });
   },
-  restoreTab: mkRepeatCommand((request, callback) =>
+  restoreTab: createRepeatCommand((request, callback) =>
     chrome.sessions.restore(null, callback(request))
   ),
   async togglePinTab({ count, tab }) {
@@ -538,7 +537,7 @@ const sendRequestHandlers = {
   getCurrentTabUrl({ tab }) {
     return tab.url;
   },
-  openUrlInNewTab: mkRepeatCommand((request, callback) =>
+  openUrlInNewTab: createRepeatCommand((request, callback) =>
     TabOperations.openUrlInNewTab(request, callback)
   ),
   openUrlInNewWindow(request) {
