@@ -216,13 +216,17 @@ const NormalModeCommands = {
   findSelected() {
     let selection = window.getSelection().toString();
     if (!selection) return;
-    return FindMode.findNext(false, selection);
+    FindMode.updateQuery(selection);
+    FindMode.saveQuery();
+    return FindMode.findNext(false);
   },
 
   findSelectedBackwards() {
     let selection = window.getSelection().toString();
     if (!selection) return;
-    return FindMode.findNext(true, selection);
+    FindMode.updateQuery(selection);
+    FindMode.saveQuery();
+    return FindMode.findNext(true);
   },
 
   // Misc.

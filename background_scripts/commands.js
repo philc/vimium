@@ -331,7 +331,13 @@ const Commands = {
       "Vomnibar.activateEditUrl",
       "Vomnibar.activateEditUrlInNewTab",
     ],
-    findCommands: ["enterFindMode", "performFind", "performBackwardsFind", "findSelected", "findSelectedBackwards"],
+    findCommands: [
+      "enterFindMode",
+      "performFind",
+      "performBackwardsFind",
+      "findSelected",
+      "findSelectedBackwards",
+    ],
     historyNavigation: ["goBack", "goForward"],
     tabManipulation: [
       "createTab",
