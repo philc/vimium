@@ -351,6 +351,7 @@ const Commands = {
       "closeOtherTabs",
       "moveTabLeft",
       "moveTabRight",
+      "setZoom",
       "zoomIn",
       "zoomOut",
       "zoomReset",
@@ -386,6 +387,7 @@ const Commands = {
     "toggleViewSource",
     "passNextKey",
     "hardReload",
+    "setZoom",
     "zoomIn",
     "zoomOut",
     "zoomReset",
@@ -560,6 +562,7 @@ const commandDescriptions = {
   moveTabLeft: ["Move tab to the left", { background: true }],
   moveTabRight: ["Move tab to the right", { background: true }],
 
+  setZoom: ["Set zoom to the value given after the command, like setZoom 2.25", { background: true }],
   zoomIn: ["Increase zoom on current tab", { background: true }],
   zoomOut: ["Decrease zoom on current tab", { background: true }],
   zoomReset: ["Reset zoom on current tab", { background: true }],
