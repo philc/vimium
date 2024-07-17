@@ -129,7 +129,7 @@ async function buildStorePackage() {
 
   const firefoxManifest = createFirefoxManifest(chromeManifest);
   await writeDistManifest(firefoxManifest);
-  await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${version}.zip .`]);
+  await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${version}.zip . -x icons/*.png`]);
 
   // Build the Chrome Store package.
   await writeDistManifest(chromeManifest);
