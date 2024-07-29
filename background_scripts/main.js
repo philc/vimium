@@ -661,7 +661,7 @@ const sendRequestHandlers = {
         whichIcon = "enabled";
       }
 
-      const iconSet = {
+      let iconSet = {
         "enabled": {
           "16": "../icons/action_enabled_16.png",
           "32": "../icons/action_enabled_32.png",
@@ -675,6 +675,16 @@ const sendRequestHandlers = {
           "32": "../icons/action_disabled_32.png",
         },
       };
+
+      if (BgUtils.isFirefox()) {
+        // Only Firefox supports SVG icons.
+        iconSet = {
+          "enabled": "../icons/action_enabled.svg",
+          "partial": "../icons/action_partial.svg",
+          "disabled": "../icons/action_disabled.svg",
+        };
+      }
+
       chrome.action.setIcon({ path: iconSet[whichIcon], tabId: sender.tab.id });
     }
 

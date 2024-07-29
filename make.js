@@ -74,6 +74,10 @@ function createFirefoxManifest(manifest) {
     },
   });
 
+  Object.assign(manifest.action, {
+    "default_icon": "icons/action_disabled.svg",
+  });
+
   return manifest;
 }
 
