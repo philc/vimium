@@ -80,8 +80,8 @@
   // },
   "action": {
     "default_icon": {
-      "16": "icons/action_enabled_16.png",
-      "32": "icons/action_enabled_32.png"
+      "16": "icons/action_disabled_16.png",
+      "32": "icons/action_disabled_32.png"
     },
     // Uncomment for Firefox.
     // "default_area": "navbar",
