@@ -129,6 +129,7 @@ async function buildStorePackage() {
 
   const firefoxManifest = createFirefoxManifest(chromeManifest);
   await writeDistManifest(firefoxManifest);
+  // Exclude PNG icons from the Firefox build, because we use the SVG directly.
   await shell("bash", ["-c", `${zipCommand} ../firefox/vimium-firefox-${version}.zip . -x icons/*.png`]);
 
   // Build the Chrome Store package.
