@@ -79,7 +79,7 @@ class Suggestion {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
       faviconUrl.searchParams.set("pageUrl", this.url);
       faviconUrl.searchParams.set("size", "64");
-      const src = this.favIconUrl.startsWith("http") ? this.favIconUrl : faviconUrl.toString();
+      const src = this.favIconUrl?.startsWith("http") ? this.favIconUrl : faviconUrl.toString();
       faviconHtml = `<img class="vomnibarIcon" src="${src}" />`;
     }
     if (this.isCustomSearch) {
