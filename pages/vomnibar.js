@@ -12,11 +12,12 @@ import "../lib/dom_utils.js";
 import "../lib/handler_stack.js";
 import "./ui_component_server.js";
 
-const Vomnibar = {
-  vomnibarUI: null, // the dialog instance for this window
+class Vomnibar {
+  vomnibarUI; // the dialog instance for this window
+
   getUI() {
     return this.vomnibarUI;
-  },
+  }
 
   async activate(userOptions) {
     await Settings.onLoaded();
@@ -43,20 +44,20 @@ const Vomnibar = {
     // Use await here for vomnibar_test.js, so that this page doesn't get unloaded while a test is
     // running.
     await this.vomnibarUI.update();
-  },
+  }
 
   hide() {
     if (this.vomnibarUI) {
       this.vomnibarUI.hide();
     }
-  },
+  }
 
   onHidden() {
     if (this.vomnibarUI) {
       this.vomnibarUI.onHidden();
     }
-  },
-};
+  }
+}
 
 class VomnibarUI {
   constructor() {
@@ -443,23 +444,34 @@ class VomnibarUI {
   }
 }
 
-UIComponentServer.registerHandler(function (event) {
-  switch (event.data.name != null ? event.data.name : event.data) {
-    case "hide":
-      Vomnibar.hide();
-      break;
-    case "hidden":
-      Vomnibar.onHidden();
-      break;
-    case "activate":
-      Vomnibar.activate(event.data);
-      break;
-  }
-});
+let vomnibarInstance;
+
+function init() {
+  vomnibarInstance = new Vomnibar();
+
+  UIComponentServer.registerHandler(function (event) {
+    switch (event.data.name != null ? event.data.name : event.data) {
+      case "hide":
+        vomnibarInstance.hide();
+        break;
+      case "hidden":
+        vomnibarInstance.onHidden();
+        break;
+      case "activate":
+        vomnibarInstance.activate(event.data);
+        break;
+    }
+  });
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   await Settings.onLoaded();
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
-window.Vomnibar = Vomnibar;
+
+if (!window.location.search.includes("dom_tests=true")) {
+  init();
+}
+
+export { Vomnibar };
