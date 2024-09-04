@@ -40,7 +40,7 @@ class BaseEngine {
     return Utils.matchesAnyRegexp(this.regexps, searchUrl);
   }
   getUrl(queryTerms) {
-    return UrlUtils.createSearchUrl(queryTerms, this.engineUrl);
+    return UrlUtils.createSearchUrl(queryTerms.join(" "), this.engineUrl);
   }
 }
 
