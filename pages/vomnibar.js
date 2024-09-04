@@ -188,10 +188,10 @@ class VomnibarUI {
     return null;
   }
 
-  onKeyEvent(event) {
+  async onKeyEvent(event) {
     const action = this.actionFromKeyEvent(event);
     if (!action) {
-      return true; // pass through
+      return;
     }
 
     if (action === "dismiss") {
@@ -219,7 +219,7 @@ class VomnibarUI {
       }
       this.updateSelection();
     } else if (action === "enter") {
-      this.handleEnterKey(event);
+      await this.handleEnterKey(event);
     } else if (action === "ctrl-enter") {
       // Populate the vomnibar with the current selection's URL.
       if (!this.isUserSearchEngineActive() && (this.selection >= 0)) {
@@ -243,17 +243,15 @@ class VomnibarUI {
         this.seenTabToOpenCompletionList = false;
         this.update();
       } else {
-        return true; // Do not suppress event.
+        return; // Do not suppress event.
       }
     } else if ((action === "remove") && (this.selection >= 0)) {
       const completion = this.completions[this.selection];
       console.log(completion);
     }
 
-    // It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation();
     event.preventDefault();
-    return true;
   }
 
   async handleEnterKey(event) {
@@ -286,14 +284,14 @@ class VomnibarUI {
       const isPrimary = isPrimarySearchSuggestion(firstCompletion);
       if (isPrimary) {
         query = UrlUtils.createSearchUrl(query, firstCompletion.searchUrl);
-        this.launchUrl(query);
+        await this.launchUrl(query);
       } else {
         // If the query looks like a URL, try to open it directly. Otherwise, pass the query to
         // the user's default search engine.
         // TODO(philc):
         const isUrl = await UrlUtils.isUrl(query);
         if (isUrl) {
-          this.launchUrl(query, openInNewTab);
+          await this.launchUrl(query, openInNewTab);
         } else {
           this.hide(() =>
             chrome.runtime.sendMessage({
@@ -411,13 +409,13 @@ class VomnibarUI {
     }
   }
 
-  launchUrl(url, openInNewTab) {
+  async launchUrl(url, openInNewTab) {
     // If the URL is a bookmarklet (so, prefixed with "javascript:"), then always open it in the
     // current tab.
     if (openInNewTab && UrlUtils.hasJavascriptProtocol(url)) {
       openInNewTab = false;
     }
-    chrome.runtime.sendMessage({
+    await chrome.runtime.sendMessage({
       handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
       url,
     });
