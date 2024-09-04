@@ -268,7 +268,7 @@ class BookmarkCompleter {
       results = this.bookmarks.filter((bookmark) => {
         const suggestionTitle = usePathAndTitle ? bookmark.pathAndTitle : bookmark.title;
         if (bookmark.hasJavascriptProtocol == null) {
-          bookmark.hasJavascriptProtocol = Utils.hasJavascriptProtocol(bookmark.url);
+          bookmark.hasJavascriptProtocol = UrlUtils.hasJavascriptProtocol(bookmark.url);
         }
         if (bookmark.hasJavascriptProtocol && bookmark.shortUrl == null) {
           bookmark.shortUrl = "javascript:...";
