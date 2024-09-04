@@ -173,10 +173,29 @@ const runDomTests = async (port) => {
   const page = await browser.newPage();
   let receivedErrorOutput = false;
 
+  // The "console" event emitted has arguments which are promises. To obtain the values to be
+  // printed, we must resolve those promises. However, if many console messages are emitted at once,
+  // resolving the promises often causes the console.log messages to be printed out of order. Here,
+  // we use a queue to strictly enforce that the messages appear in the order in which they were
+  // logged.
+  const messageQueue = [];
+  let processing = false;
+  const processMessageQueue = async () => {
+    while (messageQueue.length > 0) {
+      const values = await Promise.all(messageQueue.shift());
+      console.log(...values);
+    }
+    processing = false;
+  };
   page.on("console", async (msg) => {
-    const args = await Promise.all(msg.args().map((a) => a.jsonValue()));
-    console.log(...args);
+    const values = msg.args().map((a) => a.jsonValue());
+    messageQueue.push(values);
+    if (!processing) {
+      processing = true;
+      processMessageQueue();
+    }
   });
+
   page.on("error", (err) => {
     // As far as I can tell, this handler never gets executed.
     console.error(err);
