@@ -267,10 +267,10 @@ class BookmarkCompleter {
     if (queryTerms.length > 0) {
       results = this.bookmarks.filter((bookmark) => {
         const suggestionTitle = usePathAndTitle ? bookmark.pathAndTitle : bookmark.title;
-        if (bookmark.hasJavascriptPrefix == null) {
-          bookmark.hasJavascriptPrefix = Utils.hasJavascriptPrefix(bookmark.url);
+        if (bookmark.hasJavascriptProtocol == null) {
+          bookmark.hasJavascriptProtocol = Utils.hasJavascriptProtocol(bookmark.url);
         }
-        if (bookmark.hasJavascriptPrefix && bookmark.shortUrl == null) {
+        if (bookmark.hasJavascriptProtocol && bookmark.shortUrl == null) {
           bookmark.shortUrl = "javascript:...";
         }
         const suggestionUrl = bookmark.shortUrl != null ? bookmark.shortUrl : bookmark.url;
@@ -470,7 +470,7 @@ class DomainCompleter {
 
   // Return something like "http://www.example.com" or false.
   parseDomainAndScheme(url) {
-    return UrlUtils.hasFullUrlPrefix(url) && !UrlUtils.hasChromePrefix(url) &&
+    return UrlUtils.urlHasProtocol(url) && !UrlUtils.hasChromeProtocol(url) &&
       url.split("/", 3).join("/");
   }
 }
