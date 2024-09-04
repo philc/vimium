@@ -166,13 +166,7 @@ const runUnitTests = async () => {
   return await shoulda.run();
 };
 
-const runDomTests = async (port) => {
-  const testUrl = `http://localhost:${port}/tests/dom_tests/dom_tests.html`;
-
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  let receivedErrorOutput = false;
-
+function setupPuppeteerPageForTests(page) {
   // The "console" event emitted has arguments which are promises. To obtain the values to be
   // printed, we must resolve those promises. However, if many console messages are emitted at once,
   // resolving the promises often causes the console.log messages to be printed out of order. Here,
@@ -197,37 +191,30 @@ const runDomTests = async (port) => {
   });
 
   page.on("error", (err) => {
-    // As far as I can tell, this handler never gets executed.
+    // NOTE(philc): As far as I can tell, this handler never gets executed.
     console.error(err);
   });
   // pageerror catches the same events that window.onerror would, like JavaScript parsing errors.
   page.on("pageerror", (error) => {
-    receivedErrorOutput = true;
+    // This is an arbitrary field we're writing to the page object.
+    page.receivedErrorOutput = true;
     // Whatever type error is, it requires toString() to print the message.
     console.log(error.toString());
   });
-  page.on(
-    "requestfailed",
-    (request) => console.log(console.log(`${request.failure().errorText} ${request.url()}`)),
-  );
+  page.on("requestfailed", (request) => {
+    console.log(`${request.failure().errorText} ${request.url()}`);
+  });
+}
 
-  page.goto(testUrl);
-
+// Navigates the Puppeteer `page` to `url` and invokes shoulda.run().
+async function runPuppeteerTest(page, url) {
+  page.goto(url);
   await page.waitForNavigation({ waitUntil: "load" });
-
   const success = await page.evaluate(async () => {
     return await shoulda.run();
   });
-
-  // NOTE(philc): At one point in development, I noticed that the output from Deno would suddenly
-  // pause, prior to the tests fully finishing, so closing the browser here may be racy. If it
-  // occurs again, we may need to add "await delay(200)".
-  await browser.close();
-  if (receivedErrorOutput) {
-    throw new Error("The tests fail because there was a page-level error.");
-  }
   return success;
-};
+}
 
 desc("Download and parse list of top-level domains (TLDs)");
 task("fetch-tlds", [], async () => {
@@ -250,8 +237,7 @@ task("test-unit", [], async () => {
   }
 });
 
-desc("Run DOM tests");
-task("test-dom", [], async () => {
+async function testDom() {
   const port = await getAvailablePort();
   let served404 = false;
   const httpServer = Deno.serve({ port }, async (req) => {
@@ -269,15 +255,41 @@ task("test-dom", [], async () => {
     }
   });
 
-  const success = await runDomTests(port);
-  if (served404) {
-    console.log("Tests failed because a background or content script requested a missing file.");
+  const files = ["dom_tests.html", "vomnibar_test.html"];
+  const browser = await puppeteer.launch();
+  let success = true;
+  for (const file of files) {
+    const page = await browser.newPage();
+    console.log("Running", file);
+    setupPuppeteerPageForTests(page);
+    const url = `http://localhost:${port}/tests/dom_tests/${file}?dom_tests=true`;
+    const result = await runPuppeteerTest(page, url);
+    success = success && result;
+    if (served404) {
+      console.log(`${file} failed: a background or content script requested a missing file.`);
+    }
+    if (page.receivedErrorOutput) {
+      console.log(`${file} failed: there was a page level error.`);
+      success = false;
+    }
+    // If we close the puppeteer page (tab) via page.close(), we can get innocuous but noisy output
+    // like this:
+    // net::ERR_ABORTED http://localhost:43524/pages/hud.html?dom_tests=true
+    // There's probably a way to prevent that, but as a work around, we avoid closing the page.
+    // browser.close() will close all of its owned pages.
   }
+  // NOTE(philc): At one point in development, I noticed that the output from Deno would suddenly
+  // pause, prior to the tests fully finishing, so closing the browser here may be racy. If it
+  // occurs again, we may need to add "await delay(200)".
+  await browser.close();
   await httpServer.shutdown();
   if (served404 || !success) {
     abort("test-dom failed.");
   }
-});
+}
+
+desc("Run DOM tests");
+task("test-dom", [], testDom);
 
 desc("Run unit and DOM tests");
 task("test", ["test-unit", "test-dom"]);
