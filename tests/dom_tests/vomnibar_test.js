@@ -37,13 +37,13 @@ context("vomnibar", () => {
     assert.equal(true, wasHidden);
   });
 
-  should("opens a URL-like query when enter is pressed", async () => {
+  should("open a URL-like query when enter is pressed", async () => {
     const instance = new Vomnibar();
     await instance.activate();
     const ui = instance.vomnibarUI;
     ui.setQuery("www.example.com");
-    let url = null;
     let handler = null;
+    let url = null;
     stub(chrome.runtime, "sendMessage", async (message) => {
       handler = message.handler;
       url = message.url;
@@ -51,5 +51,22 @@ context("vomnibar", () => {
     await ui.onKeyEvent(Object.assign(keyEvent, { type: "keypress", key: "Enter" }));
     assert.equal("openUrlInCurrentTab", handler);
     assert.equal("www.example.com", url);
+  });
+
+  should("search for a non-URL query when enter is pressed", async () => {
+    const instance = new Vomnibar();
+    await instance.activate();
+    const ui = instance.vomnibarUI;
+    ui.setQuery("example");
+    let handler = null;
+    let query = null;
+    stub(chrome.runtime, "sendMessage", async (message) => {
+      handler = message.handler;
+      query = message.query;
+    });
+    await ui.onKeyEvent(Object.assign(keyEvent, { type: "keypress", key: "Enter" }));
+    ui.onHidden();
+    assert.equal("launchSearchQuery", handler);
+    assert.equal("example", query);
   });
 });
