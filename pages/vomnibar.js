@@ -40,7 +40,9 @@ const Vomnibar = {
     this.vomnibarUI.setForceNewTab(options.newTab);
     this.vomnibarUI.setQuery(options.query);
     this.vomnibarUI.setActiveUserSearchEngine(UserSearchEngines.keywordToEngine[options.keyword]);
-    this.vomnibarUI.update();
+    // Use await here for vomnibar_test.js, so that this page doesn't get unloaded while a test is
+    // running.
+    await this.vomnibarUI.update();
   },
 
   hide() {
@@ -96,9 +98,9 @@ class VomnibarUI {
   // The sequence of events when the vomnibar is hidden is as follows:
   // 1. Post a "hide" message to the host page.
   // 2. The host page hides the vomnibar.
-  // 3. When that page receives the focus, and it posts back a "hidden" message.
-  // 4. Only once the "hidden" message is received here is any required action invoked (in
-  //    onHidden).
+  // 3. When that page receives the focus, it posts back a "hidden" message.
+  // 4. Only once the "hidden" message is received here is onHiddenCallback called.
+  //
   // This ensures that the vomnibar is actually hidden before any new tab is created, and avoids
   // flicker after opening a link in a new tab then returning to the original tab (see #1485).
   hide(onHiddenCallback = null) {
@@ -395,8 +397,8 @@ class VomnibarUI {
     return this.getUserSearchEngineForQuery() != null;
   }
 
-  update() {
-    this.updateCompletions();
+  async update() {
+    await this.updateCompletions();
     this.input.focus();
   }
 
