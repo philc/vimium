@@ -182,8 +182,6 @@ class VomnibarUI {
       return true; // pass through
     }
 
-    const openInNewTab = this.forceNewTab || event.shiftKey || event.ctrlKey || event.altKey ||
-      event.metaKey;
     if (action === "dismiss") {
       this.hide();
     } else if (["tab", "down"].includes(action)) {
@@ -209,48 +207,7 @@ class VomnibarUI {
       }
       this.updateSelection();
     } else if (action === "enter") {
-      const isPrimarySearchSuggestion = (c) => c?.isPrimarySuggestion && c?.isCustomSearch;
-      let query = this.input.value.trim();
-
-      // Note that it's possible that this.completions is empty. This can happen in practice if the
-      // user hits enter quickly after loading the vomnibar, before the filterCompletions request to
-      // the background page finishes.
-      const waitingOnCompletions = this.completions.length == 0;
-      const completion = this.completions[this.selection];
-
-      // If the user types something and hits enter without selecting a completion from the list,
-      // then:
-      //   - If they've activated a custom search engine in the Vomnibar, then launch that search
-      //     using the typed-in query.
-      //   - Otherwise, open the query as a URL or create a default search as appropriate.
-      //
-      //  When launching a query in a custom search engine, the user may have typed more text than
-      //  that which is included in the URL associated with the primary suggestion, because the
-      //  suggestions are updated asynchronously. Therefore, to avoid a race condition, we construct
-      //  the search URL from the actual contents of the input (query).
-      if (waitingOnCompletions || this.selection == -1) {
-        // <Enter> on an empty query is a no-op.
-        if (query.length == 0) return;
-        const firstCompletion = this.completions[0];
-        const isPrimary = isPrimarySearchSuggestion(firstCompletion);
-        if (isPrimarySearchSuggestion(firstCompletion)) {
-          query = UrlUtils.createSearchUrl(query, firstCompletion.searchUrl);
-          this.launchUrl(query);
-        } else {
-          this.hide(() =>
-            chrome.runtime.sendMessage({
-              handler: "launchSearchQuery",
-              query,
-              openInNewTab,
-            })
-          );
-        }
-      } else if (isPrimarySearchSuggestion(completion)) {
-        query = UrlUtils.createSearchUrl(query, completion.searchUrl);
-        this.hide(() => this.launchUrl(query, openInNewTab));
-      } else {
-        this.hide(() => this.openCompletion(completion, openInNewTab));
-      }
+      this.handleEnterKey(event);
     } else if (action === "ctrl-enter") {
       // Populate the vomnibar with the current selection's URL.
       if (!this.isUserSearchEngineActive() && (this.selection >= 0)) {
@@ -276,7 +233,7 @@ class VomnibarUI {
       } else {
         return true; // Do not suppress event.
       }
-    } else if ((action === "remove") && (0 <= this.selection)) {
+    } else if ((action === "remove") && (this.selection >= 0)) {
       const completion = this.completions[this.selection];
       console.log(completion);
     }
@@ -285,6 +242,62 @@ class VomnibarUI {
     event.stopImmediatePropagation();
     event.preventDefault();
     return true;
+  }
+
+  async handleEnterKey(event) {
+    const isPrimarySearchSuggestion = (c) => c?.isPrimarySuggestion && c?.isCustomSearch;
+    let query = this.input.value.trim();
+
+    // Note that it's possible that this.completions is empty. This can happen in practice if the
+    // user hits enter quickly after loading the vomnibar, before the filterCompletions request to
+    // the background page finishes.
+    const waitingOnCompletions = this.completions.length == 0;
+    const completion = this.completions[this.selection];
+
+    const openInNewTab = this.forceNewTab || event.shiftKey || event.ctrlKey || event.altKey ||
+      event.metaKey;
+
+    // If the user types something and hits enter without selecting a completion from the list,
+    // then:
+    //   - If they've activated a custom search engine in the Vomnibar, then launch that search
+    //     using the typed-in query.
+    //   - Otherwise, open the query as a URL or create a default search as appropriate.
+    //
+    //  When launching a query in a custom search engine, the user may have typed more text than
+    //  that which is included in the URL associated with the primary suggestion, because the
+    //  suggestions are updated asynchronously. Therefore, to avoid a race condition, we construct
+    //  the search URL from the actual contents of the input (query).
+    if (waitingOnCompletions || this.selection == -1) {
+      // <Enter> on an empty query is a no-op.
+      if (query.length == 0) return;
+      const firstCompletion = this.completions[0];
+      const isPrimary = isPrimarySearchSuggestion(firstCompletion);
+      if (isPrimary) {
+        query = UrlUtils.createSearchUrl(query, firstCompletion.searchUrl);
+        this.launchUrl(query);
+      } else {
+        // If the query looks like a URL, try to open it directly. Otherwise, pass the query to
+        // the user's default search engine.
+        // TODO(philc):
+        const isUrl = await UrlUtils.isUrl(query);
+        if (isUrl) {
+          this.launchUrl(query, openInNewTab);
+        } else {
+          this.hide(() =>
+            chrome.runtime.sendMessage({
+              handler: "launchSearchQuery",
+              query,
+              openInNewTab,
+            })
+          );
+        }
+      }
+    } else if (isPrimarySearchSuggestion(completion)) {
+      query = UrlUtils.createSearchUrl(query, completion.searchUrl);
+      this.hide(() => this.launchUrl(query, openInNewTab));
+    } else {
+      this.hide(() => this.openCompletion(completion, openInNewTab));
+    }
   }
 
   // Return the background-page query corresponding to the current input state. In other words,
