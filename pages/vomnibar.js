@@ -3,6 +3,15 @@
 // selection on the page (useful for bookmarklets), ensure that the Vomnibar style is unaffected by
 // the page, and simplify key handling in vimium_frontend.js
 //
+
+import "../lib/utils.js";
+import "../lib/url_utils.js";
+import "../lib/settings.js";
+import "../lib/keyboard_utils.js";
+import "../lib/dom_utils.js";
+import "../lib/handler_stack.js";
+import "./ui_component_server.js";
+
 const Vomnibar = {
   vomnibarUI: null, // the dialog instance for this window
   getUI() {
