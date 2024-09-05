@@ -24,6 +24,13 @@ const Vomnibar = {
     });
   },
 
+  restoreSession(sourceFrameId) {
+    this.open(sourceFrameId, {
+      completer: "recentlyClosed",
+      selectFirst: true,
+    });
+  },
+
   activateBookmarks(sourceFrameId) {
     this.open(sourceFrameId, {
       completer: "bookmarks",
