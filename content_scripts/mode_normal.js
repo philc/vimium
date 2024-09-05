@@ -213,6 +213,22 @@ const NormalModeCommands = {
     }
   },
 
+  findSelected() {
+    let selection = window.getSelection().toString();
+    if (!selection) return;
+    FindMode.updateQuery(selection);
+    FindMode.saveQuery();
+    return FindMode.findNext(false);
+  },
+
+  findSelectedBackwards() {
+    let selection = window.getSelection().toString();
+    if (!selection) return;
+    FindMode.updateQuery(selection);
+    FindMode.saveQuery();
+    return FindMode.findNext(true);
+  },
+
   // Misc.
   mainFrame() {
     return focusThisFrame({ highlight: true, forceFocusThisFrame: true });

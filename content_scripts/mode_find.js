@@ -152,6 +152,9 @@ class FindMode extends Mode {
 
   static updateQuery(query) {
     let pattern;
+    if (!this.query) {
+      this.query = {};
+    }
     this.query.rawQuery = query;
     // the query can be treated differently (e.g. as a plain string versus regex depending on the
     // presence of escape sequences. '\' is the escape character and needs to be escaped itself to
