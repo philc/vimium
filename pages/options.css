@@ -128,6 +128,11 @@ textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
   min-height: 140px;
   white-space: pre;
 }
+textarea#searchEngines {
+  min-width: 100%;
+  max-width: 50vw;
+  resize: both;
+}
 input#previousPatterns, input#nextPatterns {
   width: 100%;
 }
