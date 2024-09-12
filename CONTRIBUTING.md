@@ -83,25 +83,48 @@ Here's the rationale behind this policy:
 
 Vimium is written in Javascript. To install Vimium from source:
 
-**On Chrome/Chromium:**
+#### On Chrome/Chromium:
 
-1. Navigate to `chrome://extensions`
+1. Clone the [Vimium Repository](https://github.com/philc/vimium/tree/master)
+
+    ```bash
+    git clone https://github.com/philc/vimium.git
+    ```
+1. Open chrome and navigate to `chrome://extensions`
+
+    ![alt text](screenshots/image-3.png)
+
 1. Toggle into Developer Mode
+
+    ![alt text](screenshots/image-4.png)
+
 1. Click on "Load Unpacked Extension..."
+
+    ![alt text](screenshots/image-5.png)
+
 1. Select the Vimium directory you've cloned from Github.
 
-**On Firefox:**
+#### On Firefox:
 
-Firefox needs a modified version of the manifest.json that's used for Chrome. To generate this, run
+1. Clone the [Vimium Repository](screenshots/https://github.com/philc/vimium/tree/master)
+    ```bash
+    git clone https://github.com/philc/vimium.git
+    ```
 
-`./make.js write-firefox-manifest`
+1. Firefox needs a modified version of the manifest.json that's used for Chrome. To generate this, run
 
-After that:
+    ```bash
+    ./make.js write-firefox-manifest
+    ```
 
 1. Open Firefox
-1. Enter "about:debugging" in the URL bar
-1. Click "This Firefox" on the left side
-1. Click "Load Temporary Add-on"
+
+1. Enter `about:debugging#/runtime/this-firefox` in the URL bar
+
+1. Click `Load Temporary Add-on`
+
+    ![alt text](screenshots/image-8.png)
+
 1. Open the Vimium directory you've cloned from Github, and select any file inside.
 
 ### Running the tests
