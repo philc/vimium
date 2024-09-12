@@ -86,6 +86,7 @@
 #vomnibar li .vomnibarIcon {
   padding: 0 13px 0 6px;
   vertical-align: bottom;
+  width: 16px;
 }
 
 #vomnibar li .vomnibarSource {
