@@ -356,7 +356,8 @@ const Commands = {
       "zoomOut",
       "zoomReset",
     ],
-    misc: ["showHelp", "toggleViewSource"],
+    misc: ["showHelp", "toggleViewSource"] +
+          ["setProxyNone", "setProxyAutodetect", "setProxySystem", "setProxyManual"],
   },
 
   // Rarely used commands are not shown by default in the help dialog or in the README. The goal is
@@ -391,6 +392,7 @@ const Commands = {
     "zoomIn",
     "zoomOut",
     "zoomReset",
+    "setProxyNone", "setProxyAutodetect", "setProxySystem", "setProxyManual",
   ],
 };
 
@@ -476,6 +478,11 @@ const defaultKeyMappings = {
   // Misc
   "?": "showHelp",
   "gs": "toggleViewSource",
+
+  "sn": "setProxyNone",
+  "sa": "setProxyAutodetect",
+  "ss": "setProxySystem",
+  "sm": "setProxyManual",
 };
 
 // This is a mapping of: commandIdentifier => [description, options].
@@ -584,6 +591,11 @@ const commandDescriptions = {
 
   "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }],
   "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }],
+
+  setProxyNone: ["No proxy", { background: true }],
+  setProxyAutodetect: ["Auto-detect proxy settings", { background: true }],
+  setProxySystem: ["Use system proxy settings", { background: true }],
+  setProxyManual: ["Use manual proxy configuration", { background: true }],
 };
 
 globalThis.Commands = Commands;

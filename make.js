@@ -36,6 +36,8 @@ function createFirefoxManifest(manifest) {
   manifest.permissions = manifest.permissions
     // The favicon permission is not yet supported by Firefox.
     .filter((p) => p != "favicon")
+    // added for switch proxy configuration in Firefox
+    .concat(["browserSettings", "proxy"])
     // Firefox needs clipboardRead and clipboardWrite for commands like "copyCurrentUrl", but Chrome
     // does not. See #4186.
     .concat(["clipboardRead", "clipboardWrite"]);
