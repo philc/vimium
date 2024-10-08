@@ -260,9 +260,11 @@ const Commands = {
     const commandToKey = {};
     for (const key of Object.keys(this.keyToRegistryEntry || {})) {
       const registryEntry = this.keyToRegistryEntry[key];
-      const optionString = registryEntry.optionList?.length > 0 ? registryEntry.optionList?.join(" ") : '';
+      const optionString = registryEntry.optionList?.length > 0
+        ? registryEntry.optionList?.join(" ")
+        : "";
       if (commandToKey[registryEntry.command] == null) {
-        commandToKey[registryEntry.command] = {}
+        commandToKey[registryEntry.command] = {};
       }
       (commandToKey[registryEntry.command][optionString] != null
         ? commandToKey[registryEntry.command][optionString]
@@ -273,7 +275,7 @@ const Commands = {
       const commands = this.commandGroups[group];
       commandGroups[group] = [];
       for (const command of commands) {
-        for (const [options, keys] of Object.entries(commandToKey[command] ?? {'': []})) {
+        for (const [options, keys] of Object.entries(commandToKey[command] ?? { "": [] })) {
           commandGroups[group].push({
             command,
             description: this.availableCommands[command].description,
