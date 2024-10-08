@@ -467,7 +467,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
-
 if (!window.location.search.includes("dom_tests=true")) {
   init();
 }
