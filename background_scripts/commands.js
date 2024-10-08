@@ -575,8 +575,8 @@ const commandDescriptions = {
   moveTabRight: ["Move tab to the right", { background: true }],
 
   setZoom: ["Set zoom level to a given value. E.g. map zz setZoom 1.5", { background: true }],
-  zoomIn: ["Increase zoom", { background: true }],
-  zoomOut: ["Decrease zoom", { background: true }],
+  zoomIn: ["Zoom in", { background: true }],
+  zoomOut: ["Zoom out", { background: true }],
   zoomReset: ["Reset zoom", { background: true }],
 
   "Vomnibar.activate": ["Open URL, bookmark or history entry", { topFrame: true }],
