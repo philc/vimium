@@ -46,7 +46,8 @@
 
 2.0.1 (2023-10-04)
 
-- Fix exception when migrating some pre-v2.0 settings. ([#4323](https://github.com/philc/vimium/issues/4323))
+- Fix exception when migrating some pre-v2.0 settings.
+  ([#4323](https://github.com/philc/vimium/issues/4323))
 
 2.0.0 (2023-09-28 -- partially rolled out to users on the Chrome store)
 
@@ -62,14 +63,15 @@
 - Allow find mode to work when using only private windows.
   ([#3614](https://github.com/philc/vimium/issues/3614))
 - Add a count option to closeTabsOnLeft and closeTabsOnRight commands, to allow binding a key to
-  "close just 1 tab on the left/right" rather than closing all tabs, as is the default. E.g. `map cl
+  "close just 1 tab on the left/right" rather than closing all tabs, as is the default. E.g.
+  `map cl
   closeTabsOnLeft count=1`. ([#4296](https://github.com/philc/vimium/pull/4296))
 - Add search completions for Brave Search. ([#3851](https://github.com/philc/vimium/pull/3851))
 - Make regular expressions in find mode work again; other find mode improvements.
   ([#4261](https://github.com/philc/vimium/issues/4261))
 - Bug fixes. ([#3944](https://github.com/philc/vimium/pull/3944),
-[#3752](https://github.com/philc/vimium/pull/3752),
-[#3675](https://github.com/philc/vimium/pull/3675))
+  [#3752](https://github.com/philc/vimium/pull/3752),
+  [#3675](https://github.com/philc/vimium/pull/3675))
 
 1.67.7 (2023-07-12)
 

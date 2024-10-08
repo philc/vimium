@@ -4,7 +4,6 @@ about: File a bug
 title: ''
 labels: ''
 assignees: ''
-
 ---
 
 **Describe the bug**
