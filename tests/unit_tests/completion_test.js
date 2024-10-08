@@ -322,7 +322,7 @@ context("domain completer (removing entries)", () => {
 });
 
 context("multi completer", () => {
-  const tabs = [{ url: "tab1.com", title: "tab1", id: 1 },];
+  const tabs = [{ url: "tab1.com", title: "tab1", id: 1 }];
   const tabCompleter = new TabCompleter();
   let multiCompleter;
 
@@ -335,7 +335,7 @@ context("multi completer", () => {
     // Even though a TabCompleter returns results when the query is empty, a MultiCompleter which
     // wraps a TabCompleter should not.
     assert.equal(1, (await filterCompleter(tabCompleter, [])).length);
-    assert.equal([], (await filterCompleter(multiCompleter, [])));
+    assert.equal([], await filterCompleter(multiCompleter, []));
   });
 });
 
