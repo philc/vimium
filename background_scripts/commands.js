@@ -64,8 +64,8 @@ const Commands = {
 
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
-      const command = tokens[0].toLowerCase();
-      switch (command) {
+      const action = tokens[0].toLowerCase();
+      switch (action) {
         case "map":
           if (tokens.length >= 3) {
             const [_, key, command, ...optionList] = tokens;
@@ -118,7 +118,7 @@ const Commands = {
           }
           break;
         default:
-          logWarning(`"${command}" is not a valid config command in line:`, line);
+          logWarning(`"${action}" is not a valid config command in line:`, line);
       }
     }
 
@@ -260,21 +260,28 @@ const Commands = {
     const commandToKey = {};
     for (const key of Object.keys(this.keyToRegistryEntry || {})) {
       const registryEntry = this.keyToRegistryEntry[key];
-      (commandToKey[registryEntry.command] != null
-        ? commandToKey[registryEntry.command]
-        : (commandToKey[registryEntry.command] = [])).push(key);
+      const optionString = registryEntry.optionList?.length > 0 ? registryEntry.optionList?.join(" ") : '';
+      if (commandToKey[registryEntry.command] == null) {
+        commandToKey[registryEntry.command] = {}
+      }
+      (commandToKey[registryEntry.command][optionString] != null
+        ? commandToKey[registryEntry.command][optionString]
+        : (commandToKey[registryEntry.command][optionString] = [])).push(key);
     }
     const commandGroups = {};
     for (const group of Object.keys(this.commandGroups || {})) {
       const commands = this.commandGroups[group];
       commandGroups[group] = [];
       for (const command of commands) {
-        commandGroups[group].push({
-          command,
-          description: this.availableCommands[command].description,
-          keys: commandToKey[command] != null ? commandToKey[command] : [],
-          advanced: this.advancedCommands.includes(command),
-        });
+        for (const [options, keys] of Object.entries(commandToKey[command] ?? {'': []})) {
+          commandGroups[group].push({
+            command,
+            description: this.availableCommands[command].description,
+            keys: keys,
+            advanced: this.advancedCommands.includes(command),
+            options: options,
+          });
+        }
       }
     }
     chrome.storage.session.set({ helpPageData: commandGroups });
@@ -562,7 +569,7 @@ const commandDescriptions = {
   moveTabLeft: ["Move tab to the left", { background: true }],
   moveTabRight: ["Move tab to the right", { background: true }],
 
-  setZoom: ["Set zoom level to a given value. E.g. map zz setZoom 1.5", { background: true }],
+  setZoom: ["Set zoom", { background: true }],
   zoomIn: ["Zoom in", { background: true }],
   zoomOut: ["Zoom out", { background: true }],
   zoomReset: ["Reset zoom", { background: true }],
