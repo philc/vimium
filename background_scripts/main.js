@@ -405,12 +405,6 @@ const BackgroundCommands = {
       chrome.tabs.reload(tab.id, { bypassCache });
     });
   },
-
-  async hardReload({ count, tab }) {
-    await forCountTabs(count, tab, (tab) => {
-      chrome.tabs.reload(tab.id, { bypassCache: true });
-    });
-  },
 };
 
 async function forCountTabs(count, currentTab, callback) {

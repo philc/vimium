@@ -124,7 +124,17 @@ const HelpDialog = {
             });
           }
 
-          $$(descriptionElement, ".vimiumHelpDescription").textContent = command.description;
+          const MAX_LENGTH = 50;
+          const desiredOptionsLength = Math.max(0, MAX_LENGTH - command.description.length - 3);
+          const optionsTruncated = command.options.substring(0, desiredOptionsLength);
+          let ellipis = "";
+          if ((command.description.length + command.options.length) > MAX_LENGTH) {
+            ellipis = "...";
+            $$(descriptionElement, ".vimiumHelpDescription").title = command.options;
+          }
+          const optionsString = command.options ? ` (${optionsTruncated}${ellipis})` : "";
+          const fullDescription = `${command.description}${optionsString}`;
+          $$(descriptionElement, ".vimiumHelpDescription").textContent = fullDescription;
 
           keysElement = $$(keysElement, ".vimiumKeyBindings");
           let lastElement = null;
