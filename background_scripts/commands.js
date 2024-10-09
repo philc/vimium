@@ -280,7 +280,8 @@ const Commands = {
             command,
             description: this.availableCommands[command].description,
             keys: keys,
-            advanced: this.advancedCommands.includes(command) || this.advancedCommands.includes(`${command} ${options}`),
+            advanced: this.advancedCommands.includes(command) ||
+              this.advancedCommands.includes(`${command} ${options}`),
             options: options,
           });
         }
@@ -398,7 +399,7 @@ const Commands = {
     "zoomIn",
     "zoomOut",
     "zoomReset",
-    "reload hard"
+    "reload hard",
   ],
 };
 
