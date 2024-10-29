@@ -1,18 +1,3 @@
-//
-// This implements link hinting. Typing "F" will enter link-hinting mode, where all clickable items
-// on the page have a hint marker displayed containing a sequence of letters. Typing those letters
-// will select a link.
-//
-// In our 'default' mode, the characters we use to show link hints are a user-configurable option.
-// By default they're the home row. The CSS which is used on the link hints is also a configurable
-// option.
-//
-// In 'filter' mode, our link hints are numbers, and the user can narrow down the range of
-// possibilities by typing the text of the link itself.
-//
-
-// A DOM element that sits on top of a link, showing the key the user should type to select the
-// link.
 class HintMarker {
   hintDescriptor;
   localHint;
@@ -1220,6 +1205,12 @@ const LocalHints = {
     if (!isClickable && !(tabIndex < 0) && !isNaN(tabIndex)) {
       isClickable = true;
       onlyHasTabIndex = true;
+    }
+
+    // Check for elements with class 'btn'
+    if (!isClickable && className?.toLowerCase().includes("btn")) {
+      isClickable = true;
+      possibleFalsePositive = true;
     }
 
     if (isClickable) {
