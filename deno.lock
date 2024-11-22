@@ -1,7 +1,7 @@
 {
   "version": "4",
   "specifiers": {
-    "npm:puppeteer@^23.9.0": "23.9.0_devtools-protocol@0.0.1367902"
+    "npm:puppeteer@*": "23.9.0_devtools-protocol@0.0.1367902"
   },
   "npm": {
     "@babel/code-frame@7.26.2": {
@@ -830,12 +830,5 @@
     "https://esm.sh/v135/safe-buffer@5.1.2/denonext/safe-buffer.mjs": "bf91200afdaf8be92e5c7d4c79e4dc9b5c534f76e104f1b37e5891d6f81eaca2",
     "https://esm.sh/v135/set-immediate-shim@1.0.1/denonext/set-immediate-shim.mjs": "2ff36ce48c47dda8fb85fdfde6ad53ed3a329d140b3e19bbe9750aebdf10812a",
     "https://esm.sh/v135/util-deprecate@1.0.2/denonext/util-deprecate.mjs": "f69f67cf655c38428b0934e0f7c865c055834a87cc3866b629d6b2beb21005e9"
-  },
-  "workspace": {
-    "packageJson": {
-      "dependencies": [
-        "npm:puppeteer@^23.9.0"
-      ]
-    }
   }
 }
