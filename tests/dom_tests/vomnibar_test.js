@@ -3,7 +3,7 @@ import * as shoulda from "../vendor/shoulda.js";
 import "../../lib/chrome_api_stubs.js";
 import { Vomnibar } from "../../pages/vomnibar.js";
 
-window.shoulda = shoulda;
+globalThis.shoulda = shoulda;
 
 const keyEvent = {
   type: "keydown",

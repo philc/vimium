@@ -100,8 +100,8 @@ class FindMode extends Mode {
     FindMode.query = { rawQuery: "" };
 
     if (options.returnToViewport) {
-      this.scrollX = window.scrollX;
-      this.scrollY = window.scrollY;
+      this.scrollX = globalThis.scrollX;
+      this.scrollY = globalThis.scrollY;
     }
 
     super.init(Object.assign(options, {
@@ -209,7 +209,7 @@ class FindMode extends Mode {
   static updateActiveRegexIndices() {
     let activeNodeIndex = -1;
     const matchedNodes = this.query.regexMatchedNodes;
-    const selection = window.getSelection();
+    const selection = globalThis.getSelection();
     if (selection.rangeCount > 0) {
       activeNodeIndex = matchedNodes.indexOf(selection.anchorNode);
 
@@ -342,11 +342,11 @@ class FindMode extends Mode {
     document.body.classList.remove("vimiumFindMode");
     // Removing the class does not re-color existing selections. we recreate the current selection
     // so it reverts back to the default color.
-    const selection = window.getSelection();
+    const selection = globalThis.getSelection();
     if (!selection.isCollapsed) {
-      const range = window.getSelection().getRangeAt(0);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(range);
+      const range = globalThis.getSelection().getRangeAt(0);
+      globalThis.getSelection().removeAllRanges();
+      globalThis.getSelection().addRange(range);
     }
     return focusFoundLink() || selectFoundInputElement();
   }
@@ -379,7 +379,7 @@ class FindMode extends Mode {
 
   checkReturnToViewPort() {
     if (this.options.returnToViewport) {
-      window.scrollTo(this.scrollX, this.scrollY);
+      globalThis.scrollTo(this.scrollX, this.scrollY);
     }
   }
 }
@@ -404,7 +404,7 @@ const getCurrentRange = function () {
 };
 
 const getLinkFromSelection = function () {
-  let node = window.getSelection().anchorNode;
+  let node = globalThis.getSelection().anchorNode;
   while (node && (node !== document.body)) {
     if (node.nodeName.toLowerCase() === "a") {
       return node;
@@ -457,7 +457,7 @@ const highlight = (textNode, startIndex, length) => {
   if (startIndex === -1) {
     return false;
   }
-  const selection = window.getSelection();
+  const selection = globalThis.getSelection();
   const range = document.createRange();
   range.setStart(textNode, startIndex);
   range.setEnd(textNode, startIndex + length);
@@ -466,10 +466,10 @@ const highlight = (textNode, startIndex, length) => {
 
   // Ensure the highlighted element is visible within the viewport.
   const rect = range.getBoundingClientRect();
-  if (rect.top < 0 || rect.bottom > window.innerHeight) {
-    const screenHeight = window.innerHeight;
-    window.scrollTo({
-      top: window.scrollY + rect.top + rect.height / 2 - screenHeight / 2,
+  if (rect.top < 0 || rect.bottom > globalThis.innerHeight) {
+    const screenHeight = globalThis.innerHeight;
+    globalThis.scrollTo({
+      top: globalThis.scrollY + rect.top + rect.height / 2 - screenHeight / 2,
       behavior: "smooth",
     });
   }
@@ -495,5 +495,5 @@ const getAllTextNodes = () => {
   return textNodes;
 };
 
-window.PostFindMode = PostFindMode;
-window.FindMode = FindMode;
+globalThis.PostFindMode = PostFindMode;
+globalThis.FindMode = FindMode;

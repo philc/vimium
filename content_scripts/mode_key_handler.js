@@ -146,4 +146,4 @@ class KeyHandlerMode extends Mode {
   }
 }
 
-window.KeyHandlerMode = KeyHandlerMode;
+globalThis.KeyHandlerMode = KeyHandlerMode;

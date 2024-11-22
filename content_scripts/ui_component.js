@@ -178,7 +178,7 @@ class UIComponent {
               },
             });
           } else {
-            Utils.nextTick(() => window.focus());
+            Utils.nextTick(() => globalThis.focus());
           }
         }
       }
@@ -188,4 +188,4 @@ class UIComponent {
   }
 }
 
-window.UIComponent = UIComponent;
+globalThis.UIComponent = UIComponent;

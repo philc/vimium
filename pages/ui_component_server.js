@@ -4,16 +4,16 @@
 
 var registerPort = function (event) {
   chrome.storage.session.get("vimiumSecret", function ({ vimiumSecret: secret }) {
-    if (event.source !== window.parent) return;
+    if (event.source !== globalThis.parent) return;
     if (event.data !== secret) {
       Utils.debugLog("ui_component_server: vimiumSecret is incorrect.");
       return;
     }
     UIComponentServer.portOpen(event.ports[0]);
-    window.removeEventListener("message", registerPort);
+    globalThis.removeEventListener("message", registerPort);
   });
 };
-window.addEventListener("message", registerPort);
+globalThis.addEventListener("message", registerPort);
 
 var UIComponentServer = {
   ownerPagePort: null,
@@ -49,7 +49,7 @@ var UIComponentServer = {
   registerIsReady: (function () {
     let uiComponentIsReadyCount;
     if (document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", () => UIComponentServer.registerIsReady());
+      globalThis.addEventListener("DOMContentLoaded", () => UIComponentServer.registerIsReady());
       uiComponentIsReadyCount = 0;
     } else {
       uiComponentIsReadyCount = 1;
@@ -57,8 +57,8 @@ var UIComponentServer = {
 
     return function () {
       if (++uiComponentIsReadyCount === 2) {
-        if (window.frameId != null) {
-          this.postMessage({ name: "setIframeFrameId", iframeFrameId: window.frameId });
+        if (globalThis.frameId != null) {
+          this.postMessage({ name: "setIframeFrameId", iframeFrameId: globalThis.frameId });
         }
         this.postMessage("uiComponentIsReady");
       }
@@ -66,4 +66,4 @@ var UIComponentServer = {
   })(),
 };
 
-window.UIComponentServer = UIComponentServer;
+globalThis.UIComponentServer = UIComponentServer;

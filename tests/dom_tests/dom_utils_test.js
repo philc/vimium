@@ -8,7 +8,7 @@ context("DOM content loaded", () => {
 
   // See ./dom_tests.html; the callback there was installed before the document was ready.
   should("already have called callback embedded in test page.", () => {
-    assert.isTrue(window.documentReadyListenerCalled);
+    assert.isTrue(globalThis.documentReadyListenerCalled);
   });
 });
 

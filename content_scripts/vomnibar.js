@@ -43,7 +43,7 @@ const Vomnibar = {
     this.open(sourceFrameId, {
       completer: "omni",
       selectFirst: false,
-      query: window.location.href,
+      query: globalThis.location.href,
     });
   },
 
@@ -51,7 +51,7 @@ const Vomnibar = {
     this.open(sourceFrameId, {
       completer: "omni",
       selectFirst: false,
-      query: window.location.href,
+      query: globalThis.location.href,
       newTab: true,
     });
   },
@@ -78,4 +78,4 @@ const Vomnibar = {
   },
 };
 
-window.Vomnibar = Vomnibar;
+globalThis.Vomnibar = Vomnibar;

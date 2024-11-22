@@ -23,7 +23,7 @@ context("bookmark completer", () => {
   let completer;
 
   setup(() => {
-    stub(window.chrome.bookmarks, "getTree", () => [bookmark1]);
+    stub(globalThis.chrome.bookmarks, "getTree", () => [bookmark1]);
     completer = new BookmarkCompleter();
   });
 
@@ -111,7 +111,7 @@ context("HistoryCache", () => {
       onVisitedListener = null;
       onVisitRemovedListener = null;
 
-      stub(window.chrome, "history", {
+      stub(globalThis.chrome, "history", {
         search: (_options) => history,
         onVisited: {
           addListener(listener) {
@@ -181,7 +181,7 @@ context("history completer", () => {
 
   setup(() => {
     completer = new HistoryCompleter();
-    stub(window.chrome, "history", {
+    stub(globalThis.chrome, "history", {
       search: (_options) => [history1, history2],
       onVisited: { addListener() {}, removeListener() {} },
       onVisitRemoved: { addListener() {}, removeListener() {} },
@@ -210,7 +210,7 @@ context("domain completer", () => {
   let completer = null;
 
   setup(() => {
-    stub(window.chrome, "history", {
+    stub(globalThis.chrome, "history", {
       search: (_options) => [history1, history2, undef],
       onVisited: { addListener() {}, removeListener() {} },
       onVisitRemoved: { addListener() {}, removeListener() {} },
@@ -261,7 +261,7 @@ context("domain completer (removing entries)", () => {
 
   setup(async () => {
     onVisitRemovedListener = null;
-    stub(window.chrome, "history", {
+    stub(globalThis.chrome, "history", {
       search: (_options) => [history1, history2, history3],
       onVisited: {
         addListener(_listener) {
@@ -379,7 +379,7 @@ context("SearchEngineCompleter", () => {
 
   should("complete search results using the given completer", async () => {
     const googleResults = ["blue", ["blue1", "blue2"]];
-    stub(window, "fetch", () => createResponse(JSON.stringify(googleResults)));
+    stub(globalThis, "fetch", () => createResponse(JSON.stringify(googleResults)));
     const results = await filterCompleter(completer, ["g", "blue"]);
     assert.equal(
       [googleSearchUrl + "blue", googleSearchUrl + "blue1", googleSearchUrl + "blue2"],

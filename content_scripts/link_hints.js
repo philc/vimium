@@ -208,8 +208,8 @@ const HintCoordinator = {
     chrome.runtime.sendMessage({
       handler: "prepareToActivateLinkHintsMode",
       modeIndex: availableModes.indexOf(mode),
-      isVimiumHelpDialog: window.isVimiumHelpDialog,
-      isVimiumOptionsPage: window.isVimiumOptionsPage,
+      isVimiumHelpDialog: globalThis.isVimiumHelpDialog,
+      isVimiumOptionsPage: globalThis.isVimiumOptionsPage,
     });
   },
 
@@ -223,7 +223,7 @@ const HintCoordinator = {
     // If link hints is launched within the help dialog, then we only offer hints from that frame.
     // This improves the usability of the help dialog on the options page (particularly for
     // selecting command names).
-    if (isVimiumHelpDialog && !window.isVimiumHelpDialog) {
+    if (isVimiumHelpDialog && !globalThis.isVimiumHelpDialog) {
       this.localHints = [];
     } else {
       this.localHints = LocalHints.getLocalHints(requireHref);
@@ -696,7 +696,7 @@ class LinkHintsMode {
           } else if (localHint.reason === "Open.") {
             return clickEl.open = !clickEl.open;
           } else if (DomUtils.isSelectable(clickEl)) {
-            window.focus();
+            globalThis.focus();
             return DomUtils.simulateSelect(clickEl);
           } else {
             const clickActivator = (modifiers) => (link) => DomUtils.simulateClick(link, modifiers);
@@ -1173,7 +1173,7 @@ const LocalHints = {
         break;
       case "body":
         isClickable ||= (element === document.body) && !windowIsFocused() &&
-            (window.innerWidth > 3) && (window.innerHeight > 3) &&
+            (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
             ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
               "frameset")
           ? (reason = "Frame.")
@@ -1507,7 +1507,7 @@ class HoverMode extends Mode {
   }
 }
 
-Object.assign(window, {
+Object.assign(globalThis, {
   LinkHints,
   HintCoordinator,
   // Exported for tests.

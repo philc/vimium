@@ -26,7 +26,7 @@ const HUD = {
       focusable = true;
     }
     if (this.hudUI == null) {
-      const queryString = window.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
+      const queryString = globalThis.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
       this.hudUI = new UIComponent(`pages/hud.html${queryString}`, "vimiumHUDFrame", ({ data }) => {
         if (this[data.name]) {
           return this[data.name](data);
@@ -133,7 +133,7 @@ const HUD = {
     // An element won't receive a focus event if the search landed on it while we were in the HUD
     // iframe. To end up with the correct modes active, we create a focus/blur event manually after
     // refocusing this window.
-    window.focus();
+    globalThis.focus();
 
     const focusNode = DomUtils.getSelectionFocusElement();
     if (document.activeElement != null) {
@@ -195,7 +195,7 @@ const HUD = {
     // means keyboard events will always be dispatched to the HUD iframe
     if (this.hudUI && this.hudUI.showing) {
       this.hudUI.iframeElement.blur();
-      window.focus();
+      globalThis.focus();
     }
   },
 };
@@ -259,4 +259,4 @@ ${this.cssSelector} {
   }
 }
 
-window.HUD = HUD;
+globalThis.HUD = HUD;
