@@ -5,7 +5,7 @@ context("handlerStack", () => {
   let handlerStack, handler1Called, handler2Called;
 
   setup(() => {
-    stub(window, "DomUtils", {});
+    stub(globalThis, "DomUtils", {});
     stub(DomUtils, "consumeKeyup", () => {});
     stub(DomUtils, "suppressEvent", () => {});
     stub(DomUtils, "suppressPropagation", () => {});

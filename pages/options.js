@@ -63,7 +63,7 @@ const OptionsPage = {
       });
     }
 
-    window.onbeforeunload = () => {
+    globalThis.onbeforeunload = () => {
       if (!saveOptionsEl.disabled) {
         return "You have unsaved changes to options.";
       }
@@ -209,4 +209,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // Exported for use by our tests.
-window.isVimiumOptionsPage = true;
+globalThis.isVimiumOptionsPage = true;

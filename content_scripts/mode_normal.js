@@ -51,7 +51,7 @@ class NormalMode extends KeyHandlerMode {
     if (registryEntry.topFrame) {
       // We never return to a UI-component frame (e.g. the help dialog), it might have lost the
       // focus.
-      const sourceFrameId = window.isVimiumUIComponent ? 0 : frameId;
+      const sourceFrameId = globalThis.isVimiumUIComponent ? 0 : frameId;
       chrome.runtime.sendMessage({
         handler: "sendMessageToFrames",
         message: { handler: "runInTopFrame", sourceFrameId, registryEntry },
@@ -126,7 +126,7 @@ const NormalModeCommands = {
 
   // Url manipulation.
   goUp(count) {
-    let url = window.location.href;
+    let url = globalThis.location.href;
     if (url.endsWith("/")) {
       url = url.substring(0, url.length - 1);
     }
@@ -135,12 +135,12 @@ const NormalModeCommands = {
     // make sure we haven't hit the base domain yet
     if (urlsplit.length > 3) {
       urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count));
-      window.location.href = urlsplit.join("/");
+      globalThis.location.href = urlsplit.join("/");
     }
   },
 
   goToRoot() {
-    window.location.href = window.location.origin;
+    globalThis.location.href = globalThis.location.origin;
   },
 
   toggleViewSource() {
@@ -307,8 +307,8 @@ const NormalModeCommands = {
       hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint";
 
       // minus 1 for the border
-      hint.style.left = (tuple.rect.left - 1) + window.scrollX + "px";
-      hint.style.top = (tuple.rect.top - 1) + window.scrollY + "px";
+      hint.style.left = (tuple.rect.left - 1) + globalThis.scrollX + "px";
+      hint.style.top = (tuple.rect.top - 1) + globalThis.scrollY + "px";
       hint.style.width = tuple.rect.width + "px";
       hint.style.height = tuple.rect.height + "px";
 
@@ -374,7 +374,7 @@ const textInputXPath = (function () {
 // used by the findAndFollow* functions.
 const followLink = function (linkElement) {
   if (linkElement.nodeName.toLowerCase() === "link") {
-    window.location.href = linkElement.href;
+    globalThis.location.href = linkElement.href;
   } else {
     // if we can click on it, don't simply set location.href: some next/prev links are meant to
     // trigger AJAX calls, like the 'more' button on GitHub's newsfeed.
@@ -410,7 +410,7 @@ const findAndFollowLink = function (linkStrings) {
       continue;
     }
 
-    const computedStyle = window.getComputedStyle(link, null);
+    const computedStyle = globalThis.getComputedStyle(link, null);
     const isHidden = computedStyle.getPropertyValue("visibility") != "visible" ||
       computedStyle.getPropertyValue("display") == "none";
     if (isHidden) continue;
@@ -540,5 +540,5 @@ class FocusSelector extends Mode {
   }
 }
 
-window.NormalMode = NormalMode;
-window.NormalModeCommands = NormalModeCommands;
+globalThis.NormalMode = NormalMode;
+globalThis.NormalModeCommands = NormalModeCommands;

@@ -13,7 +13,7 @@ const setTextInInputElement = function (inputElement, text) {
   const range = document.createRange();
   range.selectNodeContents(inputElement);
   range.collapse(false);
-  const selection = window.getSelection();
+  const selection = globalThis.getSelection();
   selection.removeAllRanges();
   selection.addRange(range);
 };
@@ -133,7 +133,7 @@ const handlers = {
       // On Firefox, the page must first be focused before the HUD input element can be focused.
       // #3460.
       if (Utils.isFirefox()) {
-        window.focus();
+        globalThis.focus();
       }
       inputElement.focus();
     });
@@ -165,14 +165,14 @@ const handlers = {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
       // the error "DOMException: Document is not focused." is thrown.
-      window.focus();
+      globalThis.focus();
 
       // Replace nbsp; characters with space. See #2217.
       const value = message.data.replace(/\xa0/g, " ");
       await navigator.clipboard.writeText(value);
 
       if (focusedElement != null) focusedElement.focus();
-      window.parent.focus();
+      globalThis.parent.focus();
       UIComponentServer.postMessage({ name: "unfocusIfFocused" });
     });
   },
@@ -182,14 +182,14 @@ const handlers = {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
       // the error "DOMException: Document is not focused." is thrown.
-      window.focus();
+      globalThis.focus();
 
       let value = await navigator.clipboard.readText();
       // Replace nbsp; characters with space. See #2217.
       value = value.replace(/\xa0/g, " ");
 
       if (focusedElement != null) focusedElement.focus();
-      window.parent.focus();
+      globalThis.parent.focus();
       UIComponentServer.postMessage({ name: "pasteResponse", data: value });
     });
   },

@@ -431,7 +431,7 @@ class VomnibarUI {
     this.completionList = this.box.querySelector("ul");
     this.completionList.style.display = "";
 
-    window.addEventListener("focus", () => this.input.focus());
+    globalThis.addEventListener("focus", () => this.input.focus());
     // A click in the vomnibar itself refocuses the input.
     this.box.addEventListener("click", (event) => {
       this.input.focus();
@@ -467,7 +467,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
-if (!window.location.search.includes("dom_tests=true")) {
+if (!globalThis.location.search.includes("dom_tests=true")) {
   init();
 }
 

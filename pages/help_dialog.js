@@ -227,5 +227,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   DomUtils.injectUserCss(); // Manually inject custom user styles.
 });
 
-window.HelpDialog = HelpDialog;
-window.isVimiumHelpDialog = true;
+globalThis.HelpDialog = HelpDialog;
+globalThis.isVimiumHelpDialog = true;

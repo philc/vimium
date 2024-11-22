@@ -5,7 +5,7 @@ let commandName = null;
 // setup. Also, some tests affect the focus (e.g. Vomnibar tests), so we make sure the window has
 // the focus.
 const initializeModeState = () => {
-  window.focus();
+  globalThis.focus();
   Mode.reset();
   handlerStack.reset();
   const normalMode = installModes();
@@ -55,7 +55,7 @@ const activateLinkHintsMode = () => {
 // link hinting modes.
 //
 const createGeneralHintTests = (isFilteredMode) => {
-  window.vimiumOnClickAttributeName = "does-not-matter";
+  globalThis.vimiumOnClickAttributeName = "does-not-matter";
 
   context("Link hints", () => {
     setup(() => {
@@ -65,7 +65,7 @@ const createGeneralHintTests = (isFilteredMode) => {
       stubSettings("filterLinkHints", isFilteredMode);
       stubSettings("linkHintCharacters", "ab");
       stubSettings("linkHintNumbers", "12");
-      stub(window, "windowIsFocused", () => true);
+      stub(globalThis, "windowIsFocused", () => true);
     });
 
     teardown(() => document.getElementById("test-div").innerHTML = "");
@@ -108,7 +108,7 @@ context("False positives in link-hint", () => {
     document.getElementById("test-div").innerHTML = testContent;
     stubSettings("filterLinkHints", true);
     stubSettings("linkHintNumbers", "12");
-    stub(window, "windowIsFocused", () => true);
+    stub(globalThis, "windowIsFocused", () => true);
   });
 
   teardown(() => document.getElementById("test-div").innerHTML = "");
@@ -309,7 +309,7 @@ context("Alphabetical link hints", () => {
     initializeModeState();
     stubSettings("filterLinkHints", false);
     stubSettings("linkHintCharacters", "ab");
-    stub(window, "windowIsFocused", () => true);
+    stub(globalThis, "windowIsFocused", () => true);
 
     document.getElementById("test-div").innerHTML = "";
     // Three hints will trigger double hint chars.
@@ -370,7 +370,7 @@ context("Filtered link hints", () => {
   setup(() => {
     stubSettings("filterLinkHints", true);
     stubSettings("linkHintNumbers", "0123456789");
-    stub(window, "windowIsFocused", () => true);
+    stub(globalThis, "windowIsFocused", () => true);
   });
 
   context("Text hints", () => {
@@ -597,7 +597,7 @@ context("Input focus", () => {
 context("Find prev / next links", () => {
   setup(() => {
     initializeModeState();
-    window.location.hash = "";
+    globalThis.location.hash = "";
   });
 
   should("find exact matches", () => {
@@ -607,7 +607,7 @@ context("Find prev / next links", () => {
 `;
     stubSettings("nextPatterns", "next");
     NormalModeCommands.goNext();
-    assert.equal("#second", window.location.hash);
+    assert.equal("#second", globalThis.location.hash);
   });
 
   should("match against non-word patterns", () => {
@@ -616,7 +616,7 @@ context("Find prev / next links", () => {
 `;
     stubSettings("nextPatterns", ">>");
     NormalModeCommands.goNext();
-    assert.equal("#first", window.location.hash);
+    assert.equal("#first", globalThis.location.hash);
   });
 
   should("favor matches with fewer words", () => {
@@ -626,7 +626,7 @@ context("Find prev / next links", () => {
 `;
     stubSettings("nextPatterns", "next");
     NormalModeCommands.goNext();
-    assert.equal("#second", window.location.hash);
+    assert.equal("#second", globalThis.location.hash);
   });
 
   should("find link relation in header", () => {
@@ -634,7 +634,7 @@ context("Find prev / next links", () => {
 <link rel='next' href='#first'>\
 `;
     NormalModeCommands.goNext();
-    assert.equal("#first", window.location.hash);
+    assert.equal("#first", globalThis.location.hash);
   });
 
   should("favor link relation to text matching", () => {
@@ -643,7 +643,7 @@ context("Find prev / next links", () => {
 <a href='#second'>next</a>\
 `;
     NormalModeCommands.goNext();
-    assert.equal("#first", window.location.hash);
+    assert.equal("#first", globalThis.location.hash);
   });
 
   should("match mixed case link relation", () => {
@@ -651,7 +651,7 @@ context("Find prev / next links", () => {
 <link rel='Next' href='#first'>\
 `;
     NormalModeCommands.goNext();
-    assert.equal("#first", window.location.hash);
+    assert.equal("#first", globalThis.location.hash);
   });
 
   should("match against the title attribute", () => {
@@ -659,7 +659,7 @@ context("Find prev / next links", () => {
 <a title='Next page' href='#first'>unhelpful text</a>\
 `;
     NormalModeCommands.goNext();
-    assert.equal("#first", window.location.hash);
+    assert.equal("#first", globalThis.location.hash);
   });
 
   should("match against the aria-label attribute", () => {
@@ -667,7 +667,7 @@ context("Find prev / next links", () => {
 <a aria-label='Next page' href='#first'>unhelpful text</a>\
 `;
     NormalModeCommands.goNext();
-    assert.equal("#first", window.location.hash);
+    assert.equal("#first", globalThis.location.hash);
   });
 });
 

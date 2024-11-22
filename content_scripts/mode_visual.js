@@ -13,7 +13,7 @@ class Movement {
   constructor(alterMethod) {
     this.alterMethod = alterMethod;
     this.opposite = { forward: backward, backward: forward };
-    this.selection = window.getSelection();
+    this.selection = globalThis.getSelection();
   }
 
   // Return the character following (to the right of) the focus, and leave the selection unchanged,
@@ -315,7 +315,7 @@ class VisualMode extends KeyHandlerMode {
     if (this.name !== "caret") {
       if (["Caret", "Range"].includes(DomUtils.getSelectionType(this.selection))) {
         let selectionRect = this.selection.getRangeAt(0).getBoundingClientRect();
-        if (window.vimiumDomTestsAreRunning) {
+        if (globalThis.vimiumDomTestsAreRunning) {
           // We're running the DOM tests, where getBoundingClientRect() isn't available.
           if (!selectionRect) {
             selectionRect = { top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 };
@@ -323,7 +323,7 @@ class VisualMode extends KeyHandlerMode {
         }
         selectionRect = Rect.intersect(
           selectionRect,
-          Rect.create(0, 0, window.innerWidth, window.innerHeight),
+          Rect.create(0, 0, globalThis.innerWidth, globalThis.innerHeight),
         );
         if ((selectionRect.height >= 0) && (selectionRect.width >= 0)) {
           // The selection is visible in the current viewport.
@@ -594,5 +594,5 @@ class CaretMode extends VisualMode {
   }
 }
 
-window.VisualMode = VisualMode;
-window.VisualLineMode = VisualLineMode;
+globalThis.VisualMode = VisualMode;
+globalThis.VisualLineMode = VisualLineMode;

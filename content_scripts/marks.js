@@ -16,14 +16,14 @@ const Marks = {
 
   // This returns the key which is used for storing mark locations in localStorage.
   getLocationKey(keyChar) {
-    return `vimiumMark|${window.location.href.split("#")[0]}|${keyChar}`;
+    return `vimiumMark|${globalThis.location.href.split("#")[0]}|${keyChar}`;
   },
 
   getMarkString() {
     return JSON.stringify({
-      scrollX: window.scrollX,
-      scrollY: window.scrollY,
-      hash: window.location.hash,
+      scrollX: globalThis.scrollX,
+      scrollY: globalThis.scrollY,
+      hash: globalThis.location.hash,
     });
   },
 
@@ -68,7 +68,7 @@ const Marks = {
               // background page later.
               let scrollX, scrollY;
               if (DomUtils.isTopFrame()) {
-                [scrollX, scrollY] = [window.scrollX, window.scrollY];
+                [scrollX, scrollY] = [globalThis.scrollX, globalThis.scrollY];
               }
               chrome.runtime.sendMessage({
                 handler: "createMark",
@@ -118,9 +118,9 @@ const Marks = {
                 this.setPreviousPosition();
                 const position = JSON.parse(markString);
                 if (position.hash && (position.scrollX === 0) && (position.scrollY === 0)) {
-                  window.location.hash = position.hash;
+                  globalThis.location.hash = position.hash;
                 } else {
-                  window.scrollTo(position.scrollX, position.scrollY);
+                  globalThis.scrollTo(position.scrollX, position.scrollY);
                 }
                 this.showMessage("Jumped to local mark", keyChar);
               } else {
@@ -135,4 +135,4 @@ const Marks = {
   },
 };
 
-window.Marks = Marks;
+globalThis.Marks = Marks;

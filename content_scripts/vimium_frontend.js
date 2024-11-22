@@ -110,7 +110,7 @@ class GrabBackFocus extends Mode {
 
     if (!this.logged && (element !== document.body)) {
       this.logged = true;
-      if (!window.vimiumDomTestsAreRunning) {
+      if (!globalThis.vimiumDomTestsAreRunning) {
         console.log("An auto-focusing action on this page was blocked by Vimium.");
       }
     }
@@ -142,8 +142,8 @@ handlerStack.push({
         ((target.pathName !== document.location.pathName) ||
           (target.search !== document.location.search)) &&
         (["", "_self"].includes(target.target) ||
-          ((target.target === "_parent") && (window.parent === window)) ||
-          ((target.target === "_top") && (window.top === window)))
+          ((target.target === "_parent") && (globalThis.parent === window)) ||
+          ((target.target === "_top") && (globalThis.top === window)))
       ) {
         return new GrabBackFocus();
       } else {
@@ -213,7 +213,7 @@ const initializePreDomReady = async function () {
     },
     getScrollPosition(_ignoredA, _ignoredB) {
       if (DomUtils.isTopFrame()) {
-        return { scrollX: window.scrollX, scrollY: window.scrollY };
+        return { scrollX: globalThis.scrollX, scrollY: globalThis.scrollY };
       }
     },
     setScrollPosition,
@@ -296,7 +296,7 @@ const installListeners = Utils.makeIdempotent(function () {
   // the page can't set handlers to grab the keys before us.
   const events = ["keydown", "keypress", "keyup", "click", "focus", "blur", "mousedown", "scroll"];
   for (const type of events) {
-    installListener(window, type, (event) => handlerStack.bubbleEvent(type, event));
+    installListener(globalThis, type, (event) => handlerStack.bubbleEvent(type, event));
   }
   installListener(
     document,
@@ -334,11 +334,11 @@ const setScrollPosition = ({ scrollX, scrollY }) =>
   DomUtils.documentReady(function () {
     if (DomUtils.isTopFrame()) {
       Utils.nextTick(function () {
-        window.focus();
+        globalThis.focus();
         document.body.focus();
         if ((scrollX > 0) || (scrollY > 0)) {
           Marks.setPreviousPosition();
-          window.scrollTo(scrollX, scrollY);
+          globalThis.scrollTo(scrollX, scrollY);
         }
       });
     }
@@ -379,7 +379,7 @@ const focusThisFrame = function (request) {
   if (!request.forceFocusThisFrame && !isWindowFocusable()) return;
 
   Utils.nextTick(function () {
-    window.focus();
+    globalThis.focus();
     // On Firefox, window.focus doesn't always draw focus back from a child frame (bug 554039). We
     // blur the active element if it is an iframe, which gives the window back focus as intended.
     if (document.activeElement.tagName.toLowerCase() === "iframe") {
