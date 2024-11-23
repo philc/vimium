@@ -110,7 +110,7 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
 [Puppeteer](https://github.com/puppeteer/puppeteer). To run the tests:
 
 1. Install [Deno](https://deno.land/) if you don't have it already.
-2. `npx puppeteer browsers install chrome` to install puppeteer
+2. `deno run -A npm:puppeteer browsers install chrome` to install puppeteer
 1. `./make.js test` to build the code and run the tests.
 
 ### Coding Style
