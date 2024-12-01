@@ -47,6 +47,7 @@ class Suggestion {
   // The generated HTML string for showing this suggestion in the Vomnibar.
   html;
   searchUrl;
+  faviconHtml;
 
   constructor(options) {
     Object.seal(this);
@@ -77,8 +78,9 @@ class Suggestion {
     if (this.description === "tab" && !BgUtils.isFirefox()) {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
       faviconUrl.searchParams.set("pageUrl", this.url);
-      faviconUrl.searchParams.set("size", "16");
-      faviconHtml = `<img class="vomnibarIcon" src="${faviconUrl.toString()}" />`;
+      faviconUrl.searchParams.set("size", "64");
+      const src = this.favIconUrl?.startsWith("http") ? this.favIconUrl : faviconUrl.toString();
+      faviconHtml = `<img class="vomnibarIcon" src="${src}" />`;
     }
     if (this.isCustomSearch) {
       this.html = `\
@@ -489,6 +491,7 @@ class TabCompleter {
           queryTerms,
           description: "tab",
           url: tab.url,
+          faviconUrl: tab.favIconUrl,
           title: tab.title,
           tabId: tab.id,
           deDuplicate: false,

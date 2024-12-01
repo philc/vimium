@@ -659,13 +659,13 @@ class LinkHintsMode {
       }
     }
 
-    const newMarkers = []
+    const newMarkers = [];
     for (let stack of stacks) {
       if (stack.length > 1) {
         // Push the last element to the beginning.
-        stack = stack.splice(-1, 1).concat(stack)
+        stack = stack.splice(-1, 1).concat(stack);
       }
-      newMarkers.push(...stack)
+      newMarkers.push(...stack);
     }
     this.hintMarkers = newMarkers;
     this.renderHints();
@@ -1208,7 +1208,7 @@ const LocalHints = {
     // clickables are often wrapped in elements with such class names. So, when we find clickables
     // based only on their class name, we mark them as unreliable.
     const className = element.getAttribute("class");
-    if (!isClickable && className?.toLowerCase().includes("button")) {
+    if (!isClickable && (className?.toLowerCase().includes("button")) || (className?.toLowerCase().includes("btn"))) {
       isClickable = true;
       possibleFalsePositive = true;
     }
