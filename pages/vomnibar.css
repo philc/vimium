@@ -107,6 +107,8 @@
 #vomnibar li .vomnibarUrl {
   white-space: nowrap;
   color: #224684;
+  display: inline-block;
+  width: 90%;
 }
 
 #vomnibar li .vomnibarMatch {
@@ -139,8 +141,7 @@
   background-color: #E6EEFB;
 }
 
-.vomnibarInsertText {
-}
+
 
 .vomnibarNoInsertText {
   visibility: hidden;
@@ -180,6 +181,8 @@
   #vomnibar li .vomnibarUrl {
     white-space: nowrap;
     color: #5ca1f7;
+    display: inline-block;
+    width: 90%;
   }
 
   #vomnibar li em,
@@ -192,7 +195,11 @@
   }
 
   #vomnibar li .vomnibarMatch {
+    white-space: nowrap;
     color: white;
+    display: inline-block;
+    width: 90%;
+
   }
 
   #vomnibar li em .vomnibarMatch,
