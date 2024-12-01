@@ -145,6 +145,7 @@ div.vimiumHighlightedFrame {
 
 iframe.vimiumHelpDialogFrame {
   background-color: rgba(10,10,10,0.6);
+  backdrop-filter: blur(10px);
   padding: 0px;
   top: 0px;
   left: 0px;
