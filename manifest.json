@@ -16,7 +16,7 @@
     "browser_style": false,
     "open_in_tab": true
   },
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": ["chrome://*/*","<all_urls>"],
   "permissions": [
     "tabs",
     "bookmarks",
@@ -35,7 +35,7 @@
   ],
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["chrome://*/*","<all_urls>"],
       "js": [
         "lib/utils.js",
         "lib/keyboard_utils.js",
