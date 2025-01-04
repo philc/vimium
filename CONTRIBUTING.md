@@ -75,7 +75,7 @@ Here's the rationale behind this policy:
 - Adding a new feature is only part of the work. Once it's added, a feature must be maintained
   forever.
 - Vimium is a project which suffers from the
-  [stadium model of open source](https://645ventures.com/voices/articles/github-at-scale-and-how-to-help-stadium-model-maintainers):
+  [stadium model of open source](https://github.com/philc/book-notes/blob/master/engineering/working%20in%20public%20-%20nadia%20eghbal.md#the-structure-of-an-open-source-project-chap-2):
   there are many users but unfortunately few maintainers. As a result, there is bandwidth to
   maintain only a limited number of features in the main repo.
 
