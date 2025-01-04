@@ -1,5 +1,8 @@
 {
   "fmt": {
     "lineWidth": 100
+  },
+  "imports": {
+    "json5": "npm:json5@^2.2.3"
   }
 }

@@ -7,7 +7,7 @@ import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
 import { abort, desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from 'npm:puppeteer';
 import * as shoulda from "./tests/vendor/shoulda.js";
-import JSON5 from "https://deno.land/x/json5@v1.0.0/mod.ts";
+import JSON5 from "npm:json5";
 import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
 import * as fileServer from "https://deno.land/std@0.208.0/http/file_server.ts";
 import { getAvailablePort } from "https://deno.land/x/port/mod.ts";
