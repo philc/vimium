@@ -9,7 +9,6 @@ import * as shoulda from "@philc/shoulda";
 import JSON5 from "npm:json5";
 import { DOMParser } from "@b-fuze/deno-dom";
 import * as fileServer from "@std/http/file-server";
-import { getAvailablePort } from "https://deno.land/x/port/mod.ts";
 
 const projectPath = new URL(".", import.meta.url).pathname;
 
@@ -236,8 +235,41 @@ task("test-unit", [], async () => {
   }
 });
 
+
+function isPortAvailable(number) {
+  try {
+    const listener = Deno.listen({ port: number });
+    listener.close();
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function getAvailablePort() {
+  const min = 7000;
+  const max = 65535;
+  let count = 0;
+  const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  let port = getRandomInt(min, max);
+  while (!isPortAvailable(port) && count < max - min) {
+    port++;
+    if (port > max) {
+      port = min;
+    }
+    if (isPortAvailable(port)) {
+      return port;
+    }
+    count++;
+    if (count >= max - min) {
+      throw new Error(`No port is available in the range ${min} - ${max}`);
+    }
+  }
+  return port;
+}
+
 async function testDom() {
-  const port = await getAvailablePort();
+  const port = getAvailablePort();
   let served404 = false;
   const httpServer = Deno.serve({ port }, async (req) => {
     const url = new URL(req.url);
