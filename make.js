@@ -1,15 +1,14 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-net --allow-run --allow-sys
 // Usage: ./make.js command. Use -l to list commands.
 // This is a set of tasks for building and testing Vimium in development.
-import * as fs from "https://deno.land/std@0.122.0/fs/mod.ts";
-import * as fsCopy from "https://deno.land/std@0.122.0/fs/copy.ts";
-import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
+import * as fs from "@std/fs";
+import * as path from "@std/path";
 import { abort, desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from 'npm:puppeteer';
-import * as shoulda from "./tests/vendor/shoulda.js";
+import * as shoulda from "@philc/shoulda";
 import JSON5 from "npm:json5";
-import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
-import * as fileServer from "https://deno.land/std@0.208.0/http/file_server.ts";
+import { DOMParser } from "@b-fuze/deno-dom";
+import * as fileServer from "@std/http/file-server";
 import { getAvailablePort } from "https://deno.land/x/port/mod.ts";
 
 const projectPath = new URL(".", import.meta.url).pathname;
