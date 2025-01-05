@@ -206,7 +206,7 @@ const Commands = {
     const options = {};
     for (const option of Array.from(optionList)) {
       const parse = option.split("=", 2);
-      options[parse[0]] = parse.length === 1 ? true : parse[1];
+      options[parse[0]] = parse.length === 1 ? true : parse[1].replace("%20", " ");
     }
 
     // We parse any `count` option immediately (to avoid having to parse it repeatedly later).
