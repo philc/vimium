@@ -83,10 +83,6 @@ input[type="checkbox"] {
   -webkit-user-select: none;
 }
 
-label:hover {
-  color: black;
-}
-
 pre,
 code,
 .code {
