@@ -352,3 +352,15 @@ input[name="passKeys"],
 input#uploadBackup {
   max-width: 400px;
 }
+
+/*
+ * Adjustments for dark theme.
+ */
+@media (prefers-color-scheme: dark) {
+  header {
+    border-bottom: 1px solid #999;
+  }
+  pre {
+    border-left: 1px solid #666;
+  }
+}
