@@ -86,8 +86,9 @@ const OptionsPage = {
 
   // Invoked when the user clicks the "reset" button next to an option's text field.
   resetInputValue(event) {
-    const parent = event.target.closest("tr");
-    const input = parent.querySelector("input") || parent.querySelector("textarea");
+    const parentDiv = event.target.parentNode.parentNode;
+    console.assert(parentDiv?.tagName == "DIV", "Expected parent to be a div", event.target);
+    const input = parentDiv.querySelector("input") || parentDiv.querySelector("textarea");
     const optionName = input.id;
     const defaultValue = Settings.defaultOptions[optionName];
     input.value = defaultValue;
@@ -158,7 +159,7 @@ const OptionsPage = {
   // Display the UI for link hint numbers vs. characters, depending upon the value of
   // "filterLinkHints".
   maintainLinkHintsView() {
-    const show = (el, visible) => el.style.display = visible ? "table-row" : "none";
+    const show = (el, visible) => el.style.display = visible ? null : "none";
     const isFilteredLinkhints = document.querySelector("#filterLinkHints").checked;
     show(document.querySelector("#linkHintCharactersContainer"), !isFilteredLinkhints);
     show(document.querySelector("#linkHintNumbersContainer"), isFilteredLinkhints);

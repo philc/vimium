@@ -10,8 +10,8 @@ body {
 a, a:visited { color: #15c; }
 a:active { color: #052577; }
 div#wrapper, #footerWrapper {
-  width: 540px;
-  margin-left: 35px;
+  max-width: 1050px;
+  margin: 0 25px;
 }
 header {
   font-size: 18px;
@@ -65,61 +65,76 @@ pre {
   margin: 5px;
   border-left: 1px solid #eee;
   padding-left: 5px;
-
 }
 input, textarea {
   box-sizing: border-box;
 }
 textarea {
-  /* Horizontal resizing is pretty screwy-looking. */
+  /* Horizontal resizing breaks the page's layout, so we just allow vertical. */
   resize: vertical;
 }
-table#options{
-  width: 100%;
-  font-size: 14px;
-  position: relative;
-  border-spacing: 0 23px;
-  /* This should match the height of the footer, so that the footer UI doesn't sit on top of this
-     options table, covering some of the options UI. */
-  margin-bottom: 50px;
+
+h2 {
+  margin: 12px 0;
+  font-size: 16px;
+  font-weight: normal;
 }
+
+#settings-grid-container {
+  display: grid;
+  font-size: 14px;
+  grid-template-columns: auto 320px;
+  /* This is required so the "save changes" panel at the bottom of the options page doesn't cover
+   * any settings content. */
+  margin-bottom: 100px;
+}
+
+/* Adds a blank line in the grid. */
+#settings-grid-container .spacer {
+  grid-column-start: 1;
+  grid-column-end: 3;
+  height: 10px;
+}
+
+/* These should span the full width of the grid. */
+#settings-grid-container h2, #settings-grid-container header {
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
 .example {
   font-size: 12px;
   line-height: 16px;
   color: #979ca0;
   margin-left: 20px;
 }
-.info {
-  margin-left: 0px;
-}
 .reset-link {
+  margin-left: 0px;
   text-align: right;
 }
 .reset-link a {
   text-decoration: none;
 }
-.caption {
-  margin-right: 10px;
-  min-width: 130px;
-  padding-top: 3px;
-  vertical-align: top;
-}
-td { padding: 0; }
+
 div#exampleKeyMapping {
   margin-left: 10px;
   margin-top: 5px;
 }
-input#linkHintCharacters {
+#linkHintCharactersContainer, #linkHintNumbersContainer, #waitForEnterForFilteredHintsContainer {
+  display: contents;
+}
+
+.linkHintCharactersField {
+  width: 100%;
+  /* These text fields look strange when they're excessively long. */
+  max-width: 400px;
+}
+.linkHintCharactersField input {
   width: 100%;
 }
-input#linkHintNumbers {
-  width: 100%;
-}
-input#linkHintCharacters {
-  width: 100%;
-}
+
 input#scrollStepSize {
-  width: 50px;
+  width: 80px;
   margin-right: 3px;
   padding-left: 3px;
 }
@@ -141,17 +156,7 @@ input#searchUrl {
   margin-left: 10px;
   font-size: 80%;
 }
-/* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
-.caption {
-  width: 1px;
-  white-space: nowrap;
-}
-#buttonsPanel { width: 100%; }
-.help {
-  position: absolute;
-  right: -320px;
-  width: 320px;
-}
+
 input[type=text]:read-only, input[type=number]:read-only, textarea:read-only {
   background-color: #eee;
   color: #666;
@@ -171,22 +176,16 @@ button:focus, input[type="text"]:focus, textarea:focus {
   border-color: #4d90fe;
   outline: none;
 }
-/* Boolean options have a tighter form representation than text options. */
-td.booleanOption { font-size: 12px; }
 
-/* Ids and classes for rendering exclusionRules */
-
-#exclusionRulesSection #exclusionScrollBox {
-  /* When there are no rules, we want to enforce a minimum height for this section, or the help text
-     will run together.*/
-  min-height: 45px;
-}
+/*
+ * Styles for rendering exclusionRules.
+ */
 
 #exclusionScrollBox {
   overflow: scroll;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Each exclusion rule is about 30px, so this allows 7 before scrolling */
+  /* Each exclusion rule is about 30px, so this allows 7 rules before scrolling. */
   max-height: 215px;
   border-radius: 2px;
   color: #444;
@@ -199,6 +198,7 @@ td.booleanOption { font-size: 12px; }
 #exclusionRules td {
   vertical-align: top;
   border: 2px solid transparent;
+  padding: 0px;
 }
 #exclusionRules td:nth-of-type(2) {
   width: 33%;
@@ -250,9 +250,11 @@ input[name=pattern], input[name=passKeys], .exclusionHeaderText {
   border-top: 1px solid #979ca0;
   position: fixed;
   bottom: 0px;
+  left: 0;
   padding: 15px 0;
   z-index: 10;
 }
+
 #footer, #footerTable, #footerTableData {
   width: 100%;
 }
@@ -269,4 +271,7 @@ input[name=pattern], input[name=passKeys], .exclusionHeaderText {
 }
 #backupLink {
   cursor: pointer;
+}
+input#uploadBackup {
+  max-width: 400px;
 }
