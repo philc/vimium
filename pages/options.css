@@ -2,17 +2,31 @@
 :root {
   --closeButtonWidth: 25px;
 }
+
 body {
-  font: 14px "DejaVu Sans", "Arial", sans-serif;
+  font:
+    14px "DejaVu Sans",
+    "Arial",
+    sans-serif;
   color: #303942;
   margin: 0 auto;
 }
-a, a:visited { color: #15c; }
-a:active { color: #052577; }
-div#wrapper, #footerWrapper {
+
+a,
+a:visited {
+  color: #15c;
+}
+
+a:active {
+  color: #052577;
+}
+
+div#wrapper,
+#footerWrapper {
   max-width: 1050px;
   margin: 0 25px;
 }
+
 header {
   font-size: 18px;
   font-weight: normal;
@@ -20,13 +34,16 @@ header {
   padding: 20px 0 15px 0;
   width: 100%;
 }
+
 button {
   -webkit-user-select: none;
   -webkit-appearance: none;
   background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
   border: 1px solid rgba(0, 0, 0, 0.25);
   border-radius: 2px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.75);
   color: #444;
   font: inherit;
   text-shadow: 0 1px 0 #f0f0f0;
@@ -34,41 +51,59 @@ button {
   font-size: 12px;
   padding: 0 10px;
 }
+
 button:hover {
   background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
   border-color: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.12),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95);
   color: black;
 }
+
 button:active {
   background-image: -webkit-linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
   box-shadow: none;
   text-shadow: none;
 }
-button[disabled], button[disabled]:hover, button[disabled]:active {
+
+button[disabled],
+button[disabled]:hover,
+button[disabled]:active {
   background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
   border: 1px solid rgba(0, 0, 0, 0.25);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.75);
   text-shadow: 0 1px 0 #f0f0f0;
   color: #888;
 }
+
 input[type="checkbox"] {
   -webkit-user-select: none;
 }
+
 label:hover {
   color: black;
 }
-pre, code, .code {
+
+pre,
+code,
+.code {
   font-family: Consolas, "Liberation Mono", Courier, monospace;
 }
+
 pre {
   margin: 5px;
   border-left: 1px solid #eee;
   padding-left: 5px;
 }
-input, textarea {
+
+input,
+textarea {
   box-sizing: border-box;
 }
+
 textarea {
   /* Horizontal resizing breaks the page's layout, so we just allow vertical. */
   resize: vertical;
@@ -97,7 +132,8 @@ h2 {
 }
 
 /* These should span the full width of the grid. */
-#settings-grid-container h2, #settings-grid-container header {
+#settings-grid-container h2,
+#settings-grid-container header {
   grid-column-start: 1;
   grid-column-end: 3;
 }
@@ -108,10 +144,12 @@ h2 {
   color: #979ca0;
   margin-left: 20px;
 }
+
 .reset-link {
   margin-left: 0px;
   text-align: right;
 }
+
 .reset-link a {
   text-decoration: none;
 }
@@ -120,7 +158,10 @@ div#exampleKeyMapping {
   margin-left: 10px;
   margin-top: 5px;
 }
-#linkHintCharactersContainer, #linkHintNumbersContainer, #waitForEnterForFilteredHintsContainer {
+
+#linkHintCharactersContainer,
+#linkHintNumbersContainer,
+#waitForEnterForFilteredHintsContainer {
   display: contents;
 }
 
@@ -129,6 +170,7 @@ div#exampleKeyMapping {
   /* These text fields look strange when they're excessively long. */
   max-width: 400px;
 }
+
 .linkHintCharactersField input {
   width: 100%;
 }
@@ -138,32 +180,44 @@ input#scrollStepSize {
   margin-right: 3px;
   padding-left: 3px;
 }
-textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
-  width: 100%;;
+
+textarea#userDefinedLinkHintCss,
+textarea#keyMappings,
+textarea#searchEngines {
+  width: 100%;
   min-height: 140px;
   white-space: pre;
 }
-input#previousPatterns, input#nextPatterns {
+
+input#previousPatterns,
+input#nextPatterns {
   width: 100%;
 }
+
 input#newTabUrl {
   width: 100%;
 }
+
 input#searchUrl {
   width: 100%;
 }
+
 #status {
   margin-left: 10px;
   font-size: 80%;
 }
 
-input[type=text]:read-only, input[type=number]:read-only, textarea:read-only {
+input[type="text"]:read-only,
+input[type="number"]:read-only,
+textarea:read-only {
   background-color: #eee;
   color: #666;
   pointer-events: none;
   -webkit-user-select: none;
 }
-input[type="text"], textarea {
+
+input[type="text"],
+textarea {
   border: 1px solid #bfbfbf;
   border-radius: 2px;
   color: #444;
@@ -171,7 +225,10 @@ input[type="text"], textarea {
   font: inherit;
   padding: 3px;
 }
-button:focus, input[type="text"]:focus, textarea:focus {
+
+button:focus,
+input[type="text"]:focus,
+textarea:focus {
   -webkit-transition: border-color 200ms;
   border-color: #4d90fe;
   outline: none;
@@ -191,18 +248,22 @@ button:focus, input[type="text"]:focus, textarea:focus {
   color: #444;
   width: 100%;
 }
+
 #exclusionRules {
   width: 100%;
   border-collapse: collapse;
 }
+
 #exclusionRules td {
   vertical-align: top;
   border: 2px solid transparent;
   padding: 0px;
 }
+
 #exclusionRules td:nth-of-type(2) {
   width: 33%;
 }
+
 #exclusionRules td:nth-of-type(3) {
   /* Make the close button td use only the minimum width needed. */
   width: var(--closeButtonWidth);
@@ -223,28 +284,36 @@ button:focus, input[type="text"]:focus, textarea:focus {
   margin-top: 2px;
   margin-left: 2px;
 }
+
 #exclusionRules .remove {
   border: none;
   color: #979ca0;
 }
+
 #exclusionRules .remove:hover {
   color: #444;
 }
-input[name=pattern], input[name=passKeys], .exclusionHeaderText {
+
+input[name="pattern"],
+input[name="passKeys"],
+.exclusionHeaderText {
   width: 100%;
   font-family: Consolas, "Liberation Mono", Courier, monospace;
   font-size: 14px;
 }
+
 .exclusionHeaderText {
   padding-left: 3px;
   color: #979ca0;
 }
+
 #exclusionAddButton {
   float: right;
   /* Add the spacing between the table's cells to the right margin of this button. */
   margin-right: calc(var(--closeButtonWidth) + 4px);
   margin-top: 10px;
 }
+
 #footer {
   background: #f5f5f5;
   border-top: 1px solid #979ca0;
@@ -255,23 +324,31 @@ input[name=pattern], input[name=passKeys], .exclusionHeaderText {
   z-index: 10;
 }
 
-#footer, #footerTable, #footerTableData {
+#footer,
+#footerTable,
+#footerTableData {
   width: 100%;
 }
 
-#helpText, #versionAndOptions {
+#helpText,
+#versionAndOptions {
   font-size: 12px;
 }
+
 #saveOptionsTableData {
   float: right;
 }
-#saveOptions, #exclusionAddButton {
+
+#saveOptions,
+#exclusionAddButton {
   white-space: nowrap;
   width: 110px;
 }
+
 #backupLink {
   cursor: pointer;
 }
+
 input#uploadBackup {
   max-width: 400px;
 }
