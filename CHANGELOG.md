@@ -1,3 +1,8 @@
+2.1.3 (unreleased)
+
+- Add findSelected and findSelectedBackwards commands.
+  ([#4502](https://github.com/philc/vimium/pull/4502))
+
 2.1.2 (2024-04-03)
 
 - Better fix for Vomnibar doesn't always list tabs by recency.
