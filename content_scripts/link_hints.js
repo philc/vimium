@@ -1136,8 +1136,8 @@ const LocalHints = {
         const ruleSplit = jsactionRule.trim().split(":");
         if ((ruleSplit.length >= 1) && (ruleSplit.length <= 2)) {
           const [eventType, namespace, actionName] = ruleSplit.length === 1
-            ? ["click", ...ruleSplit[0].trim().split("."), "_"]
-            : [ruleSplit[0], ...ruleSplit[1].trim().split("."), "_"];
+            ? ["click", ...ruleSplit[0].trim().split("."), ""]
+            : [ruleSplit[0], ...ruleSplit[1].trim().split("."), ""];
           if (!isClickable) {
             isClickable = (eventType === "click") && (namespace !== "none") && (actionName !== "_");
           }
