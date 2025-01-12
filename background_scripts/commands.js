@@ -372,6 +372,8 @@ const Commands = {
     "scrollToLeft",
     "scrollToRight",
     "moveTabToNewWindow",
+    "findSelected",
+    "findSelectedBackwards",
     "goUp",
     "goToRoot",
     "LinkHints.activateModeWithQueue",
