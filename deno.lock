@@ -2,7 +2,6 @@
   "version": "4",
   "specifiers": {
     "jsr:@b-fuze/deno-dom@~0.1.48": "0.1.48",
-    "jsr:@philc/shoulda@2": "2.0.0",
     "jsr:@std/cli@^1.0.8": "1.0.9",
     "jsr:@std/encoding@^1.0.5": "1.0.6",
     "jsr:@std/fmt@^1.0.3": "1.0.3",
@@ -19,9 +18,6 @@
   "jsr": {
     "@b-fuze/deno-dom@0.1.48": {
       "integrity": "bf5b591aef2e9e9c59adfcbb93a9ecd45bab5b7c8263625beafa5c8f1662e7da"
-    },
-    "@philc/shoulda@2.0.0": {
-      "integrity": "2bc8b2eb9e5dee41fcd77760b009d3b3527980edf5b29cbf9f25443489a5faa9"
     },
     "@std/cli@1.0.9": {
       "integrity": "557e5865af000efbf3f737dcfea5b8ab86453594f4a9cd8d08c9fa83d8e3f3bc"
@@ -639,7 +635,6 @@
   "workspace": {
     "dependencies": [
       "jsr:@b-fuze/deno-dom@~0.1.48",
-      "jsr:@philc/shoulda@2",
       "jsr:@std/fs@^1.0.8",
       "jsr:@std/http@^1.0.12",
       "jsr:@std/path@^1.0.8",

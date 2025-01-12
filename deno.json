@@ -4,7 +4,6 @@
   },
   "imports": {
     "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@^0.1.48",
-    "@philc/shoulda": "jsr:@philc/shoulda@^2.0.0",
     "@std/fs": "jsr:@std/fs@^1.0.8",
     "@std/http": "jsr:@std/http@^1.0.12",
     "@std/path": "jsr:@std/path@^1.0.8",

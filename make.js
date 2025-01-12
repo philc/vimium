@@ -5,7 +5,9 @@ import * as fs from "@std/fs";
 import * as path from "@std/path";
 import { abort, desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
 import puppeteer from 'npm:puppeteer';
-import * as shoulda from "@philc/shoulda";
+// We use a vendored version of shoulda, rather than jsr:@philc/shoulda, because shoulda.js is used
+// in dom_tests.js which is loaded by Puppeteer, which doesn't have access to Deno's module system.
+import * as shoulda from "./tests/vendor/shoulda.js";
 import JSON5 from "npm:json5";
 import { DOMParser } from "@b-fuze/deno-dom";
 import * as fileServer from "@std/http/file-server";
