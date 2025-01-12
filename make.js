@@ -163,7 +163,7 @@ const runUnitTests = async () => {
     }
   }
 
-  return await shoulda.run();
+  return await globalThis.shoulda.run();
 };
 
 function setupPuppeteerPageForTests(page) {

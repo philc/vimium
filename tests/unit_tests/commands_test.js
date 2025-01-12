@@ -84,6 +84,11 @@ context("parseKeyMappingConfig", () => {
     assert.equal("scrollDown", keyToRegistryEntry["a"]?.command);
   });
 
+  should("handle map statements and parse options replacing %20 with space", () => {
+    const { keyToRegistryEntry } = Commands.parseKeyMappingsConfig("map a Vomnibar.activate query=foo%20bar");
+    assert.equal({ query: "foo bar" }, keyToRegistryEntry["a"]?.options);
+  });
+
   should("ignore mappings for unknown commands", () => {
     assert.equal({}, Commands.parseKeyMappingsConfig("map a unknownCommand").keyToRegistryEntry);
   });
