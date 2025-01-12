@@ -213,20 +213,20 @@ const NormalModeCommands = {
     }
   },
 
-  findSelected() {
-    let selection = window.getSelection().toString();
+  findSelectedHelper(backwards) {
+    const selection = window.getSelection().toString();
     if (!selection) return;
     FindMode.updateQuery(selection);
     FindMode.saveQuery();
-    return FindMode.findNext(false);
+    return FindMode.findNext(backwards);
+  },
+
+  findSelected() {
+    findSelectedHelper(false);
   },
 
   findSelectedBackwards() {
-    let selection = window.getSelection().toString();
-    if (!selection) return;
-    FindMode.updateQuery(selection);
-    FindMode.saveQuery();
-    return FindMode.findNext(true);
+    findSelectedHelper(true);
   },
 
   // Misc.

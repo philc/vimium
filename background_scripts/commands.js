@@ -533,7 +533,7 @@ const commandDescriptions = {
   performFind: ["Cycle forward to the next find match"],
   performBackwardsFind: ["Cycle backward to the previous find match"],
   findSelected: ["Find the selected text"],
-  findSelectedBackwards: ["Find the selected text backwards"],
+  findSelectedBackwards: ["Find the selected text, searching backwards"],
 
   goPrevious: ["Follow the link labeled previous or <", { noRepeat: true }],
   goNext: ["Follow the link labeled next or >", { noRepeat: true }],

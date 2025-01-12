@@ -88,6 +88,9 @@ class FindMode extends Mode {
       options = {};
     }
 
+    // TODO(philc): I don't think this.query is ever used/accessed, because it's only accessed from
+    // static methods. Consider splitting the static portions of this class into a separate class
+    // called FindModeSingleton. Blending the two together is confusing.
     this.query = {
       rawQuery: "",
       parsedQuery: "",
@@ -156,7 +159,7 @@ class FindMode extends Mode {
       this.query = {};
     }
     this.query.rawQuery = query;
-    // the query can be treated differently (e.g. as a plain string versus regex depending on the
+    // the query can be treated differently (e.g. as a plain string versus regex) depending on the
     // presence of escape sequences. '\' is the escape character and needs to be escaped itself to
     // be used as a normal character. here we grep for the relevant escape sequences.
     this.query.isRegex = Settings.get("regexFindMode");
