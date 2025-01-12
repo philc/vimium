@@ -1204,11 +1204,11 @@ const LocalHints = {
     // # Detect elements with "click" listeners installed with `addEventListener()`.
     // isClickable ||= element.hasAttribute "_vimium-has-onclick-listener"
 
-    // An element with a class name containing the text "button" might be clickable. However, real
+    // An element with a class name containing the text "button" or "btn" might be clickable. However, real
     // clickables are often wrapped in elements with such class names. So, when we find clickables
     // based only on their class name, we mark them as unreliable.
-    const className = element.getAttribute("class");
-    if (!isClickable && className?.toLowerCase().includes("button")) {
+    const className = element.getAttribute("class")?.toLowerCase()
+    if (!isClickable && (className?.includes("button") || className?.includes("btn"))) {
       isClickable = true;
       possibleFalsePositive = true;
     }
