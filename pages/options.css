@@ -4,10 +4,7 @@
 }
 
 body {
-  font:
-    14px "DejaVu Sans",
-    "Arial",
-    sans-serif;
+  font: 14px "DejaVu Sans", "Arial", sans-serif;
   color: #303942;
   margin: 0 auto;
 }
@@ -41,9 +38,7 @@ button {
   background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
   border: 1px solid rgba(0, 0, 0, 0.25);
   border-radius: 2px;
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.08),
-    inset 0 1px 2px rgba(255, 255, 255, 0.75);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
   color: #444;
   font: inherit;
   text-shadow: 0 1px 0 #f0f0f0;
@@ -55,9 +50,7 @@ button {
 button:hover {
   background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
   border-color: rgba(0, 0, 0, 0.3);
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.12),
-    inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
   color: black;
 }
 
@@ -72,9 +65,7 @@ button[disabled]:hover,
 button[disabled]:active {
   background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
   border: 1px solid rgba(0, 0, 0, 0.25);
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.08),
-    inset 0 1px 2px rgba(255, 255, 255, 0.75);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
   text-shadow: 0 1px 0 #f0f0f0;
   color: #888;
 }
