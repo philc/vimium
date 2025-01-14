@@ -257,32 +257,44 @@ const Commands = {
   // Build the "helpPageData" data structure which the help page needs and place it in Chrome
   // storage.
   prepareHelpPageData() {
-    const commandToKey = {};
+    /*
+      Map of commands to option sets to keys to trigger that command option set.
+      Commands with no options will have the empty string options set.
+      Example:
+      {
+        "zoomReset": {
+          "": ["z0", "zz"] // No options, with two key maps, ie: `map zz zoomReset`
+        },
+        "setZoom": {
+          "1.1": ["z1"], // `map z1 setZoom 1.1`
+          "1.2": ["z2"], // `map z2 setZoom 1.2`
+        }
+      }
+    */
+    const commandToOptionsToKeys = {};
     for (const key of Object.keys(this.keyToRegistryEntry || {})) {
       const registryEntry = this.keyToRegistryEntry[key];
-      const optionString = registryEntry.optionList?.length > 0
-        ? registryEntry.optionList?.join(" ")
-        : "";
-      if (commandToKey[registryEntry.command] == null) {
-        commandToKey[registryEntry.command] = {};
-      }
-      (commandToKey[registryEntry.command][optionString] != null
-        ? commandToKey[registryEntry.command][optionString]
-        : (commandToKey[registryEntry.command][optionString] = [])).push(key);
+      const optionString = registryEntry.optionList?.join(" ") || "";
+      commandToOptionsToKeys[registryEntry.command] ||= {};
+      commandToOptionsToKeys[registryEntry.command][optionString] ||= [];
+      commandToOptionsToKeys[registryEntry.command][optionString].push(key);
     }
     const commandGroups = {};
     for (const group of Object.keys(this.commandGroups || {})) {
       const commands = this.commandGroups[group];
       commandGroups[group] = [];
       for (const command of commands) {
-        for (const [options, keys] of Object.entries(commandToKey[command] ?? { "": [] })) {
+        // Default to base command has no keys for "show available commands" menu.
+        const optionsToKeys = commandToOptionsToKeys[command] ?? { "": [] };
+        for (const [options, keys] of Object.entries(optionsToKeys)) {
+          const advanced = this.advancedCommands.includes(command) ||
+            this.advancedCommands.includes(`${command} ${options}`);
           commandGroups[group].push({
             command,
             description: this.availableCommands[command].description,
-            keys: keys,
-            advanced: this.advancedCommands.includes(command) ||
-              this.advancedCommands.includes(`${command} ${options}`),
-            options: options,
+            keys,
+            advanced,
+            options,
           });
         }
       }

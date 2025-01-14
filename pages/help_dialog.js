@@ -125,14 +125,16 @@ const HelpDialog = {
           }
 
           const MAX_LENGTH = 50;
+          // - 3 because 3 is the length of the ellipsis string, "..."
           const desiredOptionsLength = Math.max(0, MAX_LENGTH - command.description.length - 3);
-          const optionsTruncated = command.options.substring(0, desiredOptionsLength);
-          let ellipis = "";
+          // If command + options is too long: truncate, add ellipsis, and set hover.
+          let optionsTruncated = command.options.substring(0, desiredOptionsLength);
           if ((command.description.length + command.options.length) > MAX_LENGTH) {
-            ellipis = "...";
+            optionsTruncated += "...";
+            // Full option list (non-ellipsized) will be visible on hover.
             $$(descriptionElement, ".vimiumHelpDescription").title = command.options;
           }
-          const optionsString = command.options ? ` (${optionsTruncated}${ellipis})` : "";
+          const optionsString = command.options ? ` (${optionsTruncated})` : "";
           const fullDescription = `${command.description}${optionsString}`;
           $$(descriptionElement, ".vimiumHelpDescription").textContent = fullDescription;
 
