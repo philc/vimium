@@ -152,5 +152,4 @@ context("Validate commands and options", () => {
       assert.isTrue(Commands.availableCommands[command.command]);
     }
   });
-
 });

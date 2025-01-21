@@ -1,4 +1,6 @@
-:root { --padding: 15px; }
+:root {
+  --padding: 15px;
+}
 
 body {
   /* This will be the size of the toolbar action popup. */
