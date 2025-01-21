@@ -1,4 +1,5 @@
 import "./test_helper.js";
+import "../../background_scripts/tab_recency.js";
 import "../../background_scripts/bg_utils.js";
 import "../../lib/settings.js";
 import "../../lib/keyboard_utils.js";
