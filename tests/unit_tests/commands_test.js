@@ -143,13 +143,6 @@ context("Validate commands and options", () => {
     }
   });
 
-  should("have valid commands for each advanced command", () => {
-    for (const command of Commands.advancedCommands) {
-      assert.equal("string", typeof command);
-      assert.isTrue(Commands.availableCommands[command]);
-    }
-  });
-
   should("have valid commands for each default key mapping", () => {
     const count = Object.keys(Commands.keyToRegistryEntry).length;
     assert.isTrue(0 < count);
@@ -159,14 +152,5 @@ context("Validate commands and options", () => {
       assert.isTrue(Commands.availableCommands[command.command]);
     }
   });
-});
 
-context("Validate advanced commands", () => {
-  should("include each advanced command in a command group", () => {
-    const allCommands = Object.keys(Commands.commandGroups).map((k) => Commands.commandGroups[k])
-      .flat(1);
-    for (const command of Commands.advancedCommands) {
-      assert.isTrue(allCommands.includes(command));
-    }
-  });
 });
