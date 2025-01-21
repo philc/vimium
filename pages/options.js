@@ -72,7 +72,6 @@ const OptionsPage = {
     document.addEventListener("keyup", (event) => {
       const isCtrlEnter = event.ctrlKey && event.keyCode === 13;
       if (isCtrlEnter) {
-        document.activeElement?.blur?.();
         this.saveOptions();
       }
     });
