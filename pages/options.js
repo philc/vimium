@@ -33,6 +33,9 @@ const OptionsPage = {
       // We want to immediately enable the save button when a setting is changed, so we want to use
       // the HTML element's "input" event here rather than the "change" event.
       el.addEventListener("input", () => onUpdated());
+      el.addEventListener("blur", () => {
+        this.showValidationErrors();
+      });
     }
 
     saveOptionsEl.addEventListener("click", () => this.saveOptions());
@@ -148,7 +151,85 @@ const OptionsPage = {
     return settings;
   },
 
+  getValidationErrors() {
+    const results = {};
+    let text, parsed;
+
+    // keyMappings field.
+    text = document.getElementById("keyMappings").value.trim();
+    parsed = Commands.parseKeyMappingsConfig(text);
+    if (parsed.validationErrors.length > 0) {
+      results["keyMappings"] = parsed.validationErrors.join("\n");
+    }
+
+    // searchEngines field.
+    text = document.getElementById("searchEngines").value.trim();
+    parsed = UserSearchEngines.parseConfig(text);
+    if (parsed.validationErrors.length > 0) {
+      results["searchEngines"] = parsed.validationErrors.join("\n");
+    }
+
+    return results;
+  },
+
+  addValidationMessage(el, message) {
+    el.classList.add("validation-error");
+    const exampleEl = el.nextElementSibling;
+    const messageEl = document.createElement("div");
+    messageEl.classList.add("validation-message");
+    messageEl.innerText = message;
+    exampleEl.after(messageEl);
+  },
+
+  // Returns true if there are errors, false otherwise.
+  showValidationErrors() {
+    // Remove all previous validation errors.
+    let els = document.querySelectorAll(".validation-error");
+    for (const el of els) {
+      el.classList.remove("validation-error");
+    }
+    els = document.querySelectorAll(".validation-message");
+    for (const el of els) {
+      el.remove();
+    }
+
+    const errors = this.getValidationErrors();
+    for (const [optionName, message] of Object.entries(errors)) {
+      const el = document.getElementById(optionName);
+      this.addValidationMessage(el, message);
+    }
+
+    const hasErrors = Object.keys(errors).length > 0;
+    return hasErrors;
+  },
+
+  removeDuplicateChars(str) {
+    const seen = new Set();
+    let result = "";
+    for (let char of str) {
+      if (!seen.has(char)) {
+        result += char;
+        seen.add(char);
+      }
+    }
+    return result;
+  },
+
   async saveOptions() {
+    // If linkHintCharacters or linkHintNumbers fields contain duplicate characters, just fix these
+    // fields rather than showing validation errors.
+    for (option of ["linkHintCharacters", "linkHintNumbers"]) {
+      const el = document.getElementById(option);
+      el.value = this.removeDuplicateChars(el.value.trim());
+    }
+
+    const hasErrors = this.showValidationErrors();
+    if (hasErrors) {
+      // TODO(philc): If no fields with validation errors are in view, scroll one of them into view
+      // so it's clear what the issue is.
+      return;
+    }
+
     await Settings.setSettings(this.getSettingsFromForm());
     const el = document.querySelector("#saveOptions");
     el.disabled = true;
@@ -205,7 +286,9 @@ const OptionsPage = {
 document.addEventListener("DOMContentLoaded", async () => {
   await Settings.onLoaded();
   DomUtils.injectUserCss();
+  await Commands.init();
   await OptionsPage.init();
+  OptionsPage.showValidationErrors();
 });
 
 // Exported for use by our tests.

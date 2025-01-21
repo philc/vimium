@@ -1,6 +1,7 @@
 /* This stylesheet is included in both options.html and action.html, so changes affect both. */
 :root {
   --closeButtonWidth: 25px;
+  --validationErrorColor: #ff5300;
 }
 
 body {
@@ -139,6 +140,16 @@ h2 {
 
 .reset-link a {
   text-decoration: none;
+}
+
+.validation-message {
+  color: var(--validationErrorColor);
+}
+
+/* This longer selector is required to take precedence over our dark scheme textarea colors which
+ * are defined in vimium.css. */
+body.vimiumBody textarea.validation-error {
+  border: 2px solid var(--validationErrorColor);
 }
 
 div#exampleKeyMapping {
