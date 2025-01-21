@@ -114,6 +114,21 @@ context("parseKeyMappingConfig", () => {
       Commands.parseKeyMappingsConfig("mapkey a b \n unmap a a").keyToMappedKey,
     );
   });
+
+  should("return validation errors", () => {
+    const getErrors = (config) => Commands.parseKeyMappingsConfig(config).validationErrors;
+    assert.equal(0, getErrors("map a scrollDown").length);
+    // Missing an action (map).
+    assert.equal(1, getErrors("a scrollDown").length);
+    // Invalid action.
+    assert.equal(1, getErrors("invalidAction a scrollDown").length);
+    // Unmap allows only 1 argument.
+    assert.equal(0, getErrors("unmap a").length);
+    assert.equal(1, getErrors("unmap a b").length);
+    // Mapkey requires 2 arguments.
+    assert.equal(0, getErrors("mapkey a b").length);
+    assert.equal(1, getErrors("mapkey a").length);
+  });
 });
 
 context("Validate commands and options", () => {

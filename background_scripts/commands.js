@@ -51,16 +51,13 @@ const Commands = {
 
   // Parses the text supplied by the user in their "keyMappings" setting.
   // - shouldLogWarnings: if true, logs to the console when part of the user's config is invalid.
-  // Returns { keyToRegistryEntry, keyToMappedKey }.
+  // Returns { keyToRegistryEntry, keyToMappedKey, validationErrors }.
   parseKeyMappingsConfig(configText, shouldLogWarnings) {
     let keyToRegistryEntry = {};
     let mapKeyRegistry = {};
+    const errors = [];
 
     const configLines = Utils.parseLines(configText);
-    const logWarning = (...args) => {
-      if (!shouldLogWarnings) return;
-      console.warn.apply(console, args);
-    };
 
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
@@ -70,7 +67,7 @@ const Commands = {
           if (tokens.length >= 3) {
             const [_, key, command, ...optionList] = tokens;
             if (!this.availableCommands[command]) {
-              logWarning(`"${command}" is not a valid command in the line:`, line);
+              errors.push(`"${command}" is not a valid command in the line: ${line}`);
               continue;
             }
             const keySequence = this.parseKeySequence(key);
@@ -87,7 +84,7 @@ const Commands = {
           break;
         case "unmap":
           if (tokens.length != 2) {
-            logWarning("Incorrect usage for unmap in the line:", line);
+            errors.push(`Incorrect usage for unmap in the line: ${line}`);
             continue;
           }
           const key = tokens[1];
@@ -100,7 +97,7 @@ const Commands = {
           break;
         case "mapkey":
           if (tokens.length != 3) {
-            logWarning("Incorrect usage for mapkey in the line:", line);
+            errors.push(`Incorrect usage for mapKey in the line: ${line}`);
             continue;
           }
           const fromChar = this.parseKeySequence(tokens[1]);
@@ -111,20 +108,20 @@ const Commands = {
           if (isValid) {
             mapKeyRegistry[fromChar[0]] = toChar[0];
           } else {
-            logWarning(
-              "mapkey only supports mapping keys which are single characters. Line:",
-              line,
+            errors.push(
+              `mapkey only supports mapping keys which are single characters. Line: ${line}`,
             );
           }
           break;
         default:
-          logWarning(`"${action}" is not a valid config command in line:`, line);
+          errors.push(`"${action}" is not a valid config command in line: ${line}`);
       }
     }
 
     return {
       keyToRegistryEntry,
       keyToMappedKey: mapKeyRegistry,
+      validationErrors: errors,
     };
   },
 
