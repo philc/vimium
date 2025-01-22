@@ -288,7 +288,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   DomUtils.injectUserCss();
   await Commands.init();
   await OptionsPage.init();
-  OptionsPage.showValidationErrors();
 });
 
 // Exported for use by our tests.
