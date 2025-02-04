@@ -62,6 +62,7 @@ const OptionsPage = {
     for (const el of document.querySelectorAll(".reset-link a")) {
       el.addEventListener("click", (event) => {
         this.resetInputValue(event);
+        this.showValidationErrors();
         onUpdated();
       });
     }
