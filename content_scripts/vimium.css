@@ -172,6 +172,7 @@ div#vimiumHelpDialogContainer {
 div#vimiumHelpDialog {
   min-width: 600px;
   padding: 8px 12px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 span#vimiumTitle, span#vimiumTitle span, span#vimiumTitle * {
