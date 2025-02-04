@@ -781,6 +781,11 @@ class LinkHintsMode {
 class AlphabetHints {
   constructor() {
     this.linkHintCharacters = Settings.get("linkHintCharacters").toLowerCase();
+    // Ensure we have more than 1 character to generate hint strings. With 1 character, every hint
+    // will be another hint's prefix ("1", "11", ...).
+    if (this.linkHintCharacters.length <= 1) {
+      throw new Error("The linkHintCharacters setting must have more than 1 character.");
+    }
     this.hintKeystrokeQueue = [];
   }
 
@@ -805,7 +810,6 @@ class AlphabetHints {
   // strings may be of different lengths.
   //
   hintStrings(linkCount) {
-    if (this.linkHintCharacters.length == 0) return [];
     let hints = [""];
     let offset = 0;
     while (((hints.length - offset) < linkCount) || (hints.length === 1)) {
@@ -846,6 +850,12 @@ class AlphabetHints {
 class FilterHints {
   constructor() {
     this.linkHintNumbers = Settings.get("linkHintNumbers").toUpperCase();
+    // Ensure we have more than 1 character to generate hint strings. With 1 character, every hint
+    // will be another hint's prefix ("1", "11", ...).
+    if (this.linkHintNumbers.length <= 1) {
+      throw new Error("The linkHintNumbers setting must have more than 1 character.");
+    }
+
     this.hintKeystrokeQueue = [];
     this.linkTextKeystrokeQueue = [];
     this.activeHintMarker = null;
@@ -1514,5 +1524,6 @@ Object.assign(globalThis, {
   LinkHintsMode,
   LocalHints,
   AlphabetHints,
+  FilterHints,
   WaitForEnter,
 });

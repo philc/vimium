@@ -169,6 +169,22 @@ const OptionsPage = {
       results["searchEngines"] = parsed.validationErrors.join("\n");
     }
 
+    // linkHintCharacters field.
+    text = document.getElementById("linkHintCharacters").value.trim();
+    if (text != this.removeDuplicateChars(text)) {
+      results["linkHintCharacters"] = "This cannot contain duplicate characters.";
+    } else if (text.length <= 1) {
+      results["linkHintCharacters"] = "This must be at least two characters long.";
+    }
+
+    // linkHintNumbers field.
+    text = document.getElementById("linkHintNumbers").value.trim();
+    if (text != this.removeDuplicateChars(text)) {
+      results["linkHintNumbers"] = "This cannot contain duplicate characters.";
+    } else if (text.length <= 1) {
+      results["linkHintNumbers"] = "This must be at least two characters long.";
+    }
+
     return results;
   },
 
@@ -198,7 +214,13 @@ const OptionsPage = {
       const el = document.getElementById(optionName);
       this.addValidationMessage(el, message);
     }
-
+    // Some options can be hidden in the UI. If they have validation errors, force them to be shown.
+    if (errors["linkHintCharacters"]) {
+      this.showElement(document.querySelector("#linkHintCharactersContainer"), true);
+    }
+    if (errors["linkHintNumbers"]) {
+      this.showElement(document.querySelector("#linkHintNumbersContainer"), true);
+    }
     const hasErrors = Object.keys(errors).length > 0;
     return hasErrors;
   },
@@ -216,13 +238,6 @@ const OptionsPage = {
   },
 
   async saveOptions() {
-    // If linkHintCharacters or linkHintNumbers fields contain duplicate characters, just fix these
-    // fields rather than showing validation errors.
-    for (option of ["linkHintCharacters", "linkHintNumbers"]) {
-      const el = document.getElementById(option);
-      el.value = this.removeDuplicateChars(el.value.trim());
-    }
-
     const hasErrors = this.showValidationErrors();
     if (hasErrors) {
       // TODO(philc): If no fields with validation errors are in view, scroll one of them into view
@@ -236,14 +251,27 @@ const OptionsPage = {
     el.textContent = "Saved";
   },
 
+  showElement(el, visible) {
+    el.style.display = visible ? null : "none";
+  },
+
   // Display the UI for link hint numbers vs. characters, depending upon the value of
   // "filterLinkHints".
   maintainLinkHintsView() {
-    const show = (el, visible) => el.style.display = visible ? null : "none";
+    const errors = this.getValidationErrors();
     const isFilteredLinkhints = document.querySelector("#filterLinkHints").checked;
-    show(document.querySelector("#linkHintCharactersContainer"), !isFilteredLinkhints);
-    show(document.querySelector("#linkHintNumbersContainer"), isFilteredLinkhints);
-    show(document.querySelector("#waitForEnterForFilteredHintsContainer"), isFilteredLinkhints);
+    this.showElement(
+      document.querySelector("#linkHintCharactersContainer"),
+      !isFilteredLinkhints || errors["linkHintCharacters"],
+    );
+    this.showElement(
+      document.querySelector("#linkHintNumbersContainer"),
+      isFilteredLinkhints || errors["linkHintNumbers"],
+    );
+    this.showElement(
+      document.querySelector("#waitForEnterForFilteredHintsContainer"),
+      isFilteredLinkhints,
+    );
   },
 
   onDownloadBackupClicked() {
