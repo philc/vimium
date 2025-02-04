@@ -303,7 +303,7 @@ const createLinks = function (n) {
   }
 };
 
-context("Alphabetical link hints", () => {
+context("Alphabet link hints", () => {
   let mode;
   setup(() => {
     initializeModeState();
@@ -361,7 +361,7 @@ context("Alphabetical link hints", () => {
 });
 
 context("Filtered link hints", () => {
-  // Note. In all of these tests, the order of the elements returned by getHintMarkerEls() may be
+  // In all of these tests, the order of the elements returned by getHintMarkerEls() may be
   // different from the order they are listed in the test HTML content. This is because
   // LinkHints.activateMode() sorts the elements.
 
