@@ -8,7 +8,7 @@ class SuppressPrintable extends Mode {
     super.init(options);
     const handler = (event) =>
       KeyboardUtils.isPrintable(event) ? this.suppressEvent : this.continueBubbling;
-    const type = DomUtils.getSelectionType();
+    const initialType = globalThis.getSelection().type;
 
     // We use unshift here, so we see events after normal mode, so we only see unmapped keys.
     this.unshift({
@@ -19,7 +19,7 @@ class SuppressPrintable extends Mode {
         // If the selection type has changed (usually, no longer "Range"), then the user is
         // interacting with the input element, so we get out of the way. See discussion of option 5c
         // from #1415.
-        if (DomUtils.getSelectionType() !== type) {
+        if (globalThis.getSelection().type !== initialType) {
           return this.exit();
         }
       },
@@ -401,12 +401,13 @@ const getCurrentRange = function () {
     range.setStart(document.body, 0);
     range.setEnd(document.body, 0);
     return range;
-  } else {
-    if (selection.type === "Range") {
-      selection.collapseToStart();
-    }
-    return selection.getRangeAt(0);
+  } 
+
+  if (selection.type === "Range") {
+    selection.collapseToStart();
   }
+
+  return selection.getRangeAt(0);
 };
 
 const getLinkFromSelection = function () {
