@@ -396,13 +396,13 @@ FindMode.restoreDefaultSelectionHighlight = forTrusted(() =>
 
 const getCurrentRange = function () {
   const selection = getSelection();
-  if (DomUtils.getSelectionType(selection) === "None") {
+  if (selection.type === "None") {
     const range = document.createRange();
     range.setStart(document.body, 0);
     range.setEnd(document.body, 0);
     return range;
   } else {
-    if (DomUtils.getSelectionType(selection) === "Range") {
+    if (selection.type === "Range") {
       selection.collapseToStart();
     }
     return selection.getRangeAt(0);
