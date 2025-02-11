@@ -355,7 +355,7 @@ iframe.vimiumHUDFrame {
   display: block;
   position: fixed;
   width: 20%;
-  min-width: 300px;
+  min-width: 350px;
   height: 58px;
   bottom: -14px;
   right: 20px;
