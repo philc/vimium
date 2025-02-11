@@ -9,6 +9,10 @@ context("With insufficient link characters", () => {
     await Settings.onLoaded();
   });
 
+  teardown(async () => {
+    await Settings.clear();
+  });
+
   should("throw error in AlphabetHints", async () => {
     await Settings.set("linkHintCharacters", "ab");
     new AlphabetHints();

@@ -7,8 +7,8 @@ context("settings", () => {
     await chrome.storage.sync.set({ scrollStepSize: JSON.stringify(123) });
   });
 
-  teardown(() => {
-    Settings.clear();
+  teardown(async () => {
+    await Settings.clear();
   });
 
   should("Run v2.0.0 migration when loading settings", async () => {
