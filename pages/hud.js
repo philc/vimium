@@ -68,6 +68,16 @@ function onKeyEvent(event) {
   return false;
 }
 
+// Navigator.clipboard is only available in secure contexts. Show a warning when clipboard actions
+// fail on non-HTTPS sites. See #4572.
+function ensureClipboardIsAvailable() {
+  if (!navigator.clipboard) {
+    UIComponentServer.postMessage({ name: "showClipboardUnavailableMessage" });
+    return false;
+  }
+  return true;
+}
+
 const handlers = {
   show(data) {
     document.getElementById("hud").innerText = data.text;
@@ -152,6 +162,7 @@ const handlers = {
   },
 
   copyToClipboard(message) {
+    if (!this.ensureClipboardIsAvailable()) return;
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
@@ -169,6 +180,7 @@ const handlers = {
   },
 
   pasteFromClipboard() {
+    if (!this.ensureClipboardIsAvailable()) return;
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
