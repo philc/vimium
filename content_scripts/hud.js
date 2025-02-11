@@ -20,6 +20,19 @@ const HUD = {
   // limitation of our HUD display is that it doesn't sit on top of horizontal scrollbars like
   // Chrome's HUD does.
 
+  handleUIComponentMessage({ data }) {
+    const handlers = {
+      hideFindMode: this.hideFindMode,
+      search: this.search,
+      unfocusIfFocused: this.unfocusIfFocused,
+      paseResponse: this.pasteResponse,
+    };
+    const handler = handlers[data.name];
+    if (handler) {
+      return handler.bind(this)(data);
+    }
+  },
+
   async init(focusable) {
     await Settings.onLoaded();
     if (focusable == null) {
@@ -27,11 +40,11 @@ const HUD = {
     }
     if (this.hudUI == null) {
       const queryString = globalThis.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
-      this.hudUI = new UIComponent(`pages/hud.html${queryString}`, "vimiumHUDFrame", ({ data }) => {
-        if (this[data.name]) {
-          return this[data.name](data);
-        }
-      });
+      this.hudUI = new UIComponent(
+        `pages/hud.html${queryString}`,
+        "vimiumHUDFrame",
+        this.handleUIComponentMessage.bind(this),
+      );
       // Allow to access to the clipboard through iframes.
       // This is only valid/necessary for Chrome. Firefox will show this console warning:
       // 'Feature Policy: Skipping unsupported feature name "clipboard-read"'
