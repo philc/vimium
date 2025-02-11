@@ -2,6 +2,12 @@
 
 - Add findSelected and findSelectedBackwards commands.
   ([#4502](https://github.com/philc/vimium/pull/4502))
+- Add commands zoomIn, zoomOut, zoomReset (zi, zo, z0), and setZoom.
+  ([#4488](https://github.com/philc/vimium/pull/4488))
+- Add "reload hard" command (bound to R). ([#4445](https://github.com/philc/vimium/pull/4445)).
+- Options page: improve UX, add error validation.
+- Make tab commands handle Firefox hidden tabs.
+- Bug fixes.
 
 2.1.2 (2024-04-03)
 
