@@ -6,7 +6,7 @@ let findMode = null;
 const TIME_TO_WAIT_FOR_IPC_MESSAGES = 17;
 
 // Set the input element's text, and move the cursor to the end.
-const setTextInInputElement = function (inputElement, text) {
+function setTextInInputElement(inputElement, text) {
   inputElement.textContent = text;
   // Move the cursor to the end. Based on one of the solutions here:
   // http://stackoverflow.com/questions/1125292/how-to-move-cursor-to-end-of-contenteditable-entity
@@ -16,15 +16,9 @@ const setTextInInputElement = function (inputElement, text) {
   const selection = globalThis.getSelection();
   selection.removeAllRanges();
   selection.addRange(range);
-};
+}
 
-// Manually inject custom user styles.
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss();
-});
-
-const onKeyEvent = function (event) {
+function onKeyEvent(event) {
   // Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK
   // translation (see #2915 and #2934).
   let rawQuery;
@@ -72,10 +66,7 @@ const onKeyEvent = function (event) {
 
   DomUtils.suppressEvent(event);
   return false;
-};
-
-document.addEventListener("keydown", onKeyEvent);
-document.addEventListener("keypress", onKeyEvent);
+}
 
 const handlers = {
   show(data) {
@@ -194,6 +185,15 @@ const handlers = {
     });
   },
 };
+
+// Manually inject custom user styles.
+document.addEventListener("DOMContentLoaded", async () => {
+  await Settings.onLoaded();
+  DomUtils.injectUserCss();
+});
+
+document.addEventListener("keydown", onKeyEvent);
+document.addEventListener("keypress", onKeyEvent);
 
 UIComponentServer.registerHandler(async function ({ data }) {
   await Utils.populateBrowserInfo();

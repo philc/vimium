@@ -26,6 +26,7 @@ const HUD = {
       search: this.search,
       unfocusIfFocused: this.unfocusIfFocused,
       paseResponse: this.pasteResponse,
+      showClipboardUnavailableMessage: this.showClipboardUnavailableMessage,
     };
     const handler = handlers[data.name];
     if (handler) {
@@ -210,6 +211,16 @@ const HUD = {
       this.hudUI.iframeElement.blur();
       globalThis.focus();
     }
+  },
+
+  // Navigator.clipboard is only available in secure contexts. Show a warning when clipboard actions
+  // fail on non-HTTPS sites. See #4572.
+  showClipboardUnavailableMessage() {
+    DomUtils.documentComplete(async () => {
+      await this.init();
+      // Since the message is long and surprising, show it for longer to allow more time to reading.
+      this.show("Clipboard actions available only on HTTPS sites", 4000);
+    });
   },
 };
 
