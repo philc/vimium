@@ -62,35 +62,43 @@ class Movement {
     // Native word movements behave differently on Linux and Windows, see #1441. So we implement
     // some of them character-by-character.
     if ((granularity === vimword) && (direction === forward)) {
+      // extent selection to the end of the 'vimword'
       while (this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
       }
+      // extend selection after the 'vimword' to position before next word
       while (this.getNextForwardCharacter() && !this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
       }
+      return;
     } else if (granularity === vimword) {
       this.selection.modify(this.alterMethod, backward, word);
+      return;
     }
 
     // As above, we implement this character-by-character to get consistent behavior on Windows and
     // Linux.
     if ((granularity === word) && (direction === forward)) {
+      // extent selection to the start of the next 'word' (non-word characters, e.g. whitespace)
       while (this.getNextForwardCharacter() && !this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
       }
+      // extend selection to the end of the 'word'
       while (this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
       }
+      return;
     } else {
-      return this.selection.modify(this.alterMethod, direction, granularity);
+      this.selection.modify(this.alterMethod, direction, granularity);
+      return;
     }
   }
 
