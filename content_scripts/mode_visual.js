@@ -74,9 +74,10 @@ class Movement {
           return;
         }
       }
-      return;
-    } else if (granularity === vimword) {
-      this.selection.modify(this.alterMethod, backward, word);
+      // in Caret Mode collapse selection to the end
+      if (this.alterMethod === "move") {
+        this.selection.collapseToEnd();
+      }
       return;
     }
 
@@ -94,6 +95,10 @@ class Movement {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
+      }
+      // in Caret Mode collapse selection to the end
+      if (this.alterMethod === "move") {
+        this.selection.collapseToEnd();
       }
       return;
     } else {
