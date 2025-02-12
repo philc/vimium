@@ -148,16 +148,20 @@ class Movement {
   }
 
   collapseSelectionToAnchor() {
-    if (this.selection.toString().length > 0) {
-      return this.selection
-        [this.getDirection() === backward ? "collapseToEnd" : "collapseToStart"]();
+    if (this.selection.toString().length == 0) return;
+    if (this.getDirection() === backward) {
+      this.selection.collapseToEnd();
+    } else {
+      this.selection.collapseToStart();
     }
   }
 
   collapseSelectionToFocus() {
-    if (this.selection.toString().length > 0) {
-      return this.selection
-        [this.getDirection() === forward ? "collapseToEnd" : "collapseToStart"]();
+    if (this.selection.toString().length == 0) return;
+    if (this.getDirection() === forward) {
+      this.selection.collapseToEnd();
+    } else {
+      this.selection.collapseToStart();
     }
   }
 
