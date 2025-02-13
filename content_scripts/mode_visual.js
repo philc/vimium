@@ -84,7 +84,7 @@ class Movement {
     // As above, we implement this character-by-character to get consistent behavior on Windows and
     // Linux.
     if ((granularity === word) && (direction === forward)) {
-      // Extent selection to the start of the next 'word' (non-word characters, e.g. whitespace).
+      // Extend selection to the start of the next 'word' (non-word characters, e.g. whitespace).
       while (this.getNextForwardCharacter() && !this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
