@@ -1,16 +1,16 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-net --allow-run
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-env --allow-net --allow-run --allow-sys
 // Usage: ./make.js command. Use -l to list commands.
 // This is a set of tasks for building and testing Vimium in development.
-import * as fs from "https://deno.land/std@0.122.0/fs/mod.ts";
-import * as fsCopy from "https://deno.land/std@0.122.0/fs/copy.ts";
-import * as path from "https://deno.land/std@0.136.0/path/mod.ts";
+import * as fs from "@std/fs";
+import * as path from "@std/path";
 import { abort, desc, run, task } from "https://deno.land/x/drake@v1.5.1/mod.ts";
-import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
+import puppeteer from "npm:puppeteer";
+// We use a vendored version of shoulda, rather than jsr:@philc/shoulda, because shoulda.js is used
+// in dom_tests.js which is loaded by Puppeteer, which doesn't have access to Deno's module system.
 import * as shoulda from "./tests/vendor/shoulda.js";
-import JSON5 from "https://deno.land/x/json5@v1.0.0/mod.ts";
-import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
-import * as fileServer from "https://deno.land/std@0.208.0/http/file_server.ts";
-import { getAvailablePort } from "https://deno.land/x/port/mod.ts";
+import JSON5 from "npm:json5";
+import { DOMParser } from "@b-fuze/deno-dom";
+import * as fileServer from "@std/http/file-server";
 
 const projectPath = new URL(".", import.meta.url).pathname;
 
@@ -237,8 +237,40 @@ task("test-unit", [], async () => {
   }
 });
 
+function isPortAvailable(number) {
+  try {
+    const listener = Deno.listen({ port: number });
+    listener.close();
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function getAvailablePort() {
+  const min = 7000;
+  const max = 65535;
+  let count = 0;
+  const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  let port = getRandomInt(min, max);
+  while (!isPortAvailable(port) && count < max - min) {
+    port++;
+    if (port > max) {
+      port = min;
+    }
+    if (isPortAvailable(port)) {
+      return port;
+    }
+    count++;
+    if (count >= max - min) {
+      throw new Error(`No port is available in the range ${min} - ${max}`);
+    }
+  }
+  return port;
+}
+
 async function testDom() {
-  const port = await getAvailablePort();
+  const port = getAvailablePort();
   let served404 = false;
   const httpServer = Deno.serve({ port }, async (req) => {
     const url = new URL(req.url);

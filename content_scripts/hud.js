@@ -20,18 +20,32 @@ const HUD = {
   // limitation of our HUD display is that it doesn't sit on top of horizontal scrollbars like
   // Chrome's HUD does.
 
+  handleUIComponentMessage({ data }) {
+    const handlers = {
+      hideFindMode: this.hideFindMode,
+      search: this.search,
+      unfocusIfFocused: this.unfocusIfFocused,
+      paseResponse: this.pasteResponse,
+      showClipboardUnavailableMessage: this.showClipboardUnavailableMessage,
+    };
+    const handler = handlers[data.name];
+    if (handler) {
+      return handler.bind(this)(data);
+    }
+  },
+
   async init(focusable) {
     await Settings.onLoaded();
     if (focusable == null) {
       focusable = true;
     }
     if (this.hudUI == null) {
-      const queryString = window.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
-      this.hudUI = new UIComponent(`pages/hud.html${queryString}`, "vimiumHUDFrame", ({ data }) => {
-        if (this[data.name]) {
-          return this[data.name](data);
-        }
-      });
+      const queryString = globalThis.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
+      this.hudUI = new UIComponent(
+        `pages/hud.html${queryString}`,
+        "vimiumHUDFrame",
+        this.handleUIComponentMessage.bind(this),
+      );
       // Allow to access to the clipboard through iframes.
       // This is only valid/necessary for Chrome. Firefox will show this console warning:
       // 'Feature Policy: Skipping unsupported feature name "clipboard-read"'
@@ -133,7 +147,7 @@ const HUD = {
     // An element won't receive a focus event if the search landed on it while we were in the HUD
     // iframe. To end up with the correct modes active, we create a focus/blur event manually after
     // refocusing this window.
-    window.focus();
+    globalThis.focus();
 
     const focusNode = DomUtils.getSelectionFocusElement();
     if (document.activeElement != null) {
@@ -195,8 +209,18 @@ const HUD = {
     // means keyboard events will always be dispatched to the HUD iframe
     if (this.hudUI && this.hudUI.showing) {
       this.hudUI.iframeElement.blur();
-      window.focus();
+      globalThis.focus();
     }
+  },
+
+  // Navigator.clipboard is only available in secure contexts. Show a warning when clipboard actions
+  // fail on non-HTTPS sites. See #4572.
+  showClipboardUnavailableMessage() {
+    DomUtils.documentComplete(async () => {
+      await this.init();
+      // Since the message is long and surprising, show it for longer to allow more time to reading.
+      this.show("Clipboard actions available only on HTTPS sites", 4000);
+    });
   },
 };
 
@@ -259,4 +283,4 @@ ${this.cssSelector} {
   }
 }
 
-window.HUD = HUD;
+globalThis.HUD = HUD;

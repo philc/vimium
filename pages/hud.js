@@ -6,25 +6,19 @@ let findMode = null;
 const TIME_TO_WAIT_FOR_IPC_MESSAGES = 17;
 
 // Set the input element's text, and move the cursor to the end.
-const setTextInInputElement = function (inputElement, text) {
+function setTextInInputElement(inputElement, text) {
   inputElement.textContent = text;
   // Move the cursor to the end. Based on one of the solutions here:
   // http://stackoverflow.com/questions/1125292/how-to-move-cursor-to-end-of-contenteditable-entity
   const range = document.createRange();
   range.selectNodeContents(inputElement);
   range.collapse(false);
-  const selection = window.getSelection();
+  const selection = globalThis.getSelection();
   selection.removeAllRanges();
   selection.addRange(range);
-};
+}
 
-// Manually inject custom user styles.
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss();
-});
-
-const onKeyEvent = function (event) {
+function onKeyEvent(event) {
   // Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK
   // translation (see #2915 and #2934).
   let rawQuery;
@@ -72,10 +66,17 @@ const onKeyEvent = function (event) {
 
   DomUtils.suppressEvent(event);
   return false;
-};
+}
 
-document.addEventListener("keydown", onKeyEvent);
-document.addEventListener("keypress", onKeyEvent);
+// Navigator.clipboard is only available in secure contexts. Show a warning when clipboard actions
+// fail on non-HTTPS sites. See #4572.
+function ensureClipboardIsAvailable() {
+  if (!navigator.clipboard) {
+    UIComponentServer.postMessage({ name: "showClipboardUnavailableMessage" });
+    return false;
+  }
+  return true;
+}
 
 const handlers = {
   show(data) {
@@ -133,7 +134,7 @@ const handlers = {
       // On Firefox, the page must first be focused before the HUD input element can be focused.
       // #3460.
       if (Utils.isFirefox()) {
-        window.focus();
+        globalThis.focus();
       }
       inputElement.focus();
     });
@@ -161,39 +162,50 @@ const handlers = {
   },
 
   copyToClipboard(message) {
+    if (!this.ensureClipboardIsAvailable()) return;
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
       // the error "DOMException: Document is not focused." is thrown.
-      window.focus();
+      globalThis.focus();
 
       // Replace nbsp; characters with space. See #2217.
       const value = message.data.replace(/\xa0/g, " ");
       await navigator.clipboard.writeText(value);
 
       if (focusedElement != null) focusedElement.focus();
-      window.parent.focus();
+      globalThis.parent.focus();
       UIComponentServer.postMessage({ name: "unfocusIfFocused" });
     });
   },
 
   pasteFromClipboard() {
+    if (!this.ensureClipboardIsAvailable()) return;
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
       // the error "DOMException: Document is not focused." is thrown.
-      window.focus();
+      globalThis.focus();
 
       let value = await navigator.clipboard.readText();
       // Replace nbsp; characters with space. See #2217.
       value = value.replace(/\xa0/g, " ");
 
       if (focusedElement != null) focusedElement.focus();
-      window.parent.focus();
+      globalThis.parent.focus();
       UIComponentServer.postMessage({ name: "pasteResponse", data: value });
     });
   },
 };
+
+// Manually inject custom user styles.
+document.addEventListener("DOMContentLoaded", async () => {
+  await Settings.onLoaded();
+  DomUtils.injectUserCss();
+});
+
+document.addEventListener("keydown", onKeyEvent);
+document.addEventListener("keypress", onKeyEvent);
 
 UIComponentServer.registerHandler(async function ({ data }) {
   await Utils.populateBrowserInfo();

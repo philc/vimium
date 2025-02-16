@@ -113,7 +113,7 @@ class PassNextKeyMode extends Mode {
       name: "pass-next-key",
       indicator: "Pass next key.",
       // We exit on blur because, once we lose the focus, we can no longer track key events.
-      exitOnBlur: window,
+      exitOnBlur: globalThis,
       keypress: () => {
         return this.passEventToPage;
       },
@@ -138,5 +138,5 @@ class PassNextKeyMode extends Mode {
   }
 }
 
-window.InsertMode = InsertMode;
-window.PassNextKeyMode = PassNextKeyMode;
+globalThis.InsertMode = InsertMode;
+globalThis.PassNextKeyMode = PassNextKeyMode;

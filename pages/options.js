@@ -33,6 +33,9 @@ const OptionsPage = {
       // We want to immediately enable the save button when a setting is changed, so we want to use
       // the HTML element's "input" event here rather than the "change" event.
       el.addEventListener("input", () => onUpdated());
+      el.addEventListener("blur", () => {
+        this.showValidationErrors();
+      });
     }
 
     saveOptionsEl.addEventListener("click", () => this.saveOptions());
@@ -59,11 +62,12 @@ const OptionsPage = {
     for (const el of document.querySelectorAll(".reset-link a")) {
       el.addEventListener("click", (event) => {
         this.resetInputValue(event);
+        this.showValidationErrors();
         onUpdated();
       });
     }
 
-    window.onbeforeunload = () => {
+    globalThis.onbeforeunload = () => {
       if (!saveOptionsEl.disabled) {
         return "You have unsaved changes to options.";
       }
@@ -72,7 +76,6 @@ const OptionsPage = {
     document.addEventListener("keyup", (event) => {
       const isCtrlEnter = event.ctrlKey && event.keyCode === 13;
       if (isCtrlEnter) {
-        document.activeElement?.blur?.();
         this.saveOptions();
       }
     });
@@ -86,8 +89,9 @@ const OptionsPage = {
 
   // Invoked when the user clicks the "reset" button next to an option's text field.
   resetInputValue(event) {
-    const parent = event.target.closest("tr");
-    const input = parent.querySelector("input") || parent.querySelector("textarea");
+    const parentDiv = event.target.parentNode.parentNode;
+    console.assert(parentDiv?.tagName == "DIV", "Expected parent to be a div", event.target);
+    const input = parentDiv.querySelector("input") || parentDiv.querySelector("textarea");
     const optionName = input.id;
     const defaultValue = Settings.defaultOptions[optionName];
     input.value = defaultValue;
@@ -148,21 +152,127 @@ const OptionsPage = {
     return settings;
   },
 
+  getValidationErrors() {
+    const results = {};
+    let text, parsed;
+
+    // keyMappings field.
+    text = document.getElementById("keyMappings").value.trim();
+    parsed = Commands.parseKeyMappingsConfig(text);
+    if (parsed.validationErrors.length > 0) {
+      results["keyMappings"] = parsed.validationErrors.join("\n");
+    }
+
+    // searchEngines field.
+    text = document.getElementById("searchEngines").value.trim();
+    parsed = UserSearchEngines.parseConfig(text);
+    if (parsed.validationErrors.length > 0) {
+      results["searchEngines"] = parsed.validationErrors.join("\n");
+    }
+
+    // linkHintCharacters field.
+    text = document.getElementById("linkHintCharacters").value.trim();
+    if (text != this.removeDuplicateChars(text)) {
+      results["linkHintCharacters"] = "This cannot contain duplicate characters.";
+    } else if (text.length <= 1) {
+      results["linkHintCharacters"] = "This must be at least two characters long.";
+    }
+
+    // linkHintNumbers field.
+    text = document.getElementById("linkHintNumbers").value.trim();
+    if (text != this.removeDuplicateChars(text)) {
+      results["linkHintNumbers"] = "This cannot contain duplicate characters.";
+    } else if (text.length <= 1) {
+      results["linkHintNumbers"] = "This must be at least two characters long.";
+    }
+
+    return results;
+  },
+
+  addValidationMessage(el, message) {
+    el.classList.add("validation-error");
+    const exampleEl = el.nextElementSibling;
+    const messageEl = document.createElement("div");
+    messageEl.classList.add("validation-message");
+    messageEl.innerText = message;
+    exampleEl.after(messageEl);
+  },
+
+  // Returns true if there are errors, false otherwise.
+  showValidationErrors() {
+    // Remove all previous validation errors.
+    let els = document.querySelectorAll(".validation-error");
+    for (const el of els) {
+      el.classList.remove("validation-error");
+    }
+    els = document.querySelectorAll(".validation-message");
+    for (const el of els) {
+      el.remove();
+    }
+
+    const errors = this.getValidationErrors();
+    for (const [optionName, message] of Object.entries(errors)) {
+      const el = document.getElementById(optionName);
+      this.addValidationMessage(el, message);
+    }
+    // Some options can be hidden in the UI. If they have validation errors, force them to be shown.
+    if (errors["linkHintCharacters"]) {
+      this.showElement(document.querySelector("#linkHintCharactersContainer"), true);
+    }
+    if (errors["linkHintNumbers"]) {
+      this.showElement(document.querySelector("#linkHintNumbersContainer"), true);
+    }
+    const hasErrors = Object.keys(errors).length > 0;
+    return hasErrors;
+  },
+
+  removeDuplicateChars(str) {
+    const seen = new Set();
+    let result = "";
+    for (let char of str) {
+      if (!seen.has(char)) {
+        result += char;
+        seen.add(char);
+      }
+    }
+    return result;
+  },
+
   async saveOptions() {
+    const hasErrors = this.showValidationErrors();
+    if (hasErrors) {
+      // TODO(philc): If no fields with validation errors are in view, scroll one of them into view
+      // so it's clear what the issue is.
+      return;
+    }
+
     await Settings.setSettings(this.getSettingsFromForm());
     const el = document.querySelector("#saveOptions");
     el.disabled = true;
     el.textContent = "Saved";
   },
 
+  showElement(el, visible) {
+    el.style.display = visible ? null : "none";
+  },
+
   // Display the UI for link hint numbers vs. characters, depending upon the value of
   // "filterLinkHints".
   maintainLinkHintsView() {
-    const show = (el, visible) => el.style.display = visible ? "table-row" : "none";
+    const errors = this.getValidationErrors();
     const isFilteredLinkhints = document.querySelector("#filterLinkHints").checked;
-    show(document.querySelector("#linkHintCharactersContainer"), !isFilteredLinkhints);
-    show(document.querySelector("#linkHintNumbersContainer"), isFilteredLinkhints);
-    show(document.querySelector("#waitForEnterForFilteredHintsContainer"), isFilteredLinkhints);
+    this.showElement(
+      document.querySelector("#linkHintCharactersContainer"),
+      !isFilteredLinkhints || errors["linkHintCharacters"],
+    );
+    this.showElement(
+      document.querySelector("#linkHintNumbersContainer"),
+      isFilteredLinkhints || errors["linkHintNumbers"],
+    );
+    this.showElement(
+      document.querySelector("#waitForEnterForFilteredHintsContainer"),
+      isFilteredLinkhints,
+    );
   },
 
   onDownloadBackupClicked() {
@@ -205,8 +315,9 @@ const OptionsPage = {
 document.addEventListener("DOMContentLoaded", async () => {
   await Settings.onLoaded();
   DomUtils.injectUserCss();
+  await Commands.init();
   await OptionsPage.init();
 });
 
 // Exported for use by our tests.
-window.isVimiumOptionsPage = true;
+globalThis.isVimiumOptionsPage = true;

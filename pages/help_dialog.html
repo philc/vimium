@@ -30,24 +30,30 @@
   </head>
 
   <body>
-<!--
-  This is shown when typing "?". This HTML is loaded by the background page and then populated with the
-  latest keybindings information before displaying.
--->
+    <!--
+      This is shown when typing "?". This HTML is loaded by the background page and then populated
+      with the latest keybindings information before displaying.
+      -->
 
-  <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the background
-       page with the up-to-date key bindings when the dialog is shown. -->
+    <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the
+         background page with the up-to-date key bindings when the dialog is shown. -->
     <div id="vimiumHelpDialogContainer">
       <div id="vimiumHelpDialog">
         <div>
           <table>
             <tr>
               <td>
-                <span id="vimiumTitle"><span style="color:#2f508e">Vim</span>ium <span id="help-dialog-title"></span></span>
+                <span id="vimiumTitle"><span style="color: #2f508e">Vim</span>ium
+                  <span id="help-dialog-title"></span></span>
               </td>
               <td class="vimiumHelpDialogTopButtons">
                 <a class="vimiumHelDialogLink" id="helpDialogOptionsPage" href="#">Options</a>
-                <a class="vimiumHelDialogLink" id="helpDialogWikiPage" href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
+                <a
+                  class="vimiumHelDialogLink"
+                  id="helpDialogWikiPage"
+                  href="https://github.com/philc/vimium/wiki"
+                  target="_blank"
+                >Wiki</a>
                 <a class="closeButton" href="#">&times;</a>
               </td>
             </tr>
@@ -57,32 +63,55 @@
         <div class="vimiumColumn">
           <table>
             <thead>
-              <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Navigating the page</td></tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td class="vimiumHelpSectionTitle">Navigating the page</td>
+              </tr>
             </thead>
-            <tbody id="help-dialog-pageNavigation">
-            </tbody>
+            <tbody id="help-dialog-pageNavigation"></tbody>
           </table>
         </div>
         <div class="vimiumColumn">
-          <table >
+          <table>
             <thead>
-            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Using the vomnibar</td></tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td class="vimiumHelpSectionTitle">Using the vomnibar</td>
+              </tr>
             </thead>
             <tbody id="help-dialog-vomnibarCommands"></tbody>
             <thead>
-            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Using find</td></tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td class="vimiumHelpSectionTitle">Using find</td>
+              </tr>
             </thead>
             <tbody id="help-dialog-findCommands"></tbody>
             <thead>
-            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Navigating history</td></tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td class="vimiumHelpSectionTitle">Navigating history</td>
+              </tr>
             </thead>
             <tbody id="help-dialog-historyNavigation"></tbody>
             <thead>
-            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Manipulating tabs</td></tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td class="vimiumHelpSectionTitle">Manipulating tabs</td>
+              </tr>
             </thead>
             <tbody id="help-dialog-tabManipulation"></tbody>
             <thead>
-            <tr><td></td><td></td><td class="vimiumHelpSectionTitle">Miscellaneous</td></tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td class="vimiumHelpSectionTitle">Miscellaneous</td>
+              </tr>
             </thead>
             <tbody id="help-dialog-misc"></tbody>
           </table>
@@ -101,25 +130,35 @@
           </table>
         </div>
 
-        <br clear="both"/>
+        <br clear="both" />
         <div class="vimiumDivider"></div>
 
         <div id="vimiumHelpDialogFooter">
           <div class="vimiumColumn">
             Enjoying Vimium?
-            <a class="vimiumHelDialogLink" target="_blank"
-              href="https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb/reviews">Leave us
-                  feedback</a>.<br/>
-            Found a bug? <a class="vimiumHelDialogLink" target="_blank" href="https://github.com/philc/vimium/issues">Report it here</a>.
+            <a
+              class="vimiumHelDialogLink"
+              target="_blank"
+              href="https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb/reviews"
+            >Leave us feedback</a>.<br>
+            Found a bug? <a
+              class="vimiumHelDialogLink"
+              target="_blank"
+              href="https://github.com/philc/vimium/issues"
+            >Report it here</a>.
           </div>
-          <div class="vimiumColumn" style="text-align:right">
-            <span>Version <span id="help-dialog-version"></span></span><br/>
-            <a href="https://github.com/philc/vimium/blob/master/CHANGELOG.md" target="_blank" class="vimiumHelDialogLink">What's new?</a>
+          <div class="vimiumColumn" style="text-align: right">
+            <span>Version <span id="help-dialog-version"></span></span>
+            <br>
+            <a
+              href="https://github.com/philc/vimium/blob/master/CHANGELOG.md"
+              target="_blank"
+              class="vimiumHelDialogLink"
+            >What's new?</a>
           </div>
         </div>
       </div>
     </div>
-
 
     <template id="helpDialogEntry">
       <tr>
@@ -135,10 +174,14 @@
       </tr>
     </template>
 
-    <template id="keysTemplate"><span><span class="vimiumHelpDialogKey"></span><span class="commaSeparator">, </span></span></template>
+    <template id="keysTemplate"><span><span class="vimiumHelpDialogKey"></span><span
+          class="commaSeparator"
+        >,
+        </span></span></template>
 
     <template id="commandNameTemplate">
-      <span class="vimiumCopyCommandName">(<span class="vimiumCopyCommandNameName" role="link"></span>)</span>
+      <span class="vimiumCopyCommandName"
+      >(<span class="vimiumCopyCommandNameName" role="link"></span>)</span>
     </template>
   </body>
 </html>

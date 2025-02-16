@@ -27,7 +27,7 @@ const ActionPage = {
           // We close the action page because if the user clicks on this button once, clicks "deny"
           // on the browser's permissions dialog, and then clicks on the button a second time, the
           // browser permissions dialog will now be shown *under* the action page!
-          window.close();
+          globalThis.close();
         });
         document.querySelector("#firefoxMissingPermissionsError").style.display = "block";
         return;
@@ -45,7 +45,7 @@ const ActionPage = {
     const saveOptionsEl = document.querySelector("#saveOptions");
     saveOptionsEl.addEventListener("click", (e) => this.onSave());
 
-    document.querySelector("#cancel").addEventListener("click", () => window.close());
+    document.querySelector("#cancel").addEventListener("click", () => globalThis.close());
 
     const onUpdated = () => {
       saveOptionsEl.disabled = false;

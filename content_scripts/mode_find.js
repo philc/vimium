@@ -8,7 +8,7 @@ class SuppressPrintable extends Mode {
     super.init(options);
     const handler = (event) =>
       KeyboardUtils.isPrintable(event) ? this.suppressEvent : this.continueBubbling;
-    const type = DomUtils.getSelectionType();
+    const initialType = globalThis.getSelection().type;
 
     // We use unshift here, so we see events after normal mode, so we only see unmapped keys.
     this.unshift({
@@ -19,7 +19,7 @@ class SuppressPrintable extends Mode {
         // If the selection type has changed (usually, no longer "Range"), then the user is
         // interacting with the input element, so we get out of the way. See discussion of option 5c
         // from #1415.
-        if (DomUtils.getSelectionType() !== type) {
+        if (globalThis.getSelection().type !== initialType) {
           return this.exit();
         }
       },
@@ -88,6 +88,9 @@ class FindMode extends Mode {
       options = {};
     }
 
+    // TODO(philc): I don't think this.query is ever used/accessed, because it's only accessed from
+    // static methods. Consider splitting the static portions of this class into a separate class
+    // called FindModeSingleton. Blending the two together is confusing.
     this.query = {
       rawQuery: "",
       parsedQuery: "",
@@ -100,8 +103,8 @@ class FindMode extends Mode {
     FindMode.query = { rawQuery: "" };
 
     if (options.returnToViewport) {
-      this.scrollX = window.scrollX;
-      this.scrollY = window.scrollY;
+      this.scrollX = globalThis.scrollX;
+      this.scrollY = globalThis.scrollY;
     }
 
     super.init(Object.assign(options, {
@@ -152,8 +155,11 @@ class FindMode extends Mode {
 
   static updateQuery(query) {
     let pattern;
+    if (!this.query) {
+      this.query = {};
+    }
     this.query.rawQuery = query;
-    // the query can be treated differently (e.g. as a plain string versus regex depending on the
+    // the query can be treated differently (e.g. as a plain string versus regex) depending on the
     // presence of escape sequences. '\' is the escape character and needs to be escaped itself to
     // be used as a normal character. here we grep for the relevant escape sequences.
     this.query.isRegex = Settings.get("regexFindMode");
@@ -209,7 +215,7 @@ class FindMode extends Mode {
   static updateActiveRegexIndices() {
     let activeNodeIndex = -1;
     const matchedNodes = this.query.regexMatchedNodes;
-    const selection = window.getSelection();
+    const selection = globalThis.getSelection();
     if (selection.rangeCount > 0) {
       activeNodeIndex = matchedNodes.indexOf(selection.anchorNode);
 
@@ -342,11 +348,11 @@ class FindMode extends Mode {
     document.body.classList.remove("vimiumFindMode");
     // Removing the class does not re-color existing selections. we recreate the current selection
     // so it reverts back to the default color.
-    const selection = window.getSelection();
+    const selection = globalThis.getSelection();
     if (!selection.isCollapsed) {
-      const range = window.getSelection().getRangeAt(0);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(range);
+      const range = globalThis.getSelection().getRangeAt(0);
+      globalThis.getSelection().removeAllRanges();
+      globalThis.getSelection().addRange(range);
     }
     return focusFoundLink() || selectFoundInputElement();
   }
@@ -379,7 +385,7 @@ class FindMode extends Mode {
 
   checkReturnToViewPort() {
     if (this.options.returnToViewport) {
-      window.scrollTo(this.scrollX, this.scrollY);
+      globalThis.scrollTo(this.scrollX, this.scrollY);
     }
   }
 }
@@ -390,21 +396,22 @@ FindMode.restoreDefaultSelectionHighlight = forTrusted(() =>
 
 const getCurrentRange = function () {
   const selection = getSelection();
-  if (DomUtils.getSelectionType(selection) === "None") {
+  if (selection.type === "None") {
     const range = document.createRange();
     range.setStart(document.body, 0);
     range.setEnd(document.body, 0);
     return range;
-  } else {
-    if (DomUtils.getSelectionType(selection) === "Range") {
-      selection.collapseToStart();
-    }
-    return selection.getRangeAt(0);
+  } 
+
+  if (selection.type === "Range") {
+    selection.collapseToStart();
   }
+
+  return selection.getRangeAt(0);
 };
 
 const getLinkFromSelection = function () {
-  let node = window.getSelection().anchorNode;
+  let node = globalThis.getSelection().anchorNode;
   while (node && (node !== document.body)) {
     if (node.nodeName.toLowerCase() === "a") {
       return node;
@@ -457,7 +464,7 @@ const highlight = (textNode, startIndex, length) => {
   if (startIndex === -1) {
     return false;
   }
-  const selection = window.getSelection();
+  const selection = globalThis.getSelection();
   const range = document.createRange();
   range.setStart(textNode, startIndex);
   range.setEnd(textNode, startIndex + length);
@@ -466,10 +473,10 @@ const highlight = (textNode, startIndex, length) => {
 
   // Ensure the highlighted element is visible within the viewport.
   const rect = range.getBoundingClientRect();
-  if (rect.top < 0 || rect.bottom > window.innerHeight) {
-    const screenHeight = window.innerHeight;
-    window.scrollTo({
-      top: window.scrollY + rect.top + rect.height / 2 - screenHeight / 2,
+  if (rect.top < 0 || rect.bottom > globalThis.innerHeight) {
+    const screenHeight = globalThis.innerHeight;
+    globalThis.scrollTo({
+      top: globalThis.scrollY + rect.top + rect.height / 2 - screenHeight / 2,
       behavior: "smooth",
     });
   }
@@ -483,7 +490,10 @@ const getAllTextNodes = () => {
   function getAllTextNodes(node) {
     if (node.nodeType === Node.TEXT_NODE) {
       textNodes.push(node);
-    } else if (node.nodeType === Node.ELEMENT_NODE && node.checkVisibility()) {
+    } else if (
+      node.nodeType === Node.ELEMENT_NODE &&
+      (node.checkVisibility() || node.style.display === "contents")
+    ) {
       const children = node.childNodes;
       for (const child of children) {
         getAllTextNodes(child, textNodes);
@@ -495,5 +505,5 @@ const getAllTextNodes = () => {
   return textNodes;
 };
 
-window.PostFindMode = PostFindMode;
-window.FindMode = FindMode;
+globalThis.PostFindMode = PostFindMode;
+globalThis.FindMode = FindMode;

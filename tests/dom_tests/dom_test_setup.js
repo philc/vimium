@@ -1,10 +1,10 @@
-window.vimiumDomTestsAreRunning = true;
+globalThis.vimiumDomTestsAreRunning = true;
 
 import * as shoulda from "../vendor/shoulda.js";
 
 // Attach shoulda's functions -- like setup, context, should -- to the global namespace.
-Object.assign(window, shoulda);
-window.shoulda = shoulda;
+Object.assign(globalThis, shoulda);
+globalThis.shoulda = shoulda;
 
 document.addEventListener("DOMContentLoaded", async () => {
   isEnabledForUrl = true;

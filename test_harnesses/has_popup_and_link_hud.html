@@ -2,79 +2,82 @@
   This page when loaded causes Chrome to show both its "link" and "popup blocked" HUDs.
   (mouse over the giant link to see the link HUD)
   -->
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-  "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
-<head>
-  <title>Link and popup HUD</title>
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <style type="text/css" media="screen">
-    body {
-      height:900px;
-      width:800px;
-    }
+  <head>
+    <title>Link and popup HUD</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style type="text/css" media="screen">
+      body {
+        height: 900px;
+        width: 800px;
+      }
 
-    #biglink {
-      display:block;
-      width:400px;
-      height:400px;
-      background-color:#123456;
-      float:left;
-    }
+      #biglink {
+        display: block;
+        width: 400px;
+        height: 400px;
+        background-color: #123456;
+        float: left;
+      }
 
-    #hud {
-      position:fixed;
-      bottom:0px;
-      color:black;
-/*      right:150px;*/
-      right:315px;
-      height:13px;
-      max-width:400px;
-      min-width:150px;
-      text-align:left;
-      background-color:#ebebeb;
-      font-weight:normal;
-      font-size:11px;
-      padding:3px 3px 2px 3px;
-      border:1px solid #b3b3b3;
-      font-family:"Lucida Grande", Arial, Sans;
-      z-index:99999999999;
-      text-shadow:0px 1px 2px #FFF;
-      line-height:1.0;
+      #hud {
+        position: fixed;
+        bottom: 0px;
+        color: black;
+        /*      right:150px;*/
+        right: 315px;
+        height: 13px;
+        max-width: 400px;
+        min-width: 150px;
+        text-align: left;
+        background-color: #ebebeb;
+        font-weight: normal;
+        font-size: 11px;
+        padding: 3px 3px 2px 3px;
+        border: 1px solid #b3b3b3;
+        font-family: "Lucida Grande", Arial, Sans;
+        z-index: 99999999999;
+        text-shadow: 0px 1px 2px #fff;
+        line-height: 1.0;
 
-      border-radius:4px 4px 0 0;
-    }
-    #hud a, #hud a:hover { color: blue; }
-    #hud .close-button {
-      font-family:"courier new";
-      font-weight:bold;
-      color:#9C9A9A;
-      text-decoration:none;
-      padding-left:10px;
-      font-size:14px;
-    }
-    #hud .close-button:hover {
-      color:#333333;
-      cursor:default;
-      -webkit-user-select:none;
-    }
+        border-radius: 4px 4px 0 0;
+      }
+      #hud a, #hud a:hover {
+        color: blue;
+      }
+      #hud .close-button {
+        font-family: "courier new";
+        font-weight: bold;
+        color: #9c9a9a;
+        text-decoration: none;
+        padding-left: 10px;
+        font-size: 14px;
+      }
+      #hud .close-button:hover {
+        color: #333333;
+        cursor: default;
+        -webkit-user-select: none;
+      }
+    </style>
 
-  </style>
+    <script>
+      // Trigger Chrome's popup HUD. It's inside the URL bar.
+      window.open("https://www.google.com");
+    </script>
+  </head>
+  <body>
+    <h2>Loading and popup HUD</h2>
+    <a
+      id="biglink"
+      href="http://ninjawords.com/thisShouldEventuallyGetTruncatedBecauseItsAReallyLongLink,very,long,indeed"
+    >Big link</a>
 
-  <script>
-    // Trigger the popup warning.
-    window.open("http://www.google.com");
-  </script>
-
-</head>
-<body>
-  <h2>Loading and popup HUD</h2>
-  <a id="biglink" href="http://ninjawords.com/thisShouldEventuallyGetTruncatedBecauseItsAReallyLongLink,very,long,indeed">Big link</a>
-
-  <input type="text" name="some_name" value="" id="some_name"/>
-  <!-- <div id="hud">Pop-ups Blocked</div> -->
-  <div id="hud">Vimium has been updated to 1.14.
-  <a href="#">See the changes</a>.
-  <span class="close-button" href="#">x</div>
-</body>
+    <input type="text" name="some_name" value="" id="some_name" />
+    <div id="hud">
+      Vimium has been updated to 1.14.
+      <a href="#">See the changes</a>.
+      <span class="close-button" href="#">x</span>
+    </div>
+  </body>
 </html>

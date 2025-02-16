@@ -1,5 +1,6 @@
 import "./test_helper.js";
 import "../../lib/settings.js";
+import "../../lib/url_utils.js";
 
 context("extractQuery", () => {
   should("extract queries from search URLs", () => {
@@ -164,7 +165,7 @@ context("UserSearchEngines", () => {
       " w: http://wikipedia.org/%s",
     ].join("\n");
 
-    const results = UserSearchEngines.parseConfig(config);
+    const results = UserSearchEngines.parseConfig(config).keywordToEngine;
 
     assert.equal(
       {
@@ -181,5 +182,16 @@ context("UserSearchEngines", () => {
       },
       results,
     );
+  });
+
+  should("return validation errors", () => {
+    const getErrors = (config) => UserSearchEngines.parseConfig(config).validationErrors;
+    assert.equal(0, getErrors("g: http://google.com").length);
+    // Missing colon.
+    assert.equal(1, getErrors("g http://google.com").length);
+    // Not enough tokens.
+    assert.equal(1, getErrors("g:").length);
+    // Invalid search engine URL.
+    assert.equal(1, getErrors("g: invalid-url").length);
   });
 });

@@ -24,6 +24,14 @@ context("Brave completion", () => {
   });
 });
 
+context("Kagi completion", () => {
+  should("parses results", () => {
+    const response = JSON.stringify([{ t: "one" }, { t: "two" }]);
+    const results = new Engines.Kagi().parse(response);
+    assert.equal(["one", "two"], results);
+  });
+});
+
 context("DuckDuckGo completion", () => {
   should("parses results", () => {
     const response = JSON.stringify([

@@ -29,9 +29,9 @@ context("marks", () => {
   should("goto a mark when its tab exists", async () => {
     await createMark({ markName: "A" }, { id: 1 });
     const tab = { url: "http://example.com" };
-    stub(window.chrome.tabs, "get", (id) => id == 1 ? tab : null);
+    stub(globalThis.chrome.tabs, "get", (id) => id == 1 ? tab : null);
     const updatedTabs = [];
-    stub(window.chrome.tabs, "update", (id, properties) => updatedTabs[id] = properties);
+    stub(globalThis.chrome.tabs, "update", (id, properties) => updatedTabs[id] = properties);
     await Marks.goto({ markName: "A" });
     assert.isTrue(updatedTabs[1] && updatedTabs[1].active);
   });
@@ -39,12 +39,12 @@ context("marks", () => {
   should("find a new tab if a mark's tab no longer exists", async () => {
     await createMark({ markName: "A" }, { id: 1 });
     const tab = { url: "http://example.com", id: 2 };
-    stub(window.chrome.tabs, "get", (_id) => {
+    stub(globalThis.chrome.tabs, "get", (_id) => {
       throw new Error();
     });
-    stub(window.chrome.tabs, "query", (_) => [tab]);
+    stub(globalThis.chrome.tabs, "query", (_) => [tab]);
     const updatedTabs = [];
-    stub(window.chrome.tabs, "update", (id, properties) => updatedTabs[id] = properties);
+    stub(globalThis.chrome.tabs, "update", (id, properties) => updatedTabs[id] = properties);
     await Marks.goto({ markName: "A" });
     assert.isTrue(updatedTabs[2] && updatedTabs[2].active);
   });

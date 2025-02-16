@@ -208,8 +208,8 @@ const HintCoordinator = {
     chrome.runtime.sendMessage({
       handler: "prepareToActivateLinkHintsMode",
       modeIndex: availableModes.indexOf(mode),
-      isVimiumHelpDialog: window.isVimiumHelpDialog,
-      isVimiumOptionsPage: window.isVimiumOptionsPage,
+      isVimiumHelpDialog: globalThis.isVimiumHelpDialog,
+      isVimiumOptionsPage: globalThis.isVimiumOptionsPage,
     });
   },
 
@@ -223,7 +223,7 @@ const HintCoordinator = {
     // If link hints is launched within the help dialog, then we only offer hints from that frame.
     // This improves the usability of the help dialog on the options page (particularly for
     // selecting command names).
-    if (isVimiumHelpDialog && !window.isVimiumHelpDialog) {
+    if (isVimiumHelpDialog && !globalThis.isVimiumHelpDialog) {
       this.localHints = [];
     } else {
       this.localHints = LocalHints.getLocalHints(requireHref);
@@ -659,13 +659,13 @@ class LinkHintsMode {
       }
     }
 
-    const newMarkers = []
+    const newMarkers = [];
     for (let stack of stacks) {
       if (stack.length > 1) {
         // Push the last element to the beginning.
-        stack = stack.splice(-1, 1).concat(stack)
+        stack = stack.splice(-1, 1).concat(stack);
       }
-      newMarkers.push(...stack)
+      newMarkers.push(...stack);
     }
     this.hintMarkers = newMarkers;
     this.renderHints();
@@ -696,7 +696,7 @@ class LinkHintsMode {
           } else if (localHint.reason === "Open.") {
             return clickEl.open = !clickEl.open;
           } else if (DomUtils.isSelectable(clickEl)) {
-            window.focus();
+            globalThis.focus();
             return DomUtils.simulateSelect(clickEl);
           } else {
             const clickActivator = (modifiers) => (link) => DomUtils.simulateClick(link, modifiers);
@@ -781,6 +781,11 @@ class LinkHintsMode {
 class AlphabetHints {
   constructor() {
     this.linkHintCharacters = Settings.get("linkHintCharacters").toLowerCase();
+    // Ensure we have more than 1 character to generate hint strings. With 1 character, every hint
+    // will be another hint's prefix ("1", "11", ...).
+    if (this.linkHintCharacters.length <= 1) {
+      throw new Error("The linkHintCharacters setting must have more than 1 character.");
+    }
     this.hintKeystrokeQueue = [];
   }
 
@@ -805,7 +810,6 @@ class AlphabetHints {
   // strings may be of different lengths.
   //
   hintStrings(linkCount) {
-    if (this.linkHintCharacters.length == 0) return [];
     let hints = [""];
     let offset = 0;
     while (((hints.length - offset) < linkCount) || (hints.length === 1)) {
@@ -846,6 +850,12 @@ class AlphabetHints {
 class FilterHints {
   constructor() {
     this.linkHintNumbers = Settings.get("linkHintNumbers").toUpperCase();
+    // Ensure we have more than 1 character to generate hint strings. With 1 character, every hint
+    // will be another hint's prefix ("1", "11", ...).
+    if (this.linkHintNumbers.length <= 1) {
+      throw new Error("The linkHintNumbers setting must have more than 1 character.");
+    }
+
     this.hintKeystrokeQueue = [];
     this.linkTextKeystrokeQueue = [];
     this.activeHintMarker = null;
@@ -1173,7 +1183,7 @@ const LocalHints = {
         break;
       case "body":
         isClickable ||= (element === document.body) && !windowIsFocused() &&
-            (window.innerWidth > 3) && (window.innerHeight > 3) &&
+            (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
             ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
               "frameset")
           ? (reason = "Frame.")
@@ -1507,12 +1517,13 @@ class HoverMode extends Mode {
   }
 }
 
-Object.assign(window, {
+Object.assign(globalThis, {
   LinkHints,
   HintCoordinator,
   // Exported for tests.
   LinkHintsMode,
   LocalHints,
   AlphabetHints,
+  FilterHints,
   WaitForEnter,
 });

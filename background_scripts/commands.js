@@ -51,26 +51,23 @@ const Commands = {
 
   // Parses the text supplied by the user in their "keyMappings" setting.
   // - shouldLogWarnings: if true, logs to the console when part of the user's config is invalid.
-  // Returns { keyToRegistryEntry, keyToMappedKey }.
+  // Returns { keyToRegistryEntry, keyToMappedKey, validationErrors }.
   parseKeyMappingsConfig(configText, shouldLogWarnings) {
     let keyToRegistryEntry = {};
     let mapKeyRegistry = {};
+    const errors = [];
 
     const configLines = Utils.parseLines(configText);
-    const logWarning = (...args) => {
-      if (!shouldLogWarnings) return;
-      console.warn.apply(console, args);
-    };
 
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
-      const command = tokens[0].toLowerCase();
-      switch (command) {
+      const action = tokens[0].toLowerCase();
+      switch (action) {
         case "map":
           if (tokens.length >= 3) {
             const [_, key, command, ...optionList] = tokens;
             if (!this.availableCommands[command]) {
-              logWarning(`"${command}" is not a valid command in the line:`, line);
+              errors.push(`"${command}" is not a valid command in the line: ${line}`);
               continue;
             }
             const keySequence = this.parseKeySequence(key);
@@ -87,7 +84,7 @@ const Commands = {
           break;
         case "unmap":
           if (tokens.length != 2) {
-            logWarning("Incorrect usage for unmap in the line:", line);
+            errors.push(`Incorrect usage for unmap in the line: ${line}`);
             continue;
           }
           const key = tokens[1];
@@ -100,7 +97,7 @@ const Commands = {
           break;
         case "mapkey":
           if (tokens.length != 3) {
-            logWarning("Incorrect usage for mapkey in the line:", line);
+            errors.push(`Incorrect usage for mapKey in the line: ${line}`);
             continue;
           }
           const fromChar = this.parseKeySequence(tokens[1]);
@@ -111,20 +108,20 @@ const Commands = {
           if (isValid) {
             mapKeyRegistry[fromChar[0]] = toChar[0];
           } else {
-            logWarning(
-              "mapkey only supports mapping keys which are single characters. Line:",
-              line,
+            errors.push(
+              `mapkey only supports mapping keys which are single characters. Line: ${line}`,
             );
           }
           break;
         default:
-          logWarning(`"${command}" is not a valid config command in line:`, line);
+          errors.push(`"${action}" is not a valid config command in line: ${line}`);
       }
     }
 
     return {
       keyToRegistryEntry,
       keyToMappedKey: mapKeyRegistry,
+      validationErrors: errors,
     };
   },
 
@@ -257,24 +254,46 @@ const Commands = {
   // Build the "helpPageData" data structure which the help page needs and place it in Chrome
   // storage.
   prepareHelpPageData() {
-    const commandToKey = {};
+    /*
+      Map of commands to option sets to keys to trigger that command option set.
+      Commands with no options will have the empty string options set.
+      Example:
+      {
+        "zoomReset": {
+          "": ["z0", "zz"] // No options, with two key maps, ie: `map zz zoomReset`
+        },
+        "setZoom": {
+          "1.1": ["z1"], // `map z1 setZoom 1.1`
+          "1.2": ["z2"], // `map z2 setZoom 1.2`
+        }
+      }
+    */
+    const commandToOptionsToKeys = {};
     for (const key of Object.keys(this.keyToRegistryEntry || {})) {
       const registryEntry = this.keyToRegistryEntry[key];
-      (commandToKey[registryEntry.command] != null
-        ? commandToKey[registryEntry.command]
-        : (commandToKey[registryEntry.command] = [])).push(key);
+      const optionString = registryEntry.optionList?.join(" ") || "";
+      commandToOptionsToKeys[registryEntry.command] ||= {};
+      commandToOptionsToKeys[registryEntry.command][optionString] ||= [];
+      commandToOptionsToKeys[registryEntry.command][optionString].push(key);
     }
     const commandGroups = {};
     for (const group of Object.keys(this.commandGroups || {})) {
       const commands = this.commandGroups[group];
       commandGroups[group] = [];
       for (const command of commands) {
-        commandGroups[group].push({
-          command,
-          description: this.availableCommands[command].description,
-          keys: commandToKey[command] != null ? commandToKey[command] : [],
-          advanced: this.advancedCommands.includes(command),
-        });
+        // Default to base command has no keys for "show available commands" menu.
+        const optionsToKeys = commandToOptionsToKeys[command] ?? { "": [] };
+        for (const [options, keys] of Object.entries(optionsToKeys)) {
+          const advanced = this.advancedCommands.includes(command) ||
+            this.advancedCommands.includes(`${command} ${options}`);
+          commandGroups[group].push({
+            command,
+            description: this.availableCommands[command].description,
+            keys,
+            advanced,
+            options,
+          });
+        }
       }
     }
     chrome.storage.session.set({ helpPageData: commandGroups });
@@ -297,7 +316,6 @@ const Commands = {
       "scrollToLeft",
       "scrollToRight",
       "reload",
-      "hardReload",
       "copyCurrentUrl",
       "openCopiedUrlInCurrentTab",
       "openCopiedUrlInNewTab",
@@ -331,7 +349,13 @@ const Commands = {
       "Vomnibar.activateEditUrl",
       "Vomnibar.activateEditUrlInNewTab",
     ],
-    findCommands: ["enterFindMode", "performFind", "performBackwardsFind"],
+    findCommands: [
+      "enterFindMode",
+      "performFind",
+      "performBackwardsFind",
+      "findSelected",
+      "findSelectedBackwards",
+    ],
     historyNavigation: ["goBack", "goForward"],
     tabManipulation: [
       "createTab",
@@ -374,6 +398,8 @@ const Commands = {
     "mergeTabToExistingWindowOnRight",
     "mergeTabToExistingWindowAbove",
     "mergeTabToExistingWindowBelow",
+    "findSelected",
+    "findSelectedBackwards",
     "goUp",
     "goToRoot",
     "LinkHints.activateModeWithQueue",
@@ -394,11 +420,11 @@ const Commands = {
     "enterVisualLineMode",
     "toggleViewSource",
     "passNextKey",
-    "hardReload",
     "setZoom",
     "zoomIn",
     "zoomOut",
     "zoomReset",
+    "reload hard",
   ],
 };
 
@@ -417,7 +443,7 @@ const defaultKeyMappings = {
   "d": "scrollPageDown",
   "u": "scrollPageUp",
   "r": "reload",
-  "R": "hardReload",
+  "R": "reload hard",
   "yy": "copyCurrentUrl",
   "p": "openCopiedUrlInCurrentTab",
   "P": "openCopiedUrlInNewTab",
@@ -442,6 +468,8 @@ const defaultKeyMappings = {
   "/": "enterFindMode",
   "n": "performFind",
   "N": "performBackwardsFind",
+  "*": "findSelected",
+  "#": "findSelectedBackwards",
 
   // Vomnibar
   "o": "Vomnibar.activate",
@@ -511,7 +539,6 @@ const commandDescriptions = {
   scrollFullPageUp: ["Scroll a full page up"],
 
   reload: ["Reload the page", { background: true }],
-  hardReload: ["Hard reload the page", { background: true }],
   toggleViewSource: ["View page source", { noRepeat: true }],
 
   copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }],
@@ -536,6 +563,8 @@ const commandDescriptions = {
   enterFindMode: ["Enter find mode", { noRepeat: true }],
   performFind: ["Cycle forward to the next find match"],
   performBackwardsFind: ["Cycle backward to the previous find match"],
+  findSelected: ["Find the selected text"],
+  findSelectedBackwards: ["Find the selected text, searching backwards"],
 
   goPrevious: ["Follow the link labeled previous or <", { noRepeat: true }],
   goNext: ["Follow the link labeled next or >", { noRepeat: true }],
@@ -580,9 +609,9 @@ const commandDescriptions = {
   moveTabLeft: ["Move tab to the left", { background: true }],
   moveTabRight: ["Move tab to the right", { background: true }],
 
-  setZoom: ["Set zoom level to a given value. E.g. map zz setZoom 1.5", { background: true }],
-  zoomIn: ["Increase zoom", { background: true }],
-  zoomOut: ["Decrease zoom", { background: true }],
+  setZoom: ["Set zoom", { background: true }],
+  zoomIn: ["Zoom in", { background: true }],
+  zoomOut: ["Zoom out", { background: true }],
   zoomReset: ["Reset zoom", { background: true }],
 
   "Vomnibar.activate": ["Open URL, bookmark or history entry", { topFrame: true }],
