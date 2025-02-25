@@ -523,13 +523,18 @@ class SearchEngineCompleter {
     CompletionSearch.cancel();
   }
 
-  // TODO(philc): Consider moving to UserSearchEngines
-  getUserSearchEngineForQuery(query) {
-    const parts = query.trimStart().split(/\s+/);
+  // Returns the UserSearchEngine for the given query. Returns null if the query does not begin with
+  // a keyword from one of the user's search engines.
+  getUserSearchEngineForQuery() {
+    const parts = this.input.value.trimStart().split(/\s+/);
     // For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
-    if (parts.length <= 1) return;
     const keyword = parts[0];
-    return UserSearchEngines.keywordToEngine[keyword];
+    if (parts.length <= 1) return null;
+    // Don't match queries for built-in properties like "constructor". See #4396.
+    if (Object.hasOwn(UserSearchEngines.keywordToEngine, keyword)) {
+      return UserSearchEngines.keywordToEngine[keyword];
+    }
+    return null;
   }
 
   refresh() {

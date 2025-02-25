@@ -383,13 +383,19 @@ class VomnibarUI {
     return this.update();
   }
 
-  // Returns the UserSearchEngine for the given Vomnibar input. Returns null if the Vomnibar does
-  // not start with a keyword from one of the user's search engines.
+  // Returns the UserSearchEngine for the given query. Returns null if the query does not begin with
+  // a keyword from one of the user's search engines.
   getUserSearchEngineForQuery() {
     // This logic is duplicated from SearchEngineCompleter.getEngineForQueryPrefix
     const parts = this.input.value.trimStart().split(/\s+/);
+    // For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
     const keyword = parts[0];
-    return parts.length > 1 ? UserSearchEngines.keywordToEngine[keyword] : null;
+    if (parts.length <= 1) return null;
+    // Don't match queries for built-in properties like "constructor". See #4396.
+    if (Object.hasOwn(UserSearchEngines.keywordToEngine, keyword)) {
+      return UserSearchEngines.keywordToEngine[keyword];
+    }
+    return null;
   }
 
   queryIsCustomSearch() {

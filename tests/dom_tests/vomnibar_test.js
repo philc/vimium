@@ -69,4 +69,15 @@ context("vomnibar", () => {
     assert.equal("launchSearchQuery", handler);
     assert.equal("example", query);
   });
+
+  // This test covers #4396.
+  should("not treat javascript keywords as user-defined search engines", async () => {
+    const instance = new Vomnibar();
+    await instance.activate();
+    const ui = instance.vomnibarUI;
+    ui.setQuery("constructor "); // "constructor" is a built-in JS property
+    ui.onInput();
+    // The query should not be treated as a user search engine.
+    assert.equal("constructor ", ui.input.value);
+  });
 });
