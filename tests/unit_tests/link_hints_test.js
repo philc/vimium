@@ -26,5 +26,4 @@ context("With insufficient link characters", () => {
     await Settings.set("linkHintNumbers", "1");
     assert.throwsError(() => new FilterHints(), "Error");
   });
-
 });
