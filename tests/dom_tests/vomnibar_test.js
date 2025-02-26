@@ -1,6 +1,7 @@
 import { assert, context, setup, should, stub } from "../vendor/shoulda.js";
 import * as shoulda from "../vendor/shoulda.js";
 import "../../lib/chrome_api_stubs.js";
+import "../../background_scripts/completion.js";
 import { Vomnibar } from "../../pages/vomnibar.js";
 
 globalThis.shoulda = shoulda;
@@ -40,6 +41,22 @@ context("vomnibar", () => {
     });
     await ui.onKeyEvent(newKeyEvent({ key: "Escape" }));
     assert.equal(true, wasHidden);
+  });
+
+  should("edit a completion's URL when ctrl-enter is pressed", async () => {
+    stub(chrome.runtime, "sendMessage", async (message) => {
+      if (message.handler == "filterCompletions") {
+        const s = new Suggestion({ url: "http://hello.com" });
+        return [s];
+      }
+    });
+    const instance = new Vomnibar();
+    await instance.activate();
+    const ui = instance.vomnibarUI;
+    await ui.onKeyEvent(newKeyEvent({ type: "keydown", key: "up" }));
+    // TODO(philc): Why does this need to be lowercase enter?
+    await ui.onKeyEvent(newKeyEvent({ type: "keypress", ctrlKey: true, key: "enter" }));
+    assert.equal("http://hello.com", ui.input.value);
   });
 
   should("open a URL-like query when enter is pressed", async () => {
