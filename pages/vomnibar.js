@@ -156,7 +156,7 @@ class VomnibarUI {
   // complexity.
   actionFromKeyEvent(event) {
     const key = KeyboardUtils.getKeyChar(event);
-    // Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK
+    // Handle <Enter> on "keypress", and other events on "keydown". This avoids interence with CJK
     // translation (see #2915 and #2934).
     if ((event.type === "keypress") && (key !== "enter")) return null;
     if ((event.type === "keydown") && (key === "enter")) return null;
@@ -223,10 +223,10 @@ class VomnibarUI {
     } else if (action === "ctrl-enter") {
       // Populate the vomnibar with the current selection's URL.
       if (!this.isUserSearchEngineActive() && (this.selection >= 0)) {
-        if (this.previousInputValue == null) this.previousInputValue = this.input.value;
-        this.input.value = this.completions[this.selection] != null
-          ? this.completions[this.selection].url
-          : undefined;
+        if (this.previousInputValue == null) {
+          this.previousInputValue = this.input.value;
+        }
+        this.input.value = this.completions[this.selection]?.url;
         this.input.scrollLeft = this.input.scrollWidth;
       }
     } else if (action === "delete") {
