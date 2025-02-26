@@ -5,16 +5,21 @@ import { Vomnibar } from "../../pages/vomnibar.js";
 
 globalThis.shoulda = shoulda;
 
-const keyEvent = {
-  type: "keydown",
-  key: "a",
-  ctrlKey: false,
-  shiftKey: false,
-  altKey: false,
-  metaKey: false,
-  stopImmediatePropagation: function () {},
-  preventDefault: function () {},
-};
+function newKeyEvent(properties) {
+  return Object.assign(
+    {
+      type: "keydown",
+      key: "a",
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      metaKey: false,
+      stopImmediatePropagation: function () {},
+      preventDefault: function () {},
+    },
+    properties,
+  );
+}
 
 context("vomnibar", () => {
   setup(() => {
@@ -33,7 +38,7 @@ context("vomnibar", () => {
     stub(UIComponentServer, "postMessage", (message) => {
       wasHidden = message == "hide";
     });
-    await ui.onKeyEvent(Object.assign(keyEvent, { key: "Escape" }));
+    await ui.onKeyEvent(newKeyEvent({ key: "Escape" }));
     assert.equal(true, wasHidden);
   });
 
@@ -48,7 +53,7 @@ context("vomnibar", () => {
       handler = message.handler;
       url = message.url;
     });
-    await ui.onKeyEvent(Object.assign(keyEvent, { type: "keypress", key: "Enter" }));
+    await ui.onKeyEvent(newKeyEvent({ type: "keypress", key: "Enter" }));
     assert.equal("openUrlInCurrentTab", handler);
     assert.equal("www.example.com", url);
   });
@@ -64,7 +69,7 @@ context("vomnibar", () => {
       handler = message.handler;
       query = message.query;
     });
-    await ui.onKeyEvent(Object.assign(keyEvent, { type: "keypress", key: "Enter" }));
+    await ui.onKeyEvent(newKeyEvent({ type: "keypress", key: "Enter" }));
     ui.onHidden();
     assert.equal("launchSearchQuery", handler);
     assert.equal("example", query);
