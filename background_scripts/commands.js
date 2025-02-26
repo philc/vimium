@@ -346,6 +346,7 @@ const Commands = {
       "Vomnibar.activateBookmarks",
       "Vomnibar.activateBookmarksInNewTab",
       "Vomnibar.activateTabSelection",
+      "Vomnibar.restoreSession",
       "Vomnibar.activateEditUrl",
       "Vomnibar.activateEditUrlInNewTab",
     ],
@@ -607,6 +608,7 @@ const commandDescriptions = {
   "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", {
     topFrame: true,
   }],
+  "Vomnibar.restoreSession": ["Restore a recently closed session", { topFrame: true }],
 
   nextFrame: ["Select the next frame on the page", { background: true }],
   mainFrame: ["Select the page's main/top frame", { topFrame: true, noRepeat: true }],

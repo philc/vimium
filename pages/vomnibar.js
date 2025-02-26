@@ -410,6 +410,11 @@ class VomnibarUI {
   openCompletion(completion, openInNewTab) {
     if (completion.description == "tab") {
       chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: completion.tabId });
+    } else if (completion.description == "session") {
+      chrome.runtime.sendMessage({
+        handler: "restoreSession",
+        id: completion.sessionId,
+      });
     } else {
       this.launchUrl(completion.url, openInNewTab);
     }
