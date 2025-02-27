@@ -1,10 +1,9 @@
-import { assert, context, setup, should, stub } from "../vendor/shoulda.js";
+import { assert, context, setup, should, stub, teardown } from "../vendor/shoulda.js";
 import * as shoulda from "../vendor/shoulda.js";
-import "../../lib/chrome_api_stubs.js";
+import * as jsdom from "npm:jsdom";
+import "../../tests/unit_tests/test_chrome_stubs.js"
 import "../../background_scripts/completion.js";
 import { Vomnibar } from "../../pages/vomnibar.js";
-
-globalThis.shoulda = shoulda;
 
 function newKeyEvent(properties) {
   return Object.assign(
@@ -23,12 +22,21 @@ function newKeyEvent(properties) {
 }
 
 context("vomnibar", () => {
-  setup(() => {
+  setup(async () => {
+    const html = await Deno.readTextFile("pages/vomnibar.html");
+    const w = new jsdom.JSDOM(html).window;
+    globalThis.window = w;
+    globalThis.document = w.document;
     stub(chrome.runtime, "sendMessage", async (message) => {
       if (message.handler == "filterCompletions") {
         return [];
       }
     });
+  });
+
+  teardown(() => {
+    globalThis.window = undefined;
+    globalThis.document = undefined;
   });
 
   should("hide when escape is pressed", async () => {

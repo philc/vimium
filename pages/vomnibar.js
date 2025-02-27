@@ -437,7 +437,7 @@ class VomnibarUI {
     this.completionList = this.box.querySelector("ul");
     this.completionList.style.display = "";
 
-    globalThis.addEventListener("focus", () => this.input.focus());
+    window.addEventListener("focus", () => this.input.focus());
     // A click in the vomnibar itself refocuses the input.
     this.box.addEventListener("click", (event) => {
       this.input.focus();
@@ -468,12 +468,13 @@ function init() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss(); // Manually inject custom user styles.
-});
-
-if (!globalThis.location.search.includes("dom_tests=true")) {
+const testEnv = globalThis.window == null ||
+  globalThis.window.location.search.includes("dom_tests=true");
+if (!testEnv) {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await Settings.onLoaded();
+    DomUtils.injectUserCss(); // Manually inject custom user styles.
+  });
   init();
 }
 
