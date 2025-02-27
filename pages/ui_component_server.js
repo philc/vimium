@@ -19,6 +19,7 @@ var UIComponentServer = {
   ownerPagePort: null,
   handleMessage: null,
 
+  _portOpened: false,
   portOpen(ownerPagePort) {
     this.ownerPagePort = ownerPagePort;
     this.ownerPagePort.onmessage = async (event) => {
@@ -26,7 +27,8 @@ var UIComponentServer = {
         return await this.handleMessage(event);
       }
     };
-    this.registerIsReady();
+    this._portOpened = true;
+    this.dispatchReadyEventWhenReady();
   },
 
   registerHandler(handleMessage) {
@@ -46,24 +48,22 @@ var UIComponentServer = {
   // We require both that the DOM is ready and that the port has been opened before the UI component
   // is ready. These events can happen in either order. We count them, and notify the content script
   // when we've seen both.
-  registerIsReady: (function () {
-    let uiComponentIsReadyCount;
-    if (document.readyState === "loading") {
-      globalThis.addEventListener("DOMContentLoaded", () => UIComponentServer.registerIsReady());
-      uiComponentIsReadyCount = 0;
-    } else {
-      uiComponentIsReadyCount = 1;
-    }
+  _dispatchedReadyEvent: false,
+  dispatchReadyEventWhenReady() {
+    if (this._dispatchedReadyEvent) return;
 
-    return function () {
-      if (++uiComponentIsReadyCount === 2) {
-        if (globalThis.frameId != null) {
-          this.postMessage({ name: "setIframeFrameId", iframeFrameId: globalThis.frameId });
-        }
-        this.postMessage("uiComponentIsReady");
-      }
-    };
-  })(),
+    if (document.readyState === "loading") {
+      globalThis.addEventListener("DOMContentLoaded", () => this.dispatchReadyEventWhenReady());
+      return;
+    }
+    if (!this._portOpened) return;
+
+    if (globalThis.frameId != null) {
+      this.postMessage({ name: "setIframeFrameId", iframeFrameId: globalThis.frameId });
+    }
+    this._dispatchedReadyEvent = true;
+    this.postMessage("uiComponentIsReady");
+  },
 };
 
 globalThis.UIComponentServer = UIComponentServer;
