@@ -208,6 +208,8 @@ const CoreScroller = {
       },
       keyup: (_event) => {
         return handlerStack.alwaysContinueBubbling(() => {
+          // Ignore keyup events from unrelated keys.
+          if (this.lastEvent && this.lastEvent.key != event.key) return;
           this.keyIsDown = false;
           this.time += 1;
         });
