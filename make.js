@@ -287,7 +287,7 @@ async function testDom() {
     }
   });
 
-  const files = ["dom_tests.html", "vomnibar_test.html"];
+  const files = ["dom_tests.html"];
   const browser = await puppeteer.launch();
   let success = true;
   for (const file of files) {
