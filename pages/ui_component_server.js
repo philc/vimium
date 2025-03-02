@@ -2,7 +2,7 @@
 // for messages on the window object. vimiumSecret is accessible only within the current instance of
 // Vimium. So a malicious host page trying to register its own port can do no better than guessing.
 
-var registerPort = function (event) {
+function registerPort(event) {
   chrome.storage.session.get("vimiumSecret", function ({ vimiumSecret: secret }) {
     if (event.source !== globalThis.parent) return;
     if (event.data !== secret) {
@@ -12,10 +12,10 @@ var registerPort = function (event) {
     UIComponentServer.portOpen(event.ports[0]);
     globalThis.removeEventListener("message", registerPort);
   });
-};
+}
 globalThis.addEventListener("message", registerPort);
 
-var UIComponentServer = {
+const UIComponentServer = {
   ownerPagePort: null,
   handleMessage: null,
 
