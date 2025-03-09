@@ -525,8 +525,8 @@ class SearchEngineCompleter {
 
   // Returns the UserSearchEngine for the given query. Returns null if the query does not begin with
   // a keyword from one of the user's search engines.
-  getUserSearchEngineForQuery() {
-    const parts = this.input.value.trimStart().split(/\s+/);
+  getUserSearchEngineForQuery(query) {
+    const parts = query.trimStart().split(/\s+/);
     // For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
     const keyword = parts[0];
     if (parts.length <= 1) return null;
