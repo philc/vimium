@@ -1,11 +1,12 @@
-2.1.3 (unreleased)
+2.2.0 (2025-03-08 -- partial rollout to Chrome users)
 
+- Use the browser's default search engine. [(#2598)](https://github.com/philc/vimium/issues/2598)
+- Add "reload hard" command (R). ([#4445](https://github.com/philc/vimium/pull/4445)).
+- Add zoomIn (zi), zoomOut (zo), zoomReset (z0), and setZoom commands.
+  ([#4488](https://github.com/philc/vimium/pull/4488))
 - Add findSelected and findSelectedBackwards commands.
   ([#4502](https://github.com/philc/vimium/pull/4502))
-- Add commands zoomIn, zoomOut, zoomReset (zi, zo, z0), and setZoom.
-  ([#4488](https://github.com/philc/vimium/pull/4488))
-- Add "reload hard" command (bound to R). ([#4445](https://github.com/philc/vimium/pull/4445)).
-- Options page: improve UX, add error validation.
+- Options page: improve UI, add error validation.
 - Make tab commands handle Firefox hidden tabs.
 - Bug fixes.
 
@@ -60,7 +61,7 @@
 - Fix exception when migrating some pre-v2.0 settings.
   ([#4323](https://github.com/philc/vimium/issues/4323))
 
-2.0.0 (2023-09-28 -- partially rolled out to users on the Chrome store)
+2.0.0 (2023-09-28)
 
 - Support manifest v3, as now required by Chrome. This involved a partial rewrite and many changes.
   Please report any new issues [here](https://github.com/philc/vimium/issues).
