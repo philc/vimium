@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="color-scheme" content="light dark">
+    <title>Vimium Commands</title>
+    <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
+    <link rel="stylesheet" type="text/css" href="command_listing.css" />
+    <script src="../lib/utils.js"></script>
+    <script src="../lib/dom_utils.js"></script>
+    <script src="../lib/settings.js"></script>
+    <script src="../background_scripts/all_commands.js"></script>
+    <script src="command_listing.js"></script>
+  </head>
+
+  <body class="vimiumBody">
+    <header>Vimium Commands</header>
+    <h2 data-group="navigation">Navigating the page</h2>
+
+    <h2 data-group="find">Using find</h2>
+
+    <h2 data-group="tabs">Manipulating tabs</h2>
+
+    <h2 data-group="misc">Misc</h2>
+  </body>
+</html>
+
+<template id="command">
+  <div class="command">
+    <h3><code>LinkHints.activateMode</code></h3>
+    <p class="desc">Activates a mode to select a link on the page.</p>
+    <div class="options">
+      <p><strong>Options</strong></p>
+      <ul>
+      </ul>
+    </div>
+  </div>
+</template>
