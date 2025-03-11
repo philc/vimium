@@ -9,6 +9,7 @@ const options = {
   nextPatterns: "string",
   previousPatterns: "string",
   regexFindMode: "boolean",
+  macOptionKeyFix: "boolean",
   ignoreKeyboardLayout: "boolean",
   scrollStepSize: "number",
   smoothScroll: "boolean",
@@ -23,6 +24,9 @@ const OptionsPage = {
     await Settings.onLoaded();
 
     const saveOptionsEl = document.querySelector("#saveOptions");
+
+    const isMacOS = KeyboardUtils.platform === "Mac";
+    if (isMacOS) document.getElementById("macos").style.display = "contents";
 
     const onUpdated = () => {
       saveOptionsEl.disabled = false;
