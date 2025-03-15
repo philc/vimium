@@ -66,110 +66,108 @@ const HelpDialog = {
     }, false);
   },
 
-  show({ showAllCommandDetails }) {
+  async show({ showAllCommandDetails }) {
     const title = showAllCommandDetails ? "Command Listing" : "Help";
     document.getElementById("help-dialog-title").textContent = title;
     document.getElementById("help-dialog-version").textContent = Utils.getCurrentVersion();
 
-    // TODO(philc): change this to await.
-    chrome.storage.session.get("helpPageData", ({ helpPageData }) => {
-      const entryTemplate = document.querySelector("#helpDialogEntry").content;
-      const entryBindingsTemplate = document.querySelector("#helpDialogEntryBindingsOnly").content;
-      const keysTemplate = document.querySelector("#keysTemplate").content;
-      const commandNameTemplate = document.querySelector("#commandNameTemplate").content;
+    const entryTemplate = document.querySelector("#helpDialogEntry").content;
+    const entryBindingsTemplate = document.querySelector("#helpDialogEntryBindingsOnly").content;
+    const keysTemplate = document.querySelector("#keysTemplate").content;
+    const commandNameTemplate = document.querySelector("#commandNameTemplate").content;
 
-      for (const group of Object.keys(helpPageData)) {
-        const commands = helpPageData[group];
-        const container = this.dialogElement.querySelector(`#help-dialog-${group}`);
-        container.innerHTML = "";
+    const { helpPageData } = await chrome.storage.session.get("helpPageData");
+    for (const group of Object.keys(helpPageData)) {
+      const commands = helpPageData[group];
+      const container = this.dialogElement.querySelector(`#help-dialog-${group}`);
+      container.innerHTML = "";
 
-        for (const command of Array.from(commands)) {
-          if (!showAllCommandDetails && command.keys.length == 0) {
-            continue;
+      for (const command of Array.from(commands)) {
+        if (!showAllCommandDetails && command.keys.length == 0) {
+          continue;
+        }
+
+        let keysEl = null;
+        let descEl = null;
+
+        // TODO(philc): This layout logic for displaying long commands seems unnecessarily
+        // complicated.
+        const useTwoRows = command.keys.join(", ").length >= 12;
+        if (!useTwoRows) {
+          const node = entryTemplate.cloneNode(true);
+          container.appendChild(node);
+          const el = container.lastElementChild;
+          if (command.advanced) {
+            el.classList.add("advanced");
           }
-
-          let keysEl = null;
-          let descEl = null;
-
-          // TODO(philc): This layout logic for displaying long commands seems unnecessarily
-          // complicated.
-          const useTwoRows = command.keys.join(", ").length >= 12;
-          if (!useTwoRows) {
-            const node = entryTemplate.cloneNode(true);
-            container.appendChild(node);
-            const el = container.lastElementChild;
-            if (command.advanced) {
-              el.classList.add("advanced");
-            }
-            keysEl = descEl = el;
-          } else {
-            let node = entryBindingsTemplate.cloneNode(true);
-            container.appendChild(node);
-            let el = container.lastElementChild;
-            if (command.advanced) {
-              el.classList.add("advanced");
-            }
-            keysEl = el;
-
-            node = entryTemplate.cloneNode(true);
-            container.appendChild(node);
-            el = container.lastElementChild;
-            if (command.advanced) {
-              el.classList.add("advanced");
-            }
-            descEl = el;
+          keysEl = descEl = el;
+        } else {
+          let node = entryBindingsTemplate.cloneNode(true);
+          container.appendChild(node);
+          let el = container.lastElementChild;
+          if (command.advanced) {
+            el.classList.add("advanced");
           }
+          keysEl = el;
 
-          const MAX_LENGTH = 50;
-          // - 3 because 3 is the length of the ellipsis string, "..."
-          const desiredOptionsLength = Math.max(0, MAX_LENGTH - command.description.length - 3);
-          // If command + options is too long: truncate, add ellipsis, and set hover.
-          let optionsTruncated = command.options.substring(0, desiredOptionsLength);
-          if ((command.description.length + command.options.length) > MAX_LENGTH) {
-            optionsTruncated += "...";
-            // Full option list (non-ellipsized) will be visible on hover.
-            descEl.querySelector(".vimiumHelpDescription").title = command.options;
+          node = entryTemplate.cloneNode(true);
+          container.appendChild(node);
+          el = container.lastElementChild;
+          if (command.advanced) {
+            el.classList.add("advanced");
           }
-          const optionsString = command.options ? ` (${optionsTruncated})` : "";
-          const fullDescription = `${command.description}${optionsString}`;
-          descEl.querySelector(".vimiumHelpDescription").textContent = fullDescription;
+          descEl = el;
+        }
 
-          keysEl = keysEl.querySelector(".vimiumKeyBindings");
-          const keysTemplate = document.querySelector("#keysTemplate").content;
-          for (var key of command.keys.sort(compareKeys)) {
-            const node = keysTemplate.cloneNode(true);
-            keysEl.appendChild(node);
-            const el = keysEl.lastElementChild;
-            el.querySelector(".vimiumHelpDialogKey").textContent = key;
-          }
+        const MAX_LENGTH = 50;
+        // - 3 because 3 is the length of the ellipsis string, "..."
+        const desiredOptionsLength = Math.max(0, MAX_LENGTH - command.description.length - 3);
+        // If command + options is too long: truncate, add ellipsis, and set hover.
+        let optionsTruncated = command.options.substring(0, desiredOptionsLength);
+        if ((command.description.length + command.options.length) > MAX_LENGTH) {
+          optionsTruncated += "...";
+          // Full option list (non-ellipsized) will be visible on hover.
+          descEl.querySelector(".vimiumHelpDescription").title = command.options;
+        }
+        const optionsString = command.options ? ` (${optionsTruncated})` : "";
+        const fullDescription = `${command.description}${optionsString}`;
+        descEl.querySelector(".vimiumHelpDescription").textContent = fullDescription;
 
-          // Strip off the trailing ", " if necessary.
-          const lastEl = keysEl.lastElementChild;
-          if (lastEl) {
-            lastEl.removeChild(lastEl.querySelector(".commaSeparator"));
-          }
+        keysEl = keysEl.querySelector(".vimiumKeyBindings");
+        const keysTemplate = document.querySelector("#keysTemplate").content;
+        for (var key of command.keys.sort(compareKeys)) {
+          const node = keysTemplate.cloneNode(true);
+          keysEl.appendChild(node);
+          const el = keysEl.lastElementChild;
+          el.querySelector(".vimiumHelpDialogKey").textContent = key;
+        }
 
-          if (showAllCommandDetails) {
-            const descEl2 = descEl.querySelector(".vimiumHelpDescription");
-            const node = commandNameTemplate.cloneNode(true);
-            descEl2.appendChild(node);
-            const el = descEl2.lastElementChild;
-            const commandNameEl = el.querySelector(".vimiumCopyCommandNameName");
-            commandNameEl.textContent = command.command;
-            commandNameEl.title = `Click to copy \"${command.command}\" to clipboard.`;
-            commandNameEl.addEventListener("click", function () {
-              HUD.copyToClipboard(commandNameEl.textContent);
-              HUD.show(`Yanked ${commandNameElement.textContent}.`, 2000);
-            });
-          }
+        // Strip off the trailing ", " if necessary.
+        const lastEl = keysEl.lastElementChild;
+        if (lastEl) {
+          lastEl.removeChild(lastEl.querySelector(".commaSeparator"));
+        }
+
+        if (showAllCommandDetails) {
+          const descEl2 = descEl.querySelector(".vimiumHelpDescription");
+          const node = commandNameTemplate.cloneNode(true);
+          descEl2.appendChild(node);
+          const el = descEl2.lastElementChild;
+          const commandNameEl = el.querySelector(".vimiumCopyCommandNameName");
+          commandNameEl.textContent = command.command;
+          commandNameEl.title = `Click to copy \"${command.command}\" to clipboard.`;
+          commandNameEl.addEventListener("click", function () {
+            HUD.copyToClipboard(commandNameEl.textContent);
+            HUD.show(`Yanked ${commandNameElement.textContent}.`, 2000);
+          });
         }
       }
+    }
 
-      this.showAdvancedCommands(this.getShowAdvancedCommands());
+    this.showAdvancedCommands(this.getShowAdvancedCommands());
 
-      // "Click" the dialog element (so that it becomes scrollable).
-      DomUtils.simulateClick(this.dialogElement);
-    });
+    // "Click" the dialog element (so that it becomes scrollable).
+    DomUtils.simulateClick(this.dialogElement);
   },
 
   hide() {
@@ -217,7 +215,7 @@ UIComponentServer.registerHandler(async function (event) {
       break;
     case "activate":
       HelpDialog.init();
-      HelpDialog.show(event.data);
+      await HelpDialog.show(event.data);
       // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
       Mode.setIndicator();
       break;
