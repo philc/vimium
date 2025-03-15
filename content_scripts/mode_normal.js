@@ -59,7 +59,8 @@ class NormalMode extends KeyHandlerMode {
     } else if (registryEntry.background) {
       chrome.runtime.sendMessage({ handler: "runBackgroundCommand", registryEntry, count });
     } else {
-      NormalModeCommands[registryEntry.command](count, { registryEntry });
+      const commandFn = NormalModeCommands[registryEntry.command];
+      commandFn(count, { registryEntry });
     }
   }
 }

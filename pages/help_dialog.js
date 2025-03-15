@@ -66,19 +66,18 @@ const HelpDialog = {
     }, false);
   },
 
-  instantiateHtmlTemplate(parentNode, templateId, callback) {
-    const templateContent = document.querySelector(templateId).content;
-    const node = document.importNode(templateContent, true);
-    parentNode.appendChild(node);
-    callback(parentNode.lastElementChild);
-  },
-
   show({ showAllCommandDetails }) {
     const title = showAllCommandDetails ? "Command Listing" : "Help";
     document.getElementById("help-dialog-title").textContent = title;
     document.getElementById("help-dialog-version").textContent = Utils.getCurrentVersion();
 
+    // TODO(philc): change this to await.
     chrome.storage.session.get("helpPageData", ({ helpPageData }) => {
+      const entryTemplate = document.querySelector("#helpDialogEntry").content;
+      const entryBindingsTemplate = document.querySelector("#helpDialogEntryBindingsOnly").content;
+      const keysTemplate = document.querySelector("#keysTemplate").content;
+      const commandNameTemplate = document.querySelector("#commandNameTemplate").content;
+
       for (let group of Object.keys(helpPageData)) {
         const commands = helpPageData[group];
         const container = this.dialogElement.querySelector(`#help-dialog-${group}`);
@@ -92,31 +91,33 @@ const HelpDialog = {
           let keysElement = null;
           let descriptionElement = null;
 
+          // TODO(philc): This layout logic for displaying long commands seems unnecessarily
+          // complicated.
           const useTwoRows = command.keys.join(", ").length >= 12;
           if (!useTwoRows) {
-            this.instantiateHtmlTemplate(container, "#helpDialogEntry", function (element) {
-              if (command.advanced) {
-                element.classList.add("advanced");
-              }
-              keysElement = descriptionElement = element;
-            });
+            const node = entryTemplate.cloneNode(true);
+            container.appendChild(node);
+            const el = container.lastElementChild;
+            if (command.advanced) {
+              el.classList.add("advanced");
+            }
+            keysElement = descriptionElement = el;
           } else {
-            this.instantiateHtmlTemplate(
-              container,
-              "#helpDialogEntryBindingsOnly",
-              function (element) {
-                if (command.advanced) {
-                  element.classList.add("advanced");
-                }
-                keysElement = element;
-              },
-            );
-            this.instantiateHtmlTemplate(container, "#helpDialogEntry", function (element) {
-              if (command.advanced) {
-                element.classList.add("advanced");
-              }
-              descriptionElement = element;
-            });
+            let node = entryBindingsTemplate.cloneNode(true);
+            container.appendChild(node);
+            let el = container.lastElementChild;
+            if (command.advanced) {
+              el.classList.add("advanced");
+            }
+            keysElement = el;
+
+            node = entryTemplate.cloneNode(true);
+            container.appendChild(node);
+            el = container.lastElementChild;
+            if (command.advanced) {
+              el.classList.add("advanced");
+            }
+            descriptionElement = el;
           }
 
           const MAX_LENGTH = 50;
@@ -134,36 +135,33 @@ const HelpDialog = {
           descriptionElement.querySelector(".vimiumHelpDescription").textContent = fullDescription;
 
           keysElement = keysElement.querySelector(".vimiumKeyBindings");
-          let lastElement = null;
+          const keysTemplate = document.querySelector("#keysTemplate").content;
           for (var key of command.keys.sort(compareKeys)) {
-            this.instantiateHtmlTemplate(keysElement, "#keysTemplate", function (element) {
-              lastElement = element;
-              element.querySelector(".vimiumHelpDialogKey").textContent = key;
-            });
+            const node = keysTemplate.cloneNode(true);
+            keysElement.appendChild(node);
+            const el = keysElement.lastElementChild;
+            el.querySelector(".vimiumHelpDialogKey").textContent = key;
           }
 
-          // And strip off the trailing ", ", if necessary.
+          // Strip off the trailing ", " if necessary.
+          const lastElement = keysElement.lastElementChild;
           if (lastElement) {
             lastElement.removeChild(lastElement.querySelector(".commaSeparator"));
           }
 
           if (showAllCommandDetails) {
-            const el = descriptionElement.querySelector(".vimiumHelpDescription");
-            this.instantiateHtmlTemplate(
-              el,
-              "#commandNameTemplate",
-              function (element) {
-                const commandNameElement = element.querySelector(".vimiumCopyCommandNameName");
-                commandNameElement.textContent = command.command;
-                commandNameElement.title = `Click to copy \"${command.command}\" to clipboard.`;
-                commandNameElement.addEventListener("click", function () {
-                  HUD.copyToClipboard(commandNameElement.textContent);
-                  HUD.show(`Yanked ${commandNameElement.textContent}.`, 2000);
-                });
-              },
-            );
+            const descEl = descriptionElement.querySelector(".vimiumHelpDescription");
+            const node = commandNameTemplate.cloneNode(true);
+            descEl.appendChild(node);
+            const el = descEl.lastElementChild;
+            const commandNameElement = el.querySelector(".vimiumCopyCommandNameName");
+            commandNameElement.textContent = command.command;
+            commandNameElement.title = `Click to copy \"${command.command}\" to clipboard.`;
+            commandNameElement.addEventListener("click", function () {
+              HUD.copyToClipboard(commandNameElement.textContent);
+              HUD.show(`Yanked ${commandNameElement.textContent}.`, 2000);
+            });
           }
-          // }
         }
       }
 
