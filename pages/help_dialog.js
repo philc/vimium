@@ -88,8 +88,8 @@ const HelpDialog = {
             continue;
           }
 
-          let keysElement = null;
-          let descriptionElement = null;
+          let keysEl = null;
+          let descEl = null;
 
           // TODO(philc): This layout logic for displaying long commands seems unnecessarily
           // complicated.
@@ -101,7 +101,7 @@ const HelpDialog = {
             if (command.advanced) {
               el.classList.add("advanced");
             }
-            keysElement = descriptionElement = el;
+            keysEl = descEl = el;
           } else {
             let node = entryBindingsTemplate.cloneNode(true);
             container.appendChild(node);
@@ -109,7 +109,7 @@ const HelpDialog = {
             if (command.advanced) {
               el.classList.add("advanced");
             }
-            keysElement = el;
+            keysEl = el;
 
             node = entryTemplate.cloneNode(true);
             container.appendChild(node);
@@ -117,7 +117,7 @@ const HelpDialog = {
             if (command.advanced) {
               el.classList.add("advanced");
             }
-            descriptionElement = el;
+            descEl = el;
           }
 
           const MAX_LENGTH = 50;
@@ -128,37 +128,37 @@ const HelpDialog = {
           if ((command.description.length + command.options.length) > MAX_LENGTH) {
             optionsTruncated += "...";
             // Full option list (non-ellipsized) will be visible on hover.
-            descriptionElement.querySelector(".vimiumHelpDescription").title = command.options;
+            descEl.querySelector(".vimiumHelpDescription").title = command.options;
           }
           const optionsString = command.options ? ` (${optionsTruncated})` : "";
           const fullDescription = `${command.description}${optionsString}`;
-          descriptionElement.querySelector(".vimiumHelpDescription").textContent = fullDescription;
+          descEl.querySelector(".vimiumHelpDescription").textContent = fullDescription;
 
-          keysElement = keysElement.querySelector(".vimiumKeyBindings");
+          keysEl = keysEl.querySelector(".vimiumKeyBindings");
           const keysTemplate = document.querySelector("#keysTemplate").content;
           for (var key of command.keys.sort(compareKeys)) {
             const node = keysTemplate.cloneNode(true);
-            keysElement.appendChild(node);
-            const el = keysElement.lastElementChild;
+            keysEl.appendChild(node);
+            const el = keysEl.lastElementChild;
             el.querySelector(".vimiumHelpDialogKey").textContent = key;
           }
 
           // Strip off the trailing ", " if necessary.
-          const lastElement = keysElement.lastElementChild;
-          if (lastElement) {
-            lastElement.removeChild(lastElement.querySelector(".commaSeparator"));
+          const lastEl = keysEl.lastElementChild;
+          if (lastEl) {
+            lastEl.removeChild(lastEl.querySelector(".commaSeparator"));
           }
 
           if (showAllCommandDetails) {
-            const descEl = descriptionElement.querySelector(".vimiumHelpDescription");
+            const descEl2 = descEl.querySelector(".vimiumHelpDescription");
             const node = commandNameTemplate.cloneNode(true);
-            descEl.appendChild(node);
-            const el = descEl.lastElementChild;
-            const commandNameElement = el.querySelector(".vimiumCopyCommandNameName");
-            commandNameElement.textContent = command.command;
-            commandNameElement.title = `Click to copy \"${command.command}\" to clipboard.`;
-            commandNameElement.addEventListener("click", function () {
-              HUD.copyToClipboard(commandNameElement.textContent);
+            descEl2.appendChild(node);
+            const el = descEl2.lastElementChild;
+            const commandNameEl = el.querySelector(".vimiumCopyCommandNameName");
+            commandNameEl.textContent = command.command;
+            commandNameEl.title = `Click to copy \"${command.command}\" to clipboard.`;
+            commandNameEl.addEventListener("click", function () {
+              HUD.copyToClipboard(commandNameEl.textContent);
               HUD.show(`Yanked ${commandNameElement.textContent}.`, 2000);
             });
           }
