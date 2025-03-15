@@ -1,13 +1,5 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS203: Remove `|| {}` from converted for-own loops
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
-const compareKeys = function (a, b) {
+function compareKeys(a, b) {
   a = a.replace("<", "~");
   b = b.replace("<", "~");
   if (a < b) {
@@ -82,10 +74,9 @@ const HelpDialog = {
       const container = this.dialogElement.querySelector(`#help-dialog-${group}`);
       container.innerHTML = "";
 
-      for (const command of Array.from(commands)) {
-        if (!showAllCommandDetails && command.keys.length == 0) {
-          continue;
-        }
+      for (const command of commands) {
+        const unbound = command.keys.length == 0;
+        if (unbound && !showAllCommandDetails) continue;
 
         let keysEl = null;
         let descEl = null;
@@ -182,16 +173,16 @@ const HelpDialog = {
   // Advanced commands are hidden by default so they don't overwhelm new and casual users.
   //
   toggleAdvancedCommands(event) {
-    const vimiumHelpDialogContainer = document.getElementById("vimiumHelpDialogContainer");
-    const scrollHeightBefore = vimiumHelpDialogContainer.scrollHeight;
+    const container = document.getElementById("vimiumHelpDialogContainer");
+    const scrollHeightBefore = container.scrollHeight;
     event.preventDefault();
     const showAdvanced = HelpDialog.getShowAdvancedCommands();
     HelpDialog.showAdvancedCommands(!showAdvanced);
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced);
     // Try to keep the "show advanced commands" button in the same scroll position.
-    const scrollHeightDelta = vimiumHelpDialogContainer.scrollHeight - scrollHeightBefore;
+    const scrollHeightDelta = container.scrollHeight - scrollHeightBefore;
     if (scrollHeightDelta > 0) {
-      vimiumHelpDialogContainer.scrollTop += scrollHeightDelta;
+      container.scrollTop += scrollHeightDelta;
     }
   },
 
