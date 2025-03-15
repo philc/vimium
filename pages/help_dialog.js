@@ -78,12 +78,12 @@ const HelpDialog = {
       const keysTemplate = document.querySelector("#keysTemplate").content;
       const commandNameTemplate = document.querySelector("#commandNameTemplate").content;
 
-      for (let group of Object.keys(helpPageData)) {
+      for (const group of Object.keys(helpPageData)) {
         const commands = helpPageData[group];
         const container = this.dialogElement.querySelector(`#help-dialog-${group}`);
         container.innerHTML = "";
 
-        for (var command of Array.from(commands)) {
+        for (const command of Array.from(commands)) {
           if (!showAllCommandDetails && command.keys.length == 0) {
             continue;
           }
@@ -198,13 +198,13 @@ const HelpDialog = {
   },
 
   showAdvancedCommands(visible) {
-    document.getElementById("toggleAdvancedCommands").textContent = visible
-      ? "Hide advanced commands"
-      : "Show advanced commands";
-
-    // Add/remove the showAdvanced class to show/hide advanced commands.
-    const addOrRemove = visible ? "add" : "remove";
-    HelpDialog.dialogElement.classList[addOrRemove]("showAdvanced");
+    const caption = visible ? "Hide advanced commands" : "Show advanced commands";
+    document.getElementById("toggleAdvancedCommands").textContent = caption;
+    if (visible) {
+      HelpDialog.dialogElement.classList.add("showAdvanced");
+    } else {
+      HelpDialog.dialogElement.classList.remove("showAdvanced");
+    }
   },
 };
 
