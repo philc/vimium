@@ -6,9 +6,6 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const $ = (id) => document.getElementById(id);
-const $$ = (element, selector) => element.querySelector(selector);
-
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
 const compareKeys = function (a, b) {
   a = a.replace("<", "~");
@@ -80,8 +77,9 @@ const HelpDialog = {
   },
 
   show({ showAllCommandDetails }) {
-    $("help-dialog-title").textContent = showAllCommandDetails ? "Command Listing" : "Help";
-    $("help-dialog-version").textContent = Utils.getCurrentVersion();
+    const title = showAllCommandDetails ? "Command Listing" : "Help";
+    document.getElementById("help-dialog-title").textContent = title;
+    document.getElementById("help-dialog-version").textContent = Utils.getCurrentVersion();
 
     chrome.storage.session.get("helpPageData", ({ helpPageData }) => {
       for (let group of Object.keys(helpPageData)) {
@@ -132,32 +130,33 @@ const HelpDialog = {
           if ((command.description.length + command.options.length) > MAX_LENGTH) {
             optionsTruncated += "...";
             // Full option list (non-ellipsized) will be visible on hover.
-            $$(descriptionElement, ".vimiumHelpDescription").title = command.options;
+            descriptionElement.querySelector(".vimiumHelpDescription").title = command.options;
           }
           const optionsString = command.options ? ` (${optionsTruncated})` : "";
           const fullDescription = `${command.description}${optionsString}`;
-          $$(descriptionElement, ".vimiumHelpDescription").textContent = fullDescription;
+          descriptionElement.querySelector(".vimiumHelpDescription").textContent = fullDescription;
 
-          keysElement = $$(keysElement, ".vimiumKeyBindings");
+          keysElement = keysElement.querySelector(".vimiumKeyBindings");
           let lastElement = null;
           for (var key of command.keys.sort(compareKeys)) {
             this.instantiateHtmlTemplate(keysElement, "#keysTemplate", function (element) {
               lastElement = element;
-              $$(element, ".vimiumHelpDialogKey").textContent = key;
+              element.querySelector(".vimiumHelpDialogKey").textContent = key;
             });
           }
 
           // And strip off the trailing ", ", if necessary.
           if (lastElement) {
-            lastElement.removeChild($$(lastElement, ".commaSeparator"));
+            lastElement.removeChild(lastElement.querySelector(".commaSeparator"));
           }
 
           if (showAllCommandDetails) {
+            const el = descriptionElement.querySelector(".vimiumHelpDescription");
             this.instantiateHtmlTemplate(
-              $$(descriptionElement, ".vimiumHelpDescription"),
+              el,
               "#commandNameTemplate",
               function (element) {
-                const commandNameElement = $$(element, ".vimiumCopyCommandNameName");
+                const commandNameElement = element.querySelector(".vimiumCopyCommandNameName");
                 commandNameElement.textContent = command.command;
                 commandNameElement.title = `Click to copy \"${command.command}\" to clipboard.`;
                 commandNameElement.addEventListener("click", function () {
@@ -190,7 +189,7 @@ const HelpDialog = {
   // Advanced commands are hidden by default so they don't overwhelm new and casual users.
   //
   toggleAdvancedCommands(event) {
-    const vimiumHelpDialogContainer = $("vimiumHelpDialogContainer");
+    const vimiumHelpDialogContainer = document.getElementById("vimiumHelpDialogContainer");
     const scrollHeightBefore = vimiumHelpDialogContainer.scrollHeight;
     event.preventDefault();
     const showAdvanced = HelpDialog.getShowAdvancedCommands();
