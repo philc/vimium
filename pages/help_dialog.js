@@ -36,31 +36,28 @@ const HelpDialog = {
     if (this.dialogElement != null) {
       return;
     }
-    this.dialogElement = document.getElementById("vimiumHelpDialog");
+    this.dialogElement = document.querySelector("#vimiumHelpDialog");
 
-    this.dialogElement.getElementsByClassName("closeButton")[0].addEventListener(
-      "click",
-      (clickEvent) => {
-        clickEvent.preventDefault();
-        this.hide();
-      },
-      false,
-    );
+    const closeButton = this.dialogElement.querySelector(".closeButton");
+    closeButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      this.hide();
+    }, false);
 
     // "auxclick" handles a click with the middle mouse button.
-    for (let eventName of ["click", "auxclick"]) {
-      document.getElementById("helpDialogOptionsPage").addEventListener(
-        eventName,
-        (event) => {
-          event.preventDefault();
-          chrome.runtime.sendMessage({ handler: "openOptionsPageInNewTab" });
-        },
-        false,
-      );
+    const optionsLink = document.querySelector("#helpDialogOptionsPage");
+    for (const eventName of ["click", "auxclick"]) {
+      optionsLink.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        chrome.runtime.sendMessage({ handler: "openOptionsPageInNewTab" });
+      }, false);
     }
 
-    document.getElementById("toggleAdvancedCommands")
-      .addEventListener("click", HelpDialog.toggleAdvancedCommands.bind(HelpDialog), false);
+    document.querySelector("#toggleAdvancedCommands").addEventListener(
+      "click",
+      HelpDialog.toggleAdvancedCommands.bind(HelpDialog),
+      false,
+    );
 
     document.documentElement.addEventListener("click", (event) => {
       if (!this.dialogElement.contains(event.target)) {
