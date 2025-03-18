@@ -1,3 +1,9 @@
+import "../lib/utils.js";
+import "../lib/settings.js";
+import "../lib/dom_utils.js";
+import "./ui_component_server.js";
+import "../background_scripts/all_commands.js";
+
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
 function compareKeys(a, b) {
   a = a.replace("<", "~");
@@ -9,7 +15,7 @@ function compareKeys(a, b) {
   } else {
     return 0;
   }
-};
+}
 
 // This overrides the HelpDialog implementation in vimium_frontend.js. We provide aliases for the
 // two HelpDialog methods required by normalMode (isShowing() and toggle()).
@@ -197,30 +203,38 @@ const HelpDialog = {
   },
 };
 
-UIComponentServer.registerHandler(async function (event) {
-  await Settings.onLoaded();
-  await Utils.populateBrowserInfo();
-  switch (event.data.name != null ? event.data.name : event.data) {
-    case "hide":
-      HelpDialog.hide();
-      break;
-    case "activate":
-      HelpDialog.init();
-      await HelpDialog.show(event.data);
-      // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
-      Mode.setIndicator();
-      break;
-    case "hidden":
-      // Abandon any HUD which might be showing within the help dialog.
-      HUD.abandon();
-      break;
-  }
-});
+function init() {
+  UIComponentServer.registerHandler(async function (event) {
+    await Settings.onLoaded();
+    await Utils.populateBrowserInfo();
+    switch (event.data.name != null ? event.data.name : event.data) {
+      case "hide":
+        HelpDialog.hide();
+        break;
+      case "activate":
+        HelpDialog.init();
+        await HelpDialog.show(event.data);
+        // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
+        Mode.setIndicator();
+        break;
+      case "hidden":
+        // Abandon any HUD which might be showing within the help dialog.
+        HUD.abandon();
+        break;
+    }
+  });
+}
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss(); // Manually inject custom user styles.
-});
+const testEnv = globalThis.window == null;
+if (!testEnv) {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await Settings.onLoaded();
+    DomUtils.injectUserCss(); // Manually inject custom user styles.
+    init();
+  });
+}
 
 globalThis.HelpDialog = HelpDialog;
 globalThis.isVimiumHelpDialog = true;
+
+export { HelpDialog };
