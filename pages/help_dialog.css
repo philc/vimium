@@ -18,14 +18,24 @@ div#vimiumHelpDialog {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-span#vimiumTitle, span#vimiumTitle span, span#vimiumTitle * {
+header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+h1 {
   font-size: 20px;
-}
-#vimiumTitle {
-  display: block;
-  line-height: 130%;
   white-space: nowrap;
+  flex-grow: 1;
+  font-weight: normal;
+  margin: 4px 0;
 }
+
+h1 .vim {
+  color: #2f508e;
+}
+
 td.vimiumHelpDialogTopButtons {
   width: 100%;
   text-align: right;
@@ -191,12 +201,12 @@ a#toggleAdvancedCommands {
     color: #c9cccf;
   }
 
-  span#vimiumTitle,
+  h1,
   div#vimiumHelpDialog td.vimiumHelpSectionTitle {
     color: white;
   }
 
-  #vimiumTitle > span:first-child {
+  h1 .vim {
     color: #8ab4f8 !important;
   }
 

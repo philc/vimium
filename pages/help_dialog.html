@@ -31,35 +31,28 @@
   </head>
 
   <body>
-    <!--
-      This is shown when typing "?". This HTML is loaded by the background page and then populated
-      with the latest keybindings information before displaying.
-      -->
-
-    <!-- Note that the template placeholders (e.g. "pageNavigation") will be filled in by the
-         background page with the up-to-date key bindings when the dialog is shown. -->
+    <!-- Note that the command placeholders (data-group=navigation) will be replaced by the
+         background page with the user's key bindings when the dialog is shown. -->
     <div id="vimiumHelpDialogContainer">
       <div id="vimiumHelpDialog">
-        <div>
-          <table>
-            <tr>
-              <td>
-                <span id="vimiumTitle"><span style="color: #2f508e">Vim</span>ium
-                  <span id="help-dialog-title"></span></span>
-              </td>
-              <td class="vimiumHelpDialogTopButtons">
-                <a class="vimiumHelDialogLink" id="helpDialogOptionsPage" href="#">Options</a>
-                <a
-                  class="vimiumHelDialogLink"
-                  id="helpDialogWikiPage"
-                  href="https://github.com/philc/vimium/wiki"
-                  target="_blank"
-                >Wiki</a>
-                <a class="closeButton" href="#">&times;</a>
-              </td>
-            </tr>
-          </table>
-        </div>
+        <header>
+          <h1>
+            <span class="vim">Vim</span>ium
+            <span id="help-dialog-title"></span>
+          </h1>
+
+          <div class="vimiumHelpDialogTopButtons">
+            <a class="vimiumHelDialogLink" id="helpDialogOptionsPage" href="#">Options</a>
+            <a
+              class="vimiumHelDialogLink"
+              id="helpDialogWikiPage"
+              href="https://github.com/philc/vimium/wiki"
+              target="_blank"
+            >Wiki</a>
+            <a class="closeButton" href="#">&times;</a>
+          </div>
+        </header>
+
         <div class="vimiumDivider"></div>
         <div class="vimiumColumn">
           <table>
