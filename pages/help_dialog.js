@@ -116,16 +116,8 @@ const HelpDialog = {
           keysEl.appendChild(node);
         }
 
-        // Strip off the trailing ", " if necessary.
-        // TODO(philc): Use this using CSS.
-        const lastEl = keysEl.lastElementChild;
-        if (lastEl) {
-          lastEl.removeChild(lastEl.querySelector(".comma-separator"));
-        }
-
         container.appendChild(entry);
       }
-
     }
 
     this.showAdvancedCommands(this.getShowAdvancedCommands());
