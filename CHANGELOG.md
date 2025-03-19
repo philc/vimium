@@ -1,4 +1,4 @@
-2.2.0 (2025-03-08 -- partial rollout to Chrome users)
+2.2.0 (2025-03-08)
 
 - Use the browser's default search engine. [(#2598)](https://github.com/philc/vimium/issues/2598)
 - Add "reload hard" command (R). ([#4445](https://github.com/philc/vimium/pull/4445)).
