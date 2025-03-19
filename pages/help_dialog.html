@@ -51,61 +51,38 @@
 
         <div class="divider"></div>
 
-        <div class="column">
-          <table>
-            <thead>
-              <tr>
-                <td></td>
-                <td></td>
-                <td class="section-title">Navigating the page</td>
-              </tr>
-            </thead>
-            <tbody class="commands" data-group="navigation"></tbody>
-          </table>
-        </div>
-        <div class="column">
-          <table>
-            <thead>
-              <tr>
-                <td></td>
-                <td></td>
-                <td class="section-title">Using the vomnibar</td>
-              </tr>
-            </thead>
-            <tbody class="commands" data-group="vomnibar"></tbody>
-            <thead>
-              <tr>
-                <td></td>
-                <td></td>
-                <td class="section-title">Using find</td>
-              </tr>
-            </thead>
-            <tbody class="commands" data-group="find"></tbody>
-            <thead>
-              <tr>
-                <td></td>
-                <td></td>
-                <td class="section-title">Navigating history</td>
-              </tr>
-            </thead>
-            <tbody class="commands" data-group="history"></tbody>
-            <thead>
-              <tr>
-                <td></td>
-                <td></td>
-                <td class="section-title">Manipulating tabs</td>
-              </tr>
-            </thead>
-            <tbody class="commands" data-group="tabs"></tbody>
-            <thead>
-              <tr>
-                <td></td>
-                <td></td>
-                <td class="section-title">Miscellaneous</td>
-              </tr>
-            </thead>
-            <tbody class="commands" data-group="misc"></tbody>
-          </table>
+        <div id="commands-section">
+
+          <div class="column">
+            <div></div>
+            <h2>Navigating the page</h2>
+            <div data-group="navigation"></div>
+          </div>
+
+          <div class="column">
+
+            <div></div>
+            <h2>Using the Vomnibar</h2>
+            <div data-group="vomnibar"></div>
+
+            <div></div>
+            <h2>Using find</h2>
+            <div data-group="find"></div>
+
+            <div></div>
+            <h2>Navigating history</h2>
+            <div data-group="history"></div>
+
+            <div></div>
+            <h2>Manipulating tabs</h2>
+            <div data-group="tabs"></div>
+
+            <div></div>
+            <h2>Miscellaneous</h2>
+            <div data-group="misc"></div>
+
+          </div>
+
         </div>
 
         <div id="toggle-advanced">
@@ -140,23 +117,18 @@
     </div>
 
     <template id="entry">
-      <tr>
-        <td class="key-bindings"></td>
-        <td></td>
-        <td class="help-description"></td>
-      </tr>
+      <div class="row">
+        <div class="key-bindings"></div>
+        <div class="help-description"></div>
+      </div>
     </template>
 
     <template id="entry-bindings-only">
-      <tr>
-        <td class="key-bindings" colspan="3" style="text-align: left"></td>
-      </tr>
+      <div class="key-bindings" colspan="3" style="text-align: left"></div>
     </template>
 
-    <template id="keys-template"><span><span class="key"></span><span
-          class="comma-separator"
-        >,
-        </span></span></template>
+    <template id="keys-template"><div class="key-block"><span class="key"></span><span class="comma-separator">,
+        </span></div></template>
 
     <template id="command-name-template">
       <span>(<span class="copy-command-name-name" role="link"></span>)</span>

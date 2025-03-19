@@ -18,10 +18,34 @@
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+a {
+  text-decoration: underline;
+  color: #2f508e;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 header {
   display: flex;
   flex-direction: row;
   align-items: center;
+}
+
+a#close {
+  font-family: "courier new";
+  font-weight: bold;
+  color: #555;
+  text-decoration: none;
+  font-size: 24px;
+  position: relative;
+  top: 3px;
+  padding-left: 5px;
+  cursor: pointer;
+}
+
+a#close:hover {
+  color: black;
+  -webkit-user-select: none;
 }
 
 h1 {
@@ -46,47 +70,51 @@ header a.close {
   padding-right: 0;
 }
 
-div.column {
-  width: 50%;
-  float: left;
-  font-size: 11px;
-  line-height: 130%;
+#commands-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
-div.column tr {
-  display: table-row;
+.column {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  row-gap: 3px;
 }
 
-div.column td {
-  display: table-cell;
-  font-size: 11px;
-  line-height: 130%;
+h2 {
+  margin-top: 3px;
+  margin-bottom: 4px;
+  font-size: 16px;
+  font-weight: bold;
 }
 
-div.column table, div.column td, div.column tr {
-  padding: 0;
-  margin: 0;
+div[data-group] {
+  display: contents;
 }
 
-div.column table {
-  width: 100%;
-  table-layout: auto;
+.row {
+  display: contents;
+  border: 1px solid red;
 }
 
-div.column td {
-  vertical-align: top;
-  padding: 1px;
-}
-
-#dialog div.column tr > td:first-of-type {
-  /* This is the "key" column, e.g. "j", "gg". */
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+.key-bindings {
+  max-width: 110px;
   font-size: 14px;
   text-align: right;
-  white-space: nowrap;
+  margin-right: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 
-span.key {
+/* A "key block" includes a key and a comma separator. */
+.key-block {
+  margin-bottom: 4px;
+}
+
+.key {
   background-color: rgb(243, 243, 243);
   color: rgb(33, 33, 33);
   margin-left: 2px;
@@ -102,9 +130,12 @@ span.key {
   font-size: 11px;
 }
 
-/* Make the description column as wide as it can be. */
-#dialog div.column tr > td:nth-of-type(3) {
-  width: 100%;
+.comma-separator {
+  margin-right: 3px;
+}
+
+.help-description {
+  font-size: 14px;
 }
 
 #dialog div.divider {
@@ -115,18 +146,6 @@ span.key {
   background-color: #9a9a9a;
 }
 
-#dialog td.section-title {
-  padding-top: 3px;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-#dialog td.vimiumHelpDescription {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
-}
-
 #dialog span.copy-command-name-name {
   font-style: italic;
   cursor: pointer;
@@ -134,40 +153,12 @@ span.key {
 }
 
 /* Advanced commands are hidden by default until you show them. */
-#dialog tr.advanced {
+#dialog .row.advanced {
   display: none;
 }
 
-#dialog.showAdvanced tr.advanced {
-  display: table-row;
-}
-
-#dialog div.advanced td:nth-of-type(3) {
-  color: #555;
-}
-
-a#close {
-  font-family: "courier new";
-  font-weight: bold;
-  color: #555;
-  text-decoration: none;
-  font-size: 24px;
-  position: relative;
-  top: 3px;
-  padding-left: 5px;
-  cursor: pointer;
-}
-
-a {
-  text-decoration: underline;
-  color: #2f508e;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-a#close:hover {
-  color: black;
-  -webkit-user-select: none;
+#dialog.showAdvanced .row.advanced {
+  display: contents;
 }
 
 footer {
@@ -197,21 +188,17 @@ footer {
     color: white;
   }
 
-  #dialog td.vimiumHelpDescription {
-    color: #c9cccf;
+  a {
+    color: #8ab4f8;
   }
 
   h1,
-  #dialog td.section-title {
+  h2 {
     color: white;
   }
 
   h1 .vim {
     color: #8ab4f8 !important;
-  }
-
-  a {
-    color: #8ab4f8;
   }
 
   #dialog div.divider {
@@ -223,5 +210,9 @@ footer {
     border: solid 1px black;
     box-shadow: none;
     color: white;
+  }
+
+  #dialog .help-description {
+    color: #c9cccf;
   }
 }

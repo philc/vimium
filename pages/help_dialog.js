@@ -65,6 +65,7 @@ const HelpDialog = {
     }, false);
   },
 
+  // TODO(philc): Clean up the rest of this showAllCommandDetails usage.
   async show({ showAllCommandDetails }) {
     const title = showAllCommandDetails ? "Command Listing" : "Help";
     document.getElementById("help-dialog-title").textContent = title;
@@ -78,44 +79,21 @@ const HelpDialog = {
     const { helpPageData } = await chrome.storage.session.get("helpPageData");
     for (const group of Object.keys(helpPageData)) {
       const commands = helpPageData[group];
-      const container = this.dialogElement.querySelector(`.commands[data-group="${group}"]`);
+      const container = this.dialogElement.querySelector(`[data-group="${group}"]`);
       container.innerHTML = "";
 
       for (const command of commands) {
         const unbound = command.keys.length == 0;
         if (unbound && !showAllCommandDetails) continue;
 
-        let keysEl = null;
-        let descEl = null;
-
-        // TODO(philc): This layout logic for displaying long commands seems unnecessarily
-        // complicated.
-        const useTwoRows = command.keys.join(", ").length >= 12;
-        if (!useTwoRows) {
-          const node = entryTemplate.cloneNode(true);
-          container.appendChild(node);
-          const el = container.lastElementChild;
-          if (command.advanced) {
-            el.classList.add("advanced");
-          }
-          keysEl = descEl = el;
-        } else {
-          let node = entryBindingsTemplate.cloneNode(true);
-          container.appendChild(node);
-          let el = container.lastElementChild;
-          if (command.advanced) {
-            el.classList.add("advanced");
-          }
-          keysEl = el;
-
-          node = entryTemplate.cloneNode(true);
-          container.appendChild(node);
-          el = container.lastElementChild;
-          if (command.advanced) {
-            el.classList.add("advanced");
-          }
-          descEl = el;
+        // TODO(philc): Determine how to layout long key names, e.g. <c-enter>
+        const entry = entryTemplate.cloneNode(true);
+        if (command.advanced) {
+          entry.querySelector(".row").classList.add("advanced");
         }
+
+        const keysEl = entry.querySelector(".key-bindings");
+        const descEl = entry.querySelector(".help-description");
 
         const MAX_LENGTH = 50;
         // - 3 because 3 is the length of the ellipsis string, "..."
@@ -125,41 +103,29 @@ const HelpDialog = {
         if ((command.description.length + command.options.length) > MAX_LENGTH) {
           optionsTruncated += "...";
           // Full option list (non-ellipsized) will be visible on hover.
-          descEl.querySelector(".help-description").title = command.options;
+          descEl.title = command.options;
         }
         const optionsString = command.options ? ` (${optionsTruncated})` : "";
         const fullDescription = `${command.description}${optionsString}`;
-        descEl.querySelector(".help-description").textContent = fullDescription;
+        descEl.textContent = fullDescription;
 
-        keysEl = keysEl.querySelector(".key-bindings");
         const keysTemplate = document.querySelector("#keys-template").content;
-        for (var key of command.keys.sort(compareKeys)) {
+        for (const key of command.keys.sort(compareKeys)) {
           const node = keysTemplate.cloneNode(true);
+          node.querySelector(".key").textContent = key;
           keysEl.appendChild(node);
-          const el = keysEl.lastElementChild;
-          el.querySelector(".key").textContent = key;
         }
 
         // Strip off the trailing ", " if necessary.
+        // TODO(philc): Use this using CSS.
         const lastEl = keysEl.lastElementChild;
         if (lastEl) {
           lastEl.removeChild(lastEl.querySelector(".comma-separator"));
         }
 
-        if (showAllCommandDetails) {
-          const descEl2 = descEl.querySelector(".help-description");
-          const node = commandNameTemplate.cloneNode(true);
-          descEl2.appendChild(node);
-          const el = descEl2.lastElementChild;
-          const commandNameEl = el.querySelector(".copy-command-name-name");
-          commandNameEl.textContent = command.command;
-          commandNameEl.title = `Click to copy \"${command.command}\" to clipboard.`;
-          commandNameEl.addEventListener("click", function () {
-            HUD.copyToClipboard(commandNameEl.textContent);
-            HUD.show(`Yanked ${commandNameEl.textContent}.`, 2000);
-          });
-        }
+        container.appendChild(entry);
       }
+
     }
 
     this.showAdvancedCommands(this.getShowAdvancedCommands());
