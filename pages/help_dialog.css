@@ -1,0 +1,217 @@
+
+div#vimiumHelpDialogContainer {
+  opacity: 1.0;
+  background-color: white;
+  border: 2px solid #b3b3b3;
+  border-radius: 6px;
+  width: 840px;
+  max-width: calc(100% - 100px);
+  max-height: calc(100% - 100px);
+  margin: 50px auto;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+div#vimiumHelpDialog {
+  min-width: 600px;
+  padding: 8px 12px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+span#vimiumTitle, span#vimiumTitle span, span#vimiumTitle * {
+  font-size: 20px;
+}
+#vimiumTitle {
+  display: block;
+  line-height: 130%;
+  white-space: nowrap;
+}
+td.vimiumHelpDialogTopButtons {
+  width: 100%;
+  text-align: right;
+}
+#helpDialogOptionsPage, #helpDialogWikiPage {
+  font-size: 14px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+div.vimiumColumn {
+  width: 50%;
+  float: left;
+  font-size: 11px;
+  line-height: 130%;
+}
+
+div.vimiumColumn tr {
+  display: table-row;
+}
+
+div.vimiumColumn td {
+  display: table-cell;
+  font-size: 11px;
+  line-height: 130%;
+}
+div.vimiumColumn table, div.vimiumColumn td, div.vimiumColumn tr {
+  padding: 0;
+  margin: 0;
+}
+div.vimiumColumn table {
+  width: 100%;
+  table-layout: auto;
+}
+div.vimiumColumn td {
+  vertical-align: top;
+  padding: 1px;
+}
+div#vimiumHelpDialog div.vimiumColumn tr > td:first-of-type {
+  /* This is the "key" column, e.g. "j", "gg". */
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  text-align: right;
+  white-space: nowrap;
+}
+span.vimiumHelpDialogKey {
+  background-color: rgb(243, 243, 243);
+  color: rgb(33, 33, 33);
+  margin-left: 2px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 3px;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  box-shadow: inset 0 -1px 0 #bbb;
+  font-family: monospace;
+  font-size: 11px;
+}
+/* Make the description column as wide as it can be. */
+div#vimiumHelpDialog div.vimiumColumn tr > td:nth-of-type(3) {
+  width: 100%;
+}
+div#vimiumHelpDialog div.vimiumDivider {
+  display: block;
+  height: 1px;
+  width: 100%;
+  margin: 10px auto;
+  background-color: #9a9a9a;
+}
+div#vimiumHelpDialog td.vimiumHelpSectionTitle {
+  padding-top: 3px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+}
+div#vimiumHelpDialog td.vimiumHelpDescription {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+div#vimiumHelpDialog span.vimiumCopyCommandNameName {
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+/* Advanced commands are hidden by default until you show them. */
+div#vimiumHelpDialog tr.advanced {
+  display: none;
+}
+div#vimiumHelpDialog.showAdvanced tr.advanced {
+  display: table-row;
+}
+div#vimiumHelpDialog div.advanced td:nth-of-type(3) {
+  color: #555;
+}
+div#vimiumHelpDialog a.closeButton {
+  font-family: "courier new";
+  font-weight: bold;
+  color: #555;
+  text-decoration: none;
+  font-size: 24px;
+  position: relative;
+  top: 3px;
+  padding-left: 5px;
+  cursor: pointer;
+}
+div#vimiumHelpDialog a {
+  text-decoration: underline;
+}
+
+div#vimiumHelpDialog a.closeButton:hover {
+  color: black;
+  -webkit-user-select: none;
+}
+div#vimiumHelpDialogFooter {
+  display: block;
+  position: relative;
+  margin-bottom: 37px;
+}
+table.helpDialogBottom {
+  width: 100%;
+}
+td.helpDialogBottomRight {
+  width: 100%;
+  float: right;
+  text-align: right;
+}
+td.helpDialogBottomRight, td.helpDialogBottomLeft {
+  padding: 0px;
+}
+div#vimiumHelpDialogFooter * {
+  font-size: 10px;
+}
+a#toggleAdvancedCommands, span#help-dialog-tip {
+  position: relative;
+  top: 19px;
+  white-space: nowrap;
+  font-size: 10px;
+}
+a:link.vimiumHelDialogLink,
+a:visited.vimiumHelDialogLink,
+a:hover.vimiumHelDialogLink,
+a:active.vimiumHelDialogLink,
+a#toggleAdvancedCommands {
+  color: #2f508e;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Dark Mode CSS for Help Dialog */
+@media (prefers-color-scheme: dark) {
+  div#vimiumHelpDialogContainer {
+    border-color: rgba(255, 255, 255, 0.1);
+    background-color: #202124;
+  }
+
+  div#vimiumHelpDialog {
+    background-color: #292a2d;
+    color: white;
+  }
+
+  div#vimiumHelpDialog td.vimiumHelpDescription {
+    color: #c9cccf;
+  }
+
+  span#vimiumTitle,
+  div#vimiumHelpDialog td.vimiumHelpSectionTitle {
+    color: white;
+  }
+
+  #vimiumTitle > span:first-child {
+    color: #8ab4f8 !important;
+  }
+
+  div#vimiumHelpDialog a {
+    color: #8ab4f8;
+  }
+
+  div#vimiumHelpDialog div.vimiumDivider {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  span.vimiumHelpDialogKey {
+    background-color: #1d1d1f;
+    border: solid 1px black;
+    box-shadow: none;
+    color: white;
+  }
+}
