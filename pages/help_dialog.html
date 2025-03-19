@@ -41,15 +41,11 @@
             <span id="help-dialog-title"></span>
           </h1>
 
-          <div class="vimiumHelpDialogTopButtons">
-            <a class="vimiumHelDialogLink" id="helpDialogOptionsPage" href="#">Options</a>
-            <a
-              class="vimiumHelDialogLink"
-              id="helpDialogWikiPage"
-              href="https://github.com/philc/vimium/wiki"
-              target="_blank"
-            >Wiki</a>
-            <a class="closeButton" href="#">&times;</a>
+          <!-- These buttons are wrapped in a div so they vertically center more evenly. -->
+          <div>
+            <a id="options-page" href="#">Options</a>
+            <a href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
+            <a id="close" href="#">&times;</a>
           </div>
         </header>
 
@@ -117,7 +113,7 @@
               <td class="helpDialogBottomLeft">
                 <span id="help-dialog-tip"></span>
               </td>
-              <td class="helpDialogBottomRight vimiumHelDialogLink">
+              <td class="helpDialogBottomRight">
                 <a href="#" id="toggleAdvancedCommands">Show advanced commands</a>
               </td>
             </tr>
@@ -131,12 +127,10 @@
           <div class="vimiumColumn">
             Enjoying Vimium?
             <a
-              class="vimiumHelDialogLink"
               target="_blank"
               href="https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb/reviews"
             >Leave us feedback</a>.<br>
             Found a bug? <a
-              class="vimiumHelDialogLink"
               target="_blank"
               href="https://github.com/philc/vimium/issues"
             >Report it here</a>.
@@ -147,7 +141,6 @@
             <a
               href="https://github.com/philc/vimium/blob/master/CHANGELOG.md"
               target="_blank"
-              class="vimiumHelDialogLink"
             >What's new?</a>
           </div>
         </div>

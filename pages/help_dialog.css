@@ -1,4 +1,4 @@
-
+/* TODO(philc): These reset styles aren't necessary. */
 div#vimiumHelpDialogContainer {
   opacity: 1.0;
   background-color: white;
@@ -36,15 +36,16 @@ h1 .vim {
   color: #2f508e;
 }
 
-td.vimiumHelpDialogTopButtons {
-  width: 100%;
-  text-align: right;
-}
-#helpDialogOptionsPage, #helpDialogWikiPage {
+header a {
   font-size: 14px;
   padding-left: 5px;
   padding-right: 5px;
 }
+
+header a.close {
+  padding-right: 0;
+}
+
 div.vimiumColumn {
   width: 50%;
   float: left;
@@ -131,7 +132,7 @@ div#vimiumHelpDialog.showAdvanced tr.advanced {
 div#vimiumHelpDialog div.advanced td:nth-of-type(3) {
   color: #555;
 }
-div#vimiumHelpDialog a.closeButton {
+a#close {
   font-family: "courier new";
   font-weight: bold;
   color: #555;
@@ -142,11 +143,14 @@ div#vimiumHelpDialog a.closeButton {
   padding-left: 5px;
   cursor: pointer;
 }
-div#vimiumHelpDialog a {
-  text-decoration: underline;
-}
 
-div#vimiumHelpDialog a.closeButton:hover {
+a {
+  text-decoration: underline;
+  color: #2f508e;
+  text-decoration: underline;
+  cursor: pointer;
+}
+a#close:hover {
   color: black;
   -webkit-user-select: none;
 }
@@ -175,15 +179,6 @@ a#toggleAdvancedCommands, span#help-dialog-tip {
   white-space: nowrap;
   font-size: 10px;
 }
-a:link.vimiumHelDialogLink,
-a:visited.vimiumHelDialogLink,
-a:hover.vimiumHelDialogLink,
-a:active.vimiumHelDialogLink,
-a#toggleAdvancedCommands {
-  color: #2f508e;
-  text-decoration: underline;
-  cursor: pointer;
-}
 
 /* Dark Mode CSS for Help Dialog */
 @media (prefers-color-scheme: dark) {
@@ -210,7 +205,7 @@ a#toggleAdvancedCommands {
     color: #8ab4f8 !important;
   }
 
-  div#vimiumHelpDialog a {
+  a {
     color: #8ab4f8;
   }
 
