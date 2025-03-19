@@ -115,7 +115,7 @@ div#vimiumHelpDialog div.divider {
   background-color: #9a9a9a;
 }
 
-div#vimiumHelpDialog td.vimiumHelpSectionTitle {
+div#vimiumHelpDialog td.section-title {
   padding-top: 3px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -180,24 +180,8 @@ footer {
   text-align: right;
 }
 
-table.helpDialogBottom {
-  width: 100%;
-}
-
-td.helpDialogBottomRight {
-  width: 100%;
-  float: right;
+#toggle-advanced {
   text-align: right;
-}
-
-td.helpDialogBottomRight, td.helpDialogBottomLeft {
-  padding: 0px;
-}
-
-a#toggleAdvancedCommands, span#help-dialog-tip {
-  position: relative;
-  top: 19px;
-  white-space: nowrap;
   font-size: 10px;
 }
 
@@ -218,7 +202,7 @@ a#toggleAdvancedCommands, span#help-dialog-tip {
   }
 
   h1,
-  div#vimiumHelpDialog td.vimiumHelpSectionTitle {
+  div#vimiumHelpDialog td.section-title {
     color: white;
   }
 

@@ -52,7 +52,7 @@ const HelpDialog = {
       }, false);
     }
 
-    document.querySelector("#toggleAdvancedCommands").addEventListener(
+    document.querySelector("#toggle-advanced a").addEventListener(
       "click",
       HelpDialog.toggleAdvancedCommands.bind(HelpDialog),
       false,
@@ -195,7 +195,7 @@ const HelpDialog = {
 
   showAdvancedCommands(visible) {
     const caption = visible ? "Hide advanced commands" : "Show advanced commands";
-    document.getElementById("toggleAdvancedCommands").textContent = caption;
+    document.querySelector("#toggle-advanced a").textContent = caption;
     if (visible) {
       HelpDialog.dialogElement.classList.add("showAdvanced");
     } else {
