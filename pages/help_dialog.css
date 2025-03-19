@@ -1,6 +1,8 @@
-/* TODO(philc): These reset styles aren't necessary. */
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
 #container {
-  opacity: 1.0;
   background-color: white;
   border: 2px solid #b3b3b3;
   border-radius: 6px;
@@ -15,13 +17,11 @@
 #dialog {
   min-width: 600px;
   padding: 8px 12px;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 a {
   text-decoration: underline;
   color: #2f508e;
-  text-decoration: underline;
   cursor: pointer;
 }
 
@@ -32,7 +32,7 @@ header {
 }
 
 a#close {
-  font-family: "courier new";
+  font-family: "courier new", monospace;
   font-weight: bold;
   color: #555;
   text-decoration: none;
@@ -117,10 +117,7 @@ div[data-group] {
   background-color: rgb(243, 243, 243);
   color: rgb(33, 33, 33);
   margin-left: 2px;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  padding-left: 4px;
-  padding-right: 4px;
+  padding: 1px 4px;
   border-radius: 3px;
   border: solid 1px #ccc;
   border-bottom-color: #bbb;
@@ -143,7 +140,6 @@ div[data-group] {
 }
 
 div.divider {
-  display: block;
   height: 1px;
   width: 100%;
   margin: 10px auto;
@@ -202,14 +198,14 @@ footer {
   }
 
   h1 .vim {
-    color: #8ab4f8 !important;
+    color: #8ab4f8;
   }
 
   div.divider {
     background-color: rgba(255, 255, 255, 0.1);
   }
 
-  span.key {
+  .key {
     background-color: #1d1d1f;
     border: solid 1px black;
     box-shadow: none;
