@@ -35,7 +35,7 @@ const HelpDialog = {
     if (this.dialogElement != null) {
       return;
     }
-    this.dialogElement = document.querySelector("#vimiumHelpDialog");
+    this.dialogElement = document.querySelector("#dialog");
 
     const closeButton = this.dialogElement.querySelector("#close");
     closeButton.addEventListener("click", (event) => {
@@ -137,7 +137,7 @@ const HelpDialog = {
           const node = keysTemplate.cloneNode(true);
           keysEl.appendChild(node);
           const el = keysEl.lastElementChild;
-          el.querySelector(".vimiumHelpDialogKey").textContent = key;
+          el.querySelector(".key").textContent = key;
         }
 
         // Strip off the trailing ", " if necessary.
@@ -180,7 +180,7 @@ const HelpDialog = {
   // Advanced commands are hidden by default so they don't overwhelm new and casual users.
   //
   toggleAdvancedCommands(event) {
-    const container = document.getElementById("vimiumHelpDialogContainer");
+    const container = document.querySelector("#container");
     const scrollHeightBefore = container.scrollHeight;
     event.preventDefault();
     const showAdvanced = HelpDialog.getShowAdvancedCommands();
