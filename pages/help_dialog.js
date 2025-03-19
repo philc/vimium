@@ -37,14 +37,14 @@ const HelpDialog = {
     }
     this.dialogElement = document.querySelector("#vimiumHelpDialog");
 
-    const closeButton = this.dialogElement.querySelector(".closeButton");
+    const closeButton = this.dialogElement.querySelector("#close");
     closeButton.addEventListener("click", (event) => {
       event.preventDefault();
       this.hide();
     }, false);
 
     // "auxclick" handles a click with the middle mouse button.
-    const optionsLink = document.querySelector("#helpDialogOptionsPage");
+    const optionsLink = document.querySelector("#options-page");
     for (const eventName of ["click", "auxclick"]) {
       optionsLink.addEventListener(eventName, (event) => {
         event.preventDefault();
