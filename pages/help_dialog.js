@@ -70,10 +70,10 @@ const HelpDialog = {
     document.getElementById("help-dialog-title").textContent = title;
     document.getElementById("vimium-version").textContent = Utils.getCurrentVersion();
 
-    const entryTemplate = document.querySelector("#helpDialogEntry").content;
-    const entryBindingsTemplate = document.querySelector("#helpDialogEntryBindingsOnly").content;
-    const keysTemplate = document.querySelector("#keysTemplate").content;
-    const commandNameTemplate = document.querySelector("#commandNameTemplate").content;
+    const entryTemplate = document.querySelector("#entry").content;
+    const entryBindingsTemplate = document.querySelector("#entry-bindings-only").content;
+    const keysTemplate = document.querySelector("#keys-template").content;
+    const commandNameTemplate = document.querySelector("#command-name-template").content;
 
     const { helpPageData } = await chrome.storage.session.get("helpPageData");
     for (const group of Object.keys(helpPageData)) {
@@ -125,14 +125,14 @@ const HelpDialog = {
         if ((command.description.length + command.options.length) > MAX_LENGTH) {
           optionsTruncated += "...";
           // Full option list (non-ellipsized) will be visible on hover.
-          descEl.querySelector(".vimiumHelpDescription").title = command.options;
+          descEl.querySelector(".help-description").title = command.options;
         }
         const optionsString = command.options ? ` (${optionsTruncated})` : "";
         const fullDescription = `${command.description}${optionsString}`;
-        descEl.querySelector(".vimiumHelpDescription").textContent = fullDescription;
+        descEl.querySelector(".help-description").textContent = fullDescription;
 
-        keysEl = keysEl.querySelector(".vimiumKeyBindings");
-        const keysTemplate = document.querySelector("#keysTemplate").content;
+        keysEl = keysEl.querySelector(".key-bindings");
+        const keysTemplate = document.querySelector("#keys-template").content;
         for (var key of command.keys.sort(compareKeys)) {
           const node = keysTemplate.cloneNode(true);
           keysEl.appendChild(node);
@@ -143,15 +143,15 @@ const HelpDialog = {
         // Strip off the trailing ", " if necessary.
         const lastEl = keysEl.lastElementChild;
         if (lastEl) {
-          lastEl.removeChild(lastEl.querySelector(".commaSeparator"));
+          lastEl.removeChild(lastEl.querySelector(".comma-separator"));
         }
 
         if (showAllCommandDetails) {
-          const descEl2 = descEl.querySelector(".vimiumHelpDescription");
+          const descEl2 = descEl.querySelector(".help-description");
           const node = commandNameTemplate.cloneNode(true);
           descEl2.appendChild(node);
           const el = descEl2.lastElementChild;
-          const commandNameEl = el.querySelector(".vimiumCopyCommandNameName");
+          const commandNameEl = el.querySelector(".copy-command-name-name");
           commandNameEl.textContent = command.command;
           commandNameEl.title = `Click to copy \"${command.command}\" to clipboard.`;
           commandNameEl.addEventListener("click", function () {
