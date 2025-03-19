@@ -1,7 +1,8 @@
 import "../lib/utils.js";
 import "../lib/settings.js";
 import "../lib/dom_utils.js";
-import "./ui_component_server.js";
+// TODO(philc): Why does importing this break the help dialog?
+// import "./ui_component_server.js";
 import "../background_scripts/all_commands.js";
 
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
