@@ -78,7 +78,7 @@ const HelpDialog = {
     const { helpPageData } = await chrome.storage.session.get("helpPageData");
     for (const group of Object.keys(helpPageData)) {
       const commands = helpPageData[group];
-      const container = this.dialogElement.querySelector(`#help-dialog-${group}`);
+      const container = this.dialogElement.querySelector(`.commands[data-group="${group}"]`);
       container.innerHTML = "";
 
       for (const command of commands) {
