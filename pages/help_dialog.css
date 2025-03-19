@@ -134,6 +134,11 @@ div[data-group] {
   margin-right: 3px;
 }
 
+/* Don't show a trailing comma after the last key binding. */
+.key-block:last-of-type .comma-separator {
+  display: none;
+}
+
 .help-description {
   font-size: 14px;
 }
