@@ -62,18 +62,22 @@ div.vimiumColumn td {
   font-size: 11px;
   line-height: 130%;
 }
+
 div.vimiumColumn table, div.vimiumColumn td, div.vimiumColumn tr {
   padding: 0;
   margin: 0;
 }
+
 div.vimiumColumn table {
   width: 100%;
   table-layout: auto;
 }
+
 div.vimiumColumn td {
   vertical-align: top;
   padding: 1px;
 }
+
 div#vimiumHelpDialog div.vimiumColumn tr > td:first-of-type {
   /* This is the "key" column, e.g. "j", "gg". */
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -81,6 +85,7 @@ div#vimiumHelpDialog div.vimiumColumn tr > td:first-of-type {
   text-align: right;
   white-space: nowrap;
 }
+
 span.vimiumHelpDialogKey {
   background-color: rgb(243, 243, 243);
   color: rgb(33, 33, 33);
@@ -96,10 +101,12 @@ span.vimiumHelpDialogKey {
   font-family: monospace;
   font-size: 11px;
 }
+
 /* Make the description column as wide as it can be. */
 div#vimiumHelpDialog div.vimiumColumn tr > td:nth-of-type(3) {
   width: 100%;
 }
+
 div#vimiumHelpDialog div.vimiumDivider {
   display: block;
   height: 1px;
@@ -107,31 +114,38 @@ div#vimiumHelpDialog div.vimiumDivider {
   margin: 10px auto;
   background-color: #9a9a9a;
 }
+
 div#vimiumHelpDialog td.vimiumHelpSectionTitle {
   padding-top: 3px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 16px;
   font-weight: bold;
 }
+
 div#vimiumHelpDialog td.vimiumHelpDescription {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
 }
+
 div#vimiumHelpDialog span.vimiumCopyCommandNameName {
   font-style: italic;
   cursor: pointer;
   font-size: 12px;
 }
+
 /* Advanced commands are hidden by default until you show them. */
 div#vimiumHelpDialog tr.advanced {
   display: none;
 }
+
 div#vimiumHelpDialog.showAdvanced tr.advanced {
   display: table-row;
 }
+
 div#vimiumHelpDialog div.advanced td:nth-of-type(3) {
   color: #555;
 }
+
 a#close {
   font-family: "courier new";
   font-weight: bold;
@@ -150,29 +164,36 @@ a {
   text-decoration: underline;
   cursor: pointer;
 }
+
 a#close:hover {
   color: black;
   -webkit-user-select: none;
 }
+
 div#vimiumHelpDialogFooter {
   display: block;
   position: relative;
   margin-bottom: 37px;
 }
+
 table.helpDialogBottom {
   width: 100%;
 }
+
 td.helpDialogBottomRight {
   width: 100%;
   float: right;
   text-align: right;
 }
+
 td.helpDialogBottomRight, td.helpDialogBottomLeft {
   padding: 0px;
 }
+
 div#vimiumHelpDialogFooter * {
   font-size: 10px;
 }
+
 a#toggleAdvancedCommands, span#help-dialog-tip {
   position: relative;
   top: 19px;
