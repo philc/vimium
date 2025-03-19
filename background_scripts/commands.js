@@ -302,7 +302,7 @@ const Commands = {
   // An ordered listing of all available commands, grouped by type. This is the order they will be
   // shown in the help page.
   commandGroups: {
-    pageNavigation: [
+    navigation: [
       "scrollDown",
       "scrollUp",
       "scrollToTop",
@@ -340,7 +340,7 @@ const Commands = {
       "Marks.activateCreateMode",
       "Marks.activateGotoMode",
     ],
-    vomnibarCommands: [
+    vomnibar: [
       "Vomnibar.activate",
       "Vomnibar.activateInNewTab",
       "Vomnibar.activateBookmarks",
@@ -349,15 +349,15 @@ const Commands = {
       "Vomnibar.activateEditUrl",
       "Vomnibar.activateEditUrlInNewTab",
     ],
-    findCommands: [
+    find: [
       "enterFindMode",
       "performFind",
       "performBackwardsFind",
       "findSelected",
       "findSelectedBackwards",
     ],
-    historyNavigation: ["goBack", "goForward"],
-    tabManipulation: [
+    history: ["goBack", "goForward"],
+    tabs: [
       "createTab",
       "previousTab",
       "nextTab",
