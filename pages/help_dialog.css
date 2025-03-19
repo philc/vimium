@@ -95,7 +95,6 @@ div[data-group] {
 
 .row {
   display: contents;
-  border: 1px solid red;
 }
 
 .key-bindings {
@@ -143,7 +142,7 @@ div[data-group] {
   font-size: 14px;
 }
 
-#dialog div.divider {
+div.divider {
   display: block;
   height: 1px;
   width: 100%;
@@ -151,14 +150,14 @@ div[data-group] {
   background-color: #9a9a9a;
 }
 
-#dialog span.copy-command-name-name {
+span.copy-command-name-name {
   font-style: italic;
   cursor: pointer;
   font-size: 12px;
 }
 
 /* Advanced commands are hidden by default until you show them. */
-#dialog .row.advanced {
+.row.advanced {
   display: none;
 }
 
@@ -206,7 +205,7 @@ footer {
     color: #8ab4f8 !important;
   }
 
-  #dialog div.divider {
+  div.divider {
     background-color: rgba(255, 255, 255, 0.1);
   }
 
@@ -217,7 +216,7 @@ footer {
     color: white;
   }
 
-  #dialog .help-description {
+  .help-description {
     color: #c9cccf;
   }
 }
