@@ -170,10 +170,14 @@ a#close:hover {
   -webkit-user-select: none;
 }
 
-div#vimiumHelpDialogFooter {
-  display: block;
-  position: relative;
-  margin-bottom: 37px;
+footer {
+  font-size: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.version-info {
+  text-align: right;
 }
 
 table.helpDialogBottom {
@@ -188,10 +192,6 @@ td.helpDialogBottomRight {
 
 td.helpDialogBottomRight, td.helpDialogBottomLeft {
   padding: 0px;
-}
-
-div#vimiumHelpDialogFooter * {
-  font-size: 10px;
 }
 
 a#toggleAdvancedCommands, span#help-dialog-tip {

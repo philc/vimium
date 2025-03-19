@@ -68,7 +68,7 @@ const HelpDialog = {
   async show({ showAllCommandDetails }) {
     const title = showAllCommandDetails ? "Command Listing" : "Help";
     document.getElementById("help-dialog-title").textContent = title;
-    document.getElementById("help-dialog-version").textContent = Utils.getCurrentVersion();
+    document.getElementById("vimium-version").textContent = Utils.getCurrentVersion();
 
     const entryTemplate = document.querySelector("#helpDialogEntry").content;
     const entryBindingsTemplate = document.querySelector("#helpDialogEntryBindingsOnly").content;
