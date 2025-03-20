@@ -25,7 +25,7 @@ const HUD = {
       hideFindMode: this.hideFindMode,
       search: this.search,
       unfocusIfFocused: this.unfocusIfFocused,
-      paseResponse: this.pasteResponse,
+      pasteResponse: this.pasteResponse,
       showClipboardUnavailableMessage: this.showClipboardUnavailableMessage,
     };
     const handler = handlers[data.name];
