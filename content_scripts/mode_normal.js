@@ -225,11 +225,11 @@ const NormalModeCommands = {
   },
 
   findSelected() {
-    findSelectedHelper(false);
+    this.findSelectedHelper(false);
   },
 
   findSelectedBackwards() {
-    findSelectedHelper(true);
+    this.findSelectedHelper(true);
   },
 
   // Misc.
