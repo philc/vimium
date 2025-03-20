@@ -177,6 +177,20 @@ b: http://b.com/?q=%s description
         </div>
 
         <h2></h2>
+        <div id="macos">
+          <label>
+            <input id="macOptionKeyFix" type="checkbox" />
+            macOS: Treat Option as Alt/Meta
+          </label>
+          <div class="example">
+            This forces Vimium to treat an <code>Option + Key</code> keypress that would produce a
+            symbol on macOS as the equivalent <code>Alt + Letter</code> keypress. (With this
+            enabled, you can create maps such as <code>&lt;a-j&gt;</code> rather than
+            <code>&lt;a-&Delta;&gt;</code>.)
+          </div>
+        </div>
+
+        <h2></h2>
         <label>
           <input id="ignoreKeyboardLayout" type="checkbox" />
           Ignore keyboard layout
