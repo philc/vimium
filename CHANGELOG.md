@@ -1,3 +1,8 @@
+2.2.1 (2025-03-20)
+
+- Fix findSelected and findSelectedBackwards commands (https://github.com/philc/vimium/issues/4655)
+- Fix openCopiedUrlInCurrentTab (https://github.com/philc/vimium/issues/4654)
+
 2.2.0 (2025-03-08)
 
 - Use the browser's default search engine. [(#2598)](https://github.com/philc/vimium/issues/2598)
