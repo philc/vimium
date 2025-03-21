@@ -134,8 +134,9 @@ const COPY_LINK_TEXT = {
 const HOVER_LINK = {
   name: "hover",
   indicator: "Hover link",
+  doesScroll: false,
   linkActivator(link) {
-    new HoverMode(link);
+    new HoverMode(link, HOVER_LINK.doesScroll);
   },
 };
 const FOCUS_LINK = {
@@ -310,11 +311,14 @@ const LinkHints = {
     if (count == null) count = 1;
     if (mode == null) mode = OPEN_IN_CURRENT_TAB;
 
-    switch (registryEntry?.options.action) {
+    const action = registryEntry?.options.action;
+
+    switch (action) {
       case "copy-text":
         mode = COPY_LINK_TEXT;
         break;
-      case "hover":
+      case "hover": case "hover-and-scroll":
+        HOVER_LINK.doesScroll = action !== "hover";
         mode = HOVER_LINK;
         break;
       case "focus":
@@ -1508,10 +1512,13 @@ class WaitForEnter extends Mode {
 }
 
 class HoverMode extends Mode {
-  constructor(link) {
+  constructor(link, doesScroll) {
     super();
     super.init({ name: "hover-mode", singleton: "hover-mode", exitOnEscape: true });
     this.link = link;
+    if (doesScroll) {
+      Scroller.selectElement(link);
+    }
     DomUtils.simulateHover(this.link);
     this.onExit(() => DomUtils.simulateUnhover(this.link));
   }
