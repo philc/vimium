@@ -268,6 +268,7 @@ const Commands = {
         }
       }
     */
+    // TODO(philc): Consider pulling this out into a different pure function.
     const commandToOptionsToKeys = {};
     for (const key of Object.keys(this.keyToRegistryEntry || {})) {
       const registryEntry = this.keyToRegistryEntry[key];
@@ -276,27 +277,7 @@ const Commands = {
       commandToOptionsToKeys[registryEntry.command][optionString] ||= [];
       commandToOptionsToKeys[registryEntry.command][optionString].push(key);
     }
-    const commandGroups = {};
-    for (const group of Object.keys(this.commandGroups || {})) {
-      const commands = this.commandGroups[group];
-      commandGroups[group] = [];
-      for (const command of commands) {
-        // Default to base command has no keys for "show available commands" menu.
-        const optionsToKeys = commandToOptionsToKeys[command] ?? { "": [] };
-        for (const [options, keys] of Object.entries(optionsToKeys)) {
-          const advanced = this.advancedCommands.includes(command) ||
-            this.advancedCommands.includes(`${command} ${options}`);
-          commandGroups[group].push({
-            command,
-            description: this.availableCommands[command].description,
-            keys,
-            advanced,
-            options,
-          });
-        }
-      }
-    }
-    chrome.storage.session.set({ helpPageData: commandGroups });
+    chrome.storage.session.set({ helpPageData: commandToOptionsToKeys });
   },
 
   // An ordered listing of all available commands, grouped by type. This is the order they will be

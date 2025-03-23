@@ -8,6 +8,7 @@ import { HelpDialog } from "../../pages/help_dialog.js";
 context("help dialog", () => {
   setup(async () => {
     const html = await Deno.readTextFile("pages/help_dialog.html");
+
     const w = new jsdom.JSDOM(html).window;
     // TODO(philc): Change these to stub, and improve how this works.
     globalThis.window = w;
@@ -18,24 +19,41 @@ context("help dialog", () => {
     stub(chrome.storage.session, "get", async (key) => {
       if (key == "helpPageData") {
         const data = {
-          "pageNavigation": [
-            {
-              keys: ["a"],
-              advanced: false,
-              description: "example-description",
-              options: "example-options",
-            },
-          ],
+          "reload": {
+            "": ["a"],
+            "hard": ["b"],
+          },
         };
         return { helpPageData: data };
       }
     });
-
   });
 
   teardown(() => {
     globalThis.window = undefined;
     globalThis.document = undefined;
+  });
+
+  should("getRowsForDialog includes commands which are not bound", () => {
+    const emptyConfig = {};
+    const result = HelpDialog.getRowsForDialog(emptyConfig);
+    const miscGroup = result["misc"];
+    const helpCommands = miscGroup.filter((row) => row[0] == "showHelp");
+    assert.equal(1, helpCommands.length);
+  });
+
+  should("getRowsForDialog includes one row per command-options pair", () => {
+    const config = {
+      "reload": {
+        "hard": ["b", "c"],
+      },
+    };
+    const result = HelpDialog.getRowsForDialog(config);
+    const reloadCommands = result["navigation"].filter((row) => row[0] == "reload");
+    assert.equal([
+      ["reload", "", []],
+      ["reload", "hard", ["b", "c"]],
+    ], reloadCommands);
   });
 
   should("have a section in the help dialog for every group", async () => {
@@ -44,7 +62,7 @@ context("help dialog", () => {
     HelpDialog.init();
     await HelpDialog.show({ showAllCommandDetails: false });
     const groups = Array.from(new Set(allCommands.map((c) => c.group))).sort();
-    const groupsInDialog = Array.from(HelpDialog.dialogElement.querySelectorAll(".commands"))
+    const groupsInDialog = Array.from(HelpDialog.dialogElement.querySelectorAll("div[data-group]"))
       .map((e) => e.dataset.group)
       .sort();
     assert.equal(groups, groupsInDialog);

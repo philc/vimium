@@ -65,6 +65,31 @@ const HelpDialog = {
     }, false);
   },
 
+  // Returns the rows to show in the help dialog, grouped by command group.
+  // Returns: { group: [[commandName, args, keys], ...], ... }
+  getRowsForDialog(commandToOptionsToKeys) {
+    const result = {};
+    const byGroup = Object.groupBy(allCommands, (o) => o.group);
+    for (const [group, commands] of Object.entries(byGroup)) {
+      const list = [];
+      for (const command of commands) {
+        const variations = commandToOptionsToKeys[command.name] || {};
+        // Ensure every command, without options, has an entry in the help dialog.
+        // NOTE(philc): It doesn't necessarily need to be the case that we want to show
+        // an entry for every command without options, but it's the case today.
+        const noOptions = "";
+        if (!variations[noOptions]) {
+          list.push([command.name, "", []]);
+        }
+        for (const [options, keys] of Object.entries(variations)) {
+          list.push([command.name, options, keys]);
+        }
+      }
+      result[group] = list;
+    }
+    return result;
+  },
+
   // TODO(philc): Clean up the rest of this showAllCommandDetails usage.
   async show({ showAllCommandDetails }) {
     const title = showAllCommandDetails ? "Command Listing" : "Help";
@@ -76,47 +101,27 @@ const HelpDialog = {
     const keysTemplate = document.querySelector("#keys-template").content;
     const commandNameTemplate = document.querySelector("#command-name-template").content;
 
-    const { helpPageData } = await chrome.storage.session.get("helpPageData");
-    for (const group of Object.keys(helpPageData)) {
-      const commands = helpPageData[group];
+    const commandToOptionsToKeys = (await chrome.storage.session.get("helpPageData")).helpPageData;
+    const rowsByGroup = this.getRowsForDialog(commandToOptionsToKeys);
+    const commandsByName = Utils.keyBy(allCommands, "name");
+
+    for (const [group, rows] of Object.entries(rowsByGroup)) {
       const container = this.dialogElement.querySelector(`[data-group="${group}"]`);
       container.innerHTML = "";
-
-      for (const command of commands) {
-        const unbound = command.keys.length == 0;
-        if (unbound && !showAllCommandDetails) continue;
-
-        // TODO(philc): Determine how to layout long key names, e.g. <c-enter>
-        const entry = entryTemplate.cloneNode(true);
+      for (const [name, options, keys] of rows) {
+        const entryEl = entryTemplate.cloneNode(true);
+        const command = commandsByName[name];
+        entryEl.querySelector(".help-description").textContent = command.desc;
         if (command.advanced) {
-          entry.querySelector(".row").classList.add("advanced");
+          entryEl.querySelector(".row").classList.add("advanced");
         }
-
-        const keysEl = entry.querySelector(".key-bindings");
-        const descEl = entry.querySelector(".help-description");
-
-        const MAX_LENGTH = 50;
-        // - 3 because 3 is the length of the ellipsis string, "..."
-        const desiredOptionsLength = Math.max(0, MAX_LENGTH - command.description.length - 3);
-        // If command + options is too long: truncate, add ellipsis, and set hover.
-        let optionsTruncated = command.options.substring(0, desiredOptionsLength);
-        if ((command.description.length + command.options.length) > MAX_LENGTH) {
-          optionsTruncated += "...";
-          // Full option list (non-ellipsized) will be visible on hover.
-          descEl.title = command.options;
-        }
-        const optionsString = command.options ? ` (${optionsTruncated})` : "";
-        const fullDescription = `${command.description}${optionsString}`;
-        descEl.textContent = fullDescription;
-
-        const keysTemplate = document.querySelector("#keys-template").content;
-        for (const key of command.keys.sort(compareKeys)) {
+        const keysEl = entryEl.querySelector(".key-bindings");
+        for (const key of keys.sort(compareKeys)) {
           const node = keysTemplate.cloneNode(true);
           node.querySelector(".key").textContent = key;
           keysEl.appendChild(node);
         }
-
-        container.appendChild(entry);
+        container.appendChild(entryEl);
       }
     }
 
