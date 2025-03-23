@@ -11,8 +11,8 @@ function populatePage() {
     commands = commands.sort((a, b) => b.name.localeCompare(a.name));
     for (const command of commands) {
       const el = template.cloneNode(true);
-      el.querySelector("h3 code").innerText = command.name;
-      el.querySelector(".desc").innerText = command.desc;
+      el.querySelector("h3 code").textContent = command.name;
+      el.querySelector(".desc").textContent = command.desc;
       if (command.options) {
         const ul = el.querySelector(".options ul");
         for (const [name, desc] of Object.entries(command.options)) {
