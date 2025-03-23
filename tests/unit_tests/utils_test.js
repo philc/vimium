@@ -215,3 +215,24 @@ context("UserSearchEngines", () => {
     assert.equal(1, getErrors("g: invalid-url").length);
   });
 });
+
+context("keyBy", () => {
+  const array = [
+    { key: "a" },
+    { key: "b" },
+  ];
+
+  should("group by string key", () => {
+    assert.equal(
+      { a: array[0], b: array[1] },
+      Utils.keyBy(array, "key"),
+    );
+  });
+
+  should("group by key function", () => {
+    assert.equal(
+      { a: array[0], b: array[1] },
+      Utils.keyBy(array, (el) => el.key)
+    );
+  });
+});
