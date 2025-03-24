@@ -20,6 +20,7 @@ class RegistryEntry {
   // The (optional) raw list of options for this command provided in the user's settings.
   // E.g. "count=10" in "map j scrollDown count=10".
   // NOTE(philc): This is used only by the createTab command.
+  // TODO(philc): Can we remove this?
   optionList;
 
   constructor(o) {
