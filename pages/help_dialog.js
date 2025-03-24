@@ -73,14 +73,9 @@ const HelpDialog = {
     for (const [group, commands] of Object.entries(byGroup)) {
       const list = [];
       for (const command of commands) {
+        // Note that commands which are unbound won't be present in this data structure, and that's
+        // desired; we don't want to show unbound commands in the help dialog.
         const variations = commandToOptionsToKeys[command.name] || {};
-        // Ensure every command, without options, has an entry in the help dialog.
-        // NOTE(philc): It doesn't necessarily need to be the case that we want to show
-        // an entry for every command without options, but it's the case today.
-        const noOptions = "";
-        if (!variations[noOptions]) {
-          list.push([command.name, "", []]);
-        }
         for (const [options, keys] of Object.entries(variations)) {
           list.push([command.name, options, keys]);
         }
