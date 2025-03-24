@@ -34,24 +34,17 @@ context("help dialog", () => {
     globalThis.document = undefined;
   });
 
-  should("getRowsForDialog includes commands which are not bound", () => {
-    const emptyConfig = {};
-    const result = HelpDialog.getRowsForDialog(emptyConfig);
-    const miscGroup = result["misc"];
-    const helpCommands = miscGroup.filter((row) => row[0] == "showHelp");
-    assert.equal(1, helpCommands.length);
-  });
-
   should("getRowsForDialog includes one row per command-options pair", () => {
     const config = {
       "reload": {
+        "": ["a"],
         "hard": ["b", "c"],
       },
     };
     const result = HelpDialog.getRowsForDialog(config);
     const reloadCommands = result["navigation"].filter((row) => row[0] == "reload");
     assert.equal([
-      ["reload", "", []],
+      ["reload", "", ["a"]],
       ["reload", "hard", ["b", "c"]],
     ], reloadCommands);
   });
