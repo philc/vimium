@@ -152,7 +152,7 @@ span.copy-command-name-name {
   font-size: 12px;
 }
 
-/* Advanced commands are hidden by default until you show them. */
+/* Advanced commands are hidden by default until "show advanced" is clicked. */
 .row.advanced {
   display: none;
 }
