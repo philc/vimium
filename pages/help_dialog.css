@@ -126,12 +126,12 @@ div[data-group] {
   font-size: 11px;
 }
 
-.comma-separator {
+.comma {
   margin-right: 3px;
 }
 
 /* Don't show a trailing comma after the last key binding. */
-.key-block:last-of-type .comma-separator {
+.key-block:last-of-type .comma {
   display: none;
 }
 
