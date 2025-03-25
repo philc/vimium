@@ -124,8 +124,7 @@ const HelpDialog = {
     return rowEl;
   },
 
-  // TODO(philc): Clean up the rest of this showAllCommandDetails usage.
-  async show({ showAllCommandDetails }) {
+  async show() {
     document.getElementById("vimium-version").textContent = Utils.getCurrentVersion();
 
     const commandToOptionsToKeys = (await chrome.storage.session.get("helpPageData")).helpPageData;
