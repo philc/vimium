@@ -39,7 +39,6 @@ const OptionsPage = {
     }
 
     saveOptionsEl.addEventListener("click", () => this.saveOptions());
-    document.querySelector("#showCommands").addEventListener("click", () => HelpDialog.toggle());
 
     document.querySelector("#filterLinkHints").addEventListener(
       "click",

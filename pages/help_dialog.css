@@ -146,12 +146,6 @@ div.divider {
   background-color: #9a9a9a;
 }
 
-span.copy-command-name-name {
-  font-style: italic;
-  cursor: pointer;
-  font-size: 12px;
-}
-
 /* Advanced commands are hidden by default until "show advanced" is clicked. */
 .row.advanced {
   display: none;
