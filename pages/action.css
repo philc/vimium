@@ -46,7 +46,8 @@ h1 {
   max-height: 140px;
 }
 
-#footer {
+footer {
+  background-color: var(--vimium-foreground-color);
   padding: var(--padding);
   box-sizing: border-box;
   display: flex;
@@ -54,6 +55,6 @@ h1 {
   position: inherit;
 }
 
-#footer .optionsMessage {
+footer .optionsMessage {
   flex-grow: 1;
 }

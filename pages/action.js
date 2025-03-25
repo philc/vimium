@@ -9,7 +9,7 @@ const ActionPage = {
 
     const hideUI = () => {
       document.querySelector("#dialogBody").style.display = "none";
-      document.querySelector("#footer").style.display = "none";
+      document.querySelector("footer").style.display = "none";
     };
 
     // In Firefox, prompt the user if they haven't enabled the "all hosts" permission. Vimium needs
