@@ -93,15 +93,15 @@ const HelpDialog = {
   },
 
   getRowEl(command, options, keys) {
-    const entryTemplate = document.querySelector("#entry").content;
-    const keysTemplate = document.querySelector("#keys-template").content;
+    const rowTemplate = document.querySelector("template#row").content;
+    const keysTemplate = document.querySelector("template#keys").content;
 
-    const entryEl = entryTemplate.cloneNode(true);
-    entryEl.querySelector(".help-description").textContent = command.desc;
+    const rowEl = rowTemplate.cloneNode(true);
+    rowEl.querySelector(".help-description").textContent = command.desc;
     if (command.advanced) {
-      entryEl.querySelector(".row").classList.add("advanced");
+      rowEl.querySelector(".row").classList.add("advanced");
     }
-    const keysEl = entryEl.querySelector(".key-bindings");
+    const keysEl = rowEl.querySelector(".key-bindings");
     for (const key of keys.sort(compareKeys)) {
       const node = keysTemplate.cloneNode(true);
       node.querySelector(".key").textContent = key;
@@ -109,7 +109,7 @@ const HelpDialog = {
     }
 
     const maxLength = 40;
-    const descEl = entryEl.querySelector(".help-description");
+    const descEl = rowEl.querySelector(".help-description");
     let desc = command.desc;
     if (options != "") {
       const optionsString = ellipsize(options, maxLength - command.desc.length);
@@ -121,7 +121,7 @@ const HelpDialog = {
       }
     }
     descEl.textContent = desc;
-    return entryEl;
+    return rowEl;
   },
 
   // TODO(philc): Clean up the rest of this showAllCommandDetails usage.
