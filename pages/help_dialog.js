@@ -93,11 +93,8 @@ const HelpDialog = {
   },
 
   getRowEl(command, options, keys) {
-    // Memoize these.
     const entryTemplate = document.querySelector("#entry").content;
-    const entryBindingsTemplate = document.querySelector("#entry-bindings-only").content;
     const keysTemplate = document.querySelector("#keys-template").content;
-    const commandNameTemplate = document.querySelector("#command-name-template").content;
 
     const entryEl = entryTemplate.cloneNode(true);
     entryEl.querySelector(".help-description").textContent = command.desc;
