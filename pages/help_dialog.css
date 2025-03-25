@@ -117,7 +117,7 @@ div[data-group] {
   background-color: rgb(243, 243, 243);
   color: rgb(33, 33, 33);
   margin-left: 2px;
-  padding: 1px 4px;
+  padding: 2px 6px;
   border-radius: 3px;
   border: solid 1px #ccc;
   border-bottom-color: #bbb;
@@ -184,12 +184,12 @@ footer {
   }
 
   #dialog {
-    background-color: #292a2d;
-    color: white;
+    background-color: var(--vimium-background-color);
+    color: var(--vimium-background-text-color);
   }
 
   a {
-    color: #8ab4f8;
+    color: var(--vimium-link-color);
   }
 
   h1,
@@ -198,7 +198,7 @@ footer {
   }
 
   h1 .vim {
-    color: #8ab4f8;
+    color: var(--vimium-link-color);
   }
 
   div.divider {
@@ -206,13 +206,17 @@ footer {
   }
 
   .key {
-    background-color: #1d1d1f;
-    border: solid 1px black;
+    /* We're using a color that pops more than --vimium-foreground-color because the squares
+       representing keys are small and hard to read otherwise. */
+    background-color: #393a3d;
+    border: solid 1px #101010;
     box-shadow: none;
     color: white;
   }
 
   .help-description {
+    /* Use a fainter color than --vimium-background-text-color, so the dialog text doesn't get
+       overwhelming. */
     color: #c9cccf;
   }
 }
