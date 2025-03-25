@@ -1,8 +1,8 @@
-/* Vomnibar CSS */
-
-#vomnibar ol, #vomnibar ul {
+ul {
   list-style: none;
   display: none;
+  margin: 0;
+  padding: 0;
 }
 
 #vomnibar {
@@ -27,12 +27,12 @@
 }
 
 #vomnibar input {
-  color: #000;
   font-size: 20px;
   height: 34px;
   margin-bottom: 0;
   padding: 4px;
   background-color: white;
+  color: black;
   border-radius: 3px;
   border: 1px solid #e8e8e8;
   box-shadow: #444 0px 0px 1px;
@@ -41,10 +41,9 @@
   box-sizing: border-box;
 }
 
-#vomnibar .vomnibarSearchArea {
+.vomnibarSearchArea {
   display: block;
   padding: 10px;
-  background-color: #f1f1f1;
   border-radius: 4px 4px 0 0;
   border-bottom: 1px solid #c6c9ce;
 }
@@ -52,9 +51,6 @@
 #vomnibar ul {
   background-color: white;
   border-radius: 0 0 4px 4px;
-  list-style: none;
-  padding: 10px 0;
-  padding-top: 0;
 }
 
 #vomnibar li {
@@ -151,23 +147,22 @@
 
 @media (prefers-color-scheme: dark) {
   #vomnibar {
-    border: 1px solid rgba(0, 0, 0, 0.7);
+    background-color: var(--vimium-background-color);
+    color: var(--vimium-background-text-color);
     border-radius: 6px;
+    border: 1px solid var(--vimium-foreground-color);
   }
 
-  #vomnibar .vomnibarSearchArea, #vomnibar {
-    background-color: #35363a;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  .vomnibarSearchArea {
+    border-bottom: 1px solid var(--vimium-foreground-color);
   }
 
   #vomnibar input {
     background-color: #202124;
     color: white;
+    background-color: var(--vimium-foreground-color);
+    color: var(--vimium-foreground-text-color);
     border: none;
-  }
-
-  #vomnibar ul {
-    background-color: #202124;
   }
 
   #vomnibar li {
