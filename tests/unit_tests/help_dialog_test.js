@@ -42,11 +42,13 @@ context("help dialog", () => {
       },
     };
     const result = HelpDialog.getRowsForDialog(config);
-    const reloadCommands = result["navigation"].filter((row) => row[0] == "reload");
-    assert.equal([
-      ["reload", "", ["a"]],
-      ["reload", "hard", ["b", "c"]],
-    ], reloadCommands);
+    const rows = result["navigation"]
+          .filter((row) => row[0].name == "reload")
+    assert.equal(2, rows.length);
+    assert.equal(["reload", "", ["a"]],
+                 [rows[0][0].name, rows[0][1], rows[0][2]]);
+    assert.equal(["reload", "hard", ["b", "c"]],
+                 [rows[1][0].name, rows[1][1], rows[1][2]]);
   });
 
   should("have a section in the help dialog for every group", async () => {

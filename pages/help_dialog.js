@@ -66,7 +66,7 @@ const HelpDialog = {
   },
 
   // Returns the rows to show in the help dialog, grouped by command group.
-  // Returns: { group: [[commandName, args, keys], ...], ... }
+  // Returns: { group: [[command, args, keys], ...], ... }
   getRowsForDialog(commandToOptionsToKeys) {
     const result = {};
     const byGroup = Object.groupBy(allCommands, (o) => o.group);
@@ -77,12 +77,55 @@ const HelpDialog = {
         // desired; we don't want to show unbound commands in the help dialog.
         const variations = commandToOptionsToKeys[command.name] || {};
         for (const [options, keys] of Object.entries(variations)) {
-          list.push([command.name, options, keys]);
+          list.push([command, options, keys]);
         }
       }
       result[group] = list;
     }
     return result;
+  },
+
+  getRowEl(command, options, keys) {
+    // Memoize these.
+    const entryTemplate = document.querySelector("#entry").content;
+    const entryBindingsTemplate = document.querySelector("#entry-bindings-only").content;
+    const keysTemplate = document.querySelector("#keys-template").content;
+    const commandNameTemplate = document.querySelector("#command-name-template").content;
+
+    const entryEl = entryTemplate.cloneNode(true);
+    entryEl.querySelector(".help-description").textContent = command.desc;
+    if (command.advanced) {
+      entryEl.querySelector(".row").classList.add("advanced");
+    }
+    const keysEl = entryEl.querySelector(".key-bindings");
+    for (const key of keys.sort(compareKeys)) {
+      const node = keysTemplate.cloneNode(true);
+      node.querySelector(".key").textContent = key;
+      keysEl.appendChild(node);
+    }
+
+    // TODO(philc): move this ellipsize logic into another function.
+    const maxLength = 40;
+    const ellipsis = "...";
+    const maxOptionsLength = Math.max(0, maxLength - command.desc.length - ellipsis.length);
+    const needsTruncation = command.desc.length + options.length > maxLength;
+    let optionsString;
+    if (needsTruncation) {
+      optionsString = options.substring(0, maxOptionsLength) + "...";
+    } else {
+      optionsString = options;
+    }
+    const descEl = entryEl.querySelector(".help-description");
+    let desc = command.desc;
+    if (options != "") {
+      desc += ` (${optionsString})`;
+    }
+    descEl.textContent = desc;
+    if (needsTruncation) {
+      // Show the full option string on hover.
+      descEl.title = `${command.desc} (${options})`;
+    }
+    return entryEl;
   },
 
   // TODO(philc): Clean up the rest of this showAllCommandDetails usage.
@@ -91,32 +134,15 @@ const HelpDialog = {
     document.getElementById("help-dialog-title").textContent = title;
     document.getElementById("vimium-version").textContent = Utils.getCurrentVersion();
 
-    const entryTemplate = document.querySelector("#entry").content;
-    const entryBindingsTemplate = document.querySelector("#entry-bindings-only").content;
-    const keysTemplate = document.querySelector("#keys-template").content;
-    const commandNameTemplate = document.querySelector("#command-name-template").content;
-
     const commandToOptionsToKeys = (await chrome.storage.session.get("helpPageData")).helpPageData;
     const rowsByGroup = this.getRowsForDialog(commandToOptionsToKeys);
-    const commandsByName = Utils.keyBy(allCommands, "name");
 
     for (const [group, rows] of Object.entries(rowsByGroup)) {
       const container = this.dialogElement.querySelector(`[data-group="${group}"]`);
       container.innerHTML = "";
-      for (const [name, options, keys] of rows) {
-        const entryEl = entryTemplate.cloneNode(true);
-        const command = commandsByName[name];
-        entryEl.querySelector(".help-description").textContent = command.desc;
-        if (command.advanced) {
-          entryEl.querySelector(".row").classList.add("advanced");
-        }
-        const keysEl = entryEl.querySelector(".key-bindings");
-        for (const key of keys.sort(compareKeys)) {
-          const node = keysTemplate.cloneNode(true);
-          node.querySelector(".key").textContent = key;
-          keysEl.appendChild(node);
-        }
-        container.appendChild(entryEl);
+      for (const [command, options, keys] of rows) {
+        const el = this.getRowEl(command, options, keys);
+        container.appendChild(el);
       }
     }
 
