@@ -60,6 +60,7 @@ const OptionsPage = {
       () => this.onUploadBackupClicked(),
     );
 
+
     for (const el of document.querySelectorAll(".reset-link a")) {
       el.addEventListener("click", (event) => {
         this.resetInputValue(event);
@@ -98,6 +99,7 @@ const OptionsPage = {
     console.assert(parentDiv?.tagName == "DIV", "Expected parent to be a div", event.target);
     const input = parentDiv.querySelector("input") || parentDiv.querySelector("textarea");
     const optionName = input.name;
+
     const defaultValue = Settings.defaultOptions[optionName];
     input.value = defaultValue;
     event.preventDefault();
@@ -151,7 +153,8 @@ const OptionsPage = {
       }
     }
     if (settings["linkHintCharacters"] != null) {
-      settings["linkHintCharacters"] = settings["linkHintCharacters"].toLowerCase();
+      settings["linkHintCharacters"] =
+        settings["linkHintCharacters"].toLowerCase();
     }
     settings["exclusionRules"] = ExclusionRulesEditor.getRules();
     return settings;
@@ -178,9 +181,11 @@ const OptionsPage = {
     // linkHintCharacters field.
     text = this.getOptionEl("linkHintCharacters").value.trim();
     if (text != this.removeDuplicateChars(text)) {
-      results["linkHintCharacters"] = "This cannot contain duplicate characters.";
+      results["linkHintCharacters"] =
+        "This cannot contain duplicate characters.";
     } else if (text.length <= 1) {
-      results["linkHintCharacters"] = "This must be at least two characters long.";
+      results["linkHintCharacters"] =
+        "This must be at least two characters long.";
     }
 
     // linkHintNumbers field.
@@ -226,6 +231,7 @@ const OptionsPage = {
     }
     if (errors["linkHintNumbers"]) {
       this.showElement(document.querySelector("#link-hint-numbers-container"), true);
+
     }
     const hasErrors = Object.keys(errors).length > 0;
     return hasErrors;
@@ -266,6 +272,7 @@ const OptionsPage = {
   maintainLinkHintsView() {
     const errors = this.getValidationErrors();
     const isFilteredLinkhints = this.getOptionEl("filterLinkHints").checked;
+
     this.showElement(
       document.querySelector("#link-hint-characters-container"),
       !isFilteredLinkhints || errors["linkHintCharacters"],
