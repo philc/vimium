@@ -358,7 +358,19 @@ input#uploadBackup {
   header {
     border-bottom: 1px solid #999;
   }
+
   pre {
     border-left: 1px solid #666;
+  }
+
+  #exclusionRules .remove {
+    border: none;
+    color: var(--vimium-foreground-text-color);
+  }
+
+  #exclusionRules .remove:hover {
+    color: #444;
+    color: #15c;
+    color: var(--vimium-link-color);
   }
 }
