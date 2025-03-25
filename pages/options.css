@@ -312,7 +312,7 @@ input[name="passKeys"],
   margin-top: 10px;
 }
 
-#footer {
+footer {
   background: #f5f5f5;
   border-top: 1px solid #979ca0;
   position: fixed;
@@ -322,7 +322,7 @@ input[name="passKeys"],
   z-index: 10;
 }
 
-#footer,
+footer,
 #footerTable,
 #footerTableData {
   width: 100%;
@@ -372,5 +372,10 @@ input#uploadBackup {
     color: #444;
     color: #15c;
     color: var(--vimium-link-color);
+  }
+
+  footer {
+    background-color: var(--vimium-foreground-color);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 }

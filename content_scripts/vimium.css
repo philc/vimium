@@ -338,11 +338,4 @@ iframe.vimiumNonClickable {
   body.vimiumBody div.example {
     color: #8a9096;
   }
-
-  /* TODO(philc): Check these styles. */
-  body.vimiumBody div#state,
-  body.vimiumBody div#footer {
-    background-color: #202124;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
 }
