@@ -1,15 +1,43 @@
+:root {
+  --border-color: #666;
+}
+
 html, body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   margin: 0;
   padding: 0;
 }
 
+body {
+  display: grid;
+  grid-template-columns: 200px auto;
+}
+
+nav {
+  border-right: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+
+nav ul {
+  position: fixed;
+  margin: 0;
+  padding-left: 20px;
+}
+
+nav ul li {
+  list-style-type: none;
+  margin: 8px 0;
+}
+
 header {
   font-size: 20px;
-  border-bottom: 1px solid #ccc;
-  padding: 20px 0px 15px 0;
+  border-bottom: 1px solid var(--border-color);
   padding: 20px 20px;
-  margin-bottom: 20px;
+  grid-column: span 2;
+}
+
+main {
+  margin-top: 10px;
 }
 
 h2 {
