@@ -1,5 +1,5 @@
-// A specification for a command, as defined by the default key bindings, or as it
-// appears in the user's keymapping settings.
+// A specification for a command that's currently bound to a key sequence, as defined by the default
+// key bindings, or as it appears in the user's keymapping settings.
 class RegistryEntry {
   // Array of keys.
   keySequence;
