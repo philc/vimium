@@ -238,7 +238,7 @@ const NormalModeCommands = {
     return focusThisFrame({ highlight: true, forceFocusThisFrame: true });
   },
   showHelp(sourceFrameId) {
-    return HelpDialog.toggle({ sourceFrameId, showAllCommandDetails: false });
+    return HelpDialog.toggle({ sourceFrameId });
   },
 
   passNextKey(count, options) {

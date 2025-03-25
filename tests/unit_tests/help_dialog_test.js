@@ -55,7 +55,7 @@ context("help dialog", () => {
     // This test is to prevent code editing errors, where a command is added but doesn't have a
     // corresponding group in the help dialog.
     HelpDialog.init();
-    await HelpDialog.show({ showAllCommandDetails: false });
+    await HelpDialog.show();
     const groups = Array.from(new Set(allCommands.map((c) => c.group))).sort();
     const groupsInDialog = Array.from(HelpDialog.dialogElement.querySelectorAll("div[data-group]"))
       .map((e) => e.dataset.group)
