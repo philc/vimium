@@ -126,8 +126,6 @@ const HelpDialog = {
 
   // TODO(philc): Clean up the rest of this showAllCommandDetails usage.
   async show({ showAllCommandDetails }) {
-    const title = showAllCommandDetails ? "Command Listing" : "Help";
-    document.getElementById("help-dialog-title").textContent = title;
     document.getElementById("vimium-version").textContent = Utils.getCurrentVersion();
 
     const commandToOptionsToKeys = (await chrome.storage.session.get("helpPageData")).helpPageData;
