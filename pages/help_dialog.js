@@ -18,6 +18,13 @@ function compareKeys(a, b) {
   }
 }
 
+const ellipsis = "...";
+// Truncates `s` and appends an ellipsis if `s` is longer than maxLength.
+function ellipsize(s, maxLength) {
+  if (s.length <= maxLength) return s;
+  return s.substring(0, Math.max(0, maxLength - ellipsis.length)) + ellipsis;
+}
+
 // This overrides the HelpDialog implementation in vimium_frontend.js. We provide aliases for the
 // two HelpDialog methods required by normalMode (isShowing() and toggle()).
 const HelpDialog = {
@@ -104,27 +111,19 @@ const HelpDialog = {
       keysEl.appendChild(node);
     }
 
-    // TODO(philc): move this ellipsize logic into another function.
     const maxLength = 40;
-    const ellipsis = "...";
-    const maxOptionsLength = Math.max(0, maxLength - command.desc.length - ellipsis.length);
-    const needsTruncation = command.desc.length + options.length > maxLength;
-    let optionsString;
-    if (needsTruncation) {
-      optionsString = options.substring(0, maxOptionsLength) + "...";
-    } else {
-      optionsString = options;
-    }
     const descEl = entryEl.querySelector(".help-description");
     let desc = command.desc;
     if (options != "") {
+      const optionsString = ellipsize(options, maxLength - command.desc.length);
       desc += ` (${optionsString})`;
+      const isTruncated = optionsString != options;
+      if (isTruncated) {
+        // Show the full option string on hover.
+        descEl.title = `${command.desc} (${options})`;
+      }
     }
     descEl.textContent = desc;
-    if (needsTruncation) {
-      // Show the full option string on hover.
-      descEl.title = `${command.desc} (${options})`;
-    }
     return entryEl;
   },
 
