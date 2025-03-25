@@ -14,6 +14,16 @@
  * our UI. These declarations contain more specifiers than necessary to increase their specificity
  * (precedence).
  */
+
+:root {
+  /* TODO(philc): Change these to be good for light mode. */
+  --vimium-background-color: white;
+  --vimium-background-text-color: black;
+  --vimium-foreground-color: white;
+  --vimium-foreground-text-color: black;
+  --vimium-link-color: blue;
+}
+
 .vimiumReset,
 div.vimiumReset,
 span.vimiumReset,
@@ -290,6 +300,14 @@ iframe.vimiumNonClickable {
 }
 
 @media (prefers-color-scheme: dark) {
+  :root {
+    --vimium-background-color: #1d1d1f;
+    --vimium-background-text-color: #e3e3e3;
+    --vimium-foreground-color: #292a2d;
+    --vimium-foreground-text-color: #e8eaed;
+    --vimium-link-color: #8ab4f8;
+  }
+
   /* DarkReader is a popular dark mode browser extension. It can apply an invert filter to the whole
    * page to make the page dark, when used in Filter and Filter+ modes. We want to reverse/invert
    * that filter again for Vimium's UI elements, because Vimium is already dark mode aware. */
@@ -301,30 +319,30 @@ iframe.vimiumNonClickable {
   /* Dark mode CSS for options page and exclusions */
 
   body.vimiumBody {
-    background-color: #292a2d;
-    color: white;
+    background-color: var(--vimium-background-color);
+    color: var(--vimium-background-text-color);
   }
 
   body.vimiumBody a,
   body.vimiumBody a:visited {
-    color: #8ab4f8;
+    color: var(--vimium-link-color);
   }
 
   body.vimiumBody textarea,
   body.vimiumBody input {
-    background-color: #1d1d1f;
-    border-color: #1d1d1f;
-    color: #e8eaed;
+    background-color: var(--vimium-foreground-color);
+    border-color: var(--vimium-foreground-color);
+    color: var(--vimium-foreground-text-color);
   }
 
   body.vimiumBody div.example {
-    color: #9aa0a6;
+    color: #8a9096;
   }
 
+  /* TODO(philc): Check these styles. */
   body.vimiumBody div#state,
   body.vimiumBody div#footer {
     background-color: #202124;
     border-color: rgba(255, 255, 255, 0.1);
   }
-
 }
