@@ -56,10 +56,13 @@ async function populatePage() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss();
-  await populatePage();
-  // await Commands.init();
-  // await OptionsPage.init();
-});
+const testEnv = globalThis.window == null;
+if (!testEnv) {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await Settings.onLoaded();
+    DomUtils.injectUserCss();
+    await populatePage();
+  });
+}
+
+export { populatePage };
