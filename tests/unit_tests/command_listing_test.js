@@ -54,4 +54,17 @@ context("command listing", () => {
     const rows = globalThis.document.querySelectorAll(".command");
     assert.equal(allCommands.length, rows.length);
   });
+
+  should("show key mappings for mapped commands", async () => {
+    const getKeys = (commandName) => {
+      const el = globalThis.document.querySelector(`.command[data-command=${commandName}]`);
+      if (!el) throw new Error(`${commandName} el not found.`);
+      const keys = Array.from(el.querySelectorAll(".key")).map((el) => el.textContent);
+      return keys;
+    };
+    await commandListing.populatePage();
+    assert.equal(["a", "b"], getKeys("reload"));
+    // This command isn't bound in our stubbed test environment:
+    assert.equal([], getKeys("scrollDown"));
+  });
 });

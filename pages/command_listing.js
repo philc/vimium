@@ -30,6 +30,7 @@ async function populatePage() {
       const keys = Object.values(commandToOptionsToKeys[command.name] || {})
         .flat(1);
       const el = commandTemplate.cloneNode(true);
+      el.querySelector(".command").dataset.command = command.name; // used by tests
       el.querySelector("h3 code").textContent = command.name;
 
       const keysEl = el.querySelector(".key-bindings");
