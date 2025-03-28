@@ -47,7 +47,7 @@ h2 {
 }
 
 .command {
-  max-width: 1000px;
+  max-width: 900px;
   padding: 1px 10px;
   margin: 10px 0;
   box-sizing: border-box;
@@ -62,8 +62,7 @@ h3 {
 }
 
 h3 code {
-  background-color: #222;
-  background-color: #292a2d;
+  background-color: rgb(243, 243, 243);
   padding: 4px 6px;
   /* This pushes the key bindings to the right of the container. */
   margin-right: auto;
@@ -79,4 +78,10 @@ p.desc {
 
 .key {
   font-size: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  h3 code {
+    background-color: var(--vimium-foreground-color);
+  }
 }
