@@ -97,44 +97,6 @@ div[data-group] {
   display: contents;
 }
 
-.key-bindings {
-  max-width: 110px;
-  font-size: 14px;
-  text-align: right;
-  margin-right: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: flex-end;
-}
-
-/* A "key block" includes a key and a comma separator. */
-.key-block {
-  margin-bottom: 4px;
-}
-
-.key {
-  background-color: rgb(243, 243, 243);
-  color: rgb(33, 33, 33);
-  margin-left: 2px;
-  padding: 2px 6px;
-  border-radius: 3px;
-  border: solid 1px #ccc;
-  border-bottom-color: #bbb;
-  box-shadow: inset 0 -1px 0 #bbb;
-  font-family: monospace;
-  font-size: 11px;
-}
-
-.comma {
-  margin-right: 3px;
-}
-
-/* Don't show a trailing comma after the last key binding. */
-.key-block:last-of-type .comma {
-  display: none;
-}
-
 .help-description {
   font-size: 14px;
 }
@@ -197,15 +159,6 @@ footer {
 
   div.divider {
     background-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .key {
-    /* We're using a color that pops more than --vimium-foreground-color because the squares
-       representing keys are small and hard to read otherwise. */
-    background-color: #393a3d;
-    border: solid 1px #101010;
-    box-shadow: none;
-    color: white;
   }
 
   .help-description {
