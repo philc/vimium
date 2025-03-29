@@ -28,7 +28,7 @@ div#wrapper,
 header {
   font-size: 18px;
   font-weight: normal;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ccc;
   padding: 20px 0 15px 0;
   width: 100%;
 }
@@ -36,39 +36,10 @@ header {
 button {
   -webkit-user-select: none;
   -webkit-appearance: none;
-  background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  border-radius: 2px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
-  color: #444;
   font: inherit;
-  text-shadow: 0 1px 0 #f0f0f0;
-  height: 24px;
-  font-size: 12px;
-  padding: 0 10px;
-}
-
-button:hover {
-  background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
-  border-color: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
-  color: black;
-}
-
-button:active {
-  background-image: -webkit-linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
-  box-shadow: none;
-  text-shadow: none;
-}
-
-button[disabled],
-button[disabled]:hover,
-button[disabled]:active {
-  background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
-  text-shadow: 0 1px 0 #f0f0f0;
-  color: #888;
+  border-width: 1px;
+  border-radius: 3px;
+  padding: 2px 10px;
 }
 
 input[type="checkbox"] {
@@ -354,6 +325,39 @@ input#uploadBackup {
 /*
  * Adjustments for dark theme.
  */
+@media (prefers-color-scheme: light) {
+  button {
+    background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+    border-color: rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+    color: #444;
+    text-shadow: 0 1px 0 #f0f0f0;
+  }
+
+  button:hover {
+    background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
+    border-color: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+    color: black;
+  }
+
+  button:active {
+    background-image: -webkit-linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
+    box-shadow: none;
+    text-shadow: none;
+  }
+
+  button[disabled],
+  button[disabled]:hover,
+  button[disabled]:active {
+    background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+    border-color: rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+    text-shadow: 0 1px 0 #f0f0f0;
+    color: #888;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   header {
     border-bottom: 1px solid #999;
@@ -377,5 +381,27 @@ input#uploadBackup {
   footer {
     background-color: var(--vimium-foreground-color);
     border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Our dark mode style for buttons matches MacOS Mojave's dark mode style for HTML buttons.
+     MacOS will automatically apply a dark mode style to unstyled ubttons, but that doesn't
+     happen on other OSes, so to be cross-platform, we have to set these styles ourselves. */
+  button {
+    background: none;
+    background-color: #2b2a32;
+    border-color: #8f8f9c;
+    border-width: 1px;
+    color: var(--vimium-foreground-text-color);
+    text-shadow: none;
+  }
+  button:hover {}
+  button:active {}
+
+  button[disabled],
+  button[disabled]:hover,
+  button[disabled]:active {
+    color: #75747a;
+    border-color: #75747a;
+    background-color: #222127;
   }
 }
