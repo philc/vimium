@@ -30,7 +30,7 @@ nav ul li {
 }
 
 header {
-  font-size: 20px;
+  font-size: 18px;
   border-bottom: 1px solid var(--border-color);
   padding: 20px 20px;
   grid-column: span 2;
