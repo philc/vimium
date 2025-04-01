@@ -4,10 +4,10 @@ Utils.getCurrentVersion = () => "1.44";
 
 import "../../lib/settings.js";
 import "../../background_scripts/bg_utils.js";
-import "../../background_scripts/exclusions.js";
+import * as exclusions from "../../background_scripts/exclusions.js";
 import "../../background_scripts/commands.js";
 
-const isEnabledForUrl = (request) => Exclusions.isEnabledForUrl(request.url);
+const isEnabledForUrl = (request) => exclusions.isEnabledForUrl(request.url);
 
 // These tests cover only the most basic aspects of excluded URLs and passKeys.
 context("Excluded URLs and pass keys", () => {

@@ -5,7 +5,7 @@ import "../background_scripts/tab_recency.js";
 import * as bgUtils from "../background_scripts/bg_utils.js";
 import "../background_scripts/all_commands.js";
 import { Commands } from "../background_scripts/commands.js";
-import "../background_scripts/exclusions.js";
+import * as exclusions from "../background_scripts/exclusions.js";
 import "../background_scripts/completion_engines.js";
 import "../background_scripts/completion_search.js";
 import "../background_scripts/completion.js";
@@ -664,7 +664,7 @@ const sendRequestHandlers = {
   async initializeFrame(request, sender) {
     // Check whether the extension is enabled for the top frame's URL, rather than the URL of the
     // specific frame that sent this request.
-    const enabledState = Exclusions.isEnabledForUrl(sender.tab.url);
+    const enabledState = exclusions.isEnabledForUrl(sender.tab.url);
 
     const isTopFrame = sender.frameId == 0;
     if (isTopFrame) {
