@@ -16,7 +16,6 @@
  */
 
 :root {
-  /* TODO(philc): Change these to be good for light mode. */
   --vimium-background-color: white;
   --vimium-background-text-color: black;
   --vimium-foreground-color: white;
