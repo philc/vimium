@@ -5,7 +5,6 @@ class RegistryEntry {
   keySequence;
   // Name of the command.
   command;
-  description;
   // Whether this command can be used with a count key prefix.
   noRepeat;
   // The maximum number of allow repetitions of this command, to avoid user error.
@@ -70,8 +69,6 @@ const Commands = {
             keyToRegistryEntry[key] = new RegistryEntry({
               keySequence,
               command,
-              // TODO(philc): document why description is needed in this data structure.
-              description: commandInfo.desc,
               noRepeat: commandInfo.noRepeat,
               repeatLimit: commandInfo.repeatLimit,
               background: commandInfo.background,
@@ -236,7 +233,7 @@ const Commands = {
         } else {
           currentMapping[key] = Object.assign({}, registryEntry);
           // We don't need these properties in the content scripts.
-          for (const prop of ["keySequence", "description"]) {
+          for (const prop of ["keySequence"]) {
             delete currentMapping[key][prop];
           }
         }
