@@ -49,7 +49,6 @@ ul {
 }
 
 #vomnibar ul {
-  background-color: white;
   border-radius: 0 0 4px 4px;
 }
 
@@ -93,7 +92,6 @@ ul {
   right: 0;
   top: 0;
   padding: 5px;
-  background-color: white;
   color: black;
   font-family: monospace;
   width: 100px;
