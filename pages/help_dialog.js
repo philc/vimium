@@ -1,6 +1,4 @@
-import "../lib/utils.js";
-import "../lib/settings.js";
-import "../lib/dom_utils.js";
+import "./all_content_scripts.js";
 // TODO(philc): Why does importing this break the help dialog?
 // import "./ui_component_server.js";
 import { allCommands } from "../background_scripts/all_commands.js";

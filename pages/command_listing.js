@@ -1,26 +1,4 @@
-import "../lib/utils.js";
-import "../lib/url_utils.js";
-import "../lib/keyboard_utils.js";
-import "../lib/dom_utils.js";
-import "../lib/rect.js";
-import "../lib/handler_stack.js";
-import "../lib/settings.js";
-import "../lib/find_mode_history.js";
-
-import "../content_scripts/mode.js";
-import "../content_scripts/ui_component.js";
-import "../content_scripts/link_hints.js";
-import "../content_scripts/vomnibar.js";
-import "../content_scripts/scroller.js";
-import "../content_scripts/marks.js";
-import "../content_scripts/mode_insert.js";
-import "../content_scripts/mode_find.js";
-import "../content_scripts/mode_key_handler.js";
-import "../content_scripts/mode_visual.js";
-import "../content_scripts/hud.js";
-import "../content_scripts/mode_normal.js";
-import "../content_scripts/vimium_frontend.js";
-
+import "./all_content_scripts.js";
 import { allCommands } from "../background_scripts/all_commands.js";
 
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
