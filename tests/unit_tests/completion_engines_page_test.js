@@ -1,5 +1,4 @@
-import { assert, context, setup, should, stub, teardown } from "../vendor/shoulda.js";
-import * as shoulda from "../vendor/shoulda.js";
+import "./test_helper.js";
 import * as jsdom from "jsdom";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../lib/utils.js";

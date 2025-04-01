@@ -1,5 +1,3 @@
-import { assert, context, setup, should, stub, teardown } from "../vendor/shoulda.js";
-import * as shoulda from "../vendor/shoulda.js";
 import "./test_helper.js";
 import "../../background_scripts/tab_recency.js";
 import "../../background_scripts/bg_utils.js";
