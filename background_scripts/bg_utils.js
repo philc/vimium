@@ -1,3 +1,5 @@
+import "./tab_recency.js";
+
 const BgUtils = {
   tabRecency: new TabRecency(),
 
