@@ -1,9 +1,22 @@
+import { assert, context, setup, should, stub, teardown } from "../vendor/shoulda.js";
+import * as shoulda from "../vendor/shoulda.js";
 import "./test_helper.js";
 import "../../background_scripts/tab_recency.js";
 import "../../background_scripts/bg_utils.js";
 import "../../background_scripts/completion_engines.js";
 import "../../background_scripts/completion_search.js";
-import "../../background_scripts/completion.js";
+import {
+  BookmarkCompleter,
+  DomainCompleter,
+  HistoryCache,
+  HistoryCompleter,
+  MultiCompleter,
+  RankingUtils,
+  RegexpCache,
+  SearchEngineCompleter,
+  Suggestion,
+  TabCompleter,
+} from "../../background_scripts/completion.js";
 import "../../lib/url_utils.js";
 
 const hours = (n) => 1000 * 60 * 60 * n;

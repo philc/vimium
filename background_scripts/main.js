@@ -12,6 +12,15 @@ import "../background_scripts/completion.js";
 import "../background_scripts/tab_operations.js";
 import "../background_scripts/marks.js";
 
+import {
+  BookmarkCompleter,
+  DomainCompleter,
+  HistoryCompleter,
+  MultiCompleter,
+  SearchEngineCompleter,
+  TabCompleter,
+} from "./completion.js";
+
 // NOTE(philc): This file has many superfluous return statements in its functions, as a result of
 // converting from coffeescript to es6. Many can be removed, but I didn't take the time to
 // diligently track down precisely which return statements could be removed when I was doing the

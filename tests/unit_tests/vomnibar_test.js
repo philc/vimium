@@ -2,6 +2,8 @@ import { assert, context, setup, should, stub, teardown } from "../vendor/should
 import * as shoulda from "../vendor/shoulda.js";
 import * as jsdom from "jsdom";
 import "../../tests/unit_tests/test_chrome_stubs.js";
+
+import { Suggestion } from "../../background_scripts/completion.js";
 import "../../background_scripts/completion.js";
 import { Vomnibar } from "../../pages/vomnibar.js";
 

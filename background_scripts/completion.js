@@ -17,7 +17,7 @@ import * as bgUtils from "./bg_utils.js";
 const showRelevancy = false;
 
 // TODO(philc): Consider moving out the "computeRelevancy" function.
-class Suggestion {
+export class Suggestion {
   queryTerms;
   description;
   url;
@@ -255,7 +255,7 @@ const ignoredTopLevelBookmarks = {
 };
 
 // this.bookmarks are loaded asynchronously when refresh() is called.
-class BookmarkCompleter {
+export class BookmarkCompleter {
   async filter({ queryTerms }) {
     if (!this.bookmarks) await this.refresh();
 
@@ -347,7 +347,7 @@ class BookmarkCompleter {
   }
 }
 
-class HistoryCompleter {
+export class HistoryCompleter {
   // - seenTabToOpenCompletionList: true if the user has typed only <Tab>, and nothing else.
   //   We interpret this to mean that they want to see all of their history in the Vomnibar, sorted
   //   by recency.
@@ -397,7 +397,7 @@ class HistoryCompleter {
 // The domain completer is designed to match a single-word query which looks like it is a domain.
 // This supports the user experience where they quickly type a partial domain, hit tab -> enter, and
 // expect to arrive there.
-class DomainCompleter {
+export class DomainCompleter {
   // A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
   // - `entry` is the most recently accessed page in the History within this domain.
   // - `referenceCount` is a count of the number of History entries within this domain.
@@ -479,7 +479,7 @@ class DomainCompleter {
 
 // Searches through all open tabs, matching on title and URL.
 // If the query is empty, then return a list of open tabs, sorted by recency.
-class TabCompleter {
+export class TabCompleter {
   async filter({ queryTerms }) {
     await bgUtils.tabRecency.init();
     // We search all tabs, not just those in the current window.
@@ -520,7 +520,7 @@ class TabCompleter {
   }
 }
 
-class SearchEngineCompleter {
+export class SearchEngineCompleter {
   cancel() {
     CompletionSearch.cancel();
   }
@@ -608,7 +608,7 @@ SearchEngineCompleter.debug = false;
 // returns the top 10. All queries from the vomnibar come through a multi completer.
 const maxResults = 10;
 
-class MultiCompleter {
+export class MultiCompleter {
   constructor(completers) {
     this.completers = completers;
   }
@@ -691,7 +691,7 @@ class MultiCompleter {
 }
 
 // Utilities which help us compute a relevancy score for a given item.
-const RankingUtils = {
+export const RankingUtils = {
   // Whether the given things (usually URLs or titles) match any one of the query terms.
   // This is used to prune out irrelevant suggestions before we try to rank them, and for
   // calculating word relevancy. Every term must match at least one thing.
@@ -821,7 +821,7 @@ const RankingUtils = {
 
 // We cache regexps because we use them frequently when comparing a query to history entries and
 // bookmarks, and we don't want to create fresh objects for every comparison.
-const RegexpCache = {
+export const RegexpCache = {
   init() {
     this.initialized = true;
     this.clear();
@@ -858,7 +858,7 @@ const RegexpCache = {
 
 // Provides cached access to Chrome's history. As the user browses to new pages, we add those pages
 // to this history cache.
-const HistoryCache = {
+export const HistoryCache = {
   size: 20000,
   // An array of History items returned from Chrome.
   history: null,
@@ -963,16 +963,3 @@ HistoryCache.binarySearch = function (targetElement, array, compareFunction) {
     return middle;
   }
 };
-
-Object.assign(globalThis, {
-  Suggestion,
-  BookmarkCompleter,
-  MultiCompleter,
-  HistoryCompleter,
-  DomainCompleter,
-  TabCompleter,
-  SearchEngineCompleter,
-  HistoryCache,
-  RankingUtils,
-  RegexpCache,
-});
