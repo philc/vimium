@@ -2,7 +2,7 @@ import "../lib/utils.js";
 import "../lib/settings.js";
 import "../lib/url_utils.js";
 import "../background_scripts/tab_recency.js";
-import "../background_scripts/bg_utils.js";
+import * as bgUtils from "../background_scripts/bg_utils.js";
 import "../background_scripts/all_commands.js";
 import { Commands } from "../background_scripts/commands.js";
 import "../background_scripts/exclusions.js";
@@ -54,7 +54,7 @@ const completers = {
 
 // A query dictionary for `chrome.tabs.query` that will return only the visible tabs.
 const visibleTabsQueryArgs = { currentWindow: true };
-if (BgUtils.isFirefox()) {
+if (bgUtils.isFirefox()) {
   // Only Firefox supports hidden tabs.
   visibleTabsQueryArgs.hidden = false;
 }
@@ -202,7 +202,7 @@ function nextZoomLevel(currentZoom, steps) {
   const firefoxLevels = [0.3, 0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.2, 1.33, 1.5, 1.7, 2, 2.4, 3, 4, 5];
 
   let zoomLevels = chromeLevels; // Chrome by default
-  if (BgUtils.isFirefox()) {
+  if (bgUtils.isFirefox()) {
     zoomLevels = firefoxLevels;
   }
 
@@ -320,7 +320,7 @@ const BackgroundCommands = {
     await forCountTabs(count, tab, (tab) => {
       // In Firefox, Ctrl-W will not close a pinned tab, but on Chrome, it will. We try to be
       // consistent with each browser's UX for pinned tabs.
-      if (tab.pinned && BgUtils.isFirefox()) return;
+      if (tab.pinned && bgUtils.isFirefox()) return;
       chrome.tabs.remove(tab.id);
     });
   },
@@ -403,8 +403,8 @@ const BackgroundCommands = {
   },
 
   async visitPreviousTab({ count, tab }) {
-    await BgUtils.tabRecency.init();
-    let tabIds = BgUtils.tabRecency.getTabsByRecency();
+    await bgUtils.tabRecency.init();
+    let tabIds = bgUtils.tabRecency.getTabsByRecency();
     tabIds = tabIds.filter((tabId) => tabId !== tab.id);
     if (tabIds.length > 0) {
       const id = tabIds[(count - 1) % tabIds.length];
@@ -683,7 +683,7 @@ const sendRequestHandlers = {
         },
       };
 
-      if (BgUtils.isFirefox()) {
+      if (bgUtils.isFirefox()) {
         // Only Firefox supports SVG icons.
         iconSet = {
           "enabled": "../icons/action_enabled.svg",
@@ -696,8 +696,8 @@ const sendRequestHandlers = {
     }
 
     const response = Object.assign({
-      isFirefox: BgUtils.isFirefox(),
-      firefoxVersion: await BgUtils.getFirefoxVersion(),
+      isFirefox: bgUtils.isFirefox(),
+      firefoxVersion: await bgUtils.getFirefoxVersion(),
       frameId: sender.frameId,
     }, enabledState);
 
@@ -706,8 +706,8 @@ const sendRequestHandlers = {
 
   async getBrowserInfo() {
     return {
-      isFirefox: BgUtils.isFirefox(),
-      firefoxVersion: await BgUtils.getFirefoxVersion(),
+      isFirefox: bgUtils.isFirefox(),
+      firefoxVersion: await bgUtils.getFirefoxVersion(),
     };
   },
 
@@ -915,7 +915,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     // NOTE(philc): 2023-06-16: we do not install the content scripts in all tabs on Firefox.
     // I believe this is because Firefox does this already. See https://stackoverflow.com/a/37132144
     // for commentary.
-    !BgUtils.isFirefox() &&
+    !bgUtils.isFirefox() &&
     (["chrome_update", "shared_module_update"].includes(details.reason));
   if (shouldInjectContentScripts) injectContentScriptsAndCSSIntoExistingTabs();
 

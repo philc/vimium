@@ -3,6 +3,8 @@
 //
 // TODO(philc): Convert these to Promise-based APIs.
 
+import * as bgUtils from "../background_scripts/bg_utils.js";
+
 const chromeNewTabUrl = "about:newtab";
 
 // Opens the url in the current tab.
@@ -30,7 +32,7 @@ async function openUrlInCurrentTab(request) {
       args: [request.url],
     };
 
-    if (!BgUtils.isFirefox()) {
+    if (!bgUtils.isFirefox()) {
       // The MAIN world -- where the webpage runs -- is less privileged than the ISOLATED world.
       // Specifying a world is required for Chrome, but not Firefox.
       // As of Firefox 118, specifying "MAIN" as the world is not yet supported.
@@ -68,7 +70,7 @@ async function openUrlInNewTab(request, callback) {
     // if on Chrome or on Firefox but without openerTabId, `tabs.create` opens a tab at the end.
     // but on Firefox and with openerTabId, it opens a new tab next to the opener tab
     case "end":
-      tabIndex = BgUtils.isFirefox() ? 9999 : null;
+      tabIndex = bgUtils.isFirefox() ? 9999 : null;
       break;
     // "after" is the default case when there are no options.
     default:

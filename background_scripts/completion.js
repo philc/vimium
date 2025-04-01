@@ -11,6 +11,8 @@
 //    bookmarks).
 //  - cancel(): (optional) cancels any pending, cancelable action.
 
+import * as bgUtils from "./bg_utils.js";
+
 // Set this to true to render relevancy when debugging the ranking scores.
 const showRelevancy = false;
 
@@ -74,7 +76,7 @@ class Suggestion {
       this.title = this.insertText;
     }
     let faviconHtml = "";
-    if (this.description === "tab" && !BgUtils.isFirefox()) {
+    if (this.description === "tab" && !bgUtils.isFirefox()) {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
       faviconUrl.searchParams.set("pageUrl", this.url);
       faviconUrl.searchParams.set("size", "16");
@@ -479,7 +481,7 @@ class DomainCompleter {
 // If the query is empty, then return a list of open tabs, sorted by recency.
 class TabCompleter {
   async filter({ queryTerms }) {
-    await BgUtils.tabRecency.init();
+    await bgUtils.tabRecency.init();
     // We search all tabs, not just those in the current window.
     const tabs = await chrome.tabs.query({});
     const results = tabs.filter((tab) => RankingUtils.matches(queryTerms, tab.url, tab.title));
@@ -513,7 +515,7 @@ class TabCompleter {
     if (suggestion.queryTerms.length > 0) {
       return RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title);
     } else {
-      return BgUtils.tabRecency.recencyScore(suggestion.tabId);
+      return bgUtils.tabRecency.recencyScore(suggestion.tabId);
     }
   }
 }

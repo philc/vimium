@@ -2,7 +2,7 @@ import "../lib/utils.js";
 import "../lib/dom_utils.js";
 import "../lib/settings.js";
 
-import "../background_scripts/bg_utils.js";
+import * as bgUtils from "../background_scripts/bg_utils.js";
 import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
 
 const ActionPage = {
@@ -23,7 +23,7 @@ const ActionPage = {
     // anything. See #4348 for discussion, and https://stackoverflow.com/q/76083327 for
     // implementation notes.
     const permission = { origins: ["<all_urls>"] };
-    if (BgUtils.isFirefox()) {
+    if (bgUtils.isFirefox()) {
       const hasAllHostsPermission = await browser.permissions.contains(permission);
       if (!hasAllHostsPermission) {
         hideUI();
