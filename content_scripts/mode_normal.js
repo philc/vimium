@@ -43,7 +43,7 @@ class NormalMode extends KeyHandlerMode {
     if ((registryEntry.repeatLimit != null) && (registryEntry.repeatLimit < count)) {
       const result = confirm(
         `You have asked Vimium to perform ${count} repetitions of the ` +
-          `command: ${registryEntry.description}.\n Are you sure you want to continue?`,
+          `command "${registryEntry.command}". Are you sure you want to continue?`,
       );
       if (!result) return;
     }
