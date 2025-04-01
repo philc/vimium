@@ -247,8 +247,8 @@ const Commands = {
     });
   },
 
-  // Build the "helpPageData" data structure which the help page needs and place it in Chrome
-  // storage.
+  // Build the "commandToOptionsToKeys" data structure and place it in chrome's session storage.
+  // This is used by the help page and commands listing.
   prepareHelpPageData() {
     /*
       Map of commands to option sets to keys to trigger that command option set.
@@ -264,7 +264,6 @@ const Commands = {
         }
       }
     */
-    // TODO(philc): Consider pulling this out into a different pure function.
     const commandToOptionsToKeys = {};
     for (const key of Object.keys(this.keyToRegistryEntry || {})) {
       const registryEntry = this.keyToRegistryEntry[key];
@@ -273,7 +272,7 @@ const Commands = {
       commandToOptionsToKeys[registryEntry.command][optionString] ||= [];
       commandToOptionsToKeys[registryEntry.command][optionString].push(key);
     }
-    chrome.storage.session.set({ helpPageData: commandToOptionsToKeys });
+    chrome.storage.session.set({ commandToOptionsToKeys });
   },
 };
 

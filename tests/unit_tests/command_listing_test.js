@@ -21,14 +21,14 @@ context("command listing", () => {
 
     await Settings.onLoaded();
     stub(chrome.storage.session, "get", async (key) => {
-      if (key == "helpPageData") {
+      if (key == "commandToOptionsToKeys") {
         const data = {
           "reload": {
             "": ["a"],
             "hard": ["b"],
           },
         };
-        return { helpPageData: data };
+        return { commandToOptionsToKeys: data };
       }
     });
   });
