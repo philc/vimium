@@ -6,8 +6,12 @@ let isEnabledForUrl = true;
 let normalMode = null;
 
 // We track whther the current window has the focus or not.
-const windowIsFocused = (function () {
-  let windowHasFocus = null;
+let windowHasFocus = null;
+function windowIsFocused() {
+  return windowHasFocus;
+}
+
+function initWindowIsFocused() {
   DomUtils.documentReady(() => windowHasFocus = document.hasFocus());
   globalThis.addEventListener(
     "focus",
@@ -29,8 +33,7 @@ const windowIsFocused = (function () {
     }),
     true,
   );
-  return () => windowHasFocus;
-})();
+}
 
 // True if this window should be focusable by various Vim commands (e.g. "nextFrame").
 const isWindowFocusable = () => {
@@ -170,7 +173,8 @@ const installModes = function () {
   return normalMode;
 };
 
-let previousUrl = document.location.href;
+// document is null in our tests.
+let previousUrl = globalThis.document?.location.href;
 
 // When we're informed by the background page that a URL in this tab has changed, we check if we
 // have the correct enabled state (but only if this frame has the focus).
@@ -462,8 +466,12 @@ if (globalThis.HelpDialog == null) {
   };
 }
 
-initializePreDomReady();
-DomUtils.documentReady(initializeOnDomReady);
+const testEnv = globalThis.window == null;
+if (!testEnv) {
+  initWindowIsFocused();
+  initializePreDomReady();
+  DomUtils.documentReady(initializeOnDomReady);
+}
 
 Object.assign(globalThis, {
   handlerStack,
