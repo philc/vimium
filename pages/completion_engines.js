@@ -23,17 +23,20 @@ import "../content_scripts/vimium_frontend.js";
 
 import * as completionEngines from "../background_scripts/completion_engines.js";
 
-const cleanUpRegexp = (re) =>
-  re.toString()
+function cleanUpRegexp(re) {
+  return re.toString()
     .replace(/^\//, "")
     .replace(/\/$/, "")
     .replace(/\\\//g, "/");
+}
 
-DomUtils.documentReady(function () {
+function populatePage() {
   const html = [];
   for (const engineClass of completionEngines.list) {
     const engine = new engineClass();
-    html.push(`<h4>${engine.constructor.name}</h4>\n`);
+    const name = engine.constructor.name;
+    // This data attribute is used in tests.
+    html.push(`<h4 data-engine="${name}">${name}</h4>\n`);
     html.push('<div class="engine">');
     if (engine.example.explanation) {
       html.push(`<p>${engine.example.explanation}</p>`);
@@ -66,4 +69,11 @@ DomUtils.documentReady(function () {
   }
 
   document.getElementById("engineList").innerHTML = html.join("");
-});
+}
+
+const testEnv = globalThis.window == null;
+if (!testEnv) {
+  document.addEventListener("DOMContentLoaded", populatePage);
+}
+
+export { populatePage };
