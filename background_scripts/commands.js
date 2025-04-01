@@ -364,3 +364,6 @@ const defaultKeyMappings = {
 };
 
 globalThis.Commands = Commands;
+
+// Exported for the tests.
+globalThis.defaultKeyMappings  = defaultKeyMappings;
