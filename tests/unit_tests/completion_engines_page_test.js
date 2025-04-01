@@ -4,11 +4,11 @@ import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../lib/utils.js";
 import "../../lib/settings.js";
 import * as completionEngines from "../../background_scripts/completion_engines.js";
-import * as page from "../../pages/completion_engines.js";
+import * as page from "../../pages/completion_engines_page.js";
 
 context("completion engines page", () => {
   setup(async () => {
-    const html = await Deno.readTextFile("pages/completion_engines.html");
+    const html = await Deno.readTextFile("pages/completion_engines_page.html");
 
     const w = new jsdom.JSDOM(html).window;
     // TODO(philc): Change these to stub, and improve how this works.
