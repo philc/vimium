@@ -43,7 +43,7 @@ function createFirefoxManifest(manifest) {
   // As of 2023-07-08 Firefox doesn't yet support background.service_worker.
   delete manifest.background["service_worker"];
   Object.assign(manifest.background, {
-    "scripts": ["background_scripts/background.js"],
+    "scripts": ["background_scripts/main.js"],
   });
 
   // This key is only supported by Firefox.
