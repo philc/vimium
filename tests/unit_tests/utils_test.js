@@ -232,7 +232,7 @@ context("keyBy", () => {
   should("group by key function", () => {
     assert.equal(
       { a: array[0], b: array[1] },
-      Utils.keyBy(array, (el) => el.key)
+      Utils.keyBy(array, (el) => el.key),
     );
   });
 });

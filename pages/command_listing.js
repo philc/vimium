@@ -40,7 +40,7 @@ async function populatePage() {
   const h2s = document.querySelectorAll("h2");
   const byGroup = Object.groupBy(allCommands, (el) => el.group);
   const commandToOptionsToKeys =
-        (await chrome.storage.session.get("commandToOptionsToKeys")).commandToOptionsToKeys;
+    (await chrome.storage.session.get("commandToOptionsToKeys")).commandToOptionsToKeys;
 
   const commandTemplate = document.querySelector("template#command").content;
   const keysTemplate = document.querySelector("template#keys").content;

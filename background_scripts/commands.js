@@ -367,5 +367,5 @@ const defaultKeyMappings = {
 export {
   Commands,
   // Exported for unit tests.
-  defaultKeyMappings
+  defaultKeyMappings,
 };
