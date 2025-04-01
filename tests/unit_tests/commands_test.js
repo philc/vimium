@@ -1,10 +1,8 @@
 import "./test_helper.js";
-import "../../background_scripts/tab_recency.js";
-import "../../background_scripts/bg_utils.js";
-import "../../background_scripts/all_commands.js";
 import "../../lib/settings.js";
 import "../../lib/keyboard_utils.js";
-import "../../background_scripts/commands.js";
+import { allCommands } from "../../background_scripts/all_commands.js";
+import { Commands, defaultKeyMappings } from "../../background_scripts/commands.js";
 import "../../content_scripts/mode.js";
 import "../../content_scripts/mode_key_handler.js";
 // Include mode_normal to check that all commands have been implemented.

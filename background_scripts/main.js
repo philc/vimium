@@ -1,3 +1,17 @@
+import "../lib/utils.js";
+import "../lib/settings.js";
+import "../lib/url_utils.js";
+import "../background_scripts/tab_recency.js";
+import "../background_scripts/bg_utils.js";
+import "../background_scripts/all_commands.js";
+import { Commands } from "../background_scripts/commands.js";
+import "../background_scripts/exclusions.js";
+import "../background_scripts/completion_engines.js";
+import "../background_scripts/completion_search.js";
+import "../background_scripts/completion.js";
+import "../background_scripts/tab_operations.js";
+import "../background_scripts/marks.js";
+
 // NOTE(philc): This file has many superfluous return statements in its functions, as a result of
 // converting from coffeescript to es6. Many can be removed, but I didn't take the time to
 // diligently track down precisely which return statements could be removed when I was doing the

@@ -63,3 +63,5 @@ const ExclusionRulesEditor = {
 };
 
 Object.assign(ExclusionRulesEditor, EventDispatcher);
+
+export { ExclusionRulesEditor };

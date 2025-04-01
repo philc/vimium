@@ -565,4 +565,4 @@ const allCommands = [
   },
 ];
 
-globalThis.allCommands = allCommands;
+export { allCommands };

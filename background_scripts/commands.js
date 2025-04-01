@@ -1,3 +1,5 @@
+import { allCommands } from "./all_commands.js";
+
 // A specification for a command that's currently bound to a key sequence, as defined by the default
 // key bindings, or as it appears in the user's keymapping settings.
 class RegistryEntry {
@@ -362,7 +364,8 @@ const defaultKeyMappings = {
   "gs": "toggleViewSource",
 };
 
-globalThis.Commands = Commands;
-
-// Exported for the tests.
-globalThis.defaultKeyMappings  = defaultKeyMappings;
+export {
+  Commands,
+  // Exported for unit tests.
+  defaultKeyMappings
+};
