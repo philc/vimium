@@ -1,4 +1,15 @@
 // This is the order they will be shown in the help dialog.
+//
+// Properties:
+// - advanced: advanced commands are not shown in the help dialog by default.
+// - background: whether this command has to be run by the background page.
+// - desc: shown in the help dialog and command listing page.
+// - group: commands are displayed in groups in the help dialog and command listing.
+// - noRepeat: whether this command can be used with a count key prefix.
+// - repeatLimit: the number of allowed repetitions of this command before the user is prompted for
+//   confirmation.
+// - topFrame: whether this command must be run only in the top frame of a page.
+//
 const allCommands = [
   //
   // Navigation
@@ -62,12 +73,14 @@ const allCommands = [
     name: "scrollRight",
     desc: "Scroll right",
     group: "navigation",
+    advanced: true,
   },
 
   {
     name: "scrollToLeft",
     desc: "Scroll all the way to the left",
     group: "navigation",
+    advanced: true,
   },
 
   {
@@ -111,12 +124,14 @@ const allCommands = [
     name: "goUp",
     desc: "Go up the URL hierarchy",
     group: "navigation",
+    advanced: true,
   },
 
   {
     name: "goToRoot",
     desc: "Go to the root of current URL hierarchy",
     group: "navigation",
+    advanced: true,
   },
 
   {
@@ -137,6 +152,7 @@ const allCommands = [
     name: "enterVisualLineMode",
     desc: "Enter visual line mode",
     group: "navigation",
+    advanced: true,
     noRepeat: true,
   },
 
@@ -144,6 +160,7 @@ const allCommands = [
     name: "passNextKey",
     desc: "Pass the next key to the page",
     group: "navigation",
+    advanced: true,
   },
 
   {
@@ -180,6 +197,7 @@ const allCommands = [
     name: "LinkHints.activateModeWithQueue",
     desc: "Open multiple links in a new tab",
     group: "navigation",
+    advanced: true,
     noRepeat: true,
   },
 
@@ -187,24 +205,28 @@ const allCommands = [
     name: "LinkHints.activateModeToDownloadLink",
     desc: "Download link url",
     group: "navigation",
+    advanced: true,
   },
 
   {
     name: "LinkHints.activateModeToOpenIncognito",
     desc: "Open a link in incognito window",
     group: "navigation",
+    advanced: true,
   },
 
   {
     name: "LinkHints.activateModeToCopyLinkUrl",
     desc: "Copy a link URL to the clipboard",
     group: "navigation",
+    advanced: true,
   },
 
   {
     name: "goPrevious",
     desc: "Follow the link labeled previous or <",
     group: "navigation",
+    advanced: true,
     noRepeat: true,
   },
 
@@ -212,6 +234,7 @@ const allCommands = [
     name: "goNext",
     desc: "Follow the link labeled next or >",
     group: "navigation",
+    advanced: true,
     noRepeat: true,
   },
 
@@ -234,6 +257,7 @@ const allCommands = [
     name: "Marks.activateCreateMode",
     desc: "Create a new mark",
     group: "navigation",
+    advanced: true,
     noRepeat: true,
   },
 
@@ -241,6 +265,7 @@ const allCommands = [
     name: "Marks.activateGotoMode",
     desc: "go to a mark",
     group: "navigation",
+    advanced: true,
     noRepeat: true,
   },
 
@@ -324,12 +349,14 @@ const allCommands = [
     name: "findSelected",
     desc: "Find the selected text",
     group: "find",
+    advanced: true,
   },
 
   {
     name: "findSelectedBackwards",
     desc: "Find the selected text, searching backwards",
     group: "find",
+    advanced: true,
   },
 
   //
@@ -440,6 +467,7 @@ const allCommands = [
     name: "moveTabToNewWindow",
     desc: "Move tab to new window",
     group: "tabs",
+    advanced: true,
     background: true,
   },
 
@@ -447,6 +475,7 @@ const allCommands = [
     name: "closeTabsOnLeft",
     desc: "Close tabs on the left",
     group: "tabs",
+    advanced: true,
     background: true,
   },
 
@@ -454,6 +483,7 @@ const allCommands = [
     name: "closeTabsOnRight",
     desc: "Close tabs on the right",
     group: "tabs",
+    advanced: true,
     background: true,
   },
 
@@ -461,6 +491,7 @@ const allCommands = [
     name: "closeOtherTabs",
     desc: "Close all other tabs",
     group: "tabs",
+    advanced: true,
     background: true,
     noRepat: true,
   },
@@ -469,6 +500,7 @@ const allCommands = [
     name: "moveTabLeft",
     desc: "Move tab to the left",
     group: "tabs",
+    advanced: true,
     background: true,
   },
 
@@ -476,6 +508,7 @@ const allCommands = [
     name: "moveTabRight",
     desc: "Move tab to the right",
     group: "tabs",
+    advanced: true,
     background: true,
   },
 
@@ -483,6 +516,7 @@ const allCommands = [
     name: "setZoom",
     desc: "Set zoom",
     group: "tabs",
+    advanced: true,
     background: true,
   },
 
@@ -490,6 +524,7 @@ const allCommands = [
     name: "zoomIn",
     desc: "Zoom in",
     group: "tabs",
+    advanced: true,
     background: true,
   },
 
@@ -497,6 +532,7 @@ const allCommands = [
     name: "zoomOut",
     desc: "Zoom out",
     group: "tabs",
+    advanced: true,
     background: true,
   },
 
@@ -504,6 +540,7 @@ const allCommands = [
     name: "zoomReset",
     desc: "Reset zoom",
     group: "tabs",
+    advanced: true,
     background: true,
   },
 
@@ -515,6 +552,7 @@ const allCommands = [
     name: "toggleViewSource",
     desc: "View page source",
     group: "misc",
+    advanced: true,
     noRepeat: true,
   },
 

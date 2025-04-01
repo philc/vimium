@@ -7,7 +7,7 @@ class RegistryEntry {
   command;
   // Whether this command can be used with a count key prefix.
   noRepeat;
-  // The maximum number of allow repetitions of this command, to avoid user error.
+  // The number of allowed repetitions of this command before the user is prompted for confirmation.
   repeatLimit;
   // Whether this command has to be run by the background page.
   background;
@@ -275,43 +275,6 @@ const Commands = {
     }
     chrome.storage.session.set({ helpPageData: commandToOptionsToKeys });
   },
-
-  // Rarely used commands are not shown by default in the help dialog or in the README. The goal is
-  // to present a focused, high-signal set of commands to the new and casual user. Only those truly
-  // hungry for more power from Vimium will uncover these gems.
-  // TODO(philc): Remove/repurpose this data structure.
-  advancedCommands: [
-    "scrollToLeft",
-    "scrollToRight",
-    "moveTabToNewWindow",
-    "findSelected",
-    "findSelectedBackwards",
-    "goUp",
-    "goToRoot",
-    "LinkHints.activateModeWithQueue",
-    "LinkHints.activateModeToDownloadLink",
-    "Vomnibar.activateEditUrl",
-    "Vomnibar.activateEditUrlInNewTab",
-    "LinkHints.activateModeToOpenIncognito",
-    "LinkHints.activateModeToCopyLinkUrl",
-    "goNext",
-    "goPrevious",
-    "Marks.activateCreateMode",
-    "Marks.activateGotoMode",
-    "moveTabLeft",
-    "moveTabRight",
-    "closeTabsOnLeft",
-    "closeTabsOnRight",
-    "closeOtherTabs",
-    "enterVisualLineMode",
-    "toggleViewSource",
-    "passNextKey",
-    "setZoom",
-    "zoomIn",
-    "zoomOut",
-    "zoomReset",
-    "reload hard",
-  ],
 };
 
 const defaultKeyMappings = {
