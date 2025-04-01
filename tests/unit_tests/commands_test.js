@@ -132,41 +132,33 @@ context("parseKeyMappingConfig", () => {
   });
 });
 
-// TODO(philc): Re-enable some version of these sanity check tests.
-// context("Validate commands and options", () => {
-//   // TODO(smblott) For this and each following test, is there a way to structure the tests such that
-//   // the name of the offending command appears in the output, if the test fails?
-//   should("have either noRepeat or repeatLimit, but not both", () => {
-//     for (const command of Object.keys(Commands.availableCommands)) {
-//       const options = Commands.availableCommands[command];
-//       assert.isTrue(!(options.noRepeat && options.repeatLimit));
-//     }
-//   });
+context("Validate commands and options data structures", () => {
+  should("have either noRepeat or repeatLimit, but not both", () => {
+    for (const command of allCommands) {
+      const validProperties = !(command.noRepeat && command.repeatLimit);
+      if (!validProperties) {
+        assert.fail(`${command.name} has incorrect noRepeat and/or repeatLimit config.`);
+      }
+    }
+  });
 
-//   should("describe each command", () => {
-//     for (const command of Object.keys(Commands.availableCommands)) {
-//       const options = Commands.availableCommands[command];
-//       assert.equal("string", typeof options.description);
-//     }
-//   });
+  should("have required properties", () => {
+    for (const command of allCommands) {
+      const hasRequired = command.desc.length > 0 && command.group.length > 0;
+      if (!hasRequired) {
+        assert.fail(`${command.name} is missing required properties.`);
+      }
+    }
+  });
 
-//   should("define each command in each command group", () => {
-//     for (const group of Object.keys(Commands.commandGroups)) {
-//       const commands = Commands.commandGroups[group];
-//       for (const command of commands) {
-//         assert.equal("string", typeof command);
-//         assert.isTrue(Commands.availableCommands[command]);
-//       }
-//     }
-//   });
-
-//   should("have valid commands for each default key mapping", () => {
-//     const count = Object.keys(Commands.keyToRegistryEntry).length;
-//     assert.isTrue(0 < count);
-//     for (const key of Object.keys(Commands.keyToRegistryEntry)) {
-//       const command = Commands.keyToRegistryEntry[key];
-//       assert.equal("object", typeof command);
-//       assert.isTrue(Commands.availableCommands[command.command]);
-//     }
-//   });
-// });
+  should("have valid commands for each default key mapping", () => {
+    const commandsByName = Utils.keyBy(allCommands, "name");
+    for (const [key, commandString] of Object.entries(defaultKeyMappings)) {
+      // The comamnd string might be command name + an option string. Ignore the options.
+      const name = commandString.split(" ")[0];
+      if (commandsByName[name] == null) {
+        assert.fail(`The default mapping for ${key} is bound to non-existant command ${name}.`);
+      }
+    }
+  });
+});
