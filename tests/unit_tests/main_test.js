@@ -1,8 +1,5 @@
 import "./test_helper.js";
 import "../../lib/settings.js";
-import "../../background_scripts/commands.js";
-import "../../background_scripts/completion.js";
-import "../../background_scripts/marks.js";
 import "../../background_scripts/main.js";
 
 context("HintCoordinator", () => {
