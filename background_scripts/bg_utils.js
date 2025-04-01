@@ -1,4 +1,4 @@
-import "./tab_recency.js";
+import { TabRecency } from "./tab_recency.js";
 
 // We're using browser.runtime to determine the browser name and version for Firefox. That API is
 // only available on the background page. We're not using window.navigator because it's unreliable.

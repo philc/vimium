@@ -136,4 +136,4 @@ class TabRecency {
   }
 }
 
-Object.assign(globalThis, { TabRecency });
+export { TabRecency };
