@@ -401,7 +401,7 @@ const getCurrentRange = function () {
     range.setStart(document.body, 0);
     range.setEnd(document.body, 0);
     return range;
-  } 
+  }
 
   if (selection.type === "Range") {
     selection.collapseToStart();

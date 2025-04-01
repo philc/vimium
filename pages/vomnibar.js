@@ -156,7 +156,7 @@ class VomnibarUI {
   // complexity.
   actionFromKeyEvent(event) {
     const key = KeyboardUtils.getKeyChar(event);
-    // Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK
+    // Handle <Enter> on "keypress", and other events on "keydown". This avoids interence with CJK
     // translation (see #2915 and #2934).
     if ((event.type === "keypress") && (key !== "enter")) return null;
     if ((event.type === "keydown") && (key === "enter")) return null;
@@ -223,10 +223,10 @@ class VomnibarUI {
     } else if (action === "ctrl-enter") {
       // Populate the vomnibar with the current selection's URL.
       if (!this.isUserSearchEngineActive() && (this.selection >= 0)) {
-        if (this.previousInputValue == null) this.previousInputValue = this.input.value;
-        this.input.value = this.completions[this.selection] != null
-          ? this.completions[this.selection].url
-          : undefined;
+        if (this.previousInputValue == null) {
+          this.previousInputValue = this.input.value;
+        }
+        this.input.value = this.completions[this.selection]?.url;
         this.input.scrollLeft = this.input.scrollWidth;
       }
     } else if (action === "delete") {
@@ -383,13 +383,19 @@ class VomnibarUI {
     return this.update();
   }
 
-  // Returns the UserSearchEngine for the given Vomnibar input. Returns null if the Vomnibar does
-  // not start with a keyword from one of the user's search engines.
+  // Returns the UserSearchEngine for the given query. Returns null if the query does not begin with
+  // a keyword from one of the user's search engines.
   getUserSearchEngineForQuery() {
     // This logic is duplicated from SearchEngineCompleter.getEngineForQueryPrefix
     const parts = this.input.value.trimStart().split(/\s+/);
+    // For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
     const keyword = parts[0];
-    return parts.length > 1 ? UserSearchEngines.keywordToEngine[keyword] : null;
+    if (parts.length <= 1) return null;
+    // Don't match queries for built-in properties like "constructor". See #4396.
+    if (Object.hasOwn(UserSearchEngines.keywordToEngine, keyword)) {
+      return UserSearchEngines.keywordToEngine[keyword];
+    }
+    return null;
   }
 
   queryIsCustomSearch() {
@@ -431,7 +437,7 @@ class VomnibarUI {
     this.completionList = this.box.querySelector("ul");
     this.completionList.style.display = "";
 
-    globalThis.addEventListener("focus", () => this.input.focus());
+    window.addEventListener("focus", () => this.input.focus());
     // A click in the vomnibar itself refocuses the input.
     this.box.addEventListener("click", (event) => {
       this.input.focus();
@@ -462,12 +468,13 @@ function init() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss(); // Manually inject custom user styles.
-});
-
-if (!globalThis.location.search.includes("dom_tests=true")) {
+const testEnv = globalThis.window == null ||
+  globalThis.window.location.search.includes("dom_tests=true");
+if (!testEnv) {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await Settings.onLoaded();
+    DomUtils.injectUserCss(); // Manually inject custom user styles.
+  });
   init();
 }
 

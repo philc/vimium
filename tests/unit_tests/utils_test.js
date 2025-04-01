@@ -2,6 +2,26 @@ import "./test_helper.js";
 import "../../lib/settings.js";
 import "../../lib/url_utils.js";
 
+context("forTrusted", () => {
+  should("invoke an event handler if the event is trusted", () => {
+    let called = false;
+    const f = forTrusted(() => called = true);
+    const event = { isTrusted: true };
+    f(event);
+    assert.equal(true, called);
+  });
+
+  should("not invoke an event handler if the event is untrusted", () => {
+    let called = false;
+    const f = forTrusted(() => called = true);
+    const event = { isTrusted: false };
+    f(event);
+    assert.equal(false, called);
+    f(null);
+    assert.equal(false, called);
+  });
+});
+
 context("extractQuery", () => {
   should("extract queries from search URLs", () => {
     assert.equal(
