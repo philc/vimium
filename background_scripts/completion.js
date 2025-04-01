@@ -12,6 +12,7 @@
 //  - cancel(): (optional) cancels any pending, cancelable action.
 
 import * as bgUtils from "./bg_utils.js";
+import * as completionSearch from "./completion_search.js";
 
 // Set this to true to render relevancy when debugging the ranking scores.
 const showRelevancy = false;
@@ -522,7 +523,7 @@ export class TabCompleter {
 
 export class SearchEngineCompleter {
   cancel() {
-    CompletionSearch.cancel();
+    completionSearch.cancel();
   }
 
   // Returns the UserSearchEngine for the given query. Returns null if the query does not begin with
@@ -554,7 +555,7 @@ export class SearchEngineCompleter {
 
     const searchUrl = userSearchEngine.url;
 
-    const completions = await CompletionSearch.complete(searchUrl, queryTermsWithoutKeyword);
+    const completions = await completionSearch.complete(searchUrl, queryTermsWithoutKeyword);
 
     const makeSuggestion = (query) => {
       const url = UrlUtils.createSearchUrl(query, searchUrl);
