@@ -3,6 +3,7 @@ import * as shoulda from "../vendor/shoulda.js";
 import * as jsdom from "jsdom";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../background_scripts/completion.js";
+import { allCommands } from "../../background_scripts/all_commands.js";
 import { HelpDialog } from "../../pages/help_dialog.js";
 
 context("help dialog", () => {
