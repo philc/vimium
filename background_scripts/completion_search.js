@@ -1,3 +1,5 @@
+import * as completionEngines from "./completion_engines.js";
+
 // This is a wrapper class for completion engines. It handles the case where a custom search engine
 // includes a prefix query term (or terms). For example:
 //
@@ -78,8 +80,8 @@ const CompletionSearch = {
     if (this.engineCache.has(searchUrl)) {
       return this.engineCache.get(searchUrl);
     } else {
-      for (let engine of Array.from(CompletionEngines)) {
-        engine = new engine();
+      for (const engineClass of completionEngines.list) {
+        const engine = new engineClass();
         if (engine.match(searchUrl)) {
           return this.engineCache.set(searchUrl, engine);
         }

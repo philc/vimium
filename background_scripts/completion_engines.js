@@ -44,7 +44,7 @@ class BaseEngine {
   }
 }
 
-class Google extends BaseEngine {
+export class Google extends BaseEngine {
   constructor() {
     super({
       engineUrl: "http://suggestqueries.google.com/complete/search?client=chrome&q=%s",
@@ -63,7 +63,7 @@ class Google extends BaseEngine {
 
 const googleMapsPrefix = "map of ";
 
-class GoogleMaps extends BaseEngine {
+export class GoogleMaps extends BaseEngine {
   constructor() {
     super({
       engineUrl:
@@ -88,7 +88,7 @@ search.\
   }
 }
 
-class Youtube extends BaseEngine {
+export class Youtube extends BaseEngine {
   constructor() {
     super({
       engineUrl: "http://suggestqueries.google.com/complete/search?client=chrome&ds=yt&q=%s",
@@ -105,7 +105,7 @@ class Youtube extends BaseEngine {
   }
 }
 
-class Wikipedia extends BaseEngine {
+export class Wikipedia extends BaseEngine {
   constructor() {
     super({
       engineUrl: "https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=%s",
@@ -122,7 +122,7 @@ class Wikipedia extends BaseEngine {
   }
 }
 
-class Bing extends BaseEngine {
+export class Bing extends BaseEngine {
   constructor() {
     super({
       engineUrl: "https://api.bing.com/osjson.aspx?query=%s",
@@ -139,7 +139,7 @@ class Bing extends BaseEngine {
   }
 }
 
-class Amazon extends BaseEngine {
+export class Amazon extends BaseEngine {
   constructor() {
     super({
       engineUrl:
@@ -157,7 +157,7 @@ class Amazon extends BaseEngine {
   }
 }
 
-class DuckDuckGo extends BaseEngine {
+export class DuckDuckGo extends BaseEngine {
   constructor() {
     super({
       engineUrl: "https://duckduckgo.com/ac/?q=%s",
@@ -174,7 +174,7 @@ class DuckDuckGo extends BaseEngine {
   }
 }
 
-class Webster extends BaseEngine {
+export class Webster extends BaseEngine {
   constructor() {
     super({
       engineUrl: "https://www.merriam-webster.com/lapi/v1/mwol-search/autocomplete?search=%s",
@@ -193,7 +193,7 @@ class Webster extends BaseEngine {
 }
 
 // Qwant is a privacy-friendly search engine.
-class Qwant extends BaseEngine {
+export class Qwant extends BaseEngine {
   constructor() {
     super({
       engineUrl: "https://api.qwant.com/api/suggest?q=%s",
@@ -211,7 +211,7 @@ class Qwant extends BaseEngine {
 }
 
 // Brave is a privacy-friendly search engine.
-class Brave extends BaseEngine {
+export class Brave extends BaseEngine {
   constructor() {
     super({
       engineUrl: "https://search.brave.com/api/suggest?rich=false&q=%s",
@@ -229,7 +229,7 @@ class Brave extends BaseEngine {
 }
 
 // Kagi is a paid ad-free search engine
-class Kagi extends BaseEngine {
+export class Kagi extends BaseEngine {
   constructor() {
     super({
       engineUrl: "https://kagi.com/autosuggest?q=%s",
@@ -246,9 +246,9 @@ class Kagi extends BaseEngine {
   }
 }
 
-// On the user-facing documentation page pages/completion_engines.html, these completion search
-// engines will be shown to the user in this order.
-const CompletionEngines = [
+// On the user-facing documentation page pages/completion_engines.html, the completion search
+// engines will be shown in this order.
+export const list = [
   Youtube,
   GoogleMaps,
   Google,
@@ -257,11 +257,7 @@ const CompletionEngines = [
   Bing,
   Amazon,
   Webster,
-  Qwant,
   Brave,
+  Qwant,
   Kagi,
 ];
-
-globalThis.CompletionEngines = CompletionEngines;
-
-export { Amazon, Brave, DuckDuckGo, Kagi, Qwant, Webster };
