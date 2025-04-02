@@ -306,7 +306,7 @@ async function testDom() {
     }
     // If we close the puppeteer page (tab) via page.close(), we can get innocuous but noisy output
     // like this:
-    // net::ERR_ABORTED http://localhost:43524/pages/hud.html?dom_tests=true
+    // net::ERR_ABORTED http://localhost:43524/pages/hud_page.html?dom_tests=true
     // There's probably a way to prevent that, but as a work around, we avoid closing the page.
     // browser.close() will close all of its owned pages.
   }

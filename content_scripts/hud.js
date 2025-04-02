@@ -42,7 +42,7 @@ const HUD = {
     if (this.hudUI == null) {
       const queryString = globalThis.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
       this.hudUI = new UIComponent(
-        `pages/hud.html${queryString}`,
+        `pages/hud_page.html${queryString}`,
         "vimiumHUDFrame",
         this.handleUIComponentMessage.bind(this),
       );

@@ -92,7 +92,7 @@
       "resources": [
         "pages/vomnibar.html",
         "content_scripts/vimium.css",
-        "pages/hud.html",
+        "pages/hud_page.html",
         "pages/help_dialog.html",
         "pages/completion_engines_page.html",
         "pages/command_listing.html",
