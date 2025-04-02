@@ -18,7 +18,7 @@ const ExclusionRulesEditor = {
     const existingRuleEls = rulesTable.querySelectorAll(".rule");
     for (const el of existingRuleEls) el.remove();
 
-    const rowTemplate = document.querySelector("#exclusionRuleTemplate").content;
+    const rowTemplate = document.querySelector("#exclusion-rule-template").content;
     for (const rule of exclusionRules) {
       this.addRow(rule.pattern, rule.passKeys);
     }
@@ -27,7 +27,7 @@ const ExclusionRulesEditor = {
   // `pattern` and `passKeys` are optional.
   addRow(pattern, passKeys) {
     const rulesTable = document.querySelector("#exclusionRules");
-    const rowTemplate = document.querySelector("#exclusionRuleTemplate").content;
+    const rowTemplate = document.querySelector("#exclusion-rule-template").content;
     const rowEl = rowTemplate.cloneNode(true);
 
     const patternEl = rowEl.querySelector("[name=pattern]");
