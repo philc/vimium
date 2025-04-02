@@ -1,5 +1,5 @@
 /*
- * Many CSS class names in this file use the verbose "vimiumXYZ" as the class name. This is so we
+ * Many CSS class names in this file use the verbose "vimium-" as the class name. This is so we
  * don't use the same CSS class names that the page is using, so the page's CSS doesn't mess with
  * the style of our Vimium dialogs.
  *
@@ -9,7 +9,7 @@
  */
 
 /*
- * This vimiumReset class can be added to any of our UI elements to give it a clean slate. This is
+ * This vimium-reset class can be added to any of our UI elements to give it a clean slate. This is
  * useful in case the page has declared a broad rule like "a { padding: 50px; }" which will mess up
  * our UI. These declarations contain more specifiers than necessary to increase their specificity
  * (precedence).
@@ -23,16 +23,16 @@
   --vimium-link-color: blue;
 }
 
-.vimiumReset,
-div.vimiumReset,
-span.vimiumReset,
-table.vimiumReset,
-a.vimiumReset,
-a:visited.vimiumReset,
-a:link.vimiumReset,
-a:hover.vimiumReset,
-td.vimiumReset,
-tr.vimiumReset {
+.vimium-reset,
+div.vimium-reset,
+span.vimium-reset,
+table.vimium-reset,
+a.vimium-reset,
+a:visited.vimium-reset,
+a:link.vimium-reset,
+a:hover.vimium-reset,
+td.vimium-reset,
+tr.vimium-reset {
   background: none;
   border: none;
   bottom: auto;
@@ -71,11 +71,11 @@ tr.vimiumReset {
   z-index: 2147483647;
 }
 
-thead.vimiumReset, tbody.vimiumReset {
+thead.vimium-reset, tbody.vimium-reset {
   display: table-header-group;
 }
 
-tbody.vimiumReset {
+tbody.vimium-reset {
   display: table-row-group;
 }
 
@@ -183,8 +183,6 @@ iframe.vimium-hud-frame {
 body.vimiumFindMode ::selection {
   background: #ff9632;
 }
-
-/* Vomnibar Frame CSS */
 
 iframe.vomnibarFrame {
   background-color: transparent;

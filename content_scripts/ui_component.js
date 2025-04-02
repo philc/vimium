@@ -32,7 +32,7 @@ class UIComponent {
 
       const shadowWrapper = DomUtils.createElement("div");
       // Prevent the page's CSS from interfering with this container div.
-      shadowWrapper.className = "vimiumReset";
+      shadowWrapper.className = "vimium-reset";
       // Firefox doesn't support createShadowRoot, so guard against its non-existance.
       // https://hacks.mozilla.org/2018/10/firefox-63-tricks-and-treats/ says Firefox 63 has enabled
       // Shadow DOM v1 by default

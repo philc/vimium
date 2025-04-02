@@ -410,7 +410,7 @@ class LinkHintsMode {
     if (this.containerEl == null) {
       const div = DomUtils.createElement("div");
       div.id = "vimiumHintMarkerContainer";
-      div.className = "vimiumReset";
+      div.className = "vimium-reset";
       this.containerEl = div;
       document.documentElement.appendChild(div);
     }
@@ -479,7 +479,7 @@ class LinkHintsMode {
       el.style.left = localHint.rect.left + "px";
       el.style.top = localHint.rect.top + "px";
       // Each hint marker is assigned a different z-index.
-      el.className = "vimiumReset internalVimiumHintMarker vimiumHintMarker";
+      el.className = "vimium-reset internalVimiumHintMarker vimiumHintMarker";
       Object.assign(marker, {
         element: el,
         localHint,
@@ -1041,7 +1041,7 @@ class FilterHints {
 const spanWrap = (hintString) => {
   const innerHTML = [];
   for (const char of hintString) {
-    innerHTML.push("<span class='vimiumReset'>" + char + "</span>");
+    innerHTML.push("<span class='vimium-reset'>" + char + "</span>");
   }
   return innerHTML.join("");
 };

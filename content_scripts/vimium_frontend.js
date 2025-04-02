@@ -364,7 +364,7 @@ const flashFrame = (() => {
       shadowDOM.appendChild(styleEl);
 
       const frameEl = DomUtils.createElement("div");
-      frameEl.className = "vimiumReset vimiumHighlightedFrame";
+      frameEl.className = "vimium-reset vimiumHighlightedFrame";
       shadowDOM.appendChild(frameEl);
     }
 

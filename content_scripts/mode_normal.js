@@ -324,7 +324,7 @@ const NormalModeCommands = {
 
     const hints = visibleInputs.map((tuple) => {
       const hint = DomUtils.createElement("div");
-      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint";
+      hint.className = "vimium-reset internalVimiumInputHint vimiumInputHint";
 
       // minus 1 for the border
       hint.style.left = (tuple.rect.left - 1) + globalThis.scrollX + "px";
@@ -531,7 +531,7 @@ class FocusSelector extends Mode {
 
     const div = DomUtils.createElement("div");
     div.id = "vimiumInputMarkerContainer";
-    div.className = "vimiumReset";
+    div.className = "vimium-reset";
     for (const el of hints) {
       div.appendChild(el);
     }
