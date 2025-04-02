@@ -20,7 +20,7 @@ a:active {
 }
 
 div#wrapper,
-#footerWrapper {
+#footerContent {
   max-width: 1050px;
   margin: 0 25px;
 }
@@ -291,21 +291,22 @@ footer {
   left: 0;
   padding: 15px 0;
   z-index: 10;
-}
-
-footer,
-#footerTable,
-#footerTableData {
   width: 100%;
 }
 
-#helpText,
-#versionAndOptions {
+#footerContent {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+#footerHelpText {
+  flex-grow: 1;
   font-size: 12px;
 }
 
-#saveOptionsTableData {
-  float: right;
+#footerSaveOptions {
+  flex-grow: 0;
 }
 
 #saveOptions,
@@ -322,9 +323,6 @@ input#uploadBackup {
   max-width: 400px;
 }
 
-/*
- * Adjustments for dark theme.
- */
 @media (prefers-color-scheme: light) {
   button {
     background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
