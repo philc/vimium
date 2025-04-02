@@ -165,7 +165,7 @@ iframe.vimiumHelpDialogFrame {
 
 /* Vimium HUD CSS */
 
-div.vimiumHUD {
+div.vimium-hud {
   display: block;
   position: fixed;
   width: calc(100% - 20px);
@@ -179,7 +179,7 @@ div.vimiumHUD {
   z-index: 2147483647;
 }
 
-iframe.vimiumHUDFrame {
+iframe.vimium-hud-frame {
   background-color: transparent;
   padding: 0px;
   overflow: hidden;
@@ -196,14 +196,14 @@ iframe.vimiumHUDFrame {
   opacity: 0;
 }
 
-div.vimiumHUD .vimiumHUDSearchArea {
+div.vimium-hud .vimium-hud-search-area {
   display: block;
   padding: 3px;
   background-color: #f1f1f1;
   border-radius: 4px 4px 0 0;
 }
 
-div.vimiumHUD .vimiumHUDSearchAreaInner {
+div.vimium-hud .vimium-hud-search-area-inner {
   color: #777;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -217,12 +217,12 @@ div.vimiumHUD .vimiumHUDSearchAreaInner {
   line-height: 20px;
 }
 
-div.vimiumHUD .hud-find {
+div.vimium-hud .hud-find {
   background: #fff;
   border: 1px solid #ccc;
 }
 
-div.vimiumHUD span#hud-find-input, div.vimiumHUD span#hud-match-count {
+div.vimium-hud span#hud-find-input, div.vimium-hud span#hud-match-count {
   color: #000;
   display: inline;
   outline: none;
@@ -230,20 +230,20 @@ div.vimiumHUD span#hud-find-input, div.vimiumHUD span#hud-match-count {
   overflow-y: hidden;
 }
 
-div.vimiumHUD span#hud-find-input:before {
+div.vimium-hud span#hud-find-input:before {
   content: "/";
 }
 
-div.vimiumHUD span#hud-match-count {
+div.vimium-hud span#hud-match-count {
   color: #aaa;
   font-size: 12px;
 }
 
-div.vimiumHUD span#hud-find-input br {
+div.vimium-hud span#hud-find-input br {
   display: none;
 }
 
-div.vimiumHUD span#hud-find-input * {
+div.vimium-hud span#hud-find-input * {
   display: inline;
   white-space: nowrap;
 }
@@ -281,11 +281,11 @@ div.vimiumFlash {
 }
 
 /* UIComponent CSS */
-iframe.vimiumUIComponentHidden {
+iframe.vimium-ui-component-hidden {
   display: none;
 }
 
-iframe.vimiumUIComponentVisible {
+iframe.vimium-ui-component-visible {
   display: block;
   color-scheme: light dark;
 }

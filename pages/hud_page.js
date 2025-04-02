@@ -81,16 +81,16 @@ function ensureClipboardIsAvailable() {
 const handlers = {
   show(data) {
     document.getElementById("hud").innerText = data.text;
-    document.getElementById("hud").classList.add("vimiumUIComponentVisible");
-    document.getElementById("hud").classList.remove("vimiumUIComponentHidden");
+    document.getElementById("hud").classList.add("vimium-ui-component-visible");
+    document.getElementById("hud").classList.remove("vimium-ui-component-hidden");
     document.getElementById("hud").classList.remove("hud-find");
   },
   hidden() {
     // We get a flicker when the HUD later becomes visible again (with new text) unless we reset its
     // contents here.
     document.getElementById("hud").innerText = "";
-    document.getElementById("hud").classList.add("vimiumUIComponentHidden");
-    document.getElementById("hud").classList.remove("vimiumUIComponentVisible");
+    document.getElementById("hud").classList.add("vimium-ui-component-hidden");
+    document.getElementById("hud").classList.remove("vimium-ui-component-visible");
   },
 
   showFindMode(data) {

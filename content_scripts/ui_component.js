@@ -45,7 +45,7 @@ class UIComponent {
       this.shadowDOM.appendChild(styleSheet);
       this.shadowDOM.appendChild(this.iframeElement);
       this.handleDarkReaderFilter();
-      this.toggleIframeElementClasses("vimiumUIComponentVisible", "vimiumUIComponentHidden");
+      this.toggleIframeElementClasses("vimium-ui-component-visible", "vimium-ui-component-hidden");
 
       // Open a port and pass it to the iframe via window.postMessage. We use an AsyncDataFetcher to
       // handle requests which arrive before the iframe (and its message handlers) have completed
@@ -149,7 +149,7 @@ class UIComponent {
   activate(options = null) {
     this.options = options;
     this.postMessage(this.options, () => {
-      this.toggleIframeElementClasses("vimiumUIComponentHidden", "vimiumUIComponentVisible");
+      this.toggleIframeElementClasses("vimium-ui-component-hidden", "vimium-ui-component-visible");
       if (this.options && this.options.focus) {
         this.iframeElement.focus();
       }
@@ -164,7 +164,7 @@ class UIComponent {
     this.postMessage(null, () => {
       if (!this.showing) return;
       this.showing = false;
-      this.toggleIframeElementClasses("vimiumUIComponentVisible", "vimiumUIComponentHidden");
+      this.toggleIframeElementClasses("vimium-ui-component-visible", "vimium-ui-component-hidden");
       if (this.options && this.options.focus) {
         this.iframeElement.blur();
         if (shouldRefocusOriginalFrame) {
