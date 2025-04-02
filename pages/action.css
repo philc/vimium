@@ -14,7 +14,7 @@ h1 {
   font-size: 18px;
 }
 
-#dialogBody {
+#dialog-body {
   padding: var(--padding);
   padding-right: 0;
   display: flex;
@@ -22,23 +22,23 @@ h1 {
   flex-grow: 1;
 }
 
-#notEnabledError, #firefoxMissingPermissionsError {
+#not-enabled-error, #firefox-missing-permissions-error {
   padding: var(--padding);
 }
 
-#dialogBody > * {
+#dialog-body > * {
   margin: 10px 0;
 }
 
-#dialogBody > *:first-child {
+#dialog-body > *:first-child {
   margin-top: 0;
 }
 
-#dialogBody > *:last-child {
+#dialog-body > *:last-child {
   margin-bottom: 0;
 }
 
-#howManyEnabled {
+#how-many-enabled {
   font-weight: bold;
 }
 
@@ -55,6 +55,6 @@ footer {
   position: inherit;
 }
 
-footer .optionsMessage {
+footer .options-message {
   flex-grow: 1;
 }
