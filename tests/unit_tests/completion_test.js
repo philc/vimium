@@ -424,7 +424,7 @@ context("suggestions", () => {
       relevancyFunction: returns(1),
     });
     const expected =
-      "<span class='vomnibarMatch'>ninj</span>a<span class='vomnibarMatch'>words</span>";
+      "<span class='match'>ninj</span>a<span class='match'>words</span>";
     assert.isTrue(suggestion.generateHtml({}).indexOf(expected) >= 0);
   });
 
@@ -436,7 +436,7 @@ context("suggestions", () => {
       title: "ninjawords",
       relevancyFunction: returns(1),
     });
-    const expected = "<span class='vomnibarMatch'>ninjaword</span>s";
+    const expected = "<span class='match'>ninjaword</span>s";
     assert.isTrue(suggestion.generateHtml({}).indexOf(expected) >= 0);
   });
 

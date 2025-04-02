@@ -71,7 +71,7 @@ export class Suggestion {
     const relevancyHtml = showRelevancy
       ? `<span class='relevancy'>${this.computeRelevancy()}</span>`
       : "";
-    const insertTextClass = this.insertText ? "vomnibarInsertText" : "vomnibarNoInsertText";
+    const insertTextClass = this.insertText ? "" : "no-insert-text";
     const insertTextIndicator = "&#8618;"; // A right hooked arrow.
     if (this.insertText && this.isCustomSearch) {
       this.title = this.insertText;
@@ -81,24 +81,24 @@ export class Suggestion {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
       faviconUrl.searchParams.set("pageUrl", this.url);
       faviconUrl.searchParams.set("size", "16");
-      faviconHtml = `<img class="vomnibarIcon" src="${faviconUrl.toString()}" />`;
+      faviconHtml = `<img class="icon" src="${faviconUrl.toString()}" />`;
     }
     if (this.isCustomSearch) {
       this.html = `\
-<div class="vomnibarTopHalf">
-   <span class="vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vomnibarSource">${this.description}</span>
-   <span class="vomnibarTitle">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
+<div class="top-half">
+   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
+   <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
    ${relevancyHtml}
  </div>\
 `;
     } else {
       this.html = `\
-<div class="vomnibarTopHalf">
-   <span class="vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vomnibarSource">${this.description}</span>
-   <span class="vomnibarTitle">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
+<div class="top-half">
+   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
+   <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
  </div>
- <div class="vomnibarBottomHalf">
-  <span class="vomnibarSource vomnibarNoInsertText">${insertTextIndicator}</span>${faviconHtml}<span class="vomnibarUrl">${
+ <div class="bottom-half">
+  <span class="source no-insert-text">${insertTextIndicator}</span>${faviconHtml}<span class="url">${
         this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
       }</span>
   ${relevancyHtml}
@@ -170,7 +170,7 @@ export class Suggestion {
     ranges = ranges.sort((a, b) => b[0] - a[0]);
     for (const [start, end] of ranges) {
       string = string.substring(0, start) +
-        `<span class='vomnibarMatch'>${string.substring(start, end)}</span>` +
+        `<span class='match'>${string.substring(start, end)}</span>` +
         string.substring(end);
     }
     return string;

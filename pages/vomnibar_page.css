@@ -63,27 +63,27 @@ ul {
   border-bottom: none;
 }
 
-#vomnibar li .vomnibarTopHalf, #vomnibar li .vomnibarBottomHalf {
+#vomnibar li .top-half, #vomnibar li .bottom-half {
   display: block;
   overflow: hidden;
 }
 
-#vomnibar li .vomnibarBottomHalf {
+#vomnibar li .bottom-half {
   font-size: 15px;
   margin-top: 3px;
   padding: 2px 0;
 }
 
-#vomnibar li .vomnibarIcon {
+#vomnibar li .icon {
   padding: 0 13px 0 6px;
   vertical-align: bottom;
 }
 
-#vomnibar li .vomnibarSource {
+#vomnibar li .source {
   color: #777;
   margin-right: 4px;
 }
-#vomnibar li .vomnibarRelevancy {
+#vomnibar li .relevancy {
   position: absolute;
   right: 0;
   top: 0;
@@ -94,28 +94,28 @@ ul {
   overflow: hidden;
 }
 
-#vomnibar li .vomnibarUrl {
+#vomnibar li .url {
   white-space: nowrap;
   color: #224684;
 }
 
-#vomnibar li .vomnibarMatch {
+#vomnibar li .match {
   font-weight: bold;
   color: black;
 }
 
-#vomnibar li em, #vomnibar li .vomnibarTitle {
+#vomnibar li em, #vomnibar li .title {
   color: black;
   margin-left: 4px;
 }
 #vomnibar li em {
   font-style: italic;
 }
-#vomnibar li em .vomnibarMatch, #vomnibar li .vomnibarTitle .vomnibarMatch {
+#vomnibar li em .match, #vomnibar li .title .match {
   color: #333;
 }
 
-#vomnibar li.vomnibarSelected {
+#vomnibar li.selected {
   background-color: #bbcee9;
 }
 
@@ -131,9 +131,7 @@ ul {
   background-color: #e6eefb;
 }
 
-.vomnibarInsertText {}
-
-.vomnibarNoInsertText {
+.no-insert-text {
   visibility: hidden;
 }
 
@@ -163,30 +161,30 @@ ul {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  #vomnibar li.vomnibarSelected {
+  #vomnibar li.selected {
     background-color: #37383a;
   }
 
-  #vomnibar li .vomnibarUrl {
+  #vomnibar li .url {
     white-space: nowrap;
     color: #5ca1f7;
   }
 
   #vomnibar li em,
-  #vomnibar li .vomnibarTitle {
+  #vomnibar li .title {
     color: white;
   }
 
-  #vomnibar li .vomnibarSource {
+  #vomnibar li .source {
     color: #9aa0a6;
   }
 
-  #vomnibar li .vomnibarMatch {
+  #vomnibar li .match {
     color: white;
   }
 
-  #vomnibar li em .vomnibarMatch,
-  #vomnibar li .vomnibarTitle .vomnibarMatch {
+  #vomnibar li em .match,
+  #vomnibar li .title .match {
     color: white;
   }
 }
