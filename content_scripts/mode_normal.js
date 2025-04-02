@@ -324,7 +324,7 @@ const NormalModeCommands = {
 
     const hints = visibleInputs.map((tuple) => {
       const hint = DomUtils.createElement("div");
-      hint.className = "vimium-reset internalVimiumInputHint vimiumInputHint";
+      hint.className = "vimium-reset internal-vimium-input-hint vimiumInputHint";
 
       // minus 1 for the border
       hint.style.left = (tuple.rect.left - 1) + globalThis.scrollX + "px";
@@ -515,10 +515,10 @@ class FocusSelector extends Mode {
       exitOnClick: true,
       keydown: (event) => {
         if (event.key === "Tab") {
-          hints[selectedInputIndex].classList.remove("internalVimiumSelectedInputHint");
+          hints[selectedInputIndex].classList.remove("internal-vimium-selected-input-hint");
           selectedInputIndex += hints.length + (event.shiftKey ? -1 : 1);
           selectedInputIndex %= hints.length;
-          hints[selectedInputIndex].classList.add("internalVimiumSelectedInputHint");
+          hints[selectedInputIndex].classList.add("internal-vimium-selected-input-hint");
           DomUtils.simulateSelect(visibleInputs[selectedInputIndex].element);
           return this.suppressEvent;
         } else if (event.key !== "Shift") {
@@ -543,7 +543,7 @@ class FocusSelector extends Mode {
       this.exit();
       return;
     } else {
-      hints[selectedInputIndex].classList.add("internalVimiumSelectedInputHint");
+      hints[selectedInputIndex].classList.add("internal-vimium-selected-input-hint");
     }
   }
 

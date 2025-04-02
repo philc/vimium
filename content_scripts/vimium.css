@@ -79,13 +79,30 @@ tbody.vimium-reset {
   display: table-row-group;
 }
 
-/* Linkhints CSS */
+/*
+ * Linkhints CSS
+ */
 
-div#vimiumHintMarkerContainer {
+/* Prior to 2025, we used camel case for all CSS selectors. We're preserving some camel case class
+ * names here in link hints for backwards compatibility, because they're user-customizable via the
+ * userDefinedLinkHintCss setting.
+ *
+ * Our default example value for userDefinedLinkHintCss refers to the "vimiumHintMarker" and
+ * "matchingCharacter" classes. We'll assume these are user-facing and should not be changed:
+ *   - vimiumHintMarker
+ *   - matchingCharacter
+ *   - vimiumActiveHintMarker
+ *
+ * Note that link hint elements have both internal-vimium-hint-marker and vimiumHintMarker classes.
+ * Presumably the "internal-" classes were meant to contain non-user-facing styles, and
+ * vimiumHintMarker was meant to be an empty vessel for users to attach their own styles to.
+ */
+
+div#vimium-hint-marker-container {
   pointer-events: none;
 }
 
-div.internalVimiumHintMarker {
+div.internal-vimium-hint-marker {
   position: absolute;
   display: block;
   top: -1px;
@@ -101,7 +118,7 @@ div.internalVimiumHintMarker {
   z-index: 2147483647;
 }
 
-div.internalVimiumHintMarker span {
+div.internal-vimium-hint-marker span {
   color: #302505;
   font-family: Helvetica, Arial, sans-serif;
   font-weight: bold;
@@ -109,7 +126,7 @@ div.internalVimiumHintMarker span {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-div.internalVimiumHintMarker > .matchingCharacter {
+div.internal-vimium-hint-marker > .matchingCharacter {
   color: #d4ac3a;
 }
 
@@ -119,7 +136,7 @@ div > .vimiumActiveHintMarker span {
 
 /* Input hints CSS */
 
-div.internalVimiumInputHint {
+div.internal-vimium-input-hint {
   position: absolute;
   display: block;
   background-color: rgba(255, 247, 133, 0.3);
@@ -127,12 +144,12 @@ div.internalVimiumInputHint {
   pointer-events: none;
 }
 
-div.internalVimiumSelectedInputHint {
+div.internal-vimium-selected-input-hint {
   background-color: rgba(255, 102, 102, 0.3);
   border: solid 1px #993333 !important;
 }
 
-div.internalVimiumSelectedInputHint span {
+div.internal-vimium-selected-input-hint span {
   color: white !important;
 }
 
