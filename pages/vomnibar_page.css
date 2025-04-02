@@ -9,12 +9,8 @@ ul {
   display: block;
   position: fixed;
   width: calc(100% - 20px); /* adjusted to keep border radius and box-shadow visible*/
-  /*min-width: 400px;
-  top: 70px;
-  left: 50%;*/
   top: 8px;
   left: 8px;
-  /*margin: 0 0 0 -40%;*/
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   background: #f1f1f1;
@@ -41,7 +37,7 @@ ul {
   box-sizing: border-box;
 }
 
-.vomnibarSearchArea {
+#vomnibar-search-area {
   display: block;
   padding: 10px;
   border-radius: 4px 4px 0 0;
@@ -123,7 +119,7 @@ ul {
   background-color: #bbcee9;
 }
 
-#vomnibarInput::selection {
+#vomnibar input::selection {
   /* This is the light grey color of the vomnibar border. */
   /* background-color: #F1F1F1; */
 
@@ -151,7 +147,7 @@ ul {
     border: 1px solid var(--vimium-foreground-color);
   }
 
-  .vomnibarSearchArea {
+  #vomnibar-search-area {
     border-bottom: 1px solid var(--vimium-foreground-color);
   }
 
