@@ -61,7 +61,7 @@ const HUD = {
       );
     }
     if (focusable) {
-      this.hudUI.toggleIframeElementClasses("vimiumNonClickable", "vimiumClickable");
+      this.hudUI.toggleIframeElementClasses("vimium-non-clickable", "vimium-clickable");
       // Note(gdh1995): Chrome 74 only acknowledges text selection when a frame has been visible.
       // See more in #3277.
       // Note(mrmr1993): Show the HUD frame, so Firefox will actually perform the paste.
@@ -71,7 +71,7 @@ const HUD = {
 
       getComputedStyle(this.hudUI.iframeElement).display;
     } else {
-      this.hudUI.toggleIframeElementClasses("vimiumClickable", "vimiumNonClickable");
+      this.hudUI.toggleIframeElementClasses("vimium-clickable", "vimium-non-clickable");
     }
   },
 

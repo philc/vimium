@@ -106,7 +106,7 @@ class UIComponent {
   // preference, even when the user is also using the DarkReader extension. DarkReader is the most
   // popular dark mode Chrome extension in use as of 2020.
   handleDarkReaderFilter() {
-    const reverseFilterClass = "reverseDarkReaderFilter";
+    const reverseFilterClass = "vimium-reverse-dark-reader-filter";
 
     const reverseFilterIfExists = () => {
       // The DarkReader extension creates this element if it's actively modifying the current page.

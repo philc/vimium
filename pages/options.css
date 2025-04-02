@@ -119,7 +119,7 @@ h2 {
 
 /* This longer selector is required to take precedence over our dark scheme textarea colors which
  * are defined in vimium.css. */
-body.vimiumBody textarea.validation-error, body.vimiumBody input.validation-error {
+body.vimium-body textarea.validation-error, body.vimium-body input.validation-error {
   border: 2px solid var(--validationErrorColor);
 }
 

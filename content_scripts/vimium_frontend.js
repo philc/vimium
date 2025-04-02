@@ -364,7 +364,7 @@ const flashFrame = (() => {
       shadowDOM.appendChild(styleEl);
 
       const frameEl = DomUtils.createElement("div");
-      frameEl.className = "vimium-reset vimiumHighlightedFrame";
+      frameEl.className = "vimium-reset vimium-highlighted-frame";
       shadowDOM.appendChild(frameEl);
     }
 
@@ -450,7 +450,7 @@ if (globalThis.HelpDialog == null) {
         if (!this.helpUI) {
           this.helpUI = new UIComponent(
             "pages/help_dialog.html",
-            "vimiumHelpDialogFrame",
+            "vimium-help-dialog-frame",
             function () {},
           );
         }

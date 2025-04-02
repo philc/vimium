@@ -136,8 +136,7 @@ div.internalVimiumSelectedInputHint span {
   color: white !important;
 }
 
-/* Frame Highlight Marker CSS*/
-div.vimiumHighlightedFrame {
+div.vimium-highlighted-frame {
   position: fixed;
   top: 0px;
   left: 0px;
@@ -150,7 +149,7 @@ div.vimiumHighlightedFrame {
   pointer-events: none;
 }
 
-iframe.vimiumHelpDialogFrame {
+iframe.vimium-help-dialog-frame {
   background-color: rgba(10, 10, 10, 0.6);
   padding: 0px;
   top: 0px;
@@ -180,11 +179,11 @@ iframe.vimium-hud-frame {
   opacity: 0;
 }
 
-body.vimiumFindMode ::selection {
+body.vimium-find-mode ::selection {
   background: #ff9632;
 }
 
-iframe.vomnibarFrame {
+iframe.vomnibar-frame {
   background-color: transparent;
   padding: 0px;
   overflow: hidden;
@@ -202,7 +201,7 @@ iframe.vomnibarFrame {
   z-index: 2147483647;
 }
 
-div.vimiumFlash {
+div.vimium-flash {
   box-shadow: 0px 0px 4px 2px #4183c4;
   padding: 1px;
   background-color: transparent;
@@ -220,7 +219,7 @@ iframe.vimium-ui-component-visible {
   color-scheme: light dark;
 }
 
-iframe.vimiumNonClickable {
+iframe.vimium-non-clickable {
   pointer-events: none;
 }
 
@@ -236,31 +235,31 @@ iframe.vimiumNonClickable {
   /* DarkReader is a popular dark mode browser extension. It can apply an invert filter to the whole
    * page to make the page dark, when used in Filter and Filter+ modes. We want to reverse/invert
    * that filter again for Vimium's UI elements, because Vimium is already dark mode aware. */
-  iframe.reverseDarkReaderFilter {
+  iframe.vimium-reverse-dark-reader-filter {
     -webkit-filter: invert(100%) hue-rotate(180deg) !important;
     filter: invert(100%) hue-rotate(180deg) !important;
   }
 
   /* Dark mode CSS for options page and exclusions */
 
-  body.vimiumBody {
+  body.vimium-body {
     background-color: var(--vimium-background-color);
     color: var(--vimium-background-text-color);
   }
 
-  body.vimiumBody a,
-  body.vimiumBody a:visited {
+  body.vimium-body a,
+  body.vimium-body a:visited {
     color: var(--vimium-link-color);
   }
 
-  body.vimiumBody textarea,
-  body.vimiumBody input {
+  body.vimium-body textarea,
+  body.vimium-body input {
     background-color: var(--vimium-foreground-color);
     border-color: var(--vimium-foreground-color);
     color: var(--vimium-foreground-text-color);
   }
 
-  body.vimiumBody div.example {
+  body.vimium-body div.example {
     color: #8a9096;
   }
 }
