@@ -157,6 +157,10 @@ div#exampleKeyMapping {
   margin-top: 5px;
 }
 
+div#macos {
+  display: none;
+}
+
 #linkHintCharactersContainer,
 #linkHintNumbersContainer,
 #waitForEnterForFilteredHintsContainer {
