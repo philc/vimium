@@ -261,7 +261,7 @@ iframe.vomnibarFrame {
 
   display: block;
   position: fixed;
-  width: calc(80% + 20px); /* same adjustment as in pages/vomnibar.js */
+  width: calc(80% + 20px); /* same adjustment as in pages/vomnibar_page.js */
   min-width: 400px;
   height: calc(100% - 70px);
   top: 70px;

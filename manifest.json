@@ -90,7 +90,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "pages/vomnibar.html",
+        "pages/vomnibar_page.html",
         "content_scripts/vimium.css",
         "pages/hud_page.html",
         "pages/help_dialog.html",

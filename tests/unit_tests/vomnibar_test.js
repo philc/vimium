@@ -4,7 +4,7 @@ import "../../tests/unit_tests/test_chrome_stubs.js";
 
 import { Suggestion } from "../../background_scripts/completion.js";
 import "../../background_scripts/completion.js";
-import { Vomnibar } from "../../pages/vomnibar.js";
+import { Vomnibar } from "../../pages/vomnibar_page.js";
 
 function newKeyEvent(properties) {
   return Object.assign(
@@ -24,7 +24,7 @@ function newKeyEvent(properties) {
 
 context("vomnibar", () => {
   setup(async () => {
-    const html = await Deno.readTextFile("pages/vomnibar.html");
+    const html = await Deno.readTextFile("pages/vomnibar_page.html");
     const w = new jsdom.JSDOM(html).window;
     globalThis.window = w;
     globalThis.document = w.document;
