@@ -1,5 +1,4 @@
 import "./all_content_scripts.js";
-
 import * as completionEngines from "../background_scripts/completion_engines.js";
 
 function cleanUpRegexp(re) {
@@ -9,50 +8,47 @@ function cleanUpRegexp(re) {
     .replace(/\\\//g, "/");
 }
 
-function populatePage() {
-  const html = [];
+export function populatePage() {
+  const template = document.querySelector("#engine-template").content;
   for (const engineClass of completionEngines.list) {
+    const el = template.cloneNode(true);
     const engine = new engineClass();
-    const name = engine.constructor.name;
+    const h4 = el.querySelector("h4");
+    h4.textContent = engine.constructor.name;
     // This data attribute is used in tests.
-    html.push(`<h4 data-engine="${name}">${name}</h4>\n`);
-    html.push('<div class="engine">');
+    h4.dataset.engine = engine.constructor.name;
+    const explanationEl = el.querySelector(".explanation");
     if (engine.example.explanation) {
-      html.push(`<p>${engine.example.explanation}</p>`);
+      explanationEl.textContent = engine.example.explanation;
+    } else {
+      explanationEl.remove();
     }
+
+    const exampleEl = el.querySelector(".engine-example");
+    console.log("exampleEl:", exampleEl);
     if (engine.example.searchUrl && engine.example.keyword) {
-      if (!engine.example.description) {
-        engine.example.description = engine.constructor.name;
-      }
-      html.push("<p>");
-      html.push("Example:");
-      html.push("<pre>");
-      html.push(
-        `${engine.example.keyword}: ${engine.example.searchUrl} ${engine.example.description}`,
-      );
-      html.push("</pre>");
-      html.push("</p>");
+      const desc = engine.example.description || engine.constructor.name;
+      exampleEl.querySelector("pre").textContent =
+        `${engine.example.keyword}: ${engine.example.searchUrl} ${desc}`;
+    } else {
+      exampleEl.remove();
     }
 
+    const regexpsEl = el.querySelector(".regexps");
     if (engine.regexps) {
-      html.push("<p>");
-      html.push(`Regular expression${1 < engine.regexps.length ? "s" : ""}:`);
-      html.push("<pre>");
-      for (let re of engine.regexps) {
-        html.push(`${cleanUpRegexp(re)}\n`);
+      let content = "";
+      for (const re of engine.regexps) {
+        content += `${cleanUpRegexp(re)}\n`;
       }
-      html.push("</pre>");
-      html.push("</p>");
+      regexpsEl.querySelector("pre").textContent = content;
+    } else {
+      regexpsEl.remove();
     }
-    html.push("</div>");
+    document.querySelector("#engine-list").appendChild(el);
   }
-
-  document.getElementById("engineList").innerHTML = html.join("");
 }
 
 const testEnv = globalThis.window == null;
 if (!testEnv) {
   document.addEventListener("DOMContentLoaded", populatePage);
 }
-
-export { populatePage };
