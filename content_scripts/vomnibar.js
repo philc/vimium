@@ -58,7 +58,11 @@ const Vomnibar = {
 
   init() {
     if (!this.vomnibarUI) {
-      this.vomnibarUI = new UIComponent("pages/vomnibar_page.html", "vomnibarFrame", function () {});
+      this.vomnibarUI = new UIComponent(
+        "pages/vomnibar_page.html",
+        "vomnibarFrame",
+        function () {},
+      );
     }
   },
 
