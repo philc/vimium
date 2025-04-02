@@ -173,9 +173,9 @@ const HelpDialog = {
     const caption = visible ? "Hide advanced commands" : "Show advanced commands";
     document.querySelector("#toggle-advanced a").textContent = caption;
     if (visible) {
-      HelpDialog.dialogElement.classList.add("showAdvanced");
+      HelpDialog.dialogElement.classList.add("show-advanced");
     } else {
-      HelpDialog.dialogElement.classList.remove("showAdvanced");
+      HelpDialog.dialogElement.classList.remove("show-advanced");
     }
   },
 };

@@ -113,7 +113,7 @@ div.divider {
   display: none;
 }
 
-#dialog.showAdvanced .row.advanced {
+#dialog.show-advanced .row.advanced {
   display: contents;
 }
 
