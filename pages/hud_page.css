@@ -1,4 +1,4 @@
-div.vimium-hud {
+#hud-body {
   display: block;
   position: fixed;
   width: calc(100% - 20px);
@@ -12,14 +12,14 @@ div.vimium-hud {
   z-index: 2147483647;
 }
 
-div.vimium-hud .vimium-hud-search-area {
+#search-area {
   display: block;
   padding: 3px;
   background-color: #f1f1f1;
   border-radius: 4px 4px 0 0;
 }
 
-div.vimium-hud .vimium-hud-search-area-inner {
+#hud {
   color: #777;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -33,12 +33,12 @@ div.vimium-hud .vimium-hud-search-area-inner {
   line-height: 20px;
 }
 
-div.vimium-hud .hud-find {
+#hud.hud-find {
   background: #fff;
   border: 1px solid #ccc;
 }
 
-div.vimium-hud span#hud-find-input, div.vimium-hud span#hud-match-count {
+span#hud-find-input, span#hud-match-count {
   color: #000;
   display: inline;
   outline: none;
@@ -46,20 +46,20 @@ div.vimium-hud span#hud-find-input, div.vimium-hud span#hud-match-count {
   overflow-y: hidden;
 }
 
-div.vimium-hud span#hud-find-input:before {
+span#hud-find-input:before {
   content: "/";
 }
 
-div.vimium-hud span#hud-match-count {
+span#hud-match-count {
   color: #aaa;
   font-size: 12px;
 }
 
-div.vimium-hud span#hud-find-input br {
+span#hud-find-input br {
   display: none;
 }
 
-div.vimium-hud span#hud-find-input * {
+span#hud-find-input * {
   display: inline;
   white-space: nowrap;
 }
