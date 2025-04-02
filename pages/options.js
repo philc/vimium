@@ -50,12 +50,12 @@ const OptionsPage = {
       () => this.maintainLinkHintsView(),
     );
 
-    document.querySelector("#downloadBackup").addEventListener(
+    document.querySelector("#download-backup").addEventListener(
       "mousedown",
       () => this.onDownloadBackupClicked(),
       true,
     );
-    document.querySelector("#uploadBackup").addEventListener(
+    document.querySelector("#upload-backup").addEventListener(
       "change",
       () => this.onUploadBackupClicked(),
     );
@@ -124,7 +124,7 @@ const OptionsPage = {
 
     ExclusionRulesEditor.setForm(Settings.get("exclusionRules"));
 
-    document.querySelector("#uploadBackup").value = "";
+    document.querySelector("#upload-backup").value = "";
     this.maintainLinkHintsView();
   },
 
@@ -283,7 +283,7 @@ const OptionsPage = {
   onDownloadBackupClicked() {
     const backup = Settings.pruneOutDefaultValues(this.getSettingsFromForm());
     const settingsBlob = new Blob([JSON.stringify(backup, null, 2) + "\n"]);
-    document.querySelector("#downloadBackup").href = URL.createObjectURL(settingsBlob);
+    document.querySelector("#download-backup").href = URL.createObjectURL(settingsBlob);
   },
 
   onUploadBackupClicked() {
