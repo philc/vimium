@@ -204,62 +204,62 @@ textarea:focus {
 }
 
 /*
- * Styles for rendering exclusionRules.
+ * CSS for exclusion rules.
  */
 
 #exclusion-scroll-box {
   overflow: scroll;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Each exclusion rule is about 30px, so this allows 7 rules before scrolling. */
+  /* Each exclusion rule is about 30px tall, so this allows 7 rules before scrolling. */
   max-height: 215px;
   border-radius: 2px;
   color: #444;
   width: 100%;
 }
 
-#exclusionRules {
+#exclusion-rules {
   width: 100%;
   border-collapse: collapse;
 }
 
-#exclusionRules td {
+#exclusion-rules td {
   vertical-align: top;
   border: 2px solid transparent;
   padding: 0px;
 }
 
-#exclusionRules td:nth-of-type(2) {
+#exclusion-rules td:nth-of-type(2) {
   width: 33%;
 }
 
-#exclusionRules td:nth-of-type(3) {
+#exclusion-rules td:nth-of-type(3) {
   /* Make the close button td use only the minimum width needed. */
   width: var(--closeButtonWidth);
   padding-top: 3px;
 }
 
-#exclusionRules tr.validationError .validationMessage {
+#exclusion-rules tr.validationError .validationMessage {
   display: block;
 }
 
-#exclusionRules tr.validationError td:nth-of-type(1) input {
+#exclusion-rules tr.validationError td:nth-of-type(1) input {
   border-color: orange;
 }
 
-#exclusionRules .validationMessage {
+#exclusion-rules .validationMessage {
   display: block;
   color: orange;
   margin-top: 2px;
   margin-left: 2px;
 }
 
-#exclusionRules .remove {
+#exclusion-rules .remove {
   border: none;
   color: #979ca0;
 }
 
-#exclusionRules .remove:hover {
+#exclusion-rules .remove:hover {
   color: #444;
 }
 
@@ -365,12 +365,12 @@ input#upload-backup {
     border-left: 1px solid #666;
   }
 
-  #exclusionRules .remove {
+  #exclusion-rules .remove {
     border: none;
     color: var(--vimium-foreground-text-color);
   }
 
-  #exclusionRules .remove:hover {
+  #exclusion-rules .remove:hover {
     color: #444;
     color: #15c;
     color: var(--vimium-link-color);

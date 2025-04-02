@@ -13,7 +13,7 @@ const ExclusionRulesEditor = {
 
   // - exclusionRules: the value obtained from settings, with the shape [{pattern, passKeys}].
   setForm(exclusionRules = []) {
-    const rulesTable = document.querySelector("#exclusionRules");
+    const rulesTable = document.querySelector("#exclusion-rules");
     // Remove any previous rows.
     const existingRuleEls = rulesTable.querySelectorAll(".rule");
     for (const el of existingRuleEls) el.remove();
@@ -26,7 +26,7 @@ const ExclusionRulesEditor = {
 
   // `pattern` and `passKeys` are optional.
   addRow(pattern, passKeys) {
-    const rulesTable = document.querySelector("#exclusionRules");
+    const rulesTable = document.querySelector("#exclusion-rules");
     const rowTemplate = document.querySelector("#exclusion-rule-template").content;
     const rowEl = rowTemplate.cloneNode(true);
 
@@ -47,7 +47,7 @@ const ExclusionRulesEditor = {
 
   // Returns an array of rules, which can be stored in Settings.
   getRules() {
-    const rows = Array.from(document.querySelectorAll("#exclusionRules tr.rule"));
+    const rows = Array.from(document.querySelectorAll("#exclusion-rules tr.rule"));
     const rules = rows
       .map((el) => {
         return {
