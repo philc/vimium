@@ -222,10 +222,10 @@ const OptionsPage = {
     }
     // Some options can be hidden in the UI. If they have validation errors, force them to be shown.
     if (errors["linkHintCharacters"]) {
-      this.showElement(document.querySelector("#linkHintCharactersContainer"), true);
+      this.showElement(document.querySelector("#link-hint-characters-container"), true);
     }
     if (errors["linkHintNumbers"]) {
-      this.showElement(document.querySelector("#linkHintNumbersContainer"), true);
+      this.showElement(document.querySelector("#link-hint-numbers-container"), true);
     }
     const hasErrors = Object.keys(errors).length > 0;
     return hasErrors;
@@ -267,15 +267,15 @@ const OptionsPage = {
     const errors = this.getValidationErrors();
     const isFilteredLinkhints = this.getOptionEl("filterLinkHints").checked;
     this.showElement(
-      document.querySelector("#linkHintCharactersContainer"),
+      document.querySelector("#link-hint-characters-container"),
       !isFilteredLinkhints || errors["linkHintCharacters"],
     );
     this.showElement(
-      document.querySelector("#linkHintNumbersContainer"),
+      document.querySelector("#link-hint-numbers-container"),
       isFilteredLinkhints || errors["linkHintNumbers"],
     );
     this.showElement(
-      document.querySelector("#waitForEnterForFilteredHintsContainer"),
+      document.querySelector("#wait-for-enter"),
       isFilteredLinkhints,
     );
   },

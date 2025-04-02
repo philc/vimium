@@ -20,7 +20,7 @@ a:active {
 }
 
 div#wrapper,
-#footerContent {
+#footer-content {
   max-width: 1050px;
   margin: 0 25px;
 }
@@ -128,19 +128,19 @@ div#exampleKeyMapping {
   margin-top: 5px;
 }
 
-#linkHintCharactersContainer,
-#linkHintNumbersContainer,
-#waitForEnterForFilteredHintsContainer {
+#link-hint-characters-container,
+#link-hint-numbers-container,
+#wait-for-enter {
   display: contents;
 }
 
-.linkHintCharactersField {
+.link-hint-characters-field {
   width: 100%;
   /* These text fields look strange when they're excessively long. */
   max-width: 400px;
 }
 
-.linkHintCharactersField input {
+.link-hint-characters-field input {
   width: 100%;
 }
 
@@ -294,18 +294,18 @@ footer {
   width: 100%;
 }
 
-#footerContent {
+#footer-content {
   width: 100%;
   display: flex;
   align-items: center;
 }
 
-#footerHelpText {
+#footer-help-text {
   flex-grow: 1;
   font-size: 12px;
 }
 
-#footerSaveOptions {
+#footer-save-options {
   flex-grow: 0;
 }
 
