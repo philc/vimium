@@ -27,11 +27,11 @@ const OptionsPage = {
   async init() {
     await Settings.onLoaded();
 
-    const saveOptionsEl = document.querySelector("#saveOptions");
+    const saveButton = document.querySelector("#save");
 
     const onUpdated = () => {
-      saveOptionsEl.disabled = false;
-      saveOptionsEl.textContent = "Save changes";
+      saveButton.disabled = false;
+      saveButton.textContent = "Save changes";
     };
 
     for (const el of document.querySelectorAll("input, textarea")) {
@@ -43,7 +43,7 @@ const OptionsPage = {
       });
     }
 
-    saveOptionsEl.addEventListener("click", () => this.saveOptions());
+    saveButton.addEventListener("click", () => this.saveOptions());
 
     this.getOptionEl("filterLinkHints").addEventListener(
       "click",
@@ -69,7 +69,7 @@ const OptionsPage = {
     }
 
     globalThis.onbeforeunload = () => {
-      if (!saveOptionsEl.disabled) {
+      if (!saveButton.disabled) {
         return "You have unsaved changes to options.";
       }
     };
@@ -252,7 +252,7 @@ const OptionsPage = {
     }
 
     await Settings.setSettings(this.getSettingsFromForm());
-    const el = document.querySelector("#saveOptions");
+    const el = document.querySelector("#save");
     el.disabled = true;
     el.textContent = "Saved";
   },
@@ -308,9 +308,9 @@ const OptionsPage = {
 
         await Settings.setSettings(backup);
         this.setFormFromSettings(Settings.getSettings());
-        const saveOptionsEl = document.querySelector("#saveOptions");
-        saveOptionsEl.disabled = true;
-        saveOptionsEl.textContent = "Saved";
+        const saveButton = document.querySelector("#save");
+        saveButton.disabled = true;
+        saveButton.textContent = "Saved";
         alert("Settings have been restored from the backup.");
       };
     }

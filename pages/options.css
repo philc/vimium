@@ -309,7 +309,7 @@ footer {
   flex-grow: 0;
 }
 
-#saveOptions,
+#save,
 #exclusion-add-button {
   white-space: nowrap;
   width: 110px;
