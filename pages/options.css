@@ -144,26 +144,26 @@ div#exampleKeyMapping {
   width: 100%;
 }
 
-input#scrollStepSize {
+input[name="scrollStepSize"] {
   width: 80px;
   margin-right: 3px;
   padding-left: 3px;
 }
 
-textarea#userDefinedLinkHintCss,
-textarea#keyMappings,
-textarea#searchEngines {
+textarea[name="userDefinedLinkHintCss"],
+textarea[name="keyMappings"],
+textarea[name="searchEngines"] {
   width: 100%;
   min-height: 140px;
   white-space: pre;
 }
 
-input#previousPatterns,
-input#nextPatterns {
+input[name="previousPatterns"],
+input[name="nextPatterns"] {
   width: 100%;
 }
 
-input#newTabUrl {
+input[name="newTabUrl"] {
   width: 100%;
 }
 

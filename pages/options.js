@@ -45,7 +45,7 @@ const OptionsPage = {
 
     saveOptionsEl.addEventListener("click", () => this.saveOptions());
 
-    document.querySelector("#filterLinkHints").addEventListener(
+    this.getOptionEl("filterLinkHints").addEventListener(
       "click",
       () => this.maintainLinkHintsView(),
     );
@@ -88,12 +88,16 @@ const OptionsPage = {
     this.setFormFromSettings(settings);
   },
 
+  getOptionEl(optionName) {
+    return document.querySelector(`*[name="${optionName}"]`);
+  },
+
   // Invoked when the user clicks the "reset" button next to an option's text field.
   resetInputValue(event) {
     const parentDiv = event.target.parentNode.parentNode;
     console.assert(parentDiv?.tagName == "DIV", "Expected parent to be a div", event.target);
     const input = parentDiv.querySelector("input") || parentDiv.querySelector("textarea");
-    const optionName = input.id;
+    const optionName = input.name;
     const defaultValue = Settings.defaultOptions[optionName];
     input.value = defaultValue;
     event.preventDefault();
@@ -101,7 +105,7 @@ const OptionsPage = {
 
   setFormFromSettings(settings) {
     for (const [optionName, optionType] of Object.entries(options)) {
-      const el = document.getElementById(optionName);
+      const el = this.getOptionEl(optionName);
       const value = settings[optionName];
       switch (optionType) {
         case "boolean":
@@ -127,7 +131,7 @@ const OptionsPage = {
   getSettingsFromForm() {
     const settings = {};
     for (const [optionName, optionType] of Object.entries(options)) {
-      const el = document.getElementById(optionName);
+      const el = this.getOptionEl(optionName);
       let value;
       switch (optionType) {
         case "boolean":
@@ -158,21 +162,21 @@ const OptionsPage = {
     let text, parsed;
 
     // keyMappings field.
-    text = document.getElementById("keyMappings").value.trim();
+    text = this.getOptionEl("keyMappings").value.trim();
     parsed = Commands.parseKeyMappingsConfig(text);
     if (parsed.validationErrors.length > 0) {
       results["keyMappings"] = parsed.validationErrors.join("\n");
     }
 
     // searchEngines field.
-    text = document.getElementById("searchEngines").value.trim();
+    text = this.getOptionEl("searchEngines").value.trim();
     parsed = UserSearchEngines.parseConfig(text);
     if (parsed.validationErrors.length > 0) {
       results["searchEngines"] = parsed.validationErrors.join("\n");
     }
 
     // linkHintCharacters field.
-    text = document.getElementById("linkHintCharacters").value.trim();
+    text = this.getOptionEl("linkHintCharacters").value.trim();
     if (text != this.removeDuplicateChars(text)) {
       results["linkHintCharacters"] = "This cannot contain duplicate characters.";
     } else if (text.length <= 1) {
@@ -180,7 +184,7 @@ const OptionsPage = {
     }
 
     // linkHintNumbers field.
-    text = document.getElementById("linkHintNumbers").value.trim();
+    text = this.getOptionEl("linkHintNumbers").value.trim();
     if (text != this.removeDuplicateChars(text)) {
       results["linkHintNumbers"] = "This cannot contain duplicate characters.";
     } else if (text.length <= 1) {
@@ -213,7 +217,7 @@ const OptionsPage = {
 
     const errors = this.getValidationErrors();
     for (const [optionName, message] of Object.entries(errors)) {
-      const el = document.getElementById(optionName);
+      const el = this.getOptionEl(optionName);
       this.addValidationMessage(el, message);
     }
     // Some options can be hidden in the UI. If they have validation errors, force them to be shown.
@@ -261,7 +265,7 @@ const OptionsPage = {
   // "filterLinkHints".
   maintainLinkHintsView() {
     const errors = this.getValidationErrors();
-    const isFilteredLinkhints = document.querySelector("#filterLinkHints").checked;
+    const isFilteredLinkhints = this.getOptionEl("filterLinkHints").checked;
     this.showElement(
       document.querySelector("#linkHintCharactersContainer"),
       !isFilteredLinkhints || errors["linkHintCharacters"],

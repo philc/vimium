@@ -11,7 +11,7 @@
   <body class="vimiumBody">
     <div id="wrapper">
       <header>Vimium Options</header>
-      <input type="hidden" id="settingsVersion" />
+      <input type="hidden" name="settingsVersion" />
 
       <div id="settings-grid-container">
         <h2>Excluded URLs and keys</h2>
@@ -34,7 +34,7 @@
         </div>
 
         <h2>Custom key mappings</h2>
-        <textarea id="keyMappings" type="text"></textarea>
+        <textarea name="keyMappings" type="text"></textarea>
         <div class="example">
           Enter commands to remap your keys. Available commands:<br>
           <pre
@@ -49,7 +49,7 @@ unmapAll
         </div>
 
         <h2>Custom search engines</h2>
-        <textarea id="searchEngines"></textarea>
+        <textarea name="searchEngines"></textarea>
         <div class="example">
           Add search-engine shortcuts to the Vomnibar. Format:<br>
           <pre
@@ -68,7 +68,7 @@ b: http://b.com/?q=%s description
 
         <h2>Scroll step size</h2>
         <span>
-          <input id="scrollStepSize" type="number" />px
+          <input name="scrollStepSize" type="number" />px
         </span>
         <div class="example">
           The size for basic movements (usually j/k/h/l).
@@ -77,7 +77,7 @@ b: http://b.com/?q=%s description
         <div id="linkHintCharactersContainer">
           <h2>Characters used for link hints</h2>
           <div class="linkHintCharactersField">
-            <input id="linkHintCharacters" type="text" />
+            <input name="linkHintCharacters" type="text" />
             <div class="example reset-link"><a href="#">Reset</a></div>
           </div>
           <div class="example">
@@ -88,7 +88,7 @@ b: http://b.com/?q=%s description
         <div id="linkHintNumbersContainer">
           <h2>Numbers used for link hints</h2>
           <div class="linkHintCharactersField">
-            <input id="linkHintNumbers" type="text" />
+            <input name="linkHintNumbers" type="text" />
             <div class="example reset-link"><a href="#">Reset</a></div>
           </div>
           <div class="example">
@@ -99,14 +99,14 @@ b: http://b.com/?q=%s description
         <div class="spacer"></div>
 
         <label>
-          <input id="smoothScroll" type="checkbox" />
+          <input name="smoothScroll" type="checkbox" />
           Use smooth scrolling
         </label>
         <div class="example"></div>
 
         <h2></h2>
         <label>
-          <input id="filterLinkHints" type="checkbox" />
+          <input name="filterLinkHints" type="checkbox" />
           Use the link's name and characters for link-hint filtering
         </label>
         <div class="example">
@@ -116,7 +116,7 @@ b: http://b.com/?q=%s description
         <div id="waitForEnterForFilteredHintsContainer">
           <h2></h2>
           <label>
-            <input id="waitForEnterForFilteredHints" type="checkbox" />
+            <input name="waitForEnterForFilteredHints" type="checkbox" />
             Require <tt>Enter</tt> when filtering hints
           </label>
           <div class="example">
@@ -127,7 +127,7 @@ b: http://b.com/?q=%s description
 
         <h2></h2>
         <label>
-          <input id="grabBackFocus" type="checkbox" />
+          <input name="grabBackFocus" type="checkbox" />
           Don't let pages steal the focus on load
         </label>
         <div class="example">
@@ -136,7 +136,7 @@ b: http://b.com/?q=%s description
 
         <h2></h2>
         <label>
-          <input id="hideHud" type="checkbox" />
+          <input name="hideHud" type="checkbox" />
           Hide the Heads Up Display (HUD) in insert mode
         </label>
         <div class="example">
@@ -145,7 +145,7 @@ b: http://b.com/?q=%s description
 
         <h2></h2>
         <label>
-          <input id="regexFindMode" type="checkbox" />
+          <input name="regexFindMode" type="checkbox" />
           Treat find queries as JavaScript regular expressions
         </label>
         <div class="example">
@@ -154,7 +154,7 @@ b: http://b.com/?q=%s description
 
         <h2></h2>
         <label>
-          <input id="ignoreKeyboardLayout" type="checkbox" />
+          <input name="ignoreKeyboardLayout" type="checkbox" />
           Ignore keyboard layout
         </label>
         <div class="example">
@@ -164,7 +164,7 @@ b: http://b.com/?q=%s description
 
         <h2>Previous patterns</h2>
         <div>
-          <input id="previousPatterns" type="text" />
+          <input name="previousPatterns" type="text" />
           <div class="example reset-link"><a href="#">Reset</a></div>
         </div>
         <div class="example">
@@ -173,7 +173,7 @@ b: http://b.com/?q=%s description
 
         <h2>Next patterns</h2>
         <div>
-          <input id="nextPatterns" type="text" />
+          <input name="nextPatterns" type="text" />
           <div class="example reset-link"><a href="#">Reset</a></div>
         </div>
         <div class="example">
@@ -182,7 +182,7 @@ b: http://b.com/?q=%s description
 
         <h2>New tab URL</h2>
         <div>
-          <input id="newTabUrl" type="text" />
+          <input name="newTabUrl" type="text" />
           <div class="example reset-link"><a href="#">Reset</a></div>
         </div>
         <div class="example">
@@ -192,7 +192,7 @@ b: http://b.com/?q=%s description
 
         <h2>CSS for Vimium UI</h2>
         <div>
-          <textarea id="userDefinedLinkHintCss" class="code" type="text"></textarea>
+          <textarea name="userDefinedLinkHintCss" class="code" type="text"></textarea>
           <div class="example reset-link"><a href="#">Reset</a></div>
         </div>
         <div class="example">
