@@ -5,7 +5,7 @@ const ExclusionRulesEditor = {
   defaultPatternForNewRules: null,
 
   init() {
-    document.querySelector("#exclusionAddButton").addEventListener("click", () => {
+    document.querySelector("#exclusion-add-button").addEventListener("click", () => {
       this.addRow(this.defaultPatternForNewRules);
       this.dispatchEvent("input");
     });

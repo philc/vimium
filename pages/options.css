@@ -207,7 +207,7 @@ textarea:focus {
  * Styles for rendering exclusionRules.
  */
 
-#exclusionScrollBox {
+#exclusion-scroll-box {
   overflow: scroll;
   overflow-x: hidden;
   overflow-y: auto;
@@ -265,18 +265,18 @@ textarea:focus {
 
 input[name="pattern"],
 input[name="passKeys"],
-.exclusionHeaderText {
+.exclusion-header-text {
   width: 100%;
   font-family: Consolas, "Liberation Mono", Courier, monospace;
   font-size: 14px;
 }
 
-.exclusionHeaderText {
+.exclusion-header-text {
   padding-left: 3px;
   color: #979ca0;
 }
 
-#exclusionAddButton {
+#exclusion-add-button {
   float: right;
   /* Add the spacing between the table's cells to the right margin of this button. */
   margin-right: calc(var(--closeButtonWidth) + 4px);
@@ -310,7 +310,7 @@ footer {
 }
 
 #saveOptions,
-#exclusionAddButton {
+#exclusion-add-button {
   white-space: nowrap;
   width: 110px;
 }
