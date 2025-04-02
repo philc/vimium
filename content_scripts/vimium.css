@@ -220,10 +220,6 @@ iframe.vimium-ui-component-visible {
   color-scheme: light dark;
 }
 
-iframe.vimiumUIComponentReactivated {
-  border: 5px solid yellow;
-}
-
 iframe.vimiumNonClickable {
   pointer-events: none;
 }
