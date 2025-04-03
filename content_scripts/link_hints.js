@@ -317,7 +317,8 @@ const LinkHints = {
       case "copy-text":
         mode = COPY_LINK_TEXT;
         break;
-      case "hover": case "hover-and-scroll":
+      case "hover":
+      case "hover-and-scroll":
         HOVER_LINK.doesScroll = action !== "hover";
         mode = HOVER_LINK;
         break;
