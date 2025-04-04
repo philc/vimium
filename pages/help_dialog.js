@@ -23,6 +23,13 @@ function ellipsize(s, maxLength) {
   return s.substring(0, Math.max(0, maxLength - ellipsis.length)) + ellipsis;
 }
 
+// Returns true if the command should be labeled as "advanced" for UI purposes.
+function isAdvancedCommand(command, options) {
+  // Use some bespoke logic to label some command + option combos as advanced.
+  return command.advanced ||
+    (command.name == "reload" && options.includes("hard"));
+}
+
 // This overrides the HelpDialog implementation in vimium_frontend.js. We provide aliases for the
 // two HelpDialog methods required by normalMode (isShowing() and toggle()).
 const HelpDialog = {
@@ -96,7 +103,7 @@ const HelpDialog = {
 
     const rowEl = rowTemplate.cloneNode(true);
     rowEl.querySelector(".help-description").textContent = command.desc;
-    if (command.advanced) {
+    if (isAdvancedCommand(command, options)) {
       rowEl.querySelector(".row").classList.add("advanced");
     }
     const keysEl = rowEl.querySelector(".key-bindings");
