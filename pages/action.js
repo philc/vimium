@@ -103,10 +103,10 @@ const ActionPage = {
       const patternMatchesUrl = this.tabUrl.match(regExp);
       if (patternMatchesUrl) {
         row.classList.remove("validationError");
-        validationEl.innerText = "";
+        validationEl.textContent = "";
       } else {
         row.classList.add("validationError");
-        validationEl.innerText = "Pattern does not match the current URL";
+        validationEl.textContent = "Pattern does not match the current URL";
       }
     }
   },
@@ -123,7 +123,7 @@ const ActionPage = {
       const hasBlankPassKeysRule = rules.find((r) => r.passKeys.length == 0);
       caption = hasBlankPassKeysRule ? "No" : "Some";
     }
-    document.querySelector("#how-many-enabled").innerText = caption;
+    document.querySelector("#how-many-enabled").textContent = caption;
   },
 
   async onSave() {

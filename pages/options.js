@@ -199,7 +199,7 @@ const OptionsPage = {
     const exampleEl = el.nextElementSibling;
     const messageEl = document.createElement("div");
     messageEl.classList.add("validation-message");
-    messageEl.innerText = message;
+    messageEl.textContent = message;
     exampleEl.after(messageEl);
   },
 
