@@ -25,7 +25,6 @@ export function populatePage() {
     }
 
     const exampleEl = el.querySelector(".engine-example");
-    console.log("exampleEl:", exampleEl);
     if (engine.example.searchUrl && engine.example.keyword) {
       const desc = engine.example.description || engine.constructor.name;
       exampleEl.querySelector("pre").textContent =
