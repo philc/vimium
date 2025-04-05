@@ -211,21 +211,21 @@ const HintCoordinator = {
       handler: "prepareToActivateLinkHintsMode",
       modeIndex: availableModes.indexOf(mode),
       isExtensionPage,
-      isVimiumHelpDialog: globalThis.isVimiumHelpDialog,
+      requestedByHelpDialog: globalThis.isVimiumHelpDialog,
     });
   },
 
   // Returns a list of HintDescriptors. Hint descriptors are global. They include all of the
   // information necessary for each frame to determine whether and when a hint from *any* frame is
   // selected.
-  getHintDescriptors({ modeIndex, isVimiumHelpDialog }, _sender) {
+  getHintDescriptors({ modeIndex, requestedByHelpDialog }, _sender) {
     if (!DomUtils.isReady() || DomUtils.windowIsTooSmall()) return [];
 
     const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
     // If link hints is launched within the help dialog, then we only offer hints from that frame.
     // This improves the usability of the help dialog on the options page (particularly for
     // selecting command names).
-    if (isVimiumHelpDialog && !globalThis.isVimiumHelpDialog) {
+    if (requestedByHelpDialog && !globalThis.isVimiumHelpDialog) {
       this.localHints = [];
     } else {
       this.localHints = LocalHints.getLocalHints(requireHref);

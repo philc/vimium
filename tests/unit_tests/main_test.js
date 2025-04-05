@@ -22,7 +22,7 @@ context("HintCoordinator", () => {
 
     await HintCoordinator.prepareToActivateLinkHintsMode(0, 0, {
       modeIndex: 0,
-      isVimiumHelpDialog: false,
+      requestedByHelpDialog: false,
     });
 
     receivedMessages = receivedMessages.map(
