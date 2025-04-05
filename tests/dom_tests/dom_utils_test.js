@@ -1,17 +1,3 @@
-context("DOM content loaded", () => {
-  // The DOM content has already loaded, this should be called immediately.
-  should("call callback immediately.", () => {
-    let called = false;
-    DomUtils.documentReady(() => called = true);
-    assert.isTrue(called);
-  });
-
-  // See ./dom_tests.html; the callback there was installed before the document was ready.
-  should("already have called callback embedded in test page.", () => {
-    assert.isTrue(globalThis.documentReadyListenerCalled);
-  });
-});
-
 context("Check visibility", () => {
   should("detect visible elements as visible", () => {
     document.getElementById("test-div").innerHTML = `\

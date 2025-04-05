@@ -12,7 +12,7 @@ function windowIsFocused() {
 }
 
 function initWindowIsFocused() {
-  DomUtils.documentReady(() => windowHasFocus = document.hasFocus());
+  DomUtils.documentReady().then(() => windowHasFocus = document.hasFocus());
   globalThis.addEventListener(
     "focus",
     forTrusted(function (event) {
@@ -335,7 +335,7 @@ const onUnload = Utils.makeIdempotent(() => {
 });
 
 const setScrollPosition = ({ scrollX, scrollY }) =>
-  DomUtils.documentReady(function () {
+  DomUtils.documentReady().then(() => {
     if (DomUtils.isTopFrame()) {
       Utils.nextTick(function () {
         globalThis.focus();
@@ -470,7 +470,7 @@ const testEnv = globalThis.window == null;
 if (!testEnv) {
   initWindowIsFocused();
   initializePreDomReady();
-  DomUtils.documentReady(initializeOnDomReady);
+  DomUtils.documentReady().then(initializeOnDomReady);
 }
 
 Object.assign(globalThis, {
