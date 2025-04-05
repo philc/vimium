@@ -205,11 +205,13 @@ const HintCoordinator = {
       }
     });
     this.onExit = [onExit];
+    const protocol = window.location.protocol;
+    const isExtensionPage = ["chrome-extension:", "moz-extension:"].includes(protocol);
     chrome.runtime.sendMessage({
       handler: "prepareToActivateLinkHintsMode",
       modeIndex: availableModes.indexOf(mode),
+      isExtensionPage,
       isVimiumHelpDialog: globalThis.isVimiumHelpDialog,
-      isVimiumOptionsPage: globalThis.isVimiumOptionsPage,
     });
   },
 

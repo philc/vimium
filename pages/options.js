@@ -323,6 +323,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   await Commands.init();
   await OptionsPage.init();
 });
-
-// Exported for use by our tests.
-globalThis.isVimiumOptionsPage = true;

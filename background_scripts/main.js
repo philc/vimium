@@ -525,14 +525,13 @@ const HintCoordinator = {
   async prepareToActivateLinkHintsMode(
     tabId,
     originatingFrameId,
-    { modeIndex, isVimiumHelpDialog, isVimiumOptionsPage },
+    { modeIndex, isVimiumHelpDialog, isExtensionPage },
   ) {
     const frameIds = await getFrameIdsForTab(tabId);
-    // If link hints was triggered on the Options page, or the Vimium help dialog (which is shown
-    // inside an iframe), we cannot directly retrieve those frameIds using the getFrameIdsForTab.
-    // However, as a workaround, if those pages were the pages activating hints, their frameId is
-    // equal to originatingFrameId
-    const isExtensionPage = isVimiumHelpDialog || isVimiumOptionsPage;
+    // If link hints was triggered on a Vimium extension page (like the vimium help dialog or
+    // options page), we cannot directly retrieve the frameIds for those pages using the
+    // getFrameIdsForTab. However, as a workaround, if those pages were the pages activating hints,
+    // their frameId is equal to originatingFrameId.
     if (isExtensionPage && !frameIds.includes(originatingFrameId)) {
       frameIds.push(originatingFrameId);
     }
