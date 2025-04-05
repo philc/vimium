@@ -1,13 +1,20 @@
 class UIComponent {
+  iframeElement;
+  iframePort;
+  showing = false;
+  // An optional message handler for handling messages from the iFrame.
+  // TODO(philc): Rename to messageHandler.
+  handleMessage;
+  iframeFrameId;
+  options = {};
+  shadowDOM;
+
   constructor(iframeUrl, className, handleMessage) {
     this.handleMessage = handleMessage;
-    this.iframeElement = null;
-    this.iframePort = null;
-    this.showing = false;
-    this.iframeFrameId = null;
-    this.options = {};
-    this.shadowDOM = null;
+    this.init(iframeUrl, className);
+  }
 
+  async init(iframeUrl, className) {
     const isDomTests = iframeUrl.includes("?dom_tests=true");
 
     DomUtils.documentReady(() => {
