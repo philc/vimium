@@ -1,3 +1,11 @@
+import "../lib/chrome_api_stubs.js";
+import "../lib/utils.js";
+import "../lib/dom_utils.js";
+import "../lib/settings.js";
+import "../lib/keyboard_utils.js";
+import "../lib/find_mode_history.js";
+import "./ui_component_messenger.js";
+
 let findMode = null;
 
 // Chrome creates a unique port for each MessageChannel, so there's a race condition between
