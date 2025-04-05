@@ -42,7 +42,7 @@ const isWindowFocusable = () => {
 };
 
 // This is set by initializeFrame. We can only get this frame's ID from the background page.
-let frameId = null;
+globalThis.frameId = null;
 
 // If an input grabs the focus before the user has interacted with the page, then grab it back (if
 // the grabBackFocus option is set).
@@ -423,7 +423,7 @@ const checkIfEnabledForUrl = async () => {
   Utils._firefoxVersion = response.firefoxVersion;
   Utils._browserInfoLoaded = true;
   // This is the first time we learn what this frame's ID is.
-  frameId = response.frameId;
+  globalThis.frameId = response.frameId;
 
   if (normalMode == null) installModes();
   normalMode.setPassKeys(response.passKeys);
@@ -475,7 +475,6 @@ if (!testEnv) {
 
 Object.assign(globalThis, {
   handlerStack,
-  frameId,
   windowIsFocused,
   // These are exported for normal mode and link-hints mode.
   focusThisFrame,
