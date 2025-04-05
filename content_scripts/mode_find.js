@@ -475,9 +475,10 @@ const highlight = (textNode, startIndex, length) => {
   const rect = range.getBoundingClientRect();
   if (rect.top < 0 || rect.bottom > globalThis.innerHeight) {
     const screenHeight = globalThis.innerHeight;
+    const scrollBehavior = Settings.get("smoothScroll") ? "smooth" : "instant";
     globalThis.scrollTo({
       top: globalThis.scrollY + rect.top + rect.height / 2 - screenHeight / 2,
-      behavior: "smooth",
+      behavior: scrollBehavior,
     });
   }
 
