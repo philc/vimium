@@ -4,7 +4,7 @@ import "../lib/dom_utils.js";
 import "../lib/settings.js";
 import "../lib/keyboard_utils.js";
 import "../lib/find_mode_history.js";
-import "./ui_component_messenger.js";
+import * as UIComponentMessenger from "./ui_component_messenger.js";
 
 let findMode = null;
 
@@ -206,21 +206,29 @@ const handlers = {
   },
 };
 
-// Manually inject custom user styles.
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss();
-});
+function init() {
+  // Manually inject custom user styles.
+  document.addEventListener("DOMContentLoaded", async () => {
+    await Settings.onLoaded();
+    DomUtils.injectUserCss();
+  });
 
-document.addEventListener("keydown", onKeyEvent);
-document.addEventListener("keypress", onKeyEvent);
+  document.addEventListener("keydown", onKeyEvent);
+  document.addEventListener("keypress", onKeyEvent);
 
-UIComponentMessenger.registerHandler(async function ({ data }) {
-  await Utils.populateBrowserInfo();
-  const handler = handlers[data.name || data];
-  if (handler) {
-    return handler(data);
-  }
-});
+  UIComponentMessenger.init();
+  UIComponentMessenger.registerHandler(async function ({ data }) {
+    await Utils.populateBrowserInfo();
+    const handler = handlers[data.name || data];
+    if (handler) {
+      return handler(data);
+    }
+  });
 
-FindModeHistory.init();
+  FindModeHistory.init();
+}
+
+const testEnv = globalThis.window == null;
+if (!testEnv) {
+  init();
+}

@@ -1,6 +1,5 @@
 import "./all_content_scripts.js";
-// TODO(philc): Why does importing this break the help dialog?
-// import "./ui_component_messenger.js";
+import * as UIComponentMessenger from "./ui_component_messenger.js";
 import { allCommands } from "../background_scripts/all_commands.js";
 
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
@@ -188,6 +187,7 @@ const HelpDialog = {
 };
 
 function init() {
+  UIComponentMessenger.init();
   UIComponentMessenger.registerHandler(async function (event) {
     await Settings.onLoaded();
     await Utils.populateBrowserInfo();

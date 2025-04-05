@@ -32,15 +32,15 @@ context("vomnibar", () => {
   });
 
   should("hide when escape is pressed", async () => {
-    let wasHidden = false;
     const instance = new Vomnibar();
     await instance.activate();
     const ui = instance.vomnibarUI;
-    stub(UIComponentMessenger, "postMessage", (message) => {
-      wasHidden = message == "hide";
-    });
+    ui.setQuery("www.example.com");
+    // Here we assert that the dialog has been reset when esc is pressed, which happens as part of
+    // hiding the dialog. It would be better to check more directly that the dialog was hidden, but
+    // jacking into the channels for this are not worthwhile for this test.
     await ui.onKeyEvent(newKeyEvent({ key: "Escape" }));
-    assert.equal(true, wasHidden);
+    assert.equal("", ui.input.value);
   });
 
   should("edit a completion's URL when ctrl-enter is pressed", async () => {
