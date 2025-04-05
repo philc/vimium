@@ -33,57 +33,58 @@ class UIComponent {
       this.handleDarkReaderFilter();
       this.setIframeVisible(false);
 
-      // Open a port and pass it to the iframe via window.postMessage. We use an AsyncDataFetcher to
-      // handle requests which arrive before the iframe (and its message handlers) have completed
-      // initialization. See #1679.
-      this.iframePort = new AsyncDataFetcher((setIframePort) => {
-        // We set the iframe source and append the new element here (as opposed to above) to avoid a
-        // potential race condition vis-a-vis the "load" event (because this callback runs on
-        // "nextTick").
-        this.iframeElement.src = chrome.runtime.getURL(iframeUrl);
-        document.documentElement.appendChild(shadowWrapper);
+      // Load the iframe and pass it a port via window.postMessage so we can communicate privately
+      // with the iframe. Use a promise here so that requests to message this iframe's port will
+      // block until it's ready. See #1679.
+      let resolveFn;
+      this.iframePort = new Promise((resolve, _reject) => {
+        resolveFn = resolve;
+      });
 
-        this.iframeElement.addEventListener("load", async () => {
-          // Get vimiumSecret so the iframe can determine that our message isn't the page
-          // impersonating us.
-          const secret = (await chrome.storage.session.get("vimiumSecret")).vimiumSecret;
-          const { port1, port2 } = new MessageChannel();
-          // Outside of tests, target origin starts with chrome-extension://{vimium's-id}
-          const targetOrigin = isDomTests ? "*" : chrome.runtime.getURL("");
-          this.iframeElement.contentWindow.postMessage(secret, targetOrigin, [port2]);
-          port1.onmessage = (event) => {
-            let eventName = null;
-            if (event) {
-              eventName = (event.data ? event.data.name : undefined) || event.data;
-            }
+      this.iframeElement.src = chrome.runtime.getURL(iframeUrl);
+      document.documentElement.appendChild(shadowWrapper);
 
-            switch (eventName) {
-              case "uiComponentIsReady":
-                // If this frame receives the focus, then hide the UI component.
-                globalThis.addEventListener(
-                  "focus",
-                  forTrusted((event) => {
-                    if ((event.target === window) && this.options.focus) {
-                      this.hide(false);
-                    }
-                    // Continue propagating the event.
-                    return true;
-                  }),
-                  true,
-                );
-                // Set the iframe's port, thereby rendering the UI component ready.
-                setIframePort(port1);
-                break;
-              case "setIframeFrameId":
-                this.iframeFrameId = event.data.iframeFrameId;
-                break;
-              case "hide":
-                return this.hide();
-              default:
-                this.handleMessage(event);
-            }
-          };
-        });
+      this.iframeElement.addEventListener("load", async () => {
+        // Get vimiumSecret so the iframe can determine that our message isn't the page
+        // impersonating us.
+        const secret = (await chrome.storage.session.get("vimiumSecret")).vimiumSecret;
+        const { port1, port2 } = new MessageChannel();
+        // Outside of tests, target origin starts with chrome-extension://{vimium's-id}
+        const targetOrigin = isDomTests ? "*" : chrome.runtime.getURL("");
+        this.iframeElement.contentWindow.postMessage(secret, targetOrigin, [port2]);
+        port1.onmessage = (event) => {
+          let eventName = null;
+          if (event) {
+            eventName = (event.data ? event.data.name : undefined) || event.data;
+          }
+
+          switch (eventName) {
+            case "uiComponentIsReady":
+              // If this frame receives the focus, then hide the UI component.
+              globalThis.addEventListener(
+                "focus",
+                forTrusted((event) => {
+                  if ((event.target === window) && this.options.focus) {
+                    this.hide(false);
+                  }
+                  // Continue propagating the event.
+                  return true;
+                }),
+                true,
+              );
+              // Set the iframe's port, thereby rendering the UI component ready.
+              // setIframePort(port1);
+              resolveFn(port1);
+              break;
+            case "setIframeFrameId":
+              this.iframeFrameId = event.data.iframeFrameId;
+              break;
+            case "hide":
+              return this.hide();
+            default:
+              this.handleMessage(event);
+          }
+        };
       });
     });
   }
@@ -121,62 +122,46 @@ class UIComponent {
     }
   }
 
-  // Post a message (if provided), then call continuation (if provided). We wait for documentReady()
-  // to ensure that the @iframePort set (so that we can use @iframePort.use()).
-  postMessage(message = null, continuation = null) {
-    if (!this.iframePort) {
-      return;
-    }
-
-    this.iframePort.use(function (port) {
-      if (message != null) {
-        port.postMessage(message);
-      }
-      if (continuation) {
-        continuation();
-      }
-    });
+  async postMessage(message) {
+    (await this.iframePort).postMessage(message);
   }
 
-  activate(options = {}) {
+  async activate(options = {}) {
     this.options = options;
-    this.postMessage(this.options, () => {
-      this.setIframeVisible(true);
-      if (this.options.focus) {
-        this.iframeElement.focus();
-      }
-      this.showing = true;
-    });
+    await this.postMessage(this.options);
+    this.setIframeVisible(true);
+    if (this.options.focus) {
+      this.iframeElement.focus();
+    }
+    this.showing = true;
   }
 
-  hide(shouldRefocusOriginalFrame) {
-    // We post a non-message (null) to ensure that hide() requests cannot overtake activate()
-    // requests.
+  async hide(shouldRefocusOriginalFrame) {
     if (shouldRefocusOriginalFrame == null) shouldRefocusOriginalFrame = true;
-    this.postMessage(null, () => {
-      if (!this.showing) return;
-      this.showing = false;
-      this.setIframeVisible(false);
-      if (this.options.focus) {
-        this.iframeElement.blur();
-        if (shouldRefocusOriginalFrame) {
-          if (this.options.sourceFrameId != null) {
-            chrome.runtime.sendMessage({
-              handler: "sendMessageToFrames",
-              frameId: this.options.sourceFrameId,
-              message: {
-                handler: "focusFrame",
-                forceFocusThisFrame: true,
-              },
-            });
-          } else {
-            Utils.nextTick(() => globalThis.focus());
-          }
+
+    await this.iframePort;
+    if (!this.showing) return;
+    this.showing = false;
+    this.setIframeVisible(false);
+    if (this.options.focus) {
+      this.iframeElement.blur();
+      if (shouldRefocusOriginalFrame) {
+        if (this.options.sourceFrameId != null) {
+          chrome.runtime.sendMessage({
+            handler: "sendMessageToFrames",
+            frameId: this.options.sourceFrameId,
+            message: {
+              handler: "focusFrame",
+              forceFocusThisFrame: true,
+            },
+          });
+        } else {
+          Utils.nextTick(() => globalThis.focus());
         }
       }
-      this.options = {};
-      this.postMessage("hidden"); // Inform the UI component that it is hidden.
-    });
+    }
+    this.options = {};
+    this.postMessage("hidden"); // Inform the UI component that it is hidden.
   }
 }
 

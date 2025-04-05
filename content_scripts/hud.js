@@ -60,18 +60,20 @@ const HUD = {
         this.hudUI.shadowDOM,
       );
     }
+    const classList = this.hudUI.iframeElement.classList;
     if (focusable) {
-      this.hudUI.toggleIframeElementClasses("vimium-non-clickable", "vimium-clickable");
+      classList.remove("vimium-non-clickable");
+      classList.add("vimium-clickable");
       // Note(gdh1995): Chrome 74 only acknowledges text selection when a frame has been visible.
       // See more in #3277.
       // Note(mrmr1993): Show the HUD frame, so Firefox will actually perform the paste.
-      this.hudUI.toggleIframeElementClasses("vimium-ui-component-hidden", "vimium-ui-component-visible");
+      this.hudUI.setIframeVisible(true);
       // Force the re-computation of styles, so Chrome sends a visibility change message to the
       // child frame. See https://github.com/philc/vimium/pull/3277#issuecomment-487363284
-
       getComputedStyle(this.hudUI.iframeElement).display;
     } else {
-      this.hudUI.toggleIframeElementClasses("vimium-clickable", "vimium-non-clickable");
+      classList.remove("vimium-non-clickable");
+      classList.add("vimium-clickable");
     }
   },
 
@@ -199,7 +201,7 @@ const HUD = {
 
   pasteResponse({ data }) {
     // Hide the HUD frame again.
-    this.hudUI.toggleIframeElementClasses("vimium-ui-component-visible", "vimium-ui-component-hidden");
+    this.hudUI.setIframeVisible(false);
     this.unfocusIfFocused();
     this.pasteListener(data);
   },
