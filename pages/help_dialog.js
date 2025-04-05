@@ -152,7 +152,7 @@ const HelpDialog = {
   },
 
   hide() {
-    UIComponentMessenger.hide();
+    UIComponentMessenger.postMessage("hide");
   },
 
   toggle() {

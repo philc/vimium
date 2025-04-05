@@ -1,19 +1,19 @@
-// Fetch the Vimium secret, register the port received from the parent window, and stop listening
-// for messages on the window object. vimiumSecret is accessible only within the current instance of
-// Vimium. So a malicious host page trying to register its own port can do no better than guessing.
-
-function registerPort(event) {
-  chrome.storage.session.get("vimiumSecret", function ({ vimiumSecret: secret }) {
-    if (event.source !== globalThis.parent) return;
-    if (event.data !== secret) {
-      Utils.debugLog("ui_component_messenger.js: vimiumSecret is incorrect.");
-      return;
-    }
-    UIComponentMessenger.portOpen(event.ports[0]);
-    globalThis.removeEventListener("message", registerPort);
-  });
+async function registerPortWithParentPage(event) {
+  if (event.source !== globalThis.parent) return;
+  // The Vimium content script that's running on the parent page has access to this vimiumsecret
+  // fetched from session storage, so if it matches, then we know that event.ports came from the
+  // Vimium extension.
+  const secret = (await chrome.storage.session.get("vimiumSecret")).vimiumSecret;
+  if (event.data !== secret) {
+    Utils.debugLog("ui_component_messenger.js: vimiumSecret is incorrect.");
+    return;
+  }
+  UIComponentMessenger.portOpen(event.ports[0]);
+  // Once we complete a handshake with the parent page hosting this page's iframe, stop listening
+  // for messages on the window object.
+  globalThis.removeEventListener("message", registerPortWithParentPage);
 }
-globalThis.addEventListener("message", registerPort);
+globalThis.addEventListener("message", registerPortWithParentPage);
 
 const UIComponentMessenger = {
   ownerPagePort: null,
@@ -36,13 +36,8 @@ const UIComponentMessenger = {
   },
 
   postMessage(message) {
-    if (this.ownerPagePort) {
-      this.ownerPagePort.postMessage(message);
-    }
-  },
-
-  hide() {
-    this.postMessage("hide");
+    if (!this.ownerPagePort) return;
+    this.ownerPagePort.postMessage(message);
   },
 
   // We require both that the DOM is ready and that the port has been opened before the UI component
