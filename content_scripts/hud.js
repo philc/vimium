@@ -79,7 +79,7 @@ const HUD = {
 
   // duration - if omitted, the message will show until dismissed.
   show(text, duration) {
-    DomUtils.documentComplete(async () => {
+    DomUtils.documentComplete().then(async () => {
       clearTimeout(this._showForDurationTimerId);
       // @hudUI.activate will take charge of making it visible
       await this.init(false);
@@ -94,7 +94,7 @@ const HUD = {
 
   showFindMode(findMode = null) {
     this.findMode = findMode;
-    DomUtils.documentComplete(async () => {
+    DomUtils.documentComplete().then(async () => {
       await this.init();
       this.hudUI.activate({ name: "showFindMode" });
       this.tween.fade(1.0, 150);
@@ -184,7 +184,7 @@ const HUD = {
   // * events.
   // * the HUD shouldn't be active for this frame while any of the copy/paste commands are running.
   copyToClipboard(text) {
-    DomUtils.documentComplete(async () => {
+    DomUtils.documentComplete().then(async () => {
       await this.init();
       this.hudUI.postMessage({ name: "copyToClipboard", data: text });
     });
@@ -192,7 +192,7 @@ const HUD = {
 
   pasteFromClipboard(pasteListener) {
     this.pasteListener = pasteListener;
-    DomUtils.documentComplete(async () => {
+    DomUtils.documentComplete().then(async () => {
       await this.init();
       this.tween.fade(0, 0);
       this.hudUI.postMessage({ name: "pasteFromClipboard" });
@@ -218,7 +218,7 @@ const HUD = {
   // Navigator.clipboard is only available in secure contexts. Show a warning when clipboard actions
   // fail on non-HTTPS sites. See #4572.
   showClipboardUnavailableMessage() {
-    DomUtils.documentComplete(async () => {
+    DomUtils.documentComplete().then(async () => {
       await this.init();
       // Since the message is long and surprising, show it for longer to allow more time to reading.
       this.show("Clipboard actions available only on HTTPS sites", 4000);

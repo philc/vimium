@@ -446,7 +446,7 @@ if (globalThis.HelpDialog == null) {
     },
 
     toggle(request) {
-      DomUtils.documentComplete(() => {
+      DomUtils.documentComplete().then(() => {
         if (!this.helpUI) {
           this.helpUI = new UIComponent(
             "pages/help_dialog.html",
