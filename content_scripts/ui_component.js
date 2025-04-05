@@ -5,8 +5,7 @@ class UIComponent {
     this.iframePort = null;
     this.showing = false;
     this.iframeFrameId = null;
-    // TODO(philc): Make the @options object default to {} and remove the null checks.
-    this.options = null;
+    this.options = {};
     this.shadowDOM = null;
 
     const isDomTests = iframeUrl.includes("?dom_tests=true");
@@ -77,7 +76,7 @@ class UIComponent {
                 globalThis.addEventListener(
                   "focus",
                   forTrusted((event) => {
-                    if ((event.target === window) && this.options && this.options.focus) {
+                    if ((event.target === window) && this.options.focus) {
                       this.hide(false);
                     }
                     // Continue propagating the event.
@@ -146,11 +145,11 @@ class UIComponent {
     });
   }
 
-  activate(options = null) {
+  activate(options = {}) {
     this.options = options;
     this.postMessage(this.options, () => {
       this.toggleIframeElementClasses("vimium-ui-component-hidden", "vimium-ui-component-visible");
-      if (this.options && this.options.focus) {
+      if (this.options.focus) {
         this.iframeElement.focus();
       }
       this.showing = true;
@@ -165,10 +164,10 @@ class UIComponent {
       if (!this.showing) return;
       this.showing = false;
       this.toggleIframeElementClasses("vimium-ui-component-visible", "vimium-ui-component-hidden");
-      if (this.options && this.options.focus) {
+      if (this.options.focus) {
         this.iframeElement.blur();
         if (shouldRefocusOriginalFrame) {
-          if (this.options && (this.options.sourceFrameId != null)) {
+          if (this.options.sourceFrameId != null) {
             chrome.runtime.sendMessage({
               handler: "sendMessageToFrames",
               frameId: this.options.sourceFrameId,
@@ -182,7 +181,7 @@ class UIComponent {
           }
         }
       }
-      this.options = null;
+      this.options = {};
       this.postMessage("hidden"); // Inform the UI component that it is hidden.
     });
   }
