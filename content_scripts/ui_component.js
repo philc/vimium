@@ -1,3 +1,13 @@
+// A UIComponent is an iframe containing a Vimium extension page, like the Vomnibar. This class
+// provides methods that content scripts can use to interact with that page:
+// - activate
+// - hide
+// - postMessage
+//
+// When the iframe has not yet been loaded, all messages will be queued until it's done loading. The
+// page in the iframe uses the module ui_component_server.js to manage message passing back to this
+// class. Since the iframe's page can receive messages from untrusted javascript, secure message
+// passing is achieved using ports from MessageChannel() and a vimiumSecret handshake.
 class UIComponent {
   iframeElement;
   iframePort;
@@ -6,6 +16,7 @@ class UIComponent {
   // TODO(philc): Rename to messageHandler.
   handleMessage;
   iframeFrameId;
+  // TODO(philc): Document which options are available, and enforce that.
   options = {};
   shadowDOM;
 
@@ -51,16 +62,17 @@ class UIComponent {
     this.handleDarkReaderFilter();
     document.documentElement.appendChild(shadowWrapper);
 
-    this.iframeElement.addEventListener("load", async () => {
+    const secret = (await chrome.storage.session.get("vimiumSecret")).vimiumSecret;
+    this.iframeElement.addEventListener("load", () => {
       // Get vimiumSecret so the iframe can determine that our message isn't the page
       // impersonating us.
-      const secret = (await chrome.storage.session.get("vimiumSecret")).vimiumSecret;
       const { port1, port2 } = new MessageChannel();
       // Outside of tests, target origin starts with chrome-extension://{vimium's-id}
       const targetOrigin = isDomTests ? "*" : chrome.runtime.getURL("");
       this.iframeElement.contentWindow.postMessage(secret, targetOrigin, [port2]);
       port1.onmessage = (event) => {
         let eventName = null;
+        // TODO(philc): Why are we using both data and data.name as the name? Pick one.
         if (event) {
           eventName = (event.data ? event.data.name : undefined) || event.data;
         }
@@ -80,7 +92,6 @@ class UIComponent {
               true,
             );
             // Set the iframe's port, thereby rendering the UI component ready.
-            // setIframePort(port1);
             resolveFn(port1);
             break;
           case "setIframeFrameId":
@@ -100,7 +111,6 @@ class UIComponent {
   // popular dark mode Chrome extension in use as of 2020.
   handleDarkReaderFilter() {
     const reverseFilterClass = "vimium-reverse-dark-reader-filter";
-
     const reverseFilterIfExists = () => {
       // The DarkReader extension creates this element if it's actively modifying the current page.
       const darkReaderElement = document.getElementById("dark-reader-style");
