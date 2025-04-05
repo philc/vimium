@@ -1,5 +1,4 @@
-import "./test_helper.js";
-import * as jsdom from "jsdom";
+import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../lib/utils.js";
 import "../../lib/settings.js";
@@ -8,19 +7,7 @@ import * as page from "../../pages/completion_engines_page.js";
 
 context("completion engines page", () => {
   setup(async () => {
-    const html = await Deno.readTextFile("pages/completion_engines_page.html");
-
-    const w = new jsdom.JSDOM(html).window;
-    // TODO(philc): Change these to stub, and improve how this works.
-    globalThis.window = w;
-    globalThis.document = w.document;
-    globalThis.MouseEvent = w.MouseEvent;
-  });
-
-  teardown(() => {
-    globalThis.window = undefined;
-    globalThis.document = undefined;
-    globalThis.MouseEvent = undefined;
+    await testHelper.jsdomStub("pages/completion_engines_page.html");
   });
 
   should("have a section in the html for every engine", () => {

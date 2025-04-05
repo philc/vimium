@@ -1,5 +1,4 @@
-import "./test_helper.js";
-import * as jsdom from "jsdom";
+import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 
 import { Suggestion } from "../../background_scripts/completion.js";
@@ -24,20 +23,12 @@ function newKeyEvent(properties) {
 
 context("vomnibar", () => {
   setup(async () => {
-    const html = await Deno.readTextFile("pages/vomnibar_page.html");
-    const w = new jsdom.JSDOM(html).window;
-    globalThis.window = w;
-    globalThis.document = w.document;
+    await testHelper.jsdomStub("pages/vomnibar_page.html");
     stub(chrome.runtime, "sendMessage", async (message) => {
       if (message.handler == "filterCompletions") {
         return [];
       }
     });
-  });
-
-  teardown(() => {
-    globalThis.window = undefined;
-    globalThis.document = undefined;
   });
 
   should("hide when escape is pressed", async () => {

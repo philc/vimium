@@ -1,5 +1,4 @@
-import "./test_helper.js";
-import * as jsdom from "jsdom";
+import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../lib/utils.js";
 import "../../lib/settings.js";
@@ -8,14 +7,7 @@ import * as commandListing from "../../pages/command_listing.js";
 
 context("command listing", () => {
   setup(async () => {
-    const html = await Deno.readTextFile("pages/command_listing.html");
-
-    const w = new jsdom.JSDOM(html).window;
-    // TODO(philc): Change these to stub, and improve how this works.
-    globalThis.window = w;
-    globalThis.document = w.document;
-    globalThis.MouseEvent = w.MouseEvent;
-
+    await testHelper.jsdomStub("pages/command_listing.html");
     await Settings.onLoaded();
     stub(chrome.storage.session, "get", async (key) => {
       if (key == "commandToOptionsToKeys") {
@@ -28,11 +20,6 @@ context("command listing", () => {
         return { commandToOptionsToKeys: data };
       }
     });
-  });
-
-  teardown(() => {
-    globalThis.window = undefined;
-    globalThis.document = undefined;
   });
 
   should("have a section in the html for every group", async () => {
