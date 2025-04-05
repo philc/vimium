@@ -18,33 +18,20 @@ class UIComponent {
 
       // Fetch "content_scripts/vimium.css" from chrome.storage.session; the background page caches
       // it there.
-      chrome.storage.session.get(
-        "vimiumCSSInChromeStorage",
-        (items) => styleSheet.innerHTML = items.vimiumCSSInChromeStorage,
-      );
+      chrome.storage.session.get("vimiumCSSInChromeStorage")
+        .then((items) => styleSheet.innerHTML = items.vimiumCSSInChromeStorage);
 
       this.iframeElement = DomUtils.createElement("iframe");
-      Object.assign(this.iframeElement, {
-        className,
-        seamless: "seamless",
-      });
+      this.iframeElement.className = className;
 
       const shadowWrapper = DomUtils.createElement("div");
       // Prevent the page's CSS from interfering with this container div.
       shadowWrapper.className = "vimium-reset";
-      // Firefox doesn't support createShadowRoot, so guard against its non-existance.
-      // https://hacks.mozilla.org/2018/10/firefox-63-tricks-and-treats/ says Firefox 63 has enabled
-      // Shadow DOM v1 by default
-      if (shadowWrapper.attachShadow) {
-        this.shadowDOM = shadowWrapper.attachShadow({ mode: "open" });
-      } else {
-        this.shadowDOM = shadowWrapper;
-      }
-
+      this.shadowDOM = shadowWrapper.attachShadow({ mode: "open" });
       this.shadowDOM.appendChild(styleSheet);
       this.shadowDOM.appendChild(this.iframeElement);
       this.handleDarkReaderFilter();
-      this.toggleIframeElementClasses("vimium-ui-component-visible", "vimium-ui-component-hidden");
+      this.setIframeVisible(false);
 
       // Open a port and pass it to the iframe via window.postMessage. We use an AsyncDataFetcher to
       // handle requests which arrive before the iframe (and its message handlers) have completed
@@ -123,9 +110,15 @@ class UIComponent {
     observer.observe(document.head, { characterData: true, subtree: true, childList: true });
   }
 
-  toggleIframeElementClasses(removeClass, addClass) {
-    this.iframeElement.classList.remove(removeClass);
-    this.iframeElement.classList.add(addClass);
+  setIframeVisible(visible) {
+    const classes = this.iframeElement.classList;
+    if (visible) {
+      classes.remove("vimium-ui-component-hidden");
+      classes.add("vimium-ui-component-visible");
+    } else {
+      classes.add("vimium-ui-component-hidden");
+      classes.remove("vimium-ui-component-visible");
+    }
   }
 
   // Post a message (if provided), then call continuation (if provided). We wait for documentReady()
@@ -148,7 +141,7 @@ class UIComponent {
   activate(options = {}) {
     this.options = options;
     this.postMessage(this.options, () => {
-      this.toggleIframeElementClasses("vimium-ui-component-hidden", "vimium-ui-component-visible");
+      this.setIframeVisible(true);
       if (this.options.focus) {
         this.iframeElement.focus();
       }
@@ -163,7 +156,7 @@ class UIComponent {
     this.postMessage(null, () => {
       if (!this.showing) return;
       this.showing = false;
-      this.toggleIframeElementClasses("vimium-ui-component-visible", "vimium-ui-component-hidden");
+      this.setIframeVisible(false);
       if (this.options.focus) {
         this.iframeElement.blur();
         if (shouldRefocusOriginalFrame) {
