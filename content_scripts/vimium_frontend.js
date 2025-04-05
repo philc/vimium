@@ -445,21 +445,18 @@ if (globalThis.HelpDialog == null) {
       }
     },
 
-    toggle(request) {
-      DomUtils.documentComplete().then(() => {
-        if (!this.helpUI) {
-          this.helpUI = new UIComponent(
-            "pages/help_dialog.html",
-            "vimium-help-dialog-frame",
-            function () {},
-          );
-        }
-        return this.helpUI;
-      });
-
-      if ((this.helpUI != null) && this.isShowing()) {
-        return this.helpUI.hide();
-      } else if (this.helpUI != null) {
+    async toggle(request) {
+      if (this.helpUI == null) {
+        await DomUtils.documentComplete();
+        this.helpUI = new UIComponent(
+          "pages/help_dialog.html",
+          "vimium-help-dialog-frame",
+          function () {},
+        );
+      }
+      if (this.isShowing()) {
+        this.helpUI.hide();
+      } else {
         return this.helpUI.activate(Object.assign(request, { name: "activate", focus: true }));
       }
     },

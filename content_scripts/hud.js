@@ -78,27 +78,25 @@ const HUD = {
   },
 
   // duration - if omitted, the message will show until dismissed.
-  show(text, duration) {
-    DomUtils.documentComplete().then(async () => {
-      clearTimeout(this._showForDurationTimerId);
-      // @hudUI.activate will take charge of making it visible
-      await this.init(false);
-      this.hudUI.activate({ name: "show", text });
-      this.tween.fade(1.0, 150);
+  async show(text, duration) {
+    await DomUtils.documentComplete();
+    clearTimeout(this._showForDurationTimerId);
+    // @hudUI.activate will take charge of making it visible
+    await this.init(false);
+    this.hudUI.activate({ name: "show", text });
+    this.tween.fade(1.0, 150);
 
-      if (duration != null) {
-        this._showForDurationTimerId = setTimeout(() => this.hide(), duration);
-      }
-    });
+    if (duration != null) {
+      this._showForDurationTimerId = setTimeout(() => this.hide(), duration);
+    }
   },
 
-  showFindMode(findMode = null) {
+  async showFindMode(findMode = null) {
     this.findMode = findMode;
-    DomUtils.documentComplete().then(async () => {
-      await this.init();
-      this.hudUI.activate({ name: "showFindMode" });
-      this.tween.fade(1.0, 150);
-    });
+    await DomUtils.documentComplete();
+    await this.init();
+    this.hudUI.activate({ name: "showFindMode" });
+    this.tween.fade(1.0, 150);
   },
 
   search(data) {
@@ -183,20 +181,18 @@ const HUD = {
   // * we don't want to disrupt the focus in the page, in case the page is listening for focus/blur
   // * events.
   // * the HUD shouldn't be active for this frame while any of the copy/paste commands are running.
-  copyToClipboard(text) {
-    DomUtils.documentComplete().then(async () => {
-      await this.init();
-      this.hudUI.postMessage({ name: "copyToClipboard", data: text });
-    });
+  async copyToClipboard(text) {
+    await DomUtils.documentComplete();
+    await this.init();
+    this.hudUI.postMessage({ name: "copyToClipboard", data: text });
   },
 
-  pasteFromClipboard(pasteListener) {
+  async pasteFromClipboard(pasteListener) {
     this.pasteListener = pasteListener;
-    DomUtils.documentComplete().then(async () => {
-      await this.init();
-      this.tween.fade(0, 0);
-      this.hudUI.postMessage({ name: "pasteFromClipboard" });
-    });
+    await DomUtils.documentComplete();
+    await this.init();
+    this.tween.fade(0, 0);
+    this.hudUI.postMessage({ name: "pasteFromClipboard" });
   },
 
   pasteResponse({ data }) {
@@ -217,12 +213,11 @@ const HUD = {
 
   // Navigator.clipboard is only available in secure contexts. Show a warning when clipboard actions
   // fail on non-HTTPS sites. See #4572.
-  showClipboardUnavailableMessage() {
-    DomUtils.documentComplete().then(async () => {
-      await this.init();
-      // Since the message is long and surprising, show it for longer to allow more time to reading.
-      this.show("Clipboard actions available only on HTTPS sites", 4000);
-    });
+  async showClipboardUnavailableMessage() {
+    await DomUtils.documentComplete();
+    await this.init();
+    // Since the message is long and surprising, show it for longer to allow more time to reading.
+    this.show("Clipboard actions available only on HTTPS sites", 4000);
   },
 };
 
