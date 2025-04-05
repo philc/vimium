@@ -6,16 +6,16 @@ function registerPort(event) {
   chrome.storage.session.get("vimiumSecret", function ({ vimiumSecret: secret }) {
     if (event.source !== globalThis.parent) return;
     if (event.data !== secret) {
-      Utils.debugLog("ui_component_server: vimiumSecret is incorrect.");
+      Utils.debugLog("ui_component_messenger.js: vimiumSecret is incorrect.");
       return;
     }
-    UIComponentServer.portOpen(event.ports[0]);
+    UIComponentMessenger.portOpen(event.ports[0]);
     globalThis.removeEventListener("message", registerPort);
   });
 }
 globalThis.addEventListener("message", registerPort);
 
-const UIComponentServer = {
+const UIComponentMessenger = {
   ownerPagePort: null,
   handleMessage: null,
 
@@ -66,4 +66,4 @@ const UIComponentServer = {
   },
 };
 
-globalThis.UIComponentServer = UIComponentServer;
+globalThis.UIComponentMessenger = UIComponentMessenger;

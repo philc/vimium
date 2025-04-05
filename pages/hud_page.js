@@ -39,7 +39,7 @@ function onKeyEvent(event) {
     (event.key === "Enter") || KeyboardUtils.isEscape(event)
   ) {
     inputElement.blur();
-    UIComponentServer.postMessage({
+    UIComponentMessenger.postMessage({
       name: "hideFindMode",
       exitEventIsEnter: event.key === "Enter",
       exitEventIsEscape: KeyboardUtils.isEscape(event),
@@ -72,7 +72,7 @@ function onKeyEvent(event) {
 // fail on non-HTTPS sites. See #4572.
 function ensureClipboardIsAvailable() {
   if (!navigator.clipboard) {
-    UIComponentServer.postMessage({ name: "showClipboardUnavailableMessage" });
+    UIComponentMessenger.postMessage({ name: "showClipboardUnavailableMessage" });
     return false;
   }
   return true;
@@ -122,7 +122,7 @@ const handlers = {
         }
         // Replace \u00A0 (&nbsp;) with a normal space.
         findMode.rawQuery = inputElement.textContent.replace("\u00A0", " ");
-        UIComponentServer.postMessage({ name: "search", query: findMode.rawQuery });
+        UIComponentMessenger.postMessage({ name: "search", query: findMode.rawQuery });
       },
     );
 
@@ -175,7 +175,7 @@ const handlers = {
 
       if (focusedElement != null) focusedElement.focus();
       globalThis.parent.focus();
-      UIComponentServer.postMessage({ name: "unfocusIfFocused" });
+      UIComponentMessenger.postMessage({ name: "unfocusIfFocused" });
     });
   },
 
@@ -193,7 +193,7 @@ const handlers = {
 
       if (focusedElement != null) focusedElement.focus();
       globalThis.parent.focus();
-      UIComponentServer.postMessage({ name: "pasteResponse", data: value });
+      UIComponentMessenger.postMessage({ name: "pasteResponse", data: value });
     });
   },
 };
@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 document.addEventListener("keydown", onKeyEvent);
 document.addEventListener("keypress", onKeyEvent);
 
-UIComponentServer.registerHandler(async function ({ data }) {
+UIComponentMessenger.registerHandler(async function ({ data }) {
   await Utils.populateBrowserInfo();
   const handler = handlers[data.name || data];
   if (handler) {

@@ -5,9 +5,9 @@
 // - postMessage
 //
 // When the iframe has not yet been loaded, all messages will be queued until it's done loading. The
-// page in the iframe uses the module ui_component_server.js to manage message passing back to this
-// class. Since the iframe's page can receive messages from untrusted javascript, secure message
-// passing is achieved using ports from MessageChannel() and a vimiumSecret handshake.
+// page in the iframe uses the module ui_component_messenger.js to manage message passing back to
+// this class. Since the iframe's page can receive messages from untrusted javascript, secure
+// message passing is achieved using ports from MessageChannel() and a vimiumSecret handshake.
 class UIComponent {
   iframeElement;
   iframePort;

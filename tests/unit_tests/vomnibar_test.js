@@ -36,7 +36,7 @@ context("vomnibar", () => {
     const instance = new Vomnibar();
     await instance.activate();
     const ui = instance.vomnibarUI;
-    stub(UIComponentServer, "postMessage", (message) => {
+    stub(UIComponentMessenger, "postMessage", (message) => {
       wasHidden = message == "hide";
     });
     await ui.onKeyEvent(newKeyEvent({ key: "Escape" }));

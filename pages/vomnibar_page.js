@@ -10,7 +10,7 @@ import "../lib/settings.js";
 import "../lib/keyboard_utils.js";
 import "../lib/dom_utils.js";
 import "../lib/handler_stack.js";
-import "./ui_component_server.js";
+import "./ui_component_messenger.js";
 
 class Vomnibar {
   vomnibarUI; // the dialog instance for this window
@@ -107,7 +107,7 @@ class VomnibarUI {
   hide(onHiddenCallback = null) {
     this.onHiddenCallback = onHiddenCallback;
     this.input.blur();
-    UIComponentServer.postMessage("hide");
+    UIComponentMessenger.postMessage("hide");
     this.reset();
   }
 
@@ -453,7 +453,7 @@ let vomnibarInstance;
 function init() {
   vomnibarInstance = new Vomnibar();
 
-  UIComponentServer.registerHandler(function (event) {
+  UIComponentMessenger.registerHandler(function (event) {
     switch (event.data.name != null ? event.data.name : event.data) {
       case "hide":
         vomnibarInstance.hide();
