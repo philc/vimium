@@ -13,15 +13,17 @@ class UIComponent {
   iframePort;
   showing = false;
   // An optional message handler for handling messages from the iFrame.
-  // TODO(philc): Rename to messageHandler.
-  handleMessage;
+  messageHandler;
   iframeFrameId;
   // TODO(philc): Document which options are available, and enforce that.
   options = {};
   shadowDOM;
 
-  constructor(iframeUrl, className, handleMessage) {
-    this.handleMessage = handleMessage;
+  // - iframeUrl:
+  // - className: the CSS class to add to the iframe.
+  // - messageHandler: optional; a function to handle messages from the iframe's page.
+  constructor(iframeUrl, className, messageHandler) {
+    this.messageHandler = messageHandler;
     this.init(iframeUrl, className);
   }
 
@@ -100,7 +102,7 @@ class UIComponent {
           case "hide":
             return this.hide();
           default:
-            this.handleMessage(event);
+            this.messageHandler?.(event);
         }
       };
     });

@@ -451,7 +451,6 @@ if (globalThis.HelpDialog == null) {
         this.helpUI = new UIComponent(
           "pages/help_dialog.html",
           "vimium-help-dialog-frame",
-          function () {},
         );
       }
       if (this.isShowing()) {

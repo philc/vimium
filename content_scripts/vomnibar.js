@@ -61,7 +61,6 @@ const Vomnibar = {
       this.vomnibarUI = new UIComponent(
         "pages/vomnibar_page.html",
         "vomnibar-frame",
-        function () {},
       );
     }
   },
