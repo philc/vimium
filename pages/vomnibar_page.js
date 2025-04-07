@@ -107,7 +107,7 @@ class VomnibarUI {
   hide(onHiddenCallback = null) {
     this.onHiddenCallback = onHiddenCallback;
     this.input.blur();
-    UIComponentMessenger.postMessage("hide");
+    UIComponentMessenger.postMessage({ name: "hide" });
     this.reset();
   }
 
@@ -454,7 +454,7 @@ function init() {
   vomnibarInstance = new Vomnibar();
   UIComponentMessenger.init();
   UIComponentMessenger.registerHandler(function (event) {
-    switch (event.data.name != null ? event.data.name : event.data) {
+    switch (event.data.name) {
       case "hide":
         vomnibarInstance.hide();
         break;

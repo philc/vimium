@@ -138,8 +138,10 @@ class UIComponent {
     }
   }
 
-  async postMessage(message) {
-    (await this.iframePort).postMessage(message);
+  // Send a message to this UIComponent's iframe's page.
+  // - data: an object with at least a `name` field.
+  async postMessage(data) {
+    (await this.iframePort).postMessage(data);
   }
 
   async activate(options = {}) {
@@ -177,7 +179,7 @@ class UIComponent {
       }
     }
     this.options = {};
-    this.postMessage("hidden"); // Inform the UI component that it is hidden.
+    this.postMessage({ name: "hidden" }); // Inform the UI component that it is hidden.
   }
 }
 

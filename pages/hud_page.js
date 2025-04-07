@@ -217,14 +217,11 @@ function init() {
   document.addEventListener("keypress", onKeyEvent);
 
   UIComponentMessenger.init();
-  UIComponentMessenger.registerHandler(async function ({ data }) {
+  UIComponentMessenger.registerHandler(async function (event) {
     await Utils.populateBrowserInfo();
-    const handler = handlers[data.name || data];
-    if (handler) {
-      return handler(data);
-    } else {
-      Utils.assert(false, "Unrecognized message type.", data);
-    }
+    const handler = handlers[event.data.name];
+    Utils.assert(handler != null, "Unrecognized message type.", event.data);
+    return handler(event.data);
   });
 
   FindModeHistory.init();

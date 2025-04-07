@@ -151,7 +151,7 @@ const HelpDialog = {
   },
 
   hide() {
-    UIComponentMessenger.postMessage("hide");
+    UIComponentMessenger.postMessage({ name: "hide" });
   },
 
   toggle() {
@@ -191,7 +191,7 @@ function init() {
   UIComponentMessenger.registerHandler(async function (event) {
     await Settings.onLoaded();
     await Utils.populateBrowserInfo();
-    switch (event.data.name != null ? event.data.name : event.data) {
+    switch (event.data.name) {
       case "hide":
         HelpDialog.hide();
         break;

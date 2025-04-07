@@ -39,9 +39,9 @@ export function registerHandler(messageHandlerFn) {
   handleMessage = messageHandlerFn;
 }
 
-export function postMessage(message) {
+export function postMessage(data) {
   if (!ownerPagePort) return;
-  ownerPagePort.postMessage(message);
+  ownerPagePort.postMessage(data);
 }
 
 // We require both that the DOM is ready and that the port has been opened before the UIComponent
@@ -61,5 +61,5 @@ function dispatchReadyEventWhenReady() {
     postMessage({ name: "setIframeFrameId", iframeFrameId: globalThis.frameId });
   }
   hasDispatchedReadyEvent = true;
-  postMessage("uiComponentIsReady");
+  postMessage({ name: "uiComponentIsReady" });
 }
