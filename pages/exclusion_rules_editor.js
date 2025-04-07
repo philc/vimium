@@ -5,7 +5,7 @@ const ExclusionRulesEditor = {
   defaultPatternForNewRules: null,
 
   init() {
-    document.querySelector("#exclusionAddButton").addEventListener("click", () => {
+    document.querySelector("#exclusion-add-button").addEventListener("click", () => {
       this.addRow(this.defaultPatternForNewRules);
       this.dispatchEvent("input");
     });
@@ -13,12 +13,12 @@ const ExclusionRulesEditor = {
 
   // - exclusionRules: the value obtained from settings, with the shape [{pattern, passKeys}].
   setForm(exclusionRules = []) {
-    const rulesTable = document.querySelector("#exclusionRules");
+    const rulesTable = document.querySelector("#exclusion-rules");
     // Remove any previous rows.
     const existingRuleEls = rulesTable.querySelectorAll(".rule");
     for (const el of existingRuleEls) el.remove();
 
-    const rowTemplate = document.querySelector("#exclusionRuleTemplate").content;
+    const rowTemplate = document.querySelector("#exclusion-rule-template").content;
     for (const rule of exclusionRules) {
       this.addRow(rule.pattern, rule.passKeys);
     }
@@ -26,8 +26,8 @@ const ExclusionRulesEditor = {
 
   // `pattern` and `passKeys` are optional.
   addRow(pattern, passKeys) {
-    const rulesTable = document.querySelector("#exclusionRules");
-    const rowTemplate = document.querySelector("#exclusionRuleTemplate").content;
+    const rulesTable = document.querySelector("#exclusion-rules");
+    const rowTemplate = document.querySelector("#exclusion-rule-template").content;
     const rowEl = rowTemplate.cloneNode(true);
 
     const patternEl = rowEl.querySelector("[name=pattern]");
@@ -47,7 +47,7 @@ const ExclusionRulesEditor = {
 
   // Returns an array of rules, which can be stored in Settings.
   getRules() {
-    const rows = Array.from(document.querySelectorAll("#exclusionRules tr.rule"));
+    const rows = Array.from(document.querySelectorAll("#exclusion-rules tr.rule"));
     const rules = rows
       .map((el) => {
         return {
@@ -63,3 +63,5 @@ const ExclusionRulesEditor = {
 };
 
 Object.assign(ExclusionRulesEditor, EventDispatcher);
+
+export { ExclusionRulesEditor };

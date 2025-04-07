@@ -42,8 +42,8 @@ const HUD = {
     if (this.hudUI == null) {
       const queryString = globalThis.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
       this.hudUI = new UIComponent(
-        `pages/hud.html${queryString}`,
-        "vimiumHUDFrame",
+        `pages/hud_page.html${queryString}`,
+        "vimium-hud-frame",
         this.handleUIComponentMessage.bind(this),
       );
       // Allow to access to the clipboard through iframes.
@@ -56,22 +56,22 @@ const HUD = {
     // this[data.name]? data
     if (this.tween == null) {
       this.tween = new Tween(
-        "iframe.vimiumHUDFrame.vimiumUIComponentVisible",
+        "iframe.vimium-hud-frame.vimium-ui-component-visible",
         this.hudUI.shadowDOM,
       );
     }
     if (focusable) {
-      this.hudUI.toggleIframeElementClasses("vimiumNonClickable", "vimiumClickable");
+      this.hudUI.toggleIframeElementClasses("vimium-non-clickable", "vimium-clickable");
       // Note(gdh1995): Chrome 74 only acknowledges text selection when a frame has been visible.
       // See more in #3277.
       // Note(mrmr1993): Show the HUD frame, so Firefox will actually perform the paste.
-      this.hudUI.toggleIframeElementClasses("vimiumUIComponentHidden", "vimiumUIComponentVisible");
+      this.hudUI.toggleIframeElementClasses("vimium-ui-component-hidden", "vimium-ui-component-visible");
       // Force the re-computation of styles, so Chrome sends a visibility change message to the
       // child frame. See https://github.com/philc/vimium/pull/3277#issuecomment-487363284
 
       getComputedStyle(this.hudUI.iframeElement).display;
     } else {
-      this.hudUI.toggleIframeElementClasses("vimiumClickable", "vimiumNonClickable");
+      this.hudUI.toggleIframeElementClasses("vimium-clickable", "vimium-non-clickable");
     }
   },
 
@@ -199,7 +199,7 @@ const HUD = {
 
   pasteResponse({ data }) {
     // Hide the HUD frame again.
-    this.hudUI.toggleIframeElementClasses("vimiumUIComponentVisible", "vimiumUIComponentHidden");
+    this.hudUI.toggleIframeElementClasses("vimium-ui-component-visible", "vimium-ui-component-hidden");
     this.unfocusIfFocused();
     this.pasteListener(data);
   },

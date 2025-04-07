@@ -147,7 +147,7 @@ class VomnibarUI {
 
     // Highlight the selected entry, and only the selected entry.
     for (let i = 0, end = this.completionList.children.length; i < end; i++) {
-      this.completionList.children[i].className = i === this.selection ? "vomnibarSelected" : "";
+      this.completionList.children[i].className = i === this.selection ? "selected" : "";
     }
   }
 

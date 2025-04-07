@@ -1,16 +1,10 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS203: Remove `|| {}` from converted for-own loops
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-const $ = (id) => document.getElementById(id);
-const $$ = (element, selector) => element.querySelector(selector);
+import "./all_content_scripts.js";
+// TODO(philc): Why does importing this break the help dialog?
+// import "./ui_component_server.js";
+import { allCommands } from "../background_scripts/all_commands.js";
 
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
-const compareKeys = function (a, b) {
+function compareKeys(a, b) {
   a = a.replace("<", "~");
   b = b.replace("<", "~");
   if (a < b) {
@@ -20,7 +14,21 @@ const compareKeys = function (a, b) {
   } else {
     return 0;
   }
-};
+}
+
+const ellipsis = "...";
+// Truncates `s` and appends an ellipsis if `s` is longer than maxLength.
+function ellipsize(s, maxLength) {
+  if (s.length <= maxLength) return s;
+  return s.substring(0, Math.max(0, maxLength - ellipsis.length)) + ellipsis;
+}
+
+// Returns true if the command should be labeled as "advanced" for UI purposes.
+function isAdvancedCommand(command, options) {
+  // Use some bespoke logic to label some command + option combos as advanced.
+  return command.advanced ||
+    (command.name == "reload" && options.includes("hard"));
+}
 
 // This overrides the HelpDialog implementation in vimium_frontend.js. We provide aliases for the
 // two HelpDialog methods required by normalMode (isShowing() and toggle()).
@@ -39,31 +47,28 @@ const HelpDialog = {
     if (this.dialogElement != null) {
       return;
     }
-    this.dialogElement = document.getElementById("vimiumHelpDialog");
+    this.dialogElement = document.querySelector("#dialog");
 
-    this.dialogElement.getElementsByClassName("closeButton")[0].addEventListener(
-      "click",
-      (clickEvent) => {
-        clickEvent.preventDefault();
-        this.hide();
-      },
-      false,
-    );
+    const closeButton = this.dialogElement.querySelector("#close");
+    closeButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      this.hide();
+    }, false);
 
     // "auxclick" handles a click with the middle mouse button.
-    for (let eventName of ["click", "auxclick"]) {
-      document.getElementById("helpDialogOptionsPage").addEventListener(
-        eventName,
-        (event) => {
-          event.preventDefault();
-          chrome.runtime.sendMessage({ handler: "openOptionsPageInNewTab" });
-        },
-        false,
-      );
+    const optionsLink = document.querySelector("#options-page");
+    for (const eventName of ["click", "auxclick"]) {
+      optionsLink.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        chrome.runtime.sendMessage({ handler: "openOptionsPageInNewTab" });
+      }, false);
     }
 
-    document.getElementById("toggleAdvancedCommands")
-      .addEventListener("click", HelpDialog.toggleAdvancedCommands.bind(HelpDialog), false);
+    document.querySelector("#toggle-advanced a").addEventListener(
+      "click",
+      HelpDialog.toggleAdvancedCommands.bind(HelpDialog),
+      false,
+    );
 
     document.documentElement.addEventListener("click", (event) => {
       if (!this.dialogElement.contains(event.target)) {
@@ -72,110 +77,78 @@ const HelpDialog = {
     }, false);
   },
 
-  instantiateHtmlTemplate(parentNode, templateId, callback) {
-    const templateContent = document.querySelector(templateId).content;
-    const node = document.importNode(templateContent, true);
-    parentNode.appendChild(node);
-    callback(parentNode.lastElementChild);
-  },
-
-  show({ showAllCommandDetails }) {
-    $("help-dialog-title").textContent = showAllCommandDetails ? "Command Listing" : "Help";
-    $("help-dialog-version").textContent = Utils.getCurrentVersion();
-
-    chrome.storage.session.get("helpPageData", ({ helpPageData }) => {
-      for (let group of Object.keys(helpPageData)) {
-        const commands = helpPageData[group];
-        const container = this.dialogElement.querySelector(`#help-dialog-${group}`);
-        container.innerHTML = "";
-
-        for (var command of Array.from(commands)) {
-          if (!showAllCommandDetails && command.keys.length == 0) {
-            continue;
-          }
-
-          let keysElement = null;
-          let descriptionElement = null;
-
-          const useTwoRows = command.keys.join(", ").length >= 12;
-          if (!useTwoRows) {
-            this.instantiateHtmlTemplate(container, "#helpDialogEntry", function (element) {
-              if (command.advanced) {
-                element.classList.add("advanced");
-              }
-              keysElement = descriptionElement = element;
-            });
-          } else {
-            this.instantiateHtmlTemplate(
-              container,
-              "#helpDialogEntryBindingsOnly",
-              function (element) {
-                if (command.advanced) {
-                  element.classList.add("advanced");
-                }
-                keysElement = element;
-              },
-            );
-            this.instantiateHtmlTemplate(container, "#helpDialogEntry", function (element) {
-              if (command.advanced) {
-                element.classList.add("advanced");
-              }
-              descriptionElement = element;
-            });
-          }
-
-          const MAX_LENGTH = 50;
-          // - 3 because 3 is the length of the ellipsis string, "..."
-          const desiredOptionsLength = Math.max(0, MAX_LENGTH - command.description.length - 3);
-          // If command + options is too long: truncate, add ellipsis, and set hover.
-          let optionsTruncated = command.options.substring(0, desiredOptionsLength);
-          if ((command.description.length + command.options.length) > MAX_LENGTH) {
-            optionsTruncated += "...";
-            // Full option list (non-ellipsized) will be visible on hover.
-            $$(descriptionElement, ".vimiumHelpDescription").title = command.options;
-          }
-          const optionsString = command.options ? ` (${optionsTruncated})` : "";
-          const fullDescription = `${command.description}${optionsString}`;
-          $$(descriptionElement, ".vimiumHelpDescription").textContent = fullDescription;
-
-          keysElement = $$(keysElement, ".vimiumKeyBindings");
-          let lastElement = null;
-          for (var key of command.keys.sort(compareKeys)) {
-            this.instantiateHtmlTemplate(keysElement, "#keysTemplate", function (element) {
-              lastElement = element;
-              $$(element, ".vimiumHelpDialogKey").textContent = key;
-            });
-          }
-
-          // And strip off the trailing ", ", if necessary.
-          if (lastElement) {
-            lastElement.removeChild($$(lastElement, ".commaSeparator"));
-          }
-
-          if (showAllCommandDetails) {
-            this.instantiateHtmlTemplate(
-              $$(descriptionElement, ".vimiumHelpDescription"),
-              "#commandNameTemplate",
-              function (element) {
-                const commandNameElement = $$(element, ".vimiumCopyCommandNameName");
-                commandNameElement.textContent = command.command;
-                commandNameElement.title = `Click to copy \"${command.command}\" to clipboard.`;
-                commandNameElement.addEventListener("click", function () {
-                  HUD.copyToClipboard(commandNameElement.textContent);
-                  HUD.show(`Yanked ${commandNameElement.textContent}.`, 2000);
-                });
-              },
-            );
-          }
-          // }
+  // Returns the rows to show in the help dialog, grouped by command group.
+  // Returns: { group: [[command, args, keys], ...], ... }
+  getRowsForDialog(commandToOptionsToKeys) {
+    const result = {};
+    const byGroup = Object.groupBy(allCommands, (o) => o.group);
+    for (const [group, commands] of Object.entries(byGroup)) {
+      const list = [];
+      for (const command of commands) {
+        // Note that commands which are unbound won't be present in this data structure, and that's
+        // desired; we don't want to show unbound commands in the help dialog.
+        const variations = commandToOptionsToKeys[command.name] || {};
+        for (const [options, keys] of Object.entries(variations)) {
+          list.push([command, options, keys]);
         }
       }
+      result[group] = list;
+    }
+    return result;
+  },
 
-      this.showAdvancedCommands(this.getShowAdvancedCommands());
+  getRowEl(command, options, keys) {
+    const rowTemplate = document.querySelector("template#row").content;
+    const keysTemplate = document.querySelector("template#keys").content;
 
-      // "Click" the dialog element (so that it becomes scrollable).
-      DomUtils.simulateClick(this.dialogElement);
-    });
+    const rowEl = rowTemplate.cloneNode(true);
+    rowEl.querySelector(".help-description").textContent = command.desc;
+    if (isAdvancedCommand(command, options)) {
+      rowEl.querySelector(".row").classList.add("advanced");
+    }
+    const keysEl = rowEl.querySelector(".key-bindings");
+    for (const key of keys.sort(compareKeys)) {
+      const node = keysTemplate.cloneNode(true);
+      node.querySelector(".key").textContent = key;
+      keysEl.appendChild(node);
+    }
+
+    const maxLength = 40;
+    const descEl = rowEl.querySelector(".help-description");
+    let desc = command.desc;
+    if (options != "") {
+      const optionsString = ellipsize(options, maxLength - command.desc.length);
+      desc += ` (${optionsString})`;
+      const isTruncated = optionsString != options;
+      if (isTruncated) {
+        // Show the full option string on hover.
+        descEl.title = `${command.desc} (${options})`;
+      }
+    }
+    descEl.textContent = desc;
+    return rowEl;
+  },
+
+  async show() {
+    document.getElementById("vimium-version").textContent = Utils.getCurrentVersion();
+
+    const commandToOptionsToKeys =
+      (await chrome.storage.session.get("commandToOptionsToKeys")).commandToOptionsToKeys;
+    const rowsByGroup = this.getRowsForDialog(commandToOptionsToKeys);
+
+    for (const [group, rows] of Object.entries(rowsByGroup)) {
+      const container = this.dialogElement.querySelector(`[data-group="${group}"]`);
+      container.innerHTML = "";
+      for (const [command, options, keys] of rows) {
+        const el = this.getRowEl(command, options, keys);
+        container.appendChild(el);
+      }
+    }
+
+    this.showAdvancedCommands(this.getShowAdvancedCommands());
+
+    // "Click" the dialog element (so that it becomes scrollable).
+    DomUtils.simulateClick(this.dialogElement);
   },
 
   hide() {
@@ -190,54 +163,62 @@ const HelpDialog = {
   // Advanced commands are hidden by default so they don't overwhelm new and casual users.
   //
   toggleAdvancedCommands(event) {
-    const vimiumHelpDialogContainer = $("vimiumHelpDialogContainer");
-    const scrollHeightBefore = vimiumHelpDialogContainer.scrollHeight;
+    const container = document.querySelector("#container");
+    const scrollHeightBefore = container.scrollHeight;
     event.preventDefault();
     const showAdvanced = HelpDialog.getShowAdvancedCommands();
     HelpDialog.showAdvancedCommands(!showAdvanced);
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced);
     // Try to keep the "show advanced commands" button in the same scroll position.
-    const scrollHeightDelta = vimiumHelpDialogContainer.scrollHeight - scrollHeightBefore;
+    const scrollHeightDelta = container.scrollHeight - scrollHeightBefore;
     if (scrollHeightDelta > 0) {
-      vimiumHelpDialogContainer.scrollTop += scrollHeightDelta;
+      container.scrollTop += scrollHeightDelta;
     }
   },
 
   showAdvancedCommands(visible) {
-    document.getElementById("toggleAdvancedCommands").textContent = visible
-      ? "Hide advanced commands"
-      : "Show advanced commands";
-
-    // Add/remove the showAdvanced class to show/hide advanced commands.
-    const addOrRemove = visible ? "add" : "remove";
-    HelpDialog.dialogElement.classList[addOrRemove]("showAdvanced");
+    const caption = visible ? "Hide advanced commands" : "Show advanced commands";
+    document.querySelector("#toggle-advanced a").textContent = caption;
+    if (visible) {
+      HelpDialog.dialogElement.classList.add("show-advanced");
+    } else {
+      HelpDialog.dialogElement.classList.remove("show-advanced");
+    }
   },
 };
 
-UIComponentServer.registerHandler(async function (event) {
-  await Settings.onLoaded();
-  await Utils.populateBrowserInfo();
-  switch (event.data.name != null ? event.data.name : event.data) {
-    case "hide":
-      HelpDialog.hide();
-      break;
-    case "activate":
-      HelpDialog.init();
-      HelpDialog.show(event.data);
-      // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
-      Mode.setIndicator();
-      break;
-    case "hidden":
-      // Abandon any HUD which might be showing within the help dialog.
-      HUD.abandon();
-      break;
-  }
-});
+function init() {
+  UIComponentServer.registerHandler(async function (event) {
+    await Settings.onLoaded();
+    await Utils.populateBrowserInfo();
+    switch (event.data.name != null ? event.data.name : event.data) {
+      case "hide":
+        HelpDialog.hide();
+        break;
+      case "activate":
+        HelpDialog.init();
+        await HelpDialog.show(event.data);
+        // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
+        Mode.setIndicator();
+        break;
+      case "hidden":
+        // Abandon any HUD which might be showing within the help dialog.
+        HUD.abandon();
+        break;
+    }
+  });
+}
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss(); // Manually inject custom user styles.
-});
+const testEnv = globalThis.window == null;
+if (!testEnv) {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await Settings.onLoaded();
+    DomUtils.injectUserCss(); // Manually inject custom user styles.
+    init();
+  });
+}
 
 globalThis.HelpDialog = HelpDialog;
 globalThis.isVimiumHelpDialog = true;
+
+export { HelpDialog };

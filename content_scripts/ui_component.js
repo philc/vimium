@@ -32,7 +32,7 @@ class UIComponent {
 
       const shadowWrapper = DomUtils.createElement("div");
       // Prevent the page's CSS from interfering with this container div.
-      shadowWrapper.className = "vimiumReset";
+      shadowWrapper.className = "vimium-reset";
       // Firefox doesn't support createShadowRoot, so guard against its non-existance.
       // https://hacks.mozilla.org/2018/10/firefox-63-tricks-and-treats/ says Firefox 63 has enabled
       // Shadow DOM v1 by default
@@ -45,7 +45,7 @@ class UIComponent {
       this.shadowDOM.appendChild(styleSheet);
       this.shadowDOM.appendChild(this.iframeElement);
       this.handleDarkReaderFilter();
-      this.toggleIframeElementClasses("vimiumUIComponentVisible", "vimiumUIComponentHidden");
+      this.toggleIframeElementClasses("vimium-ui-component-visible", "vimium-ui-component-hidden");
 
       // Open a port and pass it to the iframe via window.postMessage. We use an AsyncDataFetcher to
       // handle requests which arrive before the iframe (and its message handlers) have completed
@@ -106,7 +106,7 @@ class UIComponent {
   // preference, even when the user is also using the DarkReader extension. DarkReader is the most
   // popular dark mode Chrome extension in use as of 2020.
   handleDarkReaderFilter() {
-    const reverseFilterClass = "reverseDarkReaderFilter";
+    const reverseFilterClass = "vimium-reverse-dark-reader-filter";
 
     const reverseFilterIfExists = () => {
       // The DarkReader extension creates this element if it's actively modifying the current page.
@@ -149,7 +149,7 @@ class UIComponent {
   activate(options = null) {
     this.options = options;
     this.postMessage(this.options, () => {
-      this.toggleIframeElementClasses("vimiumUIComponentHidden", "vimiumUIComponentVisible");
+      this.toggleIframeElementClasses("vimium-ui-component-hidden", "vimium-ui-component-visible");
       if (this.options && this.options.focus) {
         this.iframeElement.focus();
       }
@@ -164,7 +164,7 @@ class UIComponent {
     this.postMessage(null, () => {
       if (!this.showing) return;
       this.showing = false;
-      this.toggleIframeElementClasses("vimiumUIComponentVisible", "vimiumUIComponentHidden");
+      this.toggleIframeElementClasses("vimium-ui-component-visible", "vimium-ui-component-hidden");
       if (this.options && this.options.focus) {
         this.iframeElement.blur();
         if (shouldRefocusOriginalFrame) {

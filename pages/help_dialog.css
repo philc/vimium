@@ -1,0 +1,169 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+#container {
+  background-color: white;
+  border: 2px solid #b3b3b3;
+  border-radius: 6px;
+  width: 840px;
+  max-width: calc(100% - 100px);
+  max-height: calc(100% - 100px);
+  margin: 50px auto;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+#dialog {
+  min-width: 600px;
+  padding: 8px 12px;
+}
+
+a {
+  text-decoration: underline;
+  color: #2f508e;
+  cursor: pointer;
+}
+
+header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+a#close {
+  font-family: "courier new", monospace;
+  font-weight: bold;
+  color: #555;
+  text-decoration: none;
+  font-size: 24px;
+  position: relative;
+  top: 3px;
+  padding-left: 5px;
+  cursor: pointer;
+}
+
+a#close:hover {
+  color: black;
+  -webkit-user-select: none;
+}
+
+h1 {
+  font-size: 20px;
+  white-space: nowrap;
+  flex-grow: 1;
+  font-weight: normal;
+  margin: 4px 0;
+}
+
+h1 .vim {
+  color: #2f508e;
+}
+
+header a {
+  font-size: 14px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+header a.close {
+  padding-right: 0;
+}
+
+#commands-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.column {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  row-gap: 3px;
+}
+
+h2 {
+  margin-top: 3px;
+  margin-bottom: 4px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+div[data-group] {
+  display: contents;
+}
+
+.row {
+  display: contents;
+}
+
+.help-description {
+  font-size: 14px;
+}
+
+div.divider {
+  height: 1px;
+  width: 100%;
+  margin: 10px auto;
+  background-color: #9a9a9a;
+}
+
+/* Advanced commands are hidden by default until "show advanced" is clicked. */
+.row.advanced {
+  display: none;
+}
+
+#dialog.show-advanced .row.advanced {
+  display: contents;
+}
+
+footer {
+  font-size: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.version-info {
+  text-align: right;
+}
+
+#toggle-advanced {
+  text-align: right;
+  font-size: 10px;
+}
+
+/* Dark Mode CSS for Help Dialog */
+@media (prefers-color-scheme: dark) {
+  #container {
+    border-color: rgba(255, 255, 255, 0.1);
+    background-color: #202124;
+  }
+
+  #dialog {
+    background-color: var(--vimium-background-color);
+    color: var(--vimium-background-text-color);
+  }
+
+  a {
+    color: var(--vimium-link-color);
+  }
+
+  h1,
+  h2 {
+    color: white;
+  }
+
+  h1 .vim {
+    color: var(--vimium-link-color);
+  }
+
+  div.divider {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .help-description {
+    /* Use a fainter color than --vimium-background-text-color, so the dialog text doesn't get
+       overwhelming. */
+    color: #c9cccf;
+  }
+}

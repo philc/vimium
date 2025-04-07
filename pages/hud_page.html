@@ -5,6 +5,7 @@
     <meta name="color-scheme" content="light dark">
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
+    <link rel="stylesheet" type="text/css" href="hud_page.css" />
     <script src="../lib/chrome_api_stubs.js"></script>
     <script src="../lib/utils.js"></script>
     <script src="../lib/dom_utils.js"></script>
@@ -12,12 +13,12 @@
     <script src="../lib/keyboard_utils.js"></script>
     <script src="../lib/find_mode_history.js"></script>
     <script src="ui_component_server.js"></script>
-    <script src="hud.js"></script>
+    <script src="hud_page.js"></script>
   </head>
   <body>
-    <div class="vimiumHUD">
-      <div class="vimiumHUDSearchArea">
-        <div class="vimiumHUDSearchAreaInner" id="hud"></div>
+    <div id="hud-body">
+      <div id="search-area">
+        <div id="hud"></div>
       </div>
     </div>
   </body>
