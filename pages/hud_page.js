@@ -222,6 +222,8 @@ function init() {
     const handler = handlers[data.name || data];
     if (handler) {
       return handler(data);
+    } else {
+      Utils.assert(false, "Unrecognized message type.", data);
     }
   });
 

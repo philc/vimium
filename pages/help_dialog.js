@@ -205,6 +205,8 @@ function init() {
         // Abandon any HUD which might be showing within the help dialog.
         HUD.abandon();
         break;
+      default:
+        Utils.assert(false, "Unrecognized message type.", event.data);
     }
   });
 }
