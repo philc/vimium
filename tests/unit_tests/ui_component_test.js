@@ -28,7 +28,7 @@ context("UIComponent", () => {
     assert.equal(document.body, document.activeElement);
 
     // The shadow root element containing the iframe should be focused.
-    c.activate();
+    c.show();
     assert.equal(c.iframeElement.getRootNode().host, document.activeElement);
   });
 });

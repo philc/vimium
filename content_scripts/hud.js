@@ -83,7 +83,7 @@ const HUD = {
     clearTimeout(this._showForDurationTimerId);
     // @hudUI.activate will take charge of making it visible
     await this.init(false);
-    this.hudUI.activate({ name: "show", text });
+    this.hudUI.show({ name: "show", text });
     this.tween.fade(1.0, 150);
 
     if (duration != null) {
@@ -95,7 +95,7 @@ const HUD = {
     this.findMode = findMode;
     await DomUtils.documentComplete();
     await this.init();
-    this.hudUI.activate({ name: "showFindMode" });
+    this.hudUI.show({ name: "showFindMode" });
     this.tween.fade(1.0, 150);
   },
 

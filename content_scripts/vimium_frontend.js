@@ -456,7 +456,7 @@ if (globalThis.HelpDialog == null) {
       if (this.isShowing()) {
         this.helpUI.hide();
       } else {
-        return this.helpUI.activate(
+        return this.helpUI.show(
           { name: "activate" },
           { focus: true, sourceFrameId: request.sourceFrameId },
         );

@@ -1,6 +1,6 @@
 // A UIComponent is an iframe containing a Vimium extension page, like the Vomnibar. This class
 // provides methods that content scripts can use to interact with that page:
-// - activate
+// - show
 // - hide
 // - postMessage
 //
@@ -15,7 +15,7 @@ class UIComponent {
   // An optional message handler for handling messages from the iFrame.
   messageHandler;
   iframeFrameId;
-  // These are the focus options set when activate() is invoked. We store them while the UIComponent
+  // These are the focus options set when show() is invoked. We store them while the UIComponent
   // is visible so we know how to revert focus once it's dismissed.
   focusOptions = {};
   shadowDOM;
@@ -153,7 +153,7 @@ class UIComponent {
   //     focus: whether the UIComponent should be focused once it's ready.
   //     sourceFrameId: which frame should the focus when this component is dismissed.
   //   }
-  async activate(messageData = {}, focusOptions = {}) {
+  async show(messageData = {}, focusOptions = {}) {
     if (focusOptions) {
       Utils.assertType({ focus: "boolean", sourceFrameId: "number" }, focusOptions);
     }
