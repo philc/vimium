@@ -423,8 +423,7 @@ context("suggestions", () => {
       title: "ninjawords",
       relevancyFunction: returns(1),
     });
-    const expected =
-      "<span class='match'>ninj</span>a<span class='match'>words</span>";
+    const expected = "<span class='match'>ninj</span>a<span class='match'>words</span>";
     assert.isTrue(suggestion.generateHtml({}).indexOf(expected) >= 0);
   });
 

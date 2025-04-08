@@ -465,7 +465,7 @@ function init() {
         vomnibarInstance.activate(event.data);
         break;
       default:
-      Utils.assert(false, "Unrecognized message type.", event.data);
+        Utils.assert(false, "Unrecognized message type.", event.data);
     }
   });
 }
