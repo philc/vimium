@@ -19,6 +19,9 @@ class UIComponent {
   // is visible so we know how to revert focus once it's dismissed.
   focusOptions = {};
   shadowDOM;
+  // When we open ports to the iframe using MessageChannel, we save them so that our unit tests can
+  // close the ports. See ui_component_test.js for details.
+  messageChannelPorts;
 
   // - iframeUrl:
   // - className: the CSS class to add to the iframe.
@@ -62,10 +65,11 @@ class UIComponent {
     document.documentElement.appendChild(shadowWrapper);
 
     const secret = (await chrome.storage.session.get("vimiumSecret")).vimiumSecret;
+    const { port1, port2 } = new MessageChannel();
+    this.messageChannelPorts = [port1, port2];
     this.iframeElement.addEventListener("load", () => {
       // Get vimiumSecret so the iframe can determine that our message isn't the page
       // impersonating us.
-      const { port1, port2 } = new MessageChannel();
       // Outside of tests, target origin starts with chrome-extension://{vimium's-id}
       const targetOrigin = isDomTests ? "*" : chrome.runtime.getURL("");
       this.iframeElement.contentWindow.postMessage(secret, targetOrigin, [port2]);

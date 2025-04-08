@@ -12,13 +12,23 @@ function stubPostMessage(iframeEl, fn) {
 }
 
 context("UIComponent", () => {
+  let c;
+
   setup(async () => {
     // Which page we load doesn't matter; we just need any DOM.
     await testHelper.jsdomStub("pages/help_dialog.html");
   });
 
+  teardown(() => {
+    // MessageChannel ports must be closed, or our test process will never terminate. See
+    // https://github.com/facebook/react/issues/26608
+    for (const port of c?.messageChannelPorts) {
+      port.close();
+    }
+  });
+
   should("focus the frame when showing", async () => {
-    const c = new UIComponent("testing.html", "example-class");
+    c = new UIComponent("testing.html", "example-class");
     await c.load("example.html", "example-class");
     stubPostMessage(c.iframeElement, function () {});
     c.iframeElement.dispatchEvent(new window.Event("load"));
