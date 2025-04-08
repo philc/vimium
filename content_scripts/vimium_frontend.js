@@ -456,7 +456,10 @@ if (globalThis.HelpDialog == null) {
       if (this.isShowing()) {
         this.helpUI.hide();
       } else {
-        return this.helpUI.activate(Object.assign(request, { name: "activate", focus: true }));
+        return this.helpUI.activate(
+          { name: "activate" },
+          { focus: true, sourceFrameId: request.sourceFrameId },
+        );
       }
     },
   };

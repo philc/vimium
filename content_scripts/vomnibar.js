@@ -76,7 +76,8 @@ const Vomnibar = {
     // The Vomnibar cannot coexist with the help dialog (it causes focus issues).
     HelpDialog.abort();
     this.vomnibarUI.activate(
-      Object.assign(options, { name: "activate", sourceFrameId, focus: true }),
+      Object.assign(options, { name: "activate" }),
+      { sourceFrameId, focus: true },
     );
   },
 };

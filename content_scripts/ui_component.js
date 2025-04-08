@@ -15,8 +15,9 @@ class UIComponent {
   // An optional message handler for handling messages from the iFrame.
   messageHandler;
   iframeFrameId;
-  // TODO(philc): Document which options are available, and enforce that.
-  options = {};
+  // These are the focus options set when activate() is invoked. We store them while the UIComponent
+  // is visible so we know how to revert focus once it's dismissed.
+  focusOptions = {};
   shadowDOM;
 
   // - iframeUrl:
@@ -85,7 +86,7 @@ class UIComponent {
             globalThis.addEventListener(
               "focus",
               forTrusted((event) => {
-                if ((event.target === window) && this.options.focus) {
+                if ((event.target === window) && this.focusOptions.focus) {
                   this.hide(false);
                 }
                 // Continue propagating the event.
@@ -146,11 +147,20 @@ class UIComponent {
     (await this.iframePort).postMessage(data);
   }
 
-  async activate(options = {}) {
-    this.options = options;
-    await this.postMessage(this.options);
+  // Show the UIComponent.
+  // - messageData: a message to send to the underlying iframe via `postMessage`.
+  // - focusOptions: optional. {
+  //     focus: whether the UIComponent should be focused once it's ready.
+  //     sourceFrameId: which frame should the focus when this component is dismissed.
+  //   }
+  async activate(messageData = {}, focusOptions = {}) {
+    if (focusOptions) {
+      Utils.assertType({ focus: "boolean", sourceFrameId: "number" }, focusOptions);
+    }
+    this.focusOptions = focusOptions;
+    await this.postMessage(messageData);
     this.setIframeVisible(true);
-    if (this.options.focus) {
+    if (this.focusOptions.focus) {
       this.iframeElement.focus();
     }
     this.showing = true;
@@ -163,13 +173,13 @@ class UIComponent {
     if (!this.showing) return;
     this.showing = false;
     this.setIframeVisible(false);
-    if (this.options.focus) {
+    if (this.focusOptions.focus) {
       this.iframeElement.blur();
       if (shouldRefocusOriginalFrame) {
-        if (this.options.sourceFrameId != null) {
+        if (this.focusOptions.sourceFrameId != null) {
           chrome.runtime.sendMessage({
             handler: "sendMessageToFrames",
-            frameId: this.options.sourceFrameId,
+            frameId: this.focusOptions.sourceFrameId,
             message: {
               handler: "focusFrame",
               forceFocusThisFrame: true,
@@ -180,7 +190,7 @@ class UIComponent {
         }
       }
     }
-    this.options = {};
+    this.focusOptions = {};
     this.postMessage({ name: "hidden" }); // Inform the UI component that it is hidden.
   }
 }
