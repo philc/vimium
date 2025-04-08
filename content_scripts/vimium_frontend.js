@@ -431,37 +431,43 @@ const checkIfEnabledForUrl = async () => {
   if (!isEnabledForUrl) HUD.hide(true, false);
 };
 
-// If we are in the help dialog iframe, then HelpDialog is already defined with the necessary
-// functions.
-if (globalThis.HelpDialog == null) {
-  globalThis.HelpDialog = {
-    helpUI: null,
-    isShowing() {
-      return this.helpUI && this.helpUI.showing;
-    },
-    abort() {
-      if (this.isShowing()) {
-        return this.helpUI.hide(false);
-      }
-    },
+// If this content script is running in the help dialog's iframe, then use the HelpDialogPage's
+// methods to control the dialog. Otherwise, load the help dialog in a UIComponent iframe.
+const HelpDialog = {
+  helpUI: null,
 
-    async toggle(request) {
-      if (this.helpUI == null) {
-        await DomUtils.documentComplete();
-        this.helpUI = new UIComponent();
-        this.helpUI.load("pages/help_dialog_page.html", "vimium-help-dialog-frame");
-      }
-      if (this.isShowing()) {
-        this.helpUI.hide();
-      } else {
-        return this.helpUI.show(
-          { name: "activate" },
-          { focus: true, sourceFrameId: request.sourceFrameId },
-        );
-      }
-    },
-  };
-}
+  isShowing() {
+    if (globalThis.isVimiumHelpDialogPage) return true;
+    return this.helpUI && this.helpUI.showing;
+  },
+
+  abort() {
+    if (globalThis.isVimiumHelpDialogPage) throw new Error("This should be impossible.");
+    if (this.isShowing()) {
+      return this.helpUI.hide(false);
+    }
+  },
+
+  async toggle(request) {
+    // If we're in the help dialog page already and the user has typed a key to show the help
+    // dialog, then we should hide it.
+    if (globalThis.isVimiumHelpDialogPage) return HelpDialogPage.hide();
+
+    if (this.helpUI == null) {
+      await DomUtils.documentComplete();
+      this.helpUI = new UIComponent();
+      this.helpUI.load("pages/help_dialog_page.html", "vimium-help-dialog-frame");
+    }
+    if (this.isShowing()) {
+      this.helpUI.hide();
+    } else {
+      return this.helpUI.show(
+        { name: "activate" },
+        { focus: true, sourceFrameId: request.sourceFrameId },
+      );
+    }
+  },
+};
 
 const testEnv = globalThis.window == null;
 if (!testEnv) {
@@ -471,6 +477,7 @@ if (!testEnv) {
 }
 
 Object.assign(globalThis, {
+  HelpDialog,
   handlerStack,
   windowIsFocused,
   // These are exported for normal mode and link-hints mode.

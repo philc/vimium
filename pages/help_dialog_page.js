@@ -29,13 +29,8 @@ function isAdvancedCommand(command, options) {
     (command.name == "reload" && options.includes("hard"));
 }
 
-// This overrides the HelpDialogPage implementation in vimium_frontend.js. We provide aliases for
-// the two HelpDialogPage methods required by normalMode (isShowing() and toggle()).
 const HelpDialogPage = {
   dialogElement: null,
-  isShowing() {
-    return true;
-  },
 
   // This setting is pulled out of local storage. It's false by default.
   getShowAdvancedCommands() {
@@ -152,10 +147,6 @@ const HelpDialogPage = {
 
   hide() {
     UIComponentMessenger.postMessage({ name: "hide" });
-  },
-
-  toggle() {
-    this.hide();
   },
 
   //
