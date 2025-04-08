@@ -216,8 +216,8 @@ if (!testEnv) {
   document.addEventListener("DOMContentLoaded", async () => {
     await Settings.onLoaded();
     DomUtils.injectUserCss(); // Manually inject custom user styles.
-    init();
   });
+  init();
 }
 
 globalThis.HelpDialog = HelpDialog;
