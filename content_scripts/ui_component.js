@@ -23,12 +23,8 @@ class UIComponent {
   // - iframeUrl:
   // - className: the CSS class to add to the iframe.
   // - messageHandler: optional; a function to handle messages from the iframe's page.
-  constructor(iframeUrl, className, messageHandler) {
-    this.messageHandler = messageHandler;
-    this.init(iframeUrl, className);
-  }
-
-  async init(iframeUrl, className) {
+  async load(iframeUrl, className, messageHandler) {
+    if (this.iframeFrameElement) throw new Error("init should only be called once.");
     const isDomTests = iframeUrl.includes("?dom_tests=true");
     this.iframeElement = DomUtils.createElement("iframe");
 

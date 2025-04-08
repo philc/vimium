@@ -11,9 +11,6 @@ function stubPostMessage(iframeEl, fn) {
   });
 }
 
-// TODO(philc): We're effectively calling UIComponent.init() twice in these tests, because the
-// constructor all calls init. I think we should change all call sites of new UIComponent() to then
-// call init afterwards, and change its name to "load".
 context("UIComponent", () => {
   setup(async () => {
     // Which page we load doesn't matter; we just need any DOM.
@@ -22,7 +19,7 @@ context("UIComponent", () => {
 
   should("focus the frame when showing", async () => {
     const c = new UIComponent("testing.html", "example-class");
-    await c.init("example.html", "example-class");
+    await c.load("example.html", "example-class");
     stubPostMessage(c.iframeElement, function () {});
     c.iframeElement.dispatchEvent(new window.Event("load"));
     assert.equal(document.body, document.activeElement);

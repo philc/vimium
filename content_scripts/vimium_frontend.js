@@ -448,10 +448,8 @@ if (globalThis.HelpDialog == null) {
     async toggle(request) {
       if (this.helpUI == null) {
         await DomUtils.documentComplete();
-        this.helpUI = new UIComponent(
-          "pages/help_dialog.html",
-          "vimium-help-dialog-frame",
-        );
+        this.helpUI = new UIComponent();
+        this.helpUI.load("pages/help_dialog.html", "vimium-help-dialog-frame");
       }
       if (this.isShowing()) {
         this.helpUI.hide();
