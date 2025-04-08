@@ -26,4 +26,7 @@ export async function jsdomStub(htmlFile) {
   stub(globalThis, "window", w);
   stub(globalThis, "document", w.document);
   stub(globalThis, "MouseEvent", w.MouseEvent);
+  stub(globalThis, "MutationObserver", w.MutationObserver);
+  // We might not need to stub HTMLElement once we resolve the TODO on DomUtils.createElement
+  stub(globalThis, "HTMLElement", w.HTMLElement);
 }
