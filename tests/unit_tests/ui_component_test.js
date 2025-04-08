@@ -16,7 +16,7 @@ context("UIComponent", () => {
 
   setup(async () => {
     // Which page we load doesn't matter; we just need any DOM.
-    await testHelper.jsdomStub("pages/help_dialog.html");
+    await testHelper.jsdomStub("pages/help_dialog_page.html");
   });
 
   teardown(() => {

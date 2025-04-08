@@ -449,7 +449,7 @@ if (globalThis.HelpDialog == null) {
       if (this.helpUI == null) {
         await DomUtils.documentComplete();
         this.helpUI = new UIComponent();
-        this.helpUI.load("pages/help_dialog.html", "vimium-help-dialog-frame");
+        this.helpUI.load("pages/help_dialog_page.html", "vimium-help-dialog-frame");
       }
       if (this.isShowing()) {
         this.helpUI.hide();

@@ -2,11 +2,11 @@ import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../background_scripts/completion.js";
 import { allCommands } from "../../background_scripts/all_commands.js";
-import { HelpDialog } from "../../pages/help_dialog.js";
+import { HelpDialog } from "../../pages/help_dialog_page.js";
 
 context("help dialog", () => {
   setup(async () => {
-    await testHelper.jsdomStub("pages/help_dialog.html");
+    await testHelper.jsdomStub("pages/help_dialog_page.html");
     await Settings.onLoaded();
     stub(chrome.storage.session, "get", async (key) => {
       if (key == "commandToOptionsToKeys") {
