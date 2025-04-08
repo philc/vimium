@@ -29,9 +29,9 @@ function isAdvancedCommand(command, options) {
     (command.name == "reload" && options.includes("hard"));
 }
 
-// This overrides the HelpDialog implementation in vimium_frontend.js. We provide aliases for the
-// two HelpDialog methods required by normalMode (isShowing() and toggle()).
-const HelpDialog = {
+// This overrides the HelpDialogPage implementation in vimium_frontend.js. We provide aliases for
+// the two HelpDialogPage methods required by normalMode (isShowing() and toggle()).
+const HelpDialogPage = {
   dialogElement: null,
   isShowing() {
     return true;
@@ -65,7 +65,7 @@ const HelpDialog = {
 
     document.querySelector("#toggle-advanced a").addEventListener(
       "click",
-      HelpDialog.toggleAdvancedCommands.bind(HelpDialog),
+      HelpDialogPage.toggleAdvancedCommands.bind(HelpDialogPage),
       false,
     );
 
@@ -165,8 +165,8 @@ const HelpDialog = {
     const container = document.querySelector("#container");
     const scrollHeightBefore = container.scrollHeight;
     event.preventDefault();
-    const showAdvanced = HelpDialog.getShowAdvancedCommands();
-    HelpDialog.showAdvancedCommands(!showAdvanced);
+    const showAdvanced = HelpDialogPage.getShowAdvancedCommands();
+    HelpDialogPage.showAdvancedCommands(!showAdvanced);
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced);
     // Try to keep the "show advanced commands" button in the same scroll position.
     const scrollHeightDelta = container.scrollHeight - scrollHeightBefore;
@@ -179,9 +179,9 @@ const HelpDialog = {
     const caption = visible ? "Hide advanced commands" : "Show advanced commands";
     document.querySelector("#toggle-advanced a").textContent = caption;
     if (visible) {
-      HelpDialog.dialogElement.classList.add("show-advanced");
+      HelpDialogPage.dialogElement.classList.add("show-advanced");
     } else {
-      HelpDialog.dialogElement.classList.remove("show-advanced");
+      HelpDialogPage.dialogElement.classList.remove("show-advanced");
     }
   },
 };
@@ -193,11 +193,11 @@ function init() {
     await Utils.populateBrowserInfo();
     switch (event.data.name) {
       case "hide":
-        HelpDialog.hide();
+        HelpDialogPage.hide();
         break;
       case "activate":
-        HelpDialog.init();
-        await HelpDialog.show(event.data);
+        HelpDialogPage.init();
+        await HelpDialogPage.show(event.data);
         // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
         Mode.setIndicator();
         break;
@@ -220,7 +220,7 @@ if (!testEnv) {
   init();
 }
 
-globalThis.HelpDialog = HelpDialog;
-globalThis.isVimiumHelpDialog = true;
+globalThis.HelpDialogPage = HelpDialogPage;
+globalThis.isVimiumHelpDialogPage = true;
 
-export { HelpDialog };
+export { HelpDialogPage };

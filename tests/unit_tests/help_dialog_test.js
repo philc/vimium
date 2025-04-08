@@ -2,7 +2,7 @@ import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../background_scripts/completion.js";
 import { allCommands } from "../../background_scripts/all_commands.js";
-import { HelpDialog } from "../../pages/help_dialog_page.js";
+import { HelpDialogPage } from "../../pages/help_dialog_page.js";
 
 context("help dialog", () => {
   setup(async () => {
@@ -28,7 +28,7 @@ context("help dialog", () => {
         "hard": ["b", "c"],
       },
     };
-    const result = HelpDialog.getRowsForDialog(config);
+    const result = HelpDialogPage.getRowsForDialog(config);
     const rows = result["navigation"]
       .filter((row) => row[0].name == "reload");
     assert.equal(2, rows.length);
@@ -39,10 +39,12 @@ context("help dialog", () => {
   should("have a section in the help dialog for every group", async () => {
     // This test is to prevent code editing errors, where a command is added but doesn't have a
     // corresponding group in the help dialog.
-    HelpDialog.init();
-    await HelpDialog.show();
+    HelpDialogPage.init();
+    await HelpDialogPage.show();
     const groups = Array.from(new Set(allCommands.map((c) => c.group))).sort();
-    const groupsInDialog = Array.from(HelpDialog.dialogElement.querySelectorAll("div[data-group]"))
+    const groupsInDialog = Array.from(
+      HelpDialogPage.dialogElement.querySelectorAll("div[data-group]"),
+    )
       .map((e) => e.dataset.group)
       .sort();
     assert.equal(groups, groupsInDialog);
