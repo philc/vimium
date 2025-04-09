@@ -25,7 +25,6 @@ const ExclusionRegexpCache = {
     }
   },
 };
-
 // Make RegexpCache, which is required on the page popup, accessible via the Exclusions object.
 const RegexpCache = ExclusionRegexpCache;
 
@@ -37,15 +36,17 @@ function getRule(url, rules) {
   if (rules == null) {
     rules = Settings.get("exclusionRules");
   }
-  const matchingRules = rules.filter((r) =>
-    r.pattern && (url.search(ExclusionRegexpCache.get(r.pattern)) >= 0)
+  const matchingRules = rules.filter(
+    (r) => r.pattern && url.search(ExclusionRegexpCache.get(r.pattern)) >= 0,
   );
   // An absolute exclusion rule (one with no passKeys) takes priority.
   for (const rule of matchingRules) {
     if (!rule.passKeys) return rule;
   }
   // Strip whitespace from all matching passKeys strings, and join them together.
-  const passKeys = matchingRules.map((r) => r.passKeys.split(/\s+/).join("")).join("");
+  const passKeys = matchingRules
+    .map((r) => r.passKeys.split(/\s+/).join(""))
+    .join("");
   // TODO(philc): Remove this commented out code.
   // passKeys = (rule.passKeys.split(/\s+/).join "" for rule in matchingRules).join ""
   if (matchingRules.length > 0) {
@@ -58,7 +59,7 @@ function getRule(url, rules) {
 export function isEnabledForUrl(url) {
   const rule = getRule(url);
   return {
-    isEnabledForUrl: !rule || (rule.passKeys.length > 0),
+    isEnabledForUrl: !rule || rule.passKeys.length > 0,
     passKeys: rule ? rule.passKeys : "",
   };
 }
@@ -74,5 +75,4 @@ function onSettingsUpdated() {
   // popup is closed. Do NOT store it/use it asynchronously.
   ExclusionRegexpCache.clear();
 }
-
 Settings.addEventListener("change", () => onSettingsUpdated());

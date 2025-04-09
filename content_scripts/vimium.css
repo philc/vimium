@@ -71,7 +71,8 @@ tr.vimium-reset {
   z-index: 2147483647;
 }
 
-thead.vimium-reset, tbody.vimium-reset {
+thead.vimium-reset,
+tbody.vimium-reset {
   display: table-header-group;
 }
 
@@ -126,11 +127,11 @@ div.internal-vimium-hint-marker span {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-div.internal-vimium-hint-marker > .matchingCharacter {
+div.internal-vimium-hint-marker>.matchingCharacter {
   color: #d4ac3a;
 }
 
-div > .vimiumActiveHintMarker span {
+div>.vimiumActiveHintMarker span {
   color: #a07555 !important;
 }
 
@@ -200,14 +201,24 @@ body.vimium-find-mode ::selection {
   background: #ff9632;
 }
 
-iframe.vomnibar-frame {
+.vimiumPopover {
+  top: 0 !important;
+  left: 0 !important;
+  position: absolute !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+}
+
+iframe.vomnibarFrame {
   background-color: transparent;
   padding: 0px;
   overflow: hidden;
-
   display: block;
   position: fixed;
-  width: calc(80% + 20px); /* same adjustment as in pages/vomnibar_page.js */
+  width: calc(80% + 20px);
+  /* same adjustment as in pages/vomnibar_page.js */
   min-width: 400px;
   height: calc(100% - 70px);
   top: 70px;

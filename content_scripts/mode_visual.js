@@ -20,7 +20,7 @@ class Movement {
   // or return undefined.
   getNextForwardCharacter() {
     const beforeText = this.selection.toString();
-    if ((beforeText.length === 0) || (this.getDirection() === forward)) {
+    if (beforeText.length === 0 || this.getDirection() === forward) {
       this.selection.modify("extend", forward, character);
       const afterText = this.selection.toString();
       if (beforeText !== afterText) {
@@ -55,13 +55,16 @@ class Movement {
   //
   runMovement(...args) {
     // Normalize the various argument forms.
-    const [direction, granularity] = (typeof (args[0]) === "string") && (args.length === 1)
-      ? args[0].trim().split(/\s+/)
-      : (args.length === 1 ? args[0] : args.slice(0, 2));
+    const [direction, granularity] =
+      typeof args[0] === "string" && args.length === 1
+        ? args[0].trim().split(/\s+/)
+        : args.length === 1
+          ? args[0]
+          : args.slice(0, 2);
 
     // Native word movements behave differently on Linux and Windows, see #1441. So we implement
     // some of them character-by-character.
-    if ((granularity === vimword) && (direction === forward)) {
+    if (granularity === vimword && direction === forward) {
       // Extend selection to the end of the 'vimword'.
       while (this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
@@ -69,7 +72,10 @@ class Movement {
         }
       }
       // Extend selection after the 'vimword' to position before next word.
-      while (this.getNextForwardCharacter() && !this.nextCharacterIsWordCharacter()) {
+      while (
+        this.getNextForwardCharacter() &&
+        !this.nextCharacterIsWordCharacter()
+      ) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
@@ -83,9 +89,12 @@ class Movement {
 
     // As above, we implement this character-by-character to get consistent behavior on Windows and
     // Linux.
-    if ((granularity === word) && (direction === forward)) {
+    if (granularity === word && direction === forward) {
       // Extend selection to the start of the next 'word' (non-word characters, e.g. whitespace).
-      while (this.getNextForwardCharacter() && !this.nextCharacterIsWordCharacter()) {
+      while (
+        this.getNextForwardCharacter() &&
+        !this.nextCharacterIsWordCharacter()
+      ) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
@@ -127,7 +136,10 @@ class Movement {
       range.collapse(direction === backward);
       this.setSelectionRange(range);
       const which = direction === forward ? "start" : "end";
-      this.selection.extend(original[`${which}Container`], original[`${which}Offset`]);
+      this.selection.extend(
+        original[`${which}Container`],
+        original[`${which}Offset`],
+      );
     }
   }
 
@@ -211,7 +223,8 @@ class Movement {
     for (let i = 1, end = count; i < end; i++) this.runMovement(forward, line);
     this.runMovement(forward, lineboundary);
     // Include the next character if that character is a newline.
-    if (this.getNextForwardCharacter() === "\n") return this.runMovement(forward, character);
+    if (this.getNextForwardCharacter() === "\n")
+      return this.runMovement(forward, character);
   }
 
   // Scroll the focus into view.
@@ -232,7 +245,9 @@ class VisualMode extends KeyHandlerMode {
     if (options == null) {
       options = {};
     }
-    this.movement = new Movement(options.alterMethod != null ? options.alterMethod : "extend");
+    this.movement = new Movement(
+      options.alterMethod != null ? options.alterMethod : "extend",
+    );
     this.selection = this.movement.selection;
 
     // Build the key mapping structure required by KeyHandlerMode. This only handles one- and
@@ -245,45 +260,61 @@ class VisualMode extends KeyHandlerMode {
       }
       if (keys.length === 1) {
         keyMapping[keys] = { command: movement };
-      } else { // keys.length == 2
+      } else {
+        // keys.length == 2
         if (keyMapping[keys[0]] == null) {
           keyMapping[keys[0]] = {};
         }
-        Object.assign(keyMapping[keys[0]], { [keys[1]]: { command: movement } });
+        Object.assign(keyMapping[keys[0]], {
+          [keys[1]]: { command: movement },
+        });
       }
     }
 
     // Aliases and complex bindings.
     Object.assign(keyMapping, {
-      "B": keyMapping.b,
-      "W": keyMapping.w,
+      B: keyMapping.b,
+      W: keyMapping.w,
       "<c-e>": {
         command(count) {
-          return Scroller.scrollBy("y", count * Settings.get("scrollStepSize"), 1, false);
+          return Scroller.scrollBy(
+            "y",
+            count * Settings.get("scrollStepSize"),
+            1,
+            false,
+          );
         },
       },
       "<c-y>": {
         command(count) {
-          return Scroller.scrollBy("y", -count * Settings.get("scrollStepSize"), 1, false);
+          return Scroller.scrollBy(
+            "y",
+            -count * Settings.get("scrollStepSize"),
+            1,
+            false,
+          );
         },
       },
     });
 
-    super.init(Object.assign(options, {
-      name: options.name != null ? options.name : "visual",
-      indicator: options.indicator != null ? options.indicator : "Visual mode",
-      // Visual mode, visual-line mode and caret mode each displace each other.
-      singleton: "visual-mode-group",
-      exitOnEscape: true,
-      suppressAllKeyboardEvents: true,
-      keyMapping,
-      commandHandler: this.commandHandler.bind(this),
-    }));
+    super.init(
+      Object.assign(options, {
+        name: options.name != null ? options.name : "visual",
+        indicator:
+          options.indicator != null ? options.indicator : "Visual mode",
+        // Visual mode, visual-line mode and caret mode each displace each other.
+        singleton: "visual-mode-group",
+        exitOnEscape: true,
+        suppressAllKeyboardEvents: true,
+        keyMapping,
+        commandHandler: this.commandHandler.bind(this),
+      }),
+    );
 
     // If there was a range selection when the user lanuched visual mode, then we retain the
     // selection on exit.
-    this.shouldRetainSelectionOnExit = this.options.userLaunchedMode &&
-      (this.selection.type === "Range");
+    this.shouldRetainSelectionOnExit =
+      this.options.userLaunchedMode && this.selection.type === "Range";
 
     this.onExit((event = null) => {
       // Retain any selection, regardless of how we exit.
@@ -291,8 +322,10 @@ class VisualMode extends KeyHandlerMode {
         // This mimics vim: when leaving visual mode via Escape, collapse to focus, otherwise
         // collapse to anchor.
       } else if (
-        event && (event.type === "keydown") && KeyboardUtils.isEscape(event) &&
-        (this.name !== "caret")
+        event &&
+        event.type === "keydown" &&
+        KeyboardUtils.isEscape(event) &&
+        this.name !== "caret"
       ) {
         this.movement.collapseSelectionToFocus();
       } else {
@@ -300,7 +333,10 @@ class VisualMode extends KeyHandlerMode {
       }
 
       // Don't leave the user in insert mode just because they happen to have selected an input.
-      if (document.activeElement && DomUtils.isEditable(document.activeElement)) {
+      if (
+        document.activeElement &&
+        DomUtils.isEditable(document.activeElement)
+      ) {
         if ((event != null ? event.type : undefined) !== "click") {
           return document.activeElement.blur();
         }
@@ -312,7 +348,12 @@ class VisualMode extends KeyHandlerMode {
       // Yank on <Enter>.
       keypress: (event) => {
         if (event.key === "Enter") {
-          if (!event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey) {
+          if (
+            !event.metaKey &&
+            !event.ctrlKey &&
+            !event.altKey &&
+            !event.shiftKey
+          ) {
             this.yank();
             return this.suppressEvent;
           }
@@ -331,18 +372,27 @@ class VisualMode extends KeyHandlerMode {
     // Establish or use the initial selection. If that's not possible, then enter caret mode.
     if (this.name !== "caret") {
       if (["Caret", "Range"].includes(this.selection.type)) {
-        let selectionRect = this.selection.getRangeAt(0).getBoundingClientRect();
+        let selectionRect = this.selection
+          .getRangeAt(0)
+          .getBoundingClientRect();
         if (globalThis.vimiumDomTestsAreRunning) {
           // We're running the DOM tests, where getBoundingClientRect() isn't available.
           if (!selectionRect) {
-            selectionRect = { top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 };
+            selectionRect = {
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              width: 0,
+              height: 0,
+            };
           }
         }
         selectionRect = Rect.intersect(
           selectionRect,
           Rect.create(0, 0, globalThis.innerWidth, globalThis.innerHeight),
         );
-        if ((selectionRect.height >= 0) && (selectionRect.width >= 0)) {
+        if (selectionRect.height >= 0 && selectionRect.width >= 0) {
           // The selection is visible in the current viewport.
           if (this.selection.type === "Caret") {
             // The caret is in the viewport. Make make it visible.
@@ -356,7 +406,7 @@ class VisualMode extends KeyHandlerMode {
         }
       }
 
-      if ((this.selection.type !== "Range") && (this.name !== "caret")) {
+      if (this.selection.type !== "Range" && this.name !== "caret") {
         new CaretMode().init();
         return HUD.show("No usable selection, entering caret mode...", 2500);
       }
@@ -396,7 +446,7 @@ class VisualMode extends KeyHandlerMode {
 
     // The find was successfull. If we're in caret mode, then we should now have a selection, so we
     // can drop back into visual mode.
-    if ((this.name === "caret") && (this.selection.toString().length > 0)) {
+    if (this.name === "caret" && this.selection.toString().length > 0) {
       const mode = new VisualMode();
       mode.init();
       return mode;
@@ -417,7 +467,10 @@ class VisualMode extends KeyHandlerMode {
       message = message.slice(0, 12) + "...";
     }
     const plural = this.yankedText.length === 1 ? "" : "s";
-    HUD.show(`Yanked ${this.yankedText.length} character${plural}: \"${message}\".`, 2500);
+    HUD.show(
+      `Yanked ${this.yankedText.length} character${plural}: \"${message}\".`,
+      2500,
+    );
 
     return this.yankedText;
   }
@@ -425,71 +478,79 @@ class VisualMode extends KeyHandlerMode {
 
 // A movement can be either a string or a function.
 VisualMode.prototype.movements = {
-  "l": "forward character",
-  "h": "backward character",
-  "j": "forward line",
-  "k": "backward line",
-  "e": "forward word",
-  "b": "backward word",
-  "w": "forward vimword",
+  l: "forward character",
+  h: "backward character",
+  j: "forward line",
+  k: "backward line",
+  e: "forward word",
+  b: "backward word",
+  w: "forward vimword",
   ")": "forward sentence",
   "(": "backward sentence",
   "}": "forward paragraph",
   "{": "backward paragraph",
-  "0": "backward lineboundary",
-  "$": "forward lineboundary",
-  "G": "forward documentboundary",
-  "gg": "backward documentboundary",
+  0: "backward lineboundary",
+  $: "forward lineboundary",
+  G: "forward documentboundary",
+  gg: "backward documentboundary",
 
-  "aw"(count) {
+  aw(count) {
     return this.movement.selectLexicalEntity(word, count);
   },
-  "as"(count) {
+  as(count) {
     return this.movement.selectLexicalEntity(sentence, count);
   },
 
-  "n"(count) {
+  n(count) {
     return this.find(count, false);
   },
-  "N"(count) {
+  N(count) {
     return this.find(count, true);
   },
   "/"() {
     this.exit();
-    return new FindMode({ returnToViewport: true }).onExit(() => new VisualMode().init());
+    return new FindMode({ returnToViewport: true }).onExit(() =>
+      new VisualMode().init(),
+    );
   },
 
-  "y"() {
+  y() {
     return this.yank();
   },
-  "Y"(count) {
+  Y(count) {
     this.movement.selectLine(count);
     return this.yank();
   },
-  "p"() {
-    return chrome.runtime.sendMessage({ handler: "openUrlInCurrentTab", url: this.yank() });
+  p() {
+    return chrome.runtime.sendMessage({
+      handler: "openUrlInCurrentTab",
+      url: this.yank(),
+    });
   },
-  "P"() {
-    return chrome.runtime.sendMessage({ handler: "openUrlInNewTab", url: this.yank() });
+  P() {
+    return chrome.runtime.sendMessage({
+      handler: "openUrlInNewTab",
+      url: this.yank(),
+    });
   },
-  "v"() {
+  v() {
     return new VisualMode().init();
   },
-  "V"() {
+  V() {
     return new VisualLineMode().init();
   },
-  "c"() {
+  c() {
     // If we're already in caret mode, or if the selection looks the same as it would in caret mode,
     // then callapse to anchor (so that the caret-mode selection will seem unchanged). Otherwise,
     // we're in visual mode and the user has moved the focus, so collapse to that.
-    if ((this.name === "caret") || (this.selection.toString().length <= 1)) {
+    if (this.name === "caret" || this.selection.toString().length <= 1) {
       this.movement.collapseSelectionToAnchor();
     } else {
       this.movement.collapseSelectionToFocus();
     }
     return new CaretMode().init();
   },
-  "o"() {
+  o() {
     return this.movement.reverseSelection();
   },
 };
@@ -499,7 +560,12 @@ class VisualLineMode extends VisualMode {
     if (options == null) {
       options = {};
     }
-    super.init(Object.assign(options, { name: "visual/line", indicator: "Visual mode (line)" }));
+    super.init(
+      Object.assign(options, {
+        name: "visual/line",
+        indicator: "Visual mode (line)",
+      }),
+    );
     return this.extendSelection();
   }
 
@@ -517,7 +583,10 @@ class VisualLineMode extends VisualMode {
           if (this.selection.isCollapsed) {
             this.extendSelection();
             const [direction, granularity] = command.split(" ");
-            if ((this.movement.getDirection() !== direction) && (granularity === "line")) {
+            if (
+              this.movement.getDirection() !== direction &&
+              granularity === "line"
+            ) {
               this.movement.reverseSelection();
             }
             this.movement.runMovement(command);
@@ -537,7 +606,10 @@ class VisualLineMode extends VisualMode {
   extendSelection() {
     const initialDirection = this.movement.getDirection();
     const result = [];
-    for (const direction of [initialDirection, this.movement.opposite[initialDirection]]) {
+    for (const direction of [
+      initialDirection,
+      this.movement.opposite[initialDirection],
+    ]) {
       this.movement.runMovement(direction, lineboundary);
       result.push(this.movement.reverseSelection());
     }
@@ -551,7 +623,11 @@ class CaretMode extends VisualMode {
       options = {};
     }
     super.init(
-      Object.assign(options, { name: "caret", indicator: "Caret mode", alterMethod: "move" }),
+      Object.assign(options, {
+        name: "caret",
+        indicator: "Caret mode",
+        alterMethod: "move",
+      }),
     );
 
     // Establish the initial caret.
@@ -588,14 +664,21 @@ class CaretMode extends VisualMode {
   // try to find the start of the page's main textual content.
   establishInitialSelectionAnchor() {
     let node;
-    const nodes = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+    );
     while ((node = nodes.nextNode())) {
       // Don't choose short text nodes; they're likely to be part of a banner.
-      if ((node.nodeType === 3) && (50 <= node.data.trim().length)) {
+      if (node.nodeType === 3 && 50 <= node.data.trim().length) {
         const element = node.parentElement;
-        if (DomUtils.getVisibleClientRect(element) && !DomUtils.isEditable(element)) {
+        if (
+          DomUtils.getVisibleClientRect(element) &&
+          !DomUtils.isEditable(element)
+        ) {
           // Start at the offset of the first non-whitespace character.
-          const offset = node.data.length - node.data.replace(/^\s+/, "").length;
+          const offset =
+            node.data.length - node.data.replace(/^\s+/, "").length;
           const range = document.createRange();
           range.setStart(node, offset);
           range.setEnd(node, offset);

@@ -430,17 +430,7 @@ class LinkHintsMode {
     if (hasPopoverSupport) {
       this.containerEl.popover = "manual";
       this.containerEl.showPopover();
-      Object.assign(this.containerEl.style, {
-        top: 0,
-        left: 0,
-        position: "absolute",
-        // This display: block is required to override Github Enterprise's CSS circa 2024-04-01. See
-        // #4446.
-        display: "block",
-        width: "100%",
-        height: "100%",
-        overflow: "visible",
-      });
+      this.containerEl.classList.add("vimiumPopover");
     }
 
     this.setIndicator();
