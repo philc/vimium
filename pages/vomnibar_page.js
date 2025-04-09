@@ -10,7 +10,7 @@ import "../lib/settings.js";
 import "../lib/keyboard_utils.js";
 import "../lib/dom_utils.js";
 import "../lib/handler_stack.js";
-import "./ui_component_server.js";
+import * as UIComponentMessenger from "./ui_component_messenger.js";
 
 class Vomnibar {
   vomnibarUI; // the dialog instance for this window
@@ -107,7 +107,7 @@ class VomnibarUI {
   hide(onHiddenCallback = null) {
     this.onHiddenCallback = onHiddenCallback;
     this.input.blur();
-    UIComponentServer.postMessage("hide");
+    UIComponentMessenger.postMessage({ name: "hide" });
     this.reset();
   }
 
@@ -147,7 +147,7 @@ class VomnibarUI {
 
     // Highlight the selected entry, and only the selected entry.
     for (let i = 0, end = this.completionList.children.length; i < end; i++) {
-      this.completionList.children[i].className = i === this.selection ? "vomnibarSelected" : "";
+      this.completionList.children[i].className = i === this.selection ? "selected" : "";
     }
   }
 
@@ -452,9 +452,9 @@ let vomnibarInstance;
 
 function init() {
   vomnibarInstance = new Vomnibar();
-
-  UIComponentServer.registerHandler(function (event) {
-    switch (event.data.name != null ? event.data.name : event.data) {
+  UIComponentMessenger.init();
+  UIComponentMessenger.registerHandler(function (event) {
+    switch (event.data.name) {
       case "hide":
         vomnibarInstance.hide();
         break;
@@ -464,6 +464,8 @@ function init() {
       case "activate":
         vomnibarInstance.activate(event.data);
         break;
+      default:
+        Utils.assert(false, "Unrecognized message type.", event.data);
     }
   });
 }

@@ -6,9 +6,13 @@ let isEnabledForUrl = true;
 let normalMode = null;
 
 // We track whther the current window has the focus or not.
-const windowIsFocused = (function () {
-  let windowHasFocus = null;
-  DomUtils.documentReady(() => windowHasFocus = document.hasFocus());
+let windowHasFocus = null;
+function windowIsFocused() {
+  return windowHasFocus;
+}
+
+function initWindowIsFocused() {
+  DomUtils.documentReady().then(() => windowHasFocus = document.hasFocus());
   globalThis.addEventListener(
     "focus",
     forTrusted(function (event) {
@@ -29,8 +33,7 @@ const windowIsFocused = (function () {
     }),
     true,
   );
-  return () => windowHasFocus;
-})();
+}
 
 // True if this window should be focusable by various Vim commands (e.g. "nextFrame").
 const isWindowFocusable = () => {
@@ -39,7 +42,7 @@ const isWindowFocusable = () => {
 };
 
 // This is set by initializeFrame. We can only get this frame's ID from the background page.
-let frameId = null;
+globalThis.frameId = null;
 
 // If an input grabs the focus before the user has interacted with the page, then grab it back (if
 // the grabBackFocus option is set).
@@ -170,7 +173,8 @@ const installModes = function () {
   return normalMode;
 };
 
-let previousUrl = document.location.href;
+// document is null in our tests.
+let previousUrl = globalThis.document?.location.href;
 
 // When we're informed by the background page that a URL in this tab has changed, we check if we
 // have the correct enabled state (but only if this frame has the focus).
@@ -331,7 +335,7 @@ const onUnload = Utils.makeIdempotent(() => {
 });
 
 const setScrollPosition = ({ scrollX, scrollY }) =>
-  DomUtils.documentReady(function () {
+  DomUtils.documentReady().then(() => {
     if (DomUtils.isTopFrame()) {
       Utils.nextTick(function () {
         globalThis.focus();
@@ -360,7 +364,7 @@ const flashFrame = (() => {
       shadowDOM.appendChild(styleEl);
 
       const frameEl = DomUtils.createElement("div");
-      frameEl.className = "vimiumReset vimiumHighlightedFrame";
+      frameEl.className = "vimium-reset vimium-highlighted-frame";
       shadowDOM.appendChild(frameEl);
     }
 
@@ -419,7 +423,7 @@ const checkIfEnabledForUrl = async () => {
   Utils._firefoxVersion = response.firefoxVersion;
   Utils._browserInfoLoaded = true;
   // This is the first time we learn what this frame's ID is.
-  frameId = response.frameId;
+  globalThis.frameId = response.frameId;
 
   if (normalMode == null) installModes();
   normalMode.setPassKeys(response.passKeys);
@@ -427,47 +431,54 @@ const checkIfEnabledForUrl = async () => {
   if (!isEnabledForUrl) HUD.hide(true, false);
 };
 
-// If we are in the help dialog iframe, then HelpDialog is already defined with the necessary
-// functions.
-if (globalThis.HelpDialog == null) {
-  globalThis.HelpDialog = {
-    helpUI: null,
-    isShowing() {
-      return this.helpUI && this.helpUI.showing;
-    },
-    abort() {
-      if (this.isShowing()) {
-        return this.helpUI.hide(false);
-      }
-    },
+// If this content script is running in the help dialog's iframe, then use the HelpDialogPage's
+// methods to control the dialog. Otherwise, load the help dialog in a UIComponent iframe.
+const HelpDialog = {
+  helpUI: null,
 
-    toggle(request) {
-      DomUtils.documentComplete(() => {
-        if (!this.helpUI) {
-          this.helpUI = new UIComponent(
-            "pages/help_dialog.html",
-            "vimiumHelpDialogFrame",
-            function () {},
-          );
-        }
-        return this.helpUI;
-      });
+  isShowing() {
+    if (globalThis.isVimiumHelpDialogPage) return true;
+    return this.helpUI && this.helpUI.showing;
+  },
 
-      if ((this.helpUI != null) && this.isShowing()) {
-        return this.helpUI.hide();
-      } else if (this.helpUI != null) {
-        return this.helpUI.activate(Object.assign(request, { name: "activate", focus: true }));
-      }
-    },
-  };
+  abort() {
+    if (globalThis.isVimiumHelpDialogPage) throw new Error("This should be impossible.");
+    if (this.isShowing()) {
+      return this.helpUI.hide(false);
+    }
+  },
+
+  async toggle(request) {
+    // If we're in the help dialog page already and the user has typed a key to show the help
+    // dialog, then we should hide it.
+    if (globalThis.isVimiumHelpDialogPage) return HelpDialogPage.hide();
+
+    if (this.helpUI == null) {
+      await DomUtils.documentComplete();
+      this.helpUI = new UIComponent();
+      this.helpUI.load("pages/help_dialog_page.html", "vimium-help-dialog-frame");
+    }
+    if (this.isShowing()) {
+      this.helpUI.hide();
+    } else {
+      return this.helpUI.show(
+        { name: "activate" },
+        { focus: true, sourceFrameId: request.sourceFrameId },
+      );
+    }
+  },
+};
+
+const testEnv = globalThis.window == null;
+if (!testEnv) {
+  initWindowIsFocused();
+  initializePreDomReady();
+  DomUtils.documentReady().then(initializeOnDomReady);
 }
 
-initializePreDomReady();
-DomUtils.documentReady(initializeOnDomReady);
-
 Object.assign(globalThis, {
+  HelpDialog,
   handlerStack,
-  frameId,
   windowIsFocused,
   // These are exported for normal mode and link-hints mode.
   focusThisFrame,

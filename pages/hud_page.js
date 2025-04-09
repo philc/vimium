@@ -1,3 +1,11 @@
+import "../lib/chrome_api_stubs.js";
+import "../lib/utils.js";
+import "../lib/dom_utils.js";
+import "../lib/settings.js";
+import "../lib/keyboard_utils.js";
+import "../lib/find_mode_history.js";
+import * as UIComponentMessenger from "./ui_component_messenger.js";
+
 let findMode = null;
 
 // Chrome creates a unique port for each MessageChannel, so there's a race condition between
@@ -39,7 +47,7 @@ function onKeyEvent(event) {
     (event.key === "Enter") || KeyboardUtils.isEscape(event)
   ) {
     inputElement.blur();
-    UIComponentServer.postMessage({
+    UIComponentMessenger.postMessage({
       name: "hideFindMode",
       exitEventIsEnter: event.key === "Enter",
       exitEventIsEscape: KeyboardUtils.isEscape(event),
@@ -72,7 +80,7 @@ function onKeyEvent(event) {
 // fail on non-HTTPS sites. See #4572.
 function ensureClipboardIsAvailable() {
   if (!navigator.clipboard) {
-    UIComponentServer.postMessage({ name: "showClipboardUnavailableMessage" });
+    UIComponentMessenger.postMessage({ name: "showClipboardUnavailableMessage" });
     return false;
   }
   return true;
@@ -80,17 +88,17 @@ function ensureClipboardIsAvailable() {
 
 const handlers = {
   show(data) {
-    document.getElementById("hud").innerText = data.text;
-    document.getElementById("hud").classList.add("vimiumUIComponentVisible");
-    document.getElementById("hud").classList.remove("vimiumUIComponentHidden");
+    document.getElementById("hud").textContent = data.text;
+    document.getElementById("hud").classList.add("vimium-ui-component-visible");
+    document.getElementById("hud").classList.remove("vimium-ui-component-hidden");
     document.getElementById("hud").classList.remove("hud-find");
   },
   hidden() {
     // We get a flicker when the HUD later becomes visible again (with new text) unless we reset its
     // contents here.
-    document.getElementById("hud").innerText = "";
-    document.getElementById("hud").classList.add("vimiumUIComponentHidden");
-    document.getElementById("hud").classList.remove("vimiumUIComponentVisible");
+    document.getElementById("hud").textContent = "";
+    document.getElementById("hud").classList.add("vimium-ui-component-hidden");
+    document.getElementById("hud").classList.remove("vimium-ui-component-visible");
   },
 
   showFindMode(data) {
@@ -122,7 +130,7 @@ const handlers = {
         }
         // Replace \u00A0 (&nbsp;) with a normal space.
         findMode.rawQuery = inputElement.textContent.replace("\u00A0", " ");
-        UIComponentServer.postMessage({ name: "search", query: findMode.rawQuery });
+        UIComponentMessenger.postMessage({ name: "search", query: findMode.rawQuery });
       },
     );
 
@@ -175,7 +183,7 @@ const handlers = {
 
       if (focusedElement != null) focusedElement.focus();
       globalThis.parent.focus();
-      UIComponentServer.postMessage({ name: "unfocusIfFocused" });
+      UIComponentMessenger.postMessage({ name: "unfocusIfFocused" });
     });
   },
 
@@ -193,26 +201,33 @@ const handlers = {
 
       if (focusedElement != null) focusedElement.focus();
       globalThis.parent.focus();
-      UIComponentServer.postMessage({ name: "pasteResponse", data: value });
+      UIComponentMessenger.postMessage({ name: "pasteResponse", data: value });
     });
   },
 };
 
-// Manually inject custom user styles.
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss();
-});
+function init() {
+  // Manually inject custom user styles.
+  document.addEventListener("DOMContentLoaded", async () => {
+    await Settings.onLoaded();
+    DomUtils.injectUserCss();
+  });
 
-document.addEventListener("keydown", onKeyEvent);
-document.addEventListener("keypress", onKeyEvent);
+  document.addEventListener("keydown", onKeyEvent);
+  document.addEventListener("keypress", onKeyEvent);
 
-UIComponentServer.registerHandler(async function ({ data }) {
-  await Utils.populateBrowserInfo();
-  const handler = handlers[data.name || data];
-  if (handler) {
-    return handler(data);
-  }
-});
+  UIComponentMessenger.init();
+  UIComponentMessenger.registerHandler(async function (event) {
+    await Utils.populateBrowserInfo();
+    const handler = handlers[event.data.name];
+    Utils.assert(handler != null, "Unrecognized message type.", event.data);
+    return handler(event.data);
+  });
 
-FindModeHistory.init();
+  FindModeHistory.init();
+}
+
+const testEnv = globalThis.window == null;
+if (!testEnv) {
+  init();
+}

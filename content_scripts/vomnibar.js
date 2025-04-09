@@ -58,7 +58,8 @@ const Vomnibar = {
 
   init() {
     if (!this.vomnibarUI) {
-      this.vomnibarUI = new UIComponent("pages/vomnibar.html", "vomnibarFrame", function () {});
+      this.vomnibarUI = new UIComponent();
+      this.vomnibarUI.load("pages/vomnibar_page.html", "vomnibar-frame");
     }
   },
 
@@ -72,8 +73,9 @@ const Vomnibar = {
     this.init();
     // The Vomnibar cannot coexist with the help dialog (it causes focus issues).
     HelpDialog.abort();
-    this.vomnibarUI.activate(
-      Object.assign(options, { name: "activate", sourceFrameId, focus: true }),
+    this.vomnibarUI.show(
+      Object.assign(options, { name: "activate" }),
+      { sourceFrameId, focus: true },
     );
   },
 };

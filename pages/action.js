@@ -1,4 +1,9 @@
-// TODO(philc): Import JS modules here.
+import "../lib/utils.js";
+import "../lib/dom_utils.js";
+import "../lib/settings.js";
+
+import * as bgUtils from "../background_scripts/bg_utils.js";
+import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
 
 const ActionPage = {
   async init() {
@@ -8,8 +13,8 @@ const ActionPage = {
     this.tabUrl = activeTab.url;
 
     const hideUI = () => {
-      document.querySelector("#dialogBody").style.display = "none";
-      document.querySelector("#footer").style.display = "none";
+      document.querySelector("#dialog-body").style.display = "none";
+      document.querySelector("footer").style.display = "none";
     };
 
     // In Firefox, prompt the user if they haven't enabled the "all hosts" permission. Vimium needs
@@ -18,7 +23,7 @@ const ActionPage = {
     // anything. See #4348 for discussion, and https://stackoverflow.com/q/76083327 for
     // implementation notes.
     const permission = { origins: ["<all_urls>"] };
-    if (BgUtils.isFirefox()) {
+    if (bgUtils.isFirefox()) {
       const hasAllHostsPermission = await browser.permissions.contains(permission);
       if (!hasAllHostsPermission) {
         hideUI();
@@ -29,34 +34,34 @@ const ActionPage = {
           // browser permissions dialog will now be shown *under* the action page!
           globalThis.close();
         });
-        document.querySelector("#firefoxMissingPermissionsError").style.display = "block";
+        document.querySelector("#firefox-missing-permissions-error").style.display = "block";
         return;
       }
     }
 
     if (!await this.isVimiumInstalledInTab(activeTab.id)) {
       hideUI();
-      document.querySelector("#notEnabledError").style.display = "block";
+      document.querySelector("#not-enabled-error").style.display = "block";
       return;
     }
 
     document.querySelector("#optionsLink").href = chrome.runtime.getURL("pages/options.html");
 
-    const saveOptionsEl = document.querySelector("#saveOptions");
-    saveOptionsEl.addEventListener("click", (e) => this.onSave());
+    const saveButton = document.querySelector("#save");
+    saveButton.addEventListener("click", (e) => this.onSave());
 
     document.querySelector("#cancel").addEventListener("click", () => globalThis.close());
 
     const onUpdated = () => {
-      saveOptionsEl.disabled = false;
-      saveOptionsEl.textContent = "Save changes";
+      saveButton.disabled = false;
+      saveButton.textContent = "Save changes";
       this.syncEnabledKeysCaption();
       this.showValidationErrors();
     };
 
     const defaultPatternForNewRules = this.generateDefaultPattern(this.tabUrl);
 
-    document.querySelector("#addFirstRule").addEventListener(
+    document.querySelector("#add-first-rule").addEventListener(
       "click",
       () => {
         ExclusionRulesEditor.addRow(defaultPatternForNewRules);
@@ -98,17 +103,17 @@ const ActionPage = {
       const patternMatchesUrl = this.tabUrl.match(regExp);
       if (patternMatchesUrl) {
         row.classList.remove("validationError");
-        validationEl.innerText = "";
+        validationEl.textContent = "";
       } else {
         row.classList.add("validationError");
-        validationEl.innerText = "Pattern does not match the current URL";
+        validationEl.textContent = "Pattern does not match the current URL";
       }
     }
   },
 
   showExclusionRulesEditor() {
-    document.querySelector("#exclusionsContainer").style.display = "block";
-    document.querySelector("#addFirstRuleContainer").style.display = "none";
+    document.querySelector("#exclusions-container").style.display = "block";
+    document.querySelector("#add-first-rule-container").style.display = "none";
   },
 
   syncEnabledKeysCaption() {
@@ -118,7 +123,7 @@ const ActionPage = {
       const hasBlankPassKeysRule = rules.find((r) => r.passKeys.length == 0);
       caption = hasBlankPassKeysRule ? "No" : "Some";
     }
-    document.querySelector("#howManyEnabled").innerText = caption;
+    document.querySelector("#how-many-enabled").textContent = caption;
   },
 
   async onSave() {
@@ -127,7 +132,7 @@ const ActionPage = {
     rules = rules.filter((r) => !this.tabUrl.match(this.getPatternRegExp(r.pattern)));
     rules = rules.concat(ExclusionRulesEditor.getRules());
     Settings.set("exclusionRules", rules);
-    const el = document.querySelector("#saveOptions");
+    const el = document.querySelector("#save");
     el.disabled = true;
     el.textContent = "Saved";
   },

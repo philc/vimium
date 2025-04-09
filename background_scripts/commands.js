@@ -1,14 +1,15 @@
-// A specification for a command, as defined by the default key bindings, or as it
-// appears in the user's keymapping settings.
+import { allCommands } from "./all_commands.js";
+
+// A specification for a command that's currently bound to a key sequence, as defined by the default
+// key bindings, or as it appears in the user's keymapping settings.
 class RegistryEntry {
   // Array of keys.
   keySequence;
   // Name of the command.
   command;
-  description;
   // Whether this command can be used with a count key prefix.
   noRepeat;
-  // The maximum number of allow repetitions of this command, to avoid user error.
+  // The number of allowed repetitions of this command before the user is prompted for confirmation.
   repeatLimit;
   // Whether this command has to be run by the background page.
   background;
@@ -20,6 +21,7 @@ class RegistryEntry {
   // The (optional) raw list of options for this command provided in the user's settings.
   // E.g. "count=10" in "map j scrollDown count=10".
   // NOTE(philc): This is used only by the createTab command.
+  // TODO(philc): Can we remove this?
   optionList;
 
   constructor(o) {
@@ -29,7 +31,6 @@ class RegistryEntry {
 }
 
 const Commands = {
-  availableCommands: {},
   // A map of keyString => RegistryEntry
   keyToRegistryEntry: null,
   // A map of typed key => key it's mapped to (via the `mapkey` config statement).
@@ -37,15 +38,9 @@ const Commands = {
 
   async init() {
     await Settings.onLoaded();
-    for (const command of Object.keys(commandDescriptions)) {
-      const [description, options] = commandDescriptions[command];
-      this.availableCommands[command] = Object.assign(options || {}, { description });
-    }
-
     Settings.addEventListener("change", async () => {
       await this.loadKeyMappings(Settings.get("keyMappings"));
     });
-
     await this.loadKeyMappings(Settings.get("keyMappings"));
   },
 
@@ -56,8 +51,8 @@ const Commands = {
     let keyToRegistryEntry = {};
     let mapKeyRegistry = {};
     const errors = [];
-
     const configLines = Utils.parseLines(configText);
+    const commandsByName = Utils.keyBy(allCommands, "name");
 
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
@@ -66,20 +61,23 @@ const Commands = {
         case "map":
           if (tokens.length >= 3) {
             const [_, key, command, ...optionList] = tokens;
-            if (!this.availableCommands[command]) {
+            const commandInfo = commandsByName[command];
+            if (!commandInfo) {
               errors.push(`"${command}" is not a valid command in the line: ${line}`);
               continue;
             }
             const keySequence = this.parseKeySequence(key);
-            const options = this.parseCommandOptions(command, optionList);
-            keyToRegistryEntry[key] = new RegistryEntry(
-              Object.assign({
-                keySequence,
-                command,
-                options,
-                optionList,
-              }, this.availableCommands[command]),
-            );
+            const options = this.parseCommandOptions(command, optionList, commandInfo);
+            keyToRegistryEntry[key] = new RegistryEntry({
+              keySequence,
+              command,
+              noRepeat: commandInfo.noRepeat,
+              repeatLimit: commandInfo.repeatLimit,
+              background: commandInfo.background,
+              topFrame: commandInfo.topFrame,
+              options,
+              optionList,
+            });
           }
           break;
         case "unmap":
@@ -199,7 +197,7 @@ const Commands = {
   // Command options follow command mappings, and are of one of two forms:
   //   key=value     - a value
   //   key           - a flag
-  parseCommandOptions(command, optionList) {
+  parseCommandOptions(command, optionList, commandInfo) {
     const options = {};
     for (const option of Array.from(optionList)) {
       const parse = option.split("=", 2);
@@ -209,7 +207,7 @@ const Commands = {
     // We parse any `count` option immediately (to avoid having to parse it repeatedly later).
     if ("count" in options) {
       options.count = parseInt(options.count);
-      if (isNaN(options.count) || this.availableCommands[command].noRepeat) {
+      if (isNaN(options.count) || commandInfo.noRepeat) {
         delete options.count;
       }
     }
@@ -237,7 +235,7 @@ const Commands = {
         } else {
           currentMapping[key] = Object.assign({}, registryEntry);
           // We don't need these properties in the content scripts.
-          for (const prop of ["keySequence", "description"]) {
+          for (const prop of ["keySequence"]) {
             delete currentMapping[key][prop];
           }
         }
@@ -251,8 +249,8 @@ const Commands = {
     });
   },
 
-  // Build the "helpPageData" data structure which the help page needs and place it in Chrome
-  // storage.
+  // Build the "commandToOptionsToKeys" data structure and place it in chrome's session storage.
+  // This is used by the help page and commands listing.
   prepareHelpPageData() {
     /*
       Map of commands to option sets to keys to trigger that command option set.
@@ -276,148 +274,8 @@ const Commands = {
       commandToOptionsToKeys[registryEntry.command][optionString] ||= [];
       commandToOptionsToKeys[registryEntry.command][optionString].push(key);
     }
-    const commandGroups = {};
-    for (const group of Object.keys(this.commandGroups || {})) {
-      const commands = this.commandGroups[group];
-      commandGroups[group] = [];
-      for (const command of commands) {
-        // Default to base command has no keys for "show available commands" menu.
-        const optionsToKeys = commandToOptionsToKeys[command] ?? { "": [] };
-        for (const [options, keys] of Object.entries(optionsToKeys)) {
-          const advanced = this.advancedCommands.includes(command) ||
-            this.advancedCommands.includes(`${command} ${options}`);
-          commandGroups[group].push({
-            command,
-            description: this.availableCommands[command].description,
-            keys,
-            advanced,
-            options,
-          });
-        }
-      }
-    }
-    chrome.storage.session.set({ helpPageData: commandGroups });
+    chrome.storage.session.set({ commandToOptionsToKeys });
   },
-
-  // An ordered listing of all available commands, grouped by type. This is the order they will be
-  // shown in the help page.
-  commandGroups: {
-    pageNavigation: [
-      "scrollDown",
-      "scrollUp",
-      "scrollToTop",
-      "scrollToBottom",
-      "scrollPageDown",
-      "scrollPageUp",
-      "scrollFullPageDown",
-      "scrollFullPageUp",
-      "scrollLeft",
-      "scrollRight",
-      "scrollToLeft",
-      "scrollToRight",
-      "reload",
-      "copyCurrentUrl",
-      "openCopiedUrlInCurrentTab",
-      "openCopiedUrlInNewTab",
-      "goUp",
-      "goToRoot",
-      "enterInsertMode",
-      "enterVisualMode",
-      "enterVisualLineMode",
-      "passNextKey",
-      "focusInput",
-      "LinkHints.activateMode",
-      "LinkHints.activateModeToOpenInNewTab",
-      "LinkHints.activateModeToOpenInNewForegroundTab",
-      "LinkHints.activateModeWithQueue",
-      "LinkHints.activateModeToDownloadLink",
-      "LinkHints.activateModeToOpenIncognito",
-      "LinkHints.activateModeToCopyLinkUrl",
-      "goPrevious",
-      "goNext",
-      "nextFrame",
-      "mainFrame",
-      "Marks.activateCreateMode",
-      "Marks.activateGotoMode",
-    ],
-    vomnibarCommands: [
-      "Vomnibar.activate",
-      "Vomnibar.activateInNewTab",
-      "Vomnibar.activateBookmarks",
-      "Vomnibar.activateBookmarksInNewTab",
-      "Vomnibar.activateTabSelection",
-      "Vomnibar.activateEditUrl",
-      "Vomnibar.activateEditUrlInNewTab",
-    ],
-    findCommands: [
-      "enterFindMode",
-      "performFind",
-      "performBackwardsFind",
-      "findSelected",
-      "findSelectedBackwards",
-    ],
-    historyNavigation: ["goBack", "goForward"],
-    tabManipulation: [
-      "createTab",
-      "previousTab",
-      "nextTab",
-      "visitPreviousTab",
-      "firstTab",
-      "lastTab",
-      "duplicateTab",
-      "togglePinTab",
-      "toggleMuteTab",
-      "removeTab",
-      "restoreTab",
-      "moveTabToNewWindow",
-      "closeTabsOnLeft",
-      "closeTabsOnRight",
-      "closeOtherTabs",
-      "moveTabLeft",
-      "moveTabRight",
-      "setZoom",
-      "zoomIn",
-      "zoomOut",
-      "zoomReset",
-    ],
-    misc: ["showHelp", "toggleViewSource"],
-  },
-
-  // Rarely used commands are not shown by default in the help dialog or in the README. The goal is
-  // to present a focused, high-signal set of commands to the new and casual user. Only those truly
-  // hungry for more power from Vimium will uncover these gems.
-  advancedCommands: [
-    "scrollToLeft",
-    "scrollToRight",
-    "moveTabToNewWindow",
-    "findSelected",
-    "findSelectedBackwards",
-    "goUp",
-    "goToRoot",
-    "LinkHints.activateModeWithQueue",
-    "LinkHints.activateModeToDownloadLink",
-    "Vomnibar.activateEditUrl",
-    "Vomnibar.activateEditUrlInNewTab",
-    "LinkHints.activateModeToOpenIncognito",
-    "LinkHints.activateModeToCopyLinkUrl",
-    "goNext",
-    "goPrevious",
-    "Marks.activateCreateMode",
-    "Marks.activateGotoMode",
-    "moveTabLeft",
-    "moveTabRight",
-    "closeTabsOnLeft",
-    "closeTabsOnRight",
-    "closeOtherTabs",
-    "enterVisualLineMode",
-    "toggleViewSource",
-    "passNextKey",
-    "setZoom",
-    "zoomIn",
-    "zoomOut",
-    "zoomReset",
-    "reload hard",
-  ],
 };
 
 const defaultKeyMappings = {
@@ -506,113 +364,8 @@ const defaultKeyMappings = {
   "gs": "toggleViewSource",
 };
 
-// This is a mapping of: commandIdentifier => [description, options].
-// If the noRepeat and repeatLimit options are both specified, then noRepeat takes precedence.
-const commandDescriptions = {
-  // Navigating the current page
-  showHelp: ["Show help", { topFrame: true, noRepeat: true }],
-  scrollDown: ["Scroll down"],
-  scrollUp: ["Scroll up"],
-  scrollLeft: ["Scroll left"],
-  scrollRight: ["Scroll right"],
-
-  scrollToTop: ["Scroll to the top of the page"],
-  scrollToBottom: ["Scroll to the bottom of the page", { noRepeat: true }],
-  scrollToLeft: ["Scroll all the way to the left", { noRepeat: true }],
-  scrollToRight: ["Scroll all the way to the right", { noRepeat: true }],
-
-  scrollPageDown: ["Scroll a half page down"],
-  scrollPageUp: ["Scroll a half page up"],
-  scrollFullPageDown: ["Scroll a full page down"],
-  scrollFullPageUp: ["Scroll a full page up"],
-
-  reload: ["Reload the page", { background: true }],
-  toggleViewSource: ["View page source", { noRepeat: true }],
-
-  copyCurrentUrl: ["Copy the current URL to the clipboard", { noRepeat: true }],
-  openCopiedUrlInCurrentTab: ["Open the clipboard's URL in the current tab", { noRepeat: true }],
-  openCopiedUrlInNewTab: ["Open the clipboard's URL in a new tab", { repeatLimit: 20 }],
-
-  enterInsertMode: ["Enter insert mode", { noRepeat: true }],
-  passNextKey: ["Pass the next key to the page"],
-  enterVisualMode: ["Enter visual mode", { noRepeat: true }],
-  enterVisualLineMode: ["Enter visual line mode", { noRepeat: true }],
-
-  focusInput: ["Focus the first text input on the page"],
-
-  "LinkHints.activateMode": ["Open a link in the current tab"],
-  "LinkHints.activateModeToOpenInNewTab": ["Open a link in a new tab"],
-  "LinkHints.activateModeToOpenInNewForegroundTab": ["Open a link in a new tab & switch to it"],
-  "LinkHints.activateModeWithQueue": ["Open multiple links in a new tab", { noRepeat: true }],
-  "LinkHints.activateModeToOpenIncognito": ["Open a link in incognito window"],
-  "LinkHints.activateModeToDownloadLink": ["Download link url"],
-  "LinkHints.activateModeToCopyLinkUrl": ["Copy a link URL to the clipboard"],
-
-  enterFindMode: ["Enter find mode", { noRepeat: true }],
-  performFind: ["Cycle forward to the next find match"],
-  performBackwardsFind: ["Cycle backward to the previous find match"],
-  findSelected: ["Find the selected text"],
-  findSelectedBackwards: ["Find the selected text, searching backwards"],
-
-  goPrevious: ["Follow the link labeled previous or <", { noRepeat: true }],
-  goNext: ["Follow the link labeled next or >", { noRepeat: true }],
-
-  // Navigating your history
-  goBack: ["Go back in history"],
-  goForward: ["Go forward in history"],
-
-  // Navigating the URL hierarchy
-  goUp: ["Go up the URL hierarchy"],
-  goToRoot: ["Go to root of current URL hierarchy"],
-
-  // Manipulating tabs
-  nextTab: ["Go one tab right", { background: true }],
-  previousTab: ["Go one tab left", { background: true }],
-  visitPreviousTab: ["Go to previously-visited tab", { background: true }],
-  firstTab: ["Go to the first tab", { background: true }],
-  lastTab: ["Go to the last tab", { background: true }],
-
-  createTab: ["Create new tab", { background: true, repeatLimit: 20 }],
-  duplicateTab: ["Duplicate current tab", { background: true, repeatLimit: 20 }],
-  removeTab: ["Close current tab", {
-    background: true,
-    repeatLimit: (chrome.sessions ? chrome.sessions.MAX_SESSION_RESULTS : null) || 25,
-  }],
-  restoreTab: ["Restore closed tab", { background: true, repeatLimit: 20 }],
-
-  moveTabToNewWindow: ["Move tab to new window", { background: true }],
-  togglePinTab: ["Pin or unpin current tab", { background: true }],
-  toggleMuteTab: ["Mute or unmute current tab", { background: true, noRepeat: true }],
-
-  closeTabsOnLeft: ["Close tabs on the left", { background: true }],
-  closeTabsOnRight: ["Close tabs on the right", { background: true }],
-  closeOtherTabs: ["Close all other tabs", { background: true, noRepeat: true }],
-
-  moveTabLeft: ["Move tab to the left", { background: true }],
-  moveTabRight: ["Move tab to the right", { background: true }],
-
-  setZoom: ["Set zoom", { background: true }],
-  zoomIn: ["Zoom in", { background: true }],
-  zoomOut: ["Zoom out", { background: true }],
-  zoomReset: ["Reset zoom", { background: true }],
-
-  "Vomnibar.activate": ["Open URL, bookmark or history entry", { topFrame: true }],
-  "Vomnibar.activateInNewTab": ["Open URL, bookmark or history entry in a new tab", {
-    topFrame: true,
-  }],
-  "Vomnibar.activateTabSelection": ["Search through your open tabs", { topFrame: true }],
-  "Vomnibar.activateBookmarks": ["Open a bookmark", { topFrame: true }],
-  "Vomnibar.activateBookmarksInNewTab": ["Open a bookmark in a new tab", { topFrame: true }],
-  "Vomnibar.activateEditUrl": ["Edit the current URL", { topFrame: true }],
-  "Vomnibar.activateEditUrlInNewTab": ["Edit the current URL and open in a new tab", {
-    topFrame: true,
-  }],
-
-  nextFrame: ["Select the next frame on the page", { background: true }],
-  mainFrame: ["Select the page's main/top frame", { topFrame: true, noRepeat: true }],
-
-  "Marks.activateCreateMode": ["Create a new mark", { noRepeat: true }],
-  "Marks.activateGotoMode": ["Go to a mark", { noRepeat: true }],
+export {
+  Commands,
+  // Exported for unit tests.
+  defaultKeyMappings,
 };
-
-globalThis.Commands = Commands;

@@ -43,7 +43,7 @@ function createFirefoxManifest(manifest) {
   // As of 2023-07-08 Firefox doesn't yet support background.service_worker.
   delete manifest.background["service_worker"];
   Object.assign(manifest.background, {
-    "scripts": ["background_scripts/background.js"],
+    "scripts": ["background_scripts/main.js"],
   });
 
   // This key is only supported by Firefox.
@@ -224,7 +224,7 @@ task("fetch-tlds", [], async () => {
   const doc = new DOMParser().parseFromString(text, "text/html");
   const els = doc.querySelectorAll("span.domain.tld");
   // Each span contains a TLD, e.g. ".com". Trim off the leading period.
-  const domains = Array.from(els).map((el) => el.innerText.slice(1));
+  const domains = Array.from(els).map((el) => el.textContent.slice(1));
   const str = domains.join("\n");
   await Deno.writeTextFile("./resources/tlds.txt", str);
 });
@@ -306,7 +306,7 @@ async function testDom() {
     }
     // If we close the puppeteer page (tab) via page.close(), we can get innocuous but noisy output
     // like this:
-    // net::ERR_ABORTED http://localhost:43524/pages/hud.html?dom_tests=true
+    // net::ERR_ABORTED http://localhost:43524/pages/hud_page.html?dom_tests=true
     // There's probably a way to prevent that, but as a work around, we avoid closing the page.
     // browser.close() will close all of its owned pages.
   }

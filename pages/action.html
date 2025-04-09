@@ -1,22 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="options.css">
     <link rel="stylesheet" type="text/css" href="action.css">
     <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css">
-
-    <script src="../background_scripts/tab_recency.js"></script>
-    <script src="../background_scripts/bg_utils.js"></script>
-    <script src="../lib/utils.js"></script>
-    <script src="../lib/dom_utils.js"></script>
-    <script src="../lib/settings.js"></script>
-
-    <script src="exclusion_rules_editor.js"></script>
-    <script src="action.js"></script>
+    <script src="action.js" type="module"></script>
   </head>
 
-  <body class="vimiumBody">
-    <div id="notEnabledError" style="display: none">
+  <body class="vimium-body">
+    <div id="not-enabled-error" style="display: none">
       <h1>
         Vimium is not allowed to run on this page.
       </h1>
@@ -26,7 +19,7 @@
       </p>
     </div>
 
-    <div id="firefoxMissingPermissionsError" style="display: none">
+    <div id="firefox-missing-permissions-error" style="display: none">
       <h1>
         Vimium is missing the "all hosts" permission.
       </h1>
@@ -53,42 +46,44 @@
       </p>
     </div>
 
-    <div id="dialogBody">
-      <div id="summaryMessage">
+    <div id="dialog-body">
+      <div>
         <span id="howManyEnabled">All</span> Vimium keys are enabled on this page.
       </div>
 
-      <div id="addFirstRuleContainer">
-        <button id="addFirstRule">Exclude Vimium keys on this page</button>
+      <div id="add-first-rule-container">
+        <button id="add-first-rule">Exclude Vimium keys on this page</button>
       </div>
 
-      <div id="exclusionsContainer" style="display: none">
-        <div id="exclusionScrollBox">
-          <table id="exclusionRules">
+      <div id="exclusions-container" style="display: none">
+        <div id="exclusion-scroll-box">
+          <table id="exclusion-rules">
             <thead>
               <tr>
-                <td><span class="exclusionHeaderText">Patterns matching the current page</span></td>
-                <td><span class="exclusionHeaderText">Keys to exclude</span></td>
+                <td>
+                  <span class="exclusion-header-text">Patterns matching the current page</span>
+                </td>
+                <td><span class="exclusion-header-text">Keys to exclude</span></td>
               </tr>
             </thead>
           </table>
         </div>
 
-        <button id="exclusionAddButton">Add rule</button>
+        <button id="exclusion-add-button">Add rule</button>
       </div>
     </div>
 
-    <div id="footer">
-      <div class="optionsMessage">
+    <footer>
+      <div class="options-message">
         See all exclusion rules on the <a id="optionsLink" target="_blank">Options</a> page.
       </div>
       <div>
         <button id="cancel">Cancel</button>
-        <button id="saveOptions" disabled="true">No changes</button>
+        <button id="save" disabled="true">No changes</button>
       </div>
-    </div>
+    </footer>
 
-    <template id="exclusionRuleTemplate">
+    <template id="exclusion-rule-template">
       <tr class="rule">
         <td>
           <input type="text" name="pattern" spellcheck="false" placeholder="URL pattern" />

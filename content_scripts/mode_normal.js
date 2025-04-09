@@ -43,7 +43,7 @@ class NormalMode extends KeyHandlerMode {
     if ((registryEntry.repeatLimit != null) && (registryEntry.repeatLimit < count)) {
       const result = confirm(
         `You have asked Vimium to perform ${count} repetitions of the ` +
-          `command: ${registryEntry.description}.\n Are you sure you want to continue?`,
+          `command "${registryEntry.command}". Are you sure you want to continue?`,
       );
       if (!result) return;
     }
@@ -59,7 +59,8 @@ class NormalMode extends KeyHandlerMode {
     } else if (registryEntry.background) {
       chrome.runtime.sendMessage({ handler: "runBackgroundCommand", registryEntry, count });
     } else {
-      NormalModeCommands[registryEntry.command](count, { registryEntry });
+      const commandFn = NormalModeCommands[registryEntry.command];
+      commandFn(count, { registryEntry });
     }
   }
 }
@@ -74,6 +75,14 @@ const enterNormalMode = function (count) {
   });
   return mode;
 };
+
+function findSelectedHelper(backwards) {
+  const selection = window.getSelection().toString();
+  if (!selection) return;
+  FindMode.updateQuery(selection);
+  FindMode.saveQuery();
+  FindMode.findNext(backwards);
+}
 
 const NormalModeCommands = {
   // Scrolling.
@@ -216,20 +225,12 @@ const NormalModeCommands = {
     }
   },
 
-  findSelectedHelper(backwards) {
-    const selection = window.getSelection().toString();
-    if (!selection) return;
-    FindMode.updateQuery(selection);
-    FindMode.saveQuery();
-    return FindMode.findNext(backwards);
-  },
-
   findSelected() {
-    this.findSelectedHelper(false);
+    findSelectedHelper(false);
   },
 
   findSelectedBackwards() {
-    this.findSelectedHelper(true);
+    findSelectedHelper(true);
   },
 
   // Misc.
@@ -237,7 +238,7 @@ const NormalModeCommands = {
     return focusThisFrame({ highlight: true, forceFocusThisFrame: true });
   },
   showHelp(sourceFrameId) {
-    return HelpDialog.toggle({ sourceFrameId, showAllCommandDetails: false });
+    return HelpDialog.toggle({ sourceFrameId });
   },
 
   passNextKey(count, options) {
@@ -323,7 +324,7 @@ const NormalModeCommands = {
 
     const hints = visibleInputs.map((tuple) => {
       const hint = DomUtils.createElement("div");
-      hint.className = "vimiumReset internalVimiumInputHint vimiumInputHint";
+      hint.className = "vimium-reset internal-vimium-input-hint vimiumInputHint";
 
       // minus 1 for the border
       hint.style.left = (tuple.rect.left - 1) + globalThis.scrollX + "px";
@@ -514,10 +515,10 @@ class FocusSelector extends Mode {
       exitOnClick: true,
       keydown: (event) => {
         if (event.key === "Tab") {
-          hints[selectedInputIndex].classList.remove("internalVimiumSelectedInputHint");
+          hints[selectedInputIndex].classList.remove("internal-vimium-selected-input-hint");
           selectedInputIndex += hints.length + (event.shiftKey ? -1 : 1);
           selectedInputIndex %= hints.length;
-          hints[selectedInputIndex].classList.add("internalVimiumSelectedInputHint");
+          hints[selectedInputIndex].classList.add("internal-vimium-selected-input-hint");
           DomUtils.simulateSelect(visibleInputs[selectedInputIndex].element);
           return this.suppressEvent;
         } else if (event.key !== "Shift") {
@@ -530,7 +531,7 @@ class FocusSelector extends Mode {
 
     const div = DomUtils.createElement("div");
     div.id = "vimiumInputMarkerContainer";
-    div.className = "vimiumReset";
+    div.className = "vimium-reset";
     for (const el of hints) {
       div.appendChild(el);
     }
@@ -542,7 +543,7 @@ class FocusSelector extends Mode {
       this.exit();
       return;
     } else {
-      hints[selectedInputIndex].classList.add("internalVimiumSelectedInputHint");
+      hints[selectedInputIndex].classList.add("internal-vimium-selected-input-hint");
     }
   }
 

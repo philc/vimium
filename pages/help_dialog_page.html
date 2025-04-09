@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vimium Help</title>
+    <meta name="color-scheme" content="light dark">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
+    <link rel="stylesheet" type="text/css" href="./key_mappings.css" />
+    <link rel="stylesheet" type="text/css" href="./help_dialog_page.css" />
+
+    <script src="help_dialog_page.js" type="module"></script>
+  </head>
+
+  <body>
+    <!-- Note that the command placeholders (data-group=navigation) will be replaced by the
+         background page with the user's key bindings when the dialog is shown. -->
+    <div id="container">
+      <div id="dialog">
+        <header>
+          <h1>
+            <span class="vim">Vim</span>ium Help
+            <span id="help-dialog-title"></span>
+          </h1>
+
+          <!-- These buttons are wrapped in a div so they vertically center more evenly. -->
+          <div>
+            <a id="options-page" href="#">Options</a>
+            <a href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
+            <a id="close" href="#">&times;</a>
+          </div>
+        </header>
+
+        <div class="divider"></div>
+
+        <div id="commands-section">
+          <div class="column">
+            <div></div>
+            <h2>Navigating the page</h2>
+            <div data-group="navigation"></div>
+          </div>
+
+          <div class="column">
+            <div></div>
+            <h2>Using the Vomnibar</h2>
+            <div data-group="vomnibar"></div>
+
+            <div></div>
+            <h2>Using find</h2>
+            <div data-group="find"></div>
+
+            <div></div>
+            <h2>Navigating history</h2>
+            <div data-group="history"></div>
+
+            <div></div>
+            <h2>Manipulating tabs</h2>
+            <div data-group="tabs"></div>
+
+            <div></div>
+            <h2>Miscellaneous</h2>
+            <div data-group="misc"></div>
+          </div>
+        </div>
+
+        <div id="toggle-advanced">
+          <a href="#">Show advanced commands</a>
+        </div>
+
+        <div class="divider"></div>
+
+        <footer>
+          <div>
+            Enjoying Vimium?
+            <a
+              target="_blank"
+              href="https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb/reviews"
+            >Leave us feedback</a>.<br>
+            Found a bug? <a
+              target="_blank"
+              href="https://github.com/philc/vimium/issues"
+            >Report it here</a>.
+          </div>
+
+          <div class="version-info">
+            Version <span id="vimium-version"></span>
+            <br>
+            <a
+              href="https://github.com/philc/vimium/blob/master/CHANGELOG.md"
+              target="_blank"
+            >What's new?</a>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <template id="row">
+      <div class="row">
+        <div class="key-bindings"></div>
+        <div class="help-description"></div>
+      </div>
+    </template>
+
+    <template id="keys">
+      <div class="key-block">
+        <span class="key"></span><span class="comma">,</span>
+      </div>
+    </template>
+  </body>
+</html>

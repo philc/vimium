@@ -11,11 +11,14 @@
 //    bookmarks).
 //  - cancel(): (optional) cancels any pending, cancelable action.
 
+import * as bgUtils from "./bg_utils.js";
+import * as completionSearch from "./completion_search.js";
+
 // Set this to true to render relevancy when debugging the ranking scores.
 const showRelevancy = false;
 
 // TODO(philc): Consider moving out the "computeRelevancy" function.
-class Suggestion {
+export class Suggestion {
   queryTerms;
   description;
   url;
@@ -68,34 +71,34 @@ class Suggestion {
     const relevancyHtml = showRelevancy
       ? `<span class='relevancy'>${this.computeRelevancy()}</span>`
       : "";
-    const insertTextClass = this.insertText ? "vomnibarInsertText" : "vomnibarNoInsertText";
+    const insertTextClass = this.insertText ? "" : "no-insert-text";
     const insertTextIndicator = "&#8618;"; // A right hooked arrow.
     if (this.insertText && this.isCustomSearch) {
       this.title = this.insertText;
     }
     let faviconHtml = "";
-    if (this.description === "tab" && !BgUtils.isFirefox()) {
+    if (this.description === "tab" && !bgUtils.isFirefox()) {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
       faviconUrl.searchParams.set("pageUrl", this.url);
       faviconUrl.searchParams.set("size", "16");
-      faviconHtml = `<img class="vomnibarIcon" src="${faviconUrl.toString()}" />`;
+      faviconHtml = `<img class="icon" src="${faviconUrl.toString()}" />`;
     }
     if (this.isCustomSearch) {
       this.html = `\
-<div class="vomnibarTopHalf">
-   <span class="vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vomnibarSource">${this.description}</span>
-   <span class="vomnibarTitle">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
+<div class="top-half">
+   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
+   <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
    ${relevancyHtml}
  </div>\
 `;
     } else {
       this.html = `\
-<div class="vomnibarTopHalf">
-   <span class="vomnibarSource ${insertTextClass}">${insertTextIndicator}</span><span class="vomnibarSource">${this.description}</span>
-   <span class="vomnibarTitle">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
+<div class="top-half">
+   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
+   <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
  </div>
- <div class="vomnibarBottomHalf">
-  <span class="vomnibarSource vomnibarNoInsertText">${insertTextIndicator}</span>${faviconHtml}<span class="vomnibarUrl">${
+ <div class="bottom-half">
+  <span class="source no-insert-text">${insertTextIndicator}</span>${faviconHtml}<span class="url">${
         this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
       }</span>
   ${relevancyHtml}
@@ -167,7 +170,7 @@ class Suggestion {
     ranges = ranges.sort((a, b) => b[0] - a[0]);
     for (const [start, end] of ranges) {
       string = string.substring(0, start) +
-        `<span class='vomnibarMatch'>${string.substring(start, end)}</span>` +
+        `<span class='match'>${string.substring(start, end)}</span>` +
         string.substring(end);
     }
     return string;
@@ -253,7 +256,7 @@ const ignoredTopLevelBookmarks = {
 };
 
 // this.bookmarks are loaded asynchronously when refresh() is called.
-class BookmarkCompleter {
+export class BookmarkCompleter {
   async filter({ queryTerms }) {
     if (!this.bookmarks) await this.refresh();
 
@@ -345,7 +348,7 @@ class BookmarkCompleter {
   }
 }
 
-class HistoryCompleter {
+export class HistoryCompleter {
   // - seenTabToOpenCompletionList: true if the user has typed only <Tab>, and nothing else.
   //   We interpret this to mean that they want to see all of their history in the Vomnibar, sorted
   //   by recency.
@@ -395,7 +398,7 @@ class HistoryCompleter {
 // The domain completer is designed to match a single-word query which looks like it is a domain.
 // This supports the user experience where they quickly type a partial domain, hit tab -> enter, and
 // expect to arrive there.
-class DomainCompleter {
+export class DomainCompleter {
   // A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
   // - `entry` is the most recently accessed page in the History within this domain.
   // - `referenceCount` is a count of the number of History entries within this domain.
@@ -477,9 +480,9 @@ class DomainCompleter {
 
 // Searches through all open tabs, matching on title and URL.
 // If the query is empty, then return a list of open tabs, sorted by recency.
-class TabCompleter {
+export class TabCompleter {
   async filter({ queryTerms }) {
-    await BgUtils.tabRecency.init();
+    await bgUtils.tabRecency.init();
     // We search all tabs, not just those in the current window.
     const tabs = await chrome.tabs.query({});
     const results = tabs.filter((tab) => RankingUtils.matches(queryTerms, tab.url, tab.title));
@@ -513,14 +516,14 @@ class TabCompleter {
     if (suggestion.queryTerms.length > 0) {
       return RankingUtils.wordRelevancy(suggestion.queryTerms, suggestion.url, suggestion.title);
     } else {
-      return BgUtils.tabRecency.recencyScore(suggestion.tabId);
+      return bgUtils.tabRecency.recencyScore(suggestion.tabId);
     }
   }
 }
 
-class SearchEngineCompleter {
+export class SearchEngineCompleter {
   cancel() {
-    CompletionSearch.cancel();
+    completionSearch.cancel();
   }
 
   // Returns the UserSearchEngine for the given query. Returns null if the query does not begin with
@@ -552,7 +555,7 @@ class SearchEngineCompleter {
 
     const searchUrl = userSearchEngine.url;
 
-    const completions = await CompletionSearch.complete(searchUrl, queryTermsWithoutKeyword);
+    const completions = await completionSearch.complete(searchUrl, queryTermsWithoutKeyword);
 
     const makeSuggestion = (query) => {
       const url = UrlUtils.createSearchUrl(query, searchUrl);
@@ -606,7 +609,7 @@ SearchEngineCompleter.debug = false;
 // returns the top 10. All queries from the vomnibar come through a multi completer.
 const maxResults = 10;
 
-class MultiCompleter {
+export class MultiCompleter {
   constructor(completers) {
     this.completers = completers;
   }
@@ -689,7 +692,7 @@ class MultiCompleter {
 }
 
 // Utilities which help us compute a relevancy score for a given item.
-const RankingUtils = {
+export const RankingUtils = {
   // Whether the given things (usually URLs or titles) match any one of the query terms.
   // This is used to prune out irrelevant suggestions before we try to rank them, and for
   // calculating word relevancy. Every term must match at least one thing.
@@ -819,7 +822,7 @@ const RankingUtils = {
 
 // We cache regexps because we use them frequently when comparing a query to history entries and
 // bookmarks, and we don't want to create fresh objects for every comparison.
-const RegexpCache = {
+export const RegexpCache = {
   init() {
     this.initialized = true;
     this.clear();
@@ -856,7 +859,7 @@ const RegexpCache = {
 
 // Provides cached access to Chrome's history. As the user browses to new pages, we add those pages
 // to this history cache.
-const HistoryCache = {
+export const HistoryCache = {
   size: 20000,
   // An array of History items returned from Chrome.
   history: null,
@@ -961,16 +964,3 @@ HistoryCache.binarySearch = function (targetElement, array, compareFunction) {
     return middle;
   }
 };
-
-Object.assign(globalThis, {
-  Suggestion,
-  BookmarkCompleter,
-  MultiCompleter,
-  HistoryCompleter,
-  DomainCompleter,
-  TabCompleter,
-  SearchEngineCompleter,
-  HistoryCache,
-  RankingUtils,
-  RegexpCache,
-});
