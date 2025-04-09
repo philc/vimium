@@ -45,21 +45,20 @@ const OptionsPage = {
 
     saveButton.addEventListener("click", () => this.saveOptions());
 
-    this.getOptionEl("filterLinkHints").addEventListener(
-      "click",
-      () => this.maintainLinkHintsView(),
+    this.getOptionEl("filterLinkHints").addEventListener("click", () =>
+      this.maintainLinkHintsView(),
     );
 
-    document.querySelector("#download-backup").addEventListener(
-      "mousedown",
-      () => this.onDownloadBackupClicked(),
-      true,
-    );
-    document.querySelector("#upload-backup").addEventListener(
-      "change",
-      () => this.onUploadBackupClicked(),
-    );
-
+    document
+      .querySelector("#download-backup")
+      .addEventListener(
+        "mousedown",
+        () => this.onDownloadBackupClicked(),
+        true,
+      );
+    document
+      .querySelector("#upload-backup")
+      .addEventListener("change", () => this.onUploadBackupClicked());
 
     for (const el of document.querySelectorAll(".reset-link a")) {
       el.addEventListener("click", (event) => {
@@ -96,8 +95,13 @@ const OptionsPage = {
   // Invoked when the user clicks the "reset" button next to an option's text field.
   resetInputValue(event) {
     const parentDiv = event.target.parentNode.parentNode;
-    console.assert(parentDiv?.tagName == "DIV", "Expected parent to be a div", event.target);
-    const input = parentDiv.querySelector("input") || parentDiv.querySelector("textarea");
+    console.assert(
+      parentDiv?.tagName == "DIV",
+      "Expected parent to be a div",
+      event.target,
+    );
+    const input =
+      parentDiv.querySelector("input") || parentDiv.querySelector("textarea");
     const optionName = input.name;
 
     const defaultValue = Settings.defaultOptions[optionName];
@@ -227,11 +231,16 @@ const OptionsPage = {
     }
     // Some options can be hidden in the UI. If they have validation errors, force them to be shown.
     if (errors["linkHintCharacters"]) {
-      this.showElement(document.querySelector("#link-hint-characters-container"), true);
+      this.showElement(
+        document.querySelector("#link-hint-characters-container"),
+        true,
+      );
     }
     if (errors["linkHintNumbers"]) {
-      this.showElement(document.querySelector("#link-hint-numbers-container"), true);
-
+      this.showElement(
+        document.querySelector("#link-hint-numbers-container"),
+        true,
+      );
     }
     const hasErrors = Object.keys(errors).length > 0;
     return hasErrors;
@@ -292,7 +301,8 @@ const OptionsPage = {
   onDownloadBackupClicked() {
     const backup = Settings.pruneOutDefaultValues(this.getSettingsFromForm());
     const settingsBlob = new Blob([JSON.stringify(backup, null, 2) + "\n"]);
-    document.querySelector("#download-backup").href = URL.createObjectURL(settingsBlob);
+    document.querySelector("#download-backup").href =
+      URL.createObjectURL(settingsBlob);
   },
 
   onUploadBackupClicked() {

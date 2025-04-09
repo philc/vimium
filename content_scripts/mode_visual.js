@@ -55,12 +55,11 @@ class Movement {
   //
   runMovement(...args) {
     // Normalize the various argument forms.
-    const [direction, granularity] =
-      typeof args[0] === "string" && args.length === 1
-        ? args[0].trim().split(/\s+/)
-        : args.length === 1
-          ? args[0]
-          : args.slice(0, 2);
+    const [direction, granularity] = typeof args[0] === "string" && args.length === 1
+      ? args[0].trim().split(/\s+/)
+      : args.length === 1
+      ? args[0]
+      : args.slice(0, 2);
 
     // Native word movements behave differently on Linux and Windows, see #1441. So we implement
     // some of them character-by-character.
@@ -223,8 +222,9 @@ class Movement {
     for (let i = 1, end = count; i < end; i++) this.runMovement(forward, line);
     this.runMovement(forward, lineboundary);
     // Include the next character if that character is a newline.
-    if (this.getNextForwardCharacter() === "\n")
+    if (this.getNextForwardCharacter() === "\n") {
       return this.runMovement(forward, character);
+    }
   }
 
   // Scroll the focus into view.
@@ -300,8 +300,7 @@ class VisualMode extends KeyHandlerMode {
     super.init(
       Object.assign(options, {
         name: options.name != null ? options.name : "visual",
-        indicator:
-          options.indicator != null ? options.indicator : "Visual mode",
+        indicator: options.indicator != null ? options.indicator : "Visual mode",
         // Visual mode, visual-line mode and caret mode each displace each other.
         singleton: "visual-mode-group",
         exitOnEscape: true,
@@ -313,8 +312,8 @@ class VisualMode extends KeyHandlerMode {
 
     // If there was a range selection when the user lanuched visual mode, then we retain the
     // selection on exit.
-    this.shouldRetainSelectionOnExit =
-      this.options.userLaunchedMode && this.selection.type === "Range";
+    this.shouldRetainSelectionOnExit = this.options.userLaunchedMode &&
+      this.selection.type === "Range";
 
     this.onExit((event = null) => {
       // Retain any selection, regardless of how we exit.
@@ -509,9 +508,7 @@ VisualMode.prototype.movements = {
   },
   "/"() {
     this.exit();
-    return new FindMode({ returnToViewport: true }).onExit(() =>
-      new VisualMode().init(),
-    );
+    return new FindMode({ returnToViewport: true }).onExit(() => new VisualMode().init());
   },
 
   y() {
@@ -606,10 +603,12 @@ class VisualLineMode extends VisualMode {
   extendSelection() {
     const initialDirection = this.movement.getDirection();
     const result = [];
-    for (const direction of [
-      initialDirection,
-      this.movement.opposite[initialDirection],
-    ]) {
+    for (
+      const direction of [
+        initialDirection,
+        this.movement.opposite[initialDirection],
+      ]
+    ) {
       this.movement.runMovement(direction, lineboundary);
       result.push(this.movement.reverseSelection());
     }
@@ -677,8 +676,7 @@ class CaretMode extends VisualMode {
           !DomUtils.isEditable(element)
         ) {
           // Start at the offset of the first non-whitespace character.
-          const offset =
-            node.data.length - node.data.replace(/^\s+/, "").length;
+          const offset = node.data.length - node.data.replace(/^\s+/, "").length;
           const range = document.createRange();
           range.setStart(node, offset);
           range.setEnd(node, offset);

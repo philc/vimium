@@ -127,11 +127,11 @@ div.internal-vimium-hint-marker span {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-div.internal-vimium-hint-marker>.matchingCharacter {
+div.internal-vimium-hint-marker > .matchingCharacter {
   color: #d4ac3a;
 }
 
-div>.vimiumActiveHintMarker span {
+div > .vimiumActiveHintMarker span {
   color: #a07555 !important;
 }
 
@@ -180,6 +180,16 @@ iframe.vimium-help-dialog-frame {
   z-index: 2147483647;
 }
 
+.vimiumPopover {
+  top: 0 !important;
+  left: 0 !important;
+  position: absolute !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+}
+
 iframe.vimium-hud-frame {
   background-color: transparent;
   padding: 0px;
@@ -201,20 +211,11 @@ body.vimium-find-mode ::selection {
   background: #ff9632;
 }
 
-.vimiumPopover {
-  top: 0 !important;
-  left: 0 !important;
-  position: absolute !important;
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: visible !important;
-}
-
-iframe.vomnibarFrame {
+iframe.vomnibar-frame {
   background-color: transparent;
   padding: 0px;
   overflow: hidden;
+
   display: block;
   position: fixed;
   width: calc(80% + 20px);
