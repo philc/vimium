@@ -520,6 +520,38 @@ const allCommands = [
   },
 
   {
+    name: "mergeTabToExistingWindowOnLeft",
+    desc: "Move tab to an existing window on left, if exists",
+    group: "tabs",
+    advanced: true,
+    background: true,
+  },
+
+  {
+    name: "mergeTabToExistingWindowOnRight",
+    desc: "Move tab to an existing window on right, if exists",
+    group: "tabs",
+    advanced: true,
+    background: true,
+  },
+
+  {
+    name: "mergeTabToExistingWindowAbove",
+    desc: "Move tab to an existing window above, if exists",
+    group: "tabs",
+    advanced: true,
+    background: true,
+  },
+
+  {
+    name: "mergeTabToExistingWindowBelow",
+    desc: "Move tab to an existing window below, if exists",
+    group: "tabs",
+    advanced: true,
+    background: true,
+  },
+
+  {
     name: "closeTabsOnLeft",
     desc: "Close tabs on the left",
     group: "tabs",
