@@ -536,15 +536,12 @@ class VisualLineMode extends VisualMode {
 
   extendSelection() {
     const initialDirection = this.movement.getDirection();
-    // TODO(philc): Reformat this to be a plain loop rather than a closure.
-    return (() => {
-      const result = [];
-      for (const direction of [initialDirection, this.movement.opposite[initialDirection]]) {
-        this.movement.runMovement(direction, lineboundary);
-        result.push(this.movement.reverseSelection());
-      }
-      return result;
-    })();
+    const result = [];
+    for (const direction of [initialDirection, this.movement.opposite[initialDirection]]) {
+      this.movement.runMovement(direction, lineboundary);
+      result.push(this.movement.reverseSelection());
+    }
+    return result;
   }
 }
 
