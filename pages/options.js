@@ -246,8 +246,10 @@ const OptionsPage = {
   async saveOptions() {
     const hasErrors = this.showValidationErrors();
     if (hasErrors) {
-      // TODO(philc): If no fields with validation errors are in view, scroll one of them into view
-      // so it's clear what the issue is.
+      const error = document.querySelector(".validation-error");
+
+      error?.scrollIntoView({ smooth: true });
+
       return;
     }
 
