@@ -248,7 +248,7 @@ const OptionsPage = {
     if (hasErrors) {
       const error = document.querySelector(".validation-error");
 
-      error?.scrollIntoView({ smooth: true });
+      error?.scrollIntoView();
 
       return;
     }

@@ -196,6 +196,16 @@ iframe.vimium-hud-frame {
   opacity: 0;
 }
 
+.vimiumPopover {
+  top: 0 !important;
+  left: 0 !important;
+  position: absolute !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+}
+
 body.vimium-find-mode ::selection {
   background: #ff9632;
 }
