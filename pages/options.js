@@ -243,12 +243,34 @@ const OptionsPage = {
     return result;
   },
 
+  isElementInView(element) {
+    const rect = element.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+  },
+
   async saveOptions() {
+    // If no fields with validation errors are in view, scroll one of them into view
+    // so it's clear what the issue is.
+
     const hasErrors = this.showValidationErrors();
     if (hasErrors) {
-      const error = document.querySelector(".validation-error");
+      const errors = Array.from(document.querySelectorAll(".validation-error"));
 
-      error?.scrollIntoView();
+      let isAnyElementInView = errors.some((element) => this.isElementInView(element) == true);
+
+      if (isAnyElementInView) {
+        return;
+      }
+
+      errors[0]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
 
       return;
     }

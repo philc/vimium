@@ -428,7 +428,7 @@ class LinkHintsMode {
     if (hasPopoverSupport) {
       this.containerEl.popover = "manual";
       this.containerEl.showPopover();
-      this.containerEl.classList.add("vimiumPopover");
+      this.containerEl.classList.add("vimium-popover");
     }
 
     this.setIndicator();
