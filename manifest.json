@@ -93,7 +93,7 @@
         "pages/vomnibar_page.html",
         "content_scripts/vimium.css",
         "pages/hud_page.html",
-        "pages/help_dialog.html",
+        "pages/help_dialog_page.html",
         "pages/completion_engines_page.html",
         "pages/command_listing.html",
         "resources/tlds.txt",
