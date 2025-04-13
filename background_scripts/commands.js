@@ -30,6 +30,11 @@ class RegistryEntry {
   }
 }
 
+const modifier = "(?:[acms]-)"; // E.g. "a-", "c-", "m-", "s-".
+const namedKey = "(?:[a-z][a-z0-9]+)"; // E.g. "left" or "f12" (always two characters or more).
+const modifiedKey = `(?:${modifier}+(?:.|${namedKey}))`; // E.g. "c-*" or "c-left".
+const specialKeyRegexp = new RegExp(`^<(${namedKey}|${modifiedKey})>(.*)`, "i");
+
 const KeyMappingsParser = {
   // Parses the text supplied by the user in their "keyMappings" setting.
   // - shouldLogWarnings: if true, logs to the console when part of the user's config is invalid.
@@ -119,34 +124,28 @@ const KeyMappingsParser = {
   // "shift" as well.
   // We sort modifiers here to match the order used in keyboard_utils.js.
   // The return value is a sequence of keys: e.g. "<Space><c-A>b" -> ["<space>", "<c-A>", "b"].
-  parseKeySequence: (function () {
-    const modifier = "(?:[acms]-)"; // E.g. "a-", "c-", "m-", "s-".
-    const namedKey = "(?:[a-z][a-z0-9]+)"; // E.g. "left" or "f12" (always two characters or more).
-    const modifiedKey = `(?:${modifier}+(?:.|${namedKey}))`; // E.g. "c-*" or "c-left".
-    const specialKeyRegexp = new RegExp(`^<(${namedKey}|${modifiedKey})>(.*)`, "i");
-    return function (key) {
-      if (key.length === 0) {
-        return [];
-        // Parse "<c-a>bcd" as "<c-a>" and "bcd".
-      } else if (0 === key.search(specialKeyRegexp)) {
-        const array = RegExp.$1.split("-");
-        const adjustedLength = Math.max(array.length, 1);
-        let modifiers = array.slice(0, adjustedLength - 1);
-        let keyChar = array[adjustedLength - 1];
-        if (keyChar.length !== 1) {
-          keyChar = keyChar.toLowerCase();
-        }
-        modifiers = modifiers.map((m) => m.toLowerCase());
-        modifiers.sort();
-        return [
-          "<" + modifiers.concat([keyChar]).join("-") + ">",
-          ...this.parseKeySequence(RegExp.$2),
-        ];
-      } else {
-        return [key[0], ...this.parseKeySequence(key.slice(1))];
+  parseKeySequence(key) {
+    if (key.length === 0) {
+      return [];
+      // Parse "<c-a>bcd" as "<c-a>" and "bcd".
+    } else if (0 === key.search(specialKeyRegexp)) {
+      const array = RegExp.$1.split("-");
+      const adjustedLength = Math.max(array.length, 1);
+      let modifiers = array.slice(0, adjustedLength - 1);
+      let keyChar = array[adjustedLength - 1];
+      if (keyChar.length !== 1) {
+        keyChar = keyChar.toLowerCase();
       }
-    };
-  })(),
+      modifiers = modifiers.map((m) => m.toLowerCase());
+      modifiers.sort();
+      return [
+        "<" + modifiers.concat([keyChar]).join("-") + ">",
+        ...this.parseKeySequence(RegExp.$2),
+      ];
+    } else {
+      return [key[0], ...this.parseKeySequence(key.slice(1))];
+    }
+  },
 
   // Command options follow command mappings, and are of one of two forms:
   //   key=value     - a value
