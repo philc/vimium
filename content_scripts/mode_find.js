@@ -477,8 +477,8 @@ const highlight = (textNode, startIndex, length) => {
     const screenHeight = globalThis.innerHeight;
     globalThis.scrollTo({
       top: globalThis.scrollY + rect.top + rect.height / 2 - screenHeight / 2,
-      // #4661: Since Chrome and Firefox scroll instantly to search results, we
-      // ignore Vimium's smoothScroll Setting and scroll instantly as well.
+      // Scroll instantly when we find a search result. This matches the behavior of Chrome and
+      // Firefox's native search UI. See #4661.
       behavior: "instant",
     });
   }
