@@ -1284,7 +1284,8 @@ const LocalHints = {
     stack.push(element);
 
     if (element && element.shadowRoot) {
-      // a shadow root can contain a text node with no further elements
+      // A shadow root can contain just a text node; see #4620. In that case, return the shadow root
+      // itself.
       return LocalHints.getElementFromPoint(x, y, element.shadowRoot, stack) || element;
     }
 
