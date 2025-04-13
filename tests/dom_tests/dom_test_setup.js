@@ -9,6 +9,5 @@ globalThis.shoulda = shoulda;
 document.addEventListener("DOMContentLoaded", async () => {
   isEnabledForUrl = true;
   await Settings.onLoaded();
-
   await HUD.init();
 });

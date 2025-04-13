@@ -1,7 +1,7 @@
 import "./all_content_scripts.js";
 import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
 import { allCommands } from "../background_scripts/all_commands.js";
-import { Commands } from "../background_scripts/commands.js";
+import { Commands, KeyMappingsParser } from "../background_scripts/commands.js";
 
 const options = {
   filterLinkHints: "boolean",
@@ -163,7 +163,7 @@ const OptionsPage = {
 
     // keyMappings field.
     text = this.getOptionEl("keyMappings").value.trim();
-    parsed = Commands.parseKeyMappingsConfig(text);
+    parsed = KeyMappingsParser.parse(text);
     if (parsed.validationErrors.length > 0) {
       results["keyMappings"] = parsed.validationErrors.join("\n");
     }

@@ -2,7 +2,11 @@ import "./test_helper.js";
 import "../../lib/settings.js";
 import "../../lib/keyboard_utils.js";
 import { allCommands } from "../../background_scripts/all_commands.js";
-import { Commands, defaultKeyMappings } from "../../background_scripts/commands.js";
+import {
+  Commands,
+  defaultKeyMappings,
+  KeyMappingsParser,
+} from "../../background_scripts/commands.js";
 import "../../content_scripts/mode.js";
 import "../../content_scripts/mode_key_handler.js";
 // Include mode_normal to check that all commands have been implemented.
@@ -15,7 +19,7 @@ await Commands.init();
 
 context("parseKeySequence", () => {
   const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
-    const keySequence = Commands.parseKeySequence(key);
+    const keySequence = KeyMappingsParser.parseKeySequence(key);
     assert.equal(expectedKeyText, keySequence.join("/"));
     assert.equal(expectedKeyLength, keySequence.length);
   };
@@ -78,44 +82,44 @@ context("parseKeySequence", () => {
   });
 });
 
-context("parseKeyMappingConfig", () => {
+context("KeyMappingsParser", () => {
   should("handle map statements", () => {
-    const { keyToRegistryEntry } = Commands.parseKeyMappingsConfig("map a scrollDown");
+    const { keyToRegistryEntry } = KeyMappingsParser.parse("map a scrollDown");
     assert.equal("scrollDown", keyToRegistryEntry["a"]?.command);
   });
 
   should("ignore mappings for unknown commands", () => {
-    assert.equal({}, Commands.parseKeyMappingsConfig("map a unknownCommand").keyToRegistryEntry);
+    assert.equal({}, KeyMappingsParser.parse("map a unknownCommand").keyToRegistryEntry);
   });
 
   should("handle mapkey statements", () => {
-    const { keyToMappedKey } = Commands.parseKeyMappingsConfig("mapkey a b");
+    const { keyToMappedKey } = KeyMappingsParser.parse("mapkey a b");
     assert.equal({ "a": "b" }, keyToMappedKey);
   });
 
   should("handle unmap statements", () => {
     const input = "mapkey a b \n unmap a";
-    const { keyToMappedKey } = Commands.parseKeyMappingsConfig(input);
+    const { keyToMappedKey } = KeyMappingsParser.parse(input);
     assert.equal({}, keyToMappedKey);
   });
 
   should("handle unmapall statements", () => {
     const input = "mapkey a b \n unmapall \n mapkey b c";
-    const { keyToMappedKey } = Commands.parseKeyMappingsConfig(input);
+    const { keyToMappedKey } = KeyMappingsParser.parse(input);
     assert.equal({ "b": "c" }, keyToMappedKey);
   });
 
   should("ignore commands with the wrong number of tokens", () => {
-    assert.equal({}, Commands.parseKeyMappingsConfig("mapkey a b c").keyToMappedKey);
-    assert.equal({}, Commands.parseKeyMappingsConfig("map a").keyToRegistryEntry);
+    assert.equal({}, KeyMappingsParser.parse("mapkey a b c").keyToMappedKey);
+    assert.equal({}, KeyMappingsParser.parse("map a").keyToRegistryEntry);
     assert.equal(
       { "a": "b" },
-      Commands.parseKeyMappingsConfig("mapkey a b \n unmap a a").keyToMappedKey,
+      KeyMappingsParser.parse("mapkey a b \n unmap a a").keyToMappedKey,
     );
   });
 
   should("return validation errors", () => {
-    const getErrors = (config) => Commands.parseKeyMappingsConfig(config).validationErrors;
+    const getErrors = (config) => KeyMappingsParser.parse(config).validationErrors;
     assert.equal(0, getErrors("map a scrollDown").length);
     // Missing an action (map).
     assert.equal(1, getErrors("a scrollDown").length);

@@ -30,24 +30,11 @@ class RegistryEntry {
   }
 }
 
-const Commands = {
-  // A map of keyString => RegistryEntry
-  keyToRegistryEntry: null,
-  // A map of typed key => key it's mapped to (via the `mapkey` config statement).
-  mapKeyRegistry: null,
-
-  async init() {
-    await Settings.onLoaded();
-    Settings.addEventListener("change", async () => {
-      await this.loadKeyMappings(Settings.get("keyMappings"));
-    });
-    await this.loadKeyMappings(Settings.get("keyMappings"));
-  },
-
+const KeyMappingsParser = {
   // Parses the text supplied by the user in their "keyMappings" setting.
   // - shouldLogWarnings: if true, logs to the console when part of the user's config is invalid.
   // Returns { keyToRegistryEntry, keyToMappedKey, validationErrors }.
-  parseKeyMappingsConfig(configText, shouldLogWarnings) {
+  parse(configText, shouldLogWarnings) {
     let keyToRegistryEntry = {};
     let mapKeyRegistry = {};
     const errors = [];
@@ -123,39 +110,6 @@ const Commands = {
     };
   },
 
-  // Parses the user's keyMapping config text and persists the parsed key mappings into the
-  // extension's storage, for use by the other parts of this extension.
-  async loadKeyMappings(userKeyMappingsConfigText) {
-    let key, command;
-    this.keyToRegistryEntry = {};
-    this.mapKeyRegistry = {};
-
-    const defaultKeyConfig = Object.keys(defaultKeyMappings).map((key) =>
-      `map ${key} ${defaultKeyMappings[key]}`
-    ).join("\n");
-
-    const parsed = this.parseKeyMappingsConfig(
-      defaultKeyConfig + "\n" + userKeyMappingsConfigText,
-      true,
-    );
-    this.mapKeyRegistry = parsed.keyToMappedKey;
-    this.keyToRegistryEntry = parsed.keyToRegistryEntry;
-
-    await chrome.storage.session.set({ mapKeyRegistry: this.mapKeyRegistry });
-    await this.installKeyStateMapping();
-    this.prepareHelpPageData();
-
-    // Push the key mappings from any passNextKey commands into storage so that they're's available
-    // to the front end so they can be detected during insert mode. We exclude single-key mappings
-    // for this command (i.e. printable keys) because we're considering that a configuration error:
-    // when users press printable keys in insert mode, they expect that character to be input, not
-    // to be droppped into a special Vimium mode.
-    const passNextKeys = Object.entries(this.keyToRegistryEntry)
-      .filter(([key, v]) => v.command == "passNextKey" && key.length > 1)
-      .map(([key, v]) => key);
-    await chrome.storage.session.set({ passNextKeyKeys: passNextKeys });
-  },
-
   // Lower-case the appropriate portions of named keys.
   //
   // A key name is one of three forms exemplified by <c-a> <left> or <c-f12> (prefixed normal key,
@@ -213,6 +167,54 @@ const Commands = {
     }
 
     return options;
+  },
+};
+
+const Commands = {
+  // A map of keyString => RegistryEntry
+  keyToRegistryEntry: null,
+  // A map of typed key => key it's mapped to (via the `mapkey` config statement).
+  mapKeyRegistry: null,
+
+  async init() {
+    await Settings.onLoaded();
+    Settings.addEventListener("change", async () => {
+      await this.loadKeyMappings(Settings.get("keyMappings"));
+    });
+    await this.loadKeyMappings(Settings.get("keyMappings"));
+  },
+
+  // Parses the user's keyMapping config text and persists the parsed key mappings into the
+  // extension's storage, for use by the other parts of this extension.
+  async loadKeyMappings(userKeyMappingsConfigText) {
+    let key, command;
+    this.keyToRegistryEntry = {};
+    this.mapKeyRegistry = {};
+
+    const defaultKeyConfig = Object.keys(defaultKeyMappings).map((key) =>
+      `map ${key} ${defaultKeyMappings[key]}`
+    ).join("\n");
+
+    const parsed = KeyMappingsParser.parse(
+      defaultKeyConfig + "\n" + userKeyMappingsConfigText,
+      true,
+    );
+    this.mapKeyRegistry = parsed.keyToMappedKey;
+    this.keyToRegistryEntry = parsed.keyToRegistryEntry;
+
+    await chrome.storage.session.set({ mapKeyRegistry: this.mapKeyRegistry });
+    await this.installKeyStateMapping();
+    this.prepareHelpPageData();
+
+    // Push the key mappings from any passNextKey commands into storage so that they're's available
+    // to the front end so they can be detected during insert mode. We exclude single-key mappings
+    // for this command (i.e. printable keys) because we're considering that a configuration error:
+    // when users press printable keys in insert mode, they expect that character to be input, not
+    // to be droppped into a special Vimium mode.
+    const passNextKeys = Object.entries(this.keyToRegistryEntry)
+      .filter(([key, v]) => v.command == "passNextKey" && key.length > 1)
+      .map(([key, v]) => key);
+    await chrome.storage.session.set({ passNextKeyKeys: passNextKeys });
   },
 
   // This generates and installs a nested key-to-command mapping structure. There is an example in
@@ -368,4 +370,5 @@ export {
   Commands,
   // Exported for unit tests.
   defaultKeyMappings,
+  KeyMappingsParser,
 };
