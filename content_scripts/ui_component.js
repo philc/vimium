@@ -28,6 +28,7 @@ class UIComponent {
   // - messageHandler: optional; a function to handle messages from the iframe's page.
   async load(iframeUrl, className, messageHandler) {
     if (this.iframeFrameElement) throw new Error("init should only be called once.");
+    this.messageHandler = messageHandler;
     const isDomTests = iframeUrl.includes("?dom_tests=true");
     this.iframeElement = DomUtils.createElement("iframe");
 
