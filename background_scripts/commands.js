@@ -30,7 +30,8 @@ class RegistryEntry {
   }
 }
 
-const modifier = "(?:[acms]-)"; // E.g. "a-", "c-", "m-", "s-".
+// This is intentionally a superset of valid modifiers (a, c, m, s).
+const modifier = "(?:[a-zA-Z]-)";
 const namedKey = "(?:[a-z][a-z0-9]+)"; // E.g. "left" or "f12" (always two characters or more).
 const modifiedKey = `(?:${modifier}+(?:.|${namedKey}))`; // E.g. "c-*" or "c-left".
 const specialKeyRegexp = new RegExp(`^<(${namedKey}|${modifiedKey})>(.*)`, "i");
@@ -42,9 +43,19 @@ const KeyMappingsParser = {
   parse(configText, shouldLogWarnings) {
     let keyToRegistryEntry = {};
     let mapKeyRegistry = {};
-    const errors = [];
+    let errors = [];
     const configLines = Utils.parseLines(configText);
     const commandsByName = Utils.keyBy(allCommands, "name");
+
+    const validModifiers = ["a", "c", "m", "s"];
+    const validateParsedKey = function (key) {
+      if (!key?.match(modifiedKey)) return;
+      // Check that the modifier is valid and not capitalized.
+      const mod = key.split("-")[0].slice(1);
+      if (!validModifiers.includes(mod)) {
+        return `${key} has an invalid modifier; valid modifiers are ${validModifiers}`;
+      }
+    };
 
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
@@ -59,6 +70,11 @@ const KeyMappingsParser = {
               continue;
             }
             const keySequence = this.parseKeySequence(key);
+            const keyErrors = keySequence.map((k) => validateParsedKey(k)).filter((e) => e);
+            if (keyErrors.length > 0) {
+              errors = errors.concat(keyErrors);
+              continue;
+            }
             const options = this.parseCommandOptions(command, optionList, commandInfo);
             keyToRegistryEntry[key] = new RegistryEntry({
               keySequence,

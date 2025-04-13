@@ -76,8 +76,7 @@ context("parseKeySequence", () => {
   });
 
   should("negative tests", () => {
-    // These should not be parsed as modifiers.
-    testKeySequence("<b-a>", "</b/-/a/>", 5);
+    // This should not be parsed as modifiers.
     testKeySequence("<c-@@>", "</c/-/@/@/>", 6);
   });
 });
@@ -131,6 +130,9 @@ context("KeyMappingsParser", () => {
     // Mapkey requires 2 arguments.
     assert.equal(0, getErrors("mapkey a b").length);
     assert.equal(1, getErrors("mapkey a").length);
+    // Reject unknown modifiers.
+    assert.equal(0, getErrors("map <a-f> scrollDown").length);
+    assert.equal(1, getErrors("map <b-f> scrollDown").length);
   });
 });
 
