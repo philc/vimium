@@ -7,6 +7,7 @@ const options = {
   filterLinkHints: "boolean",
   waitForEnterForFilteredHints: "boolean",
   hideHud: "boolean",
+  hideUpdateNotifcations: "boolean",
   keyMappings: "string",
   linkHintCharacters: "string",
   linkHintNumbers: "string",
