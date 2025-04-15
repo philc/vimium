@@ -19,7 +19,7 @@ function newKeyEvent(properties) {
   );
 }
 
-context("vomnibar", () => {
+context("vomnibar page", () => {
   let ui;
   setup(async () => {
     await testHelper.jsdomStub("pages/vomnibar_page.html");
