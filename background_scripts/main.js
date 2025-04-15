@@ -832,7 +832,8 @@ async function showUpgradeMessageIfNecessary(onInstalledDetails) {
   const currentVersion = Utils.getCurrentVersion();
   // We do not show an upgrade message for patch/silent releases. Such releases have the same
   // major and minor version numbers.
-  if (!majorVersionHasIncreased(onInstalledDetails.previousVersion)) {
+  if (!majorVersionHasIncreased(onInstalledDetails.previousVersion) 
+    || Settings.get("hideUpdateNotifcations")) {
     return;
   }
 
