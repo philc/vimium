@@ -62,7 +62,10 @@ const KeyMappingsParser = {
       const action = tokens[0].toLowerCase();
       switch (action) {
         case "map":
-          if (tokens.length >= 3) {
+          if (tokens.length < 3) {
+            errors.push(`"map requires at least 2 arguments on line ${line}`);
+            continue;
+          } else {
             const [_, key, command, ...optionList] = tokens;
             const commandInfo = commandsByName[command];
             if (!commandInfo) {

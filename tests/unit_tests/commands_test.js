@@ -120,10 +120,13 @@ context("KeyMappingsParser", () => {
   should("return validation errors", () => {
     const getErrors = (config) => KeyMappingsParser.parse(config).validationErrors;
     assert.equal(0, getErrors("map a scrollDown").length);
-    // Missing an action (map).
+    // Missing an action (e.g. map).
     assert.equal(1, getErrors("a scrollDown").length);
     // Invalid action.
     assert.equal(1, getErrors("invalidAction a scrollDown").length);
+    // Map requires at least two arguments
+    assert.equal(0, getErrors("map a scrollDown").length);
+    assert.equal(1, getErrors("map a").length);
     // Unmap allows only 1 argument.
     assert.equal(0, getErrors("unmap a").length);
     assert.equal(1, getErrors("unmap a b").length);
