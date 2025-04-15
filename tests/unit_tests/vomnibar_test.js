@@ -1,8 +1,6 @@
 import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
-
 import { Suggestion } from "../../background_scripts/completion.js";
-import "../../background_scripts/completion.js";
 import * as vomnibarPage from "../../pages/vomnibar_page.js";
 
 function newKeyEvent(properties) {
