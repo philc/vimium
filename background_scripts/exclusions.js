@@ -46,8 +46,6 @@ function getRule(url, rules) {
   }
   // Strip whitespace from all matching passKeys strings, and join them together.
   const passKeys = matchingRules.map((r) => r.passKeys.split(/\s+/).join("")).join("");
-  // TODO(philc): Remove this commented out code.
-  // passKeys = (rule.passKeys.split(/\s+/).join "" for rule in matchingRules).join ""
   if (matchingRules.length > 0) {
     return { passKeys: Utils.distinctCharacters(passKeys) };
   } else {

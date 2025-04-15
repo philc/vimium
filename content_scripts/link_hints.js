@@ -425,22 +425,11 @@ class LinkHintsMode {
     }
 
     // TODO(philc): 2024-03-27 Remove this hasPopoverSupport check once Firefox has popover support.
-    // Also move this CSS into vimium.css.
     const hasPopoverSupport = this.containerEl.showPopover != null;
     if (hasPopoverSupport) {
       this.containerEl.popover = "manual";
       this.containerEl.showPopover();
-      Object.assign(this.containerEl.style, {
-        top: 0,
-        left: 0,
-        position: "absolute",
-        // This display: block is required to override Github Enterprise's CSS circa 2024-04-01. See
-        // #4446.
-        display: "block",
-        width: "100%",
-        height: "100%",
-        overflow: "visible",
-      });
+      this.containerEl.classList.add("vimium-popover");
     }
 
     this.setIndicator();
@@ -722,7 +711,7 @@ class LinkHintsMode {
     }
 
     // If flash elements are created, then this function can be used later to remove them.
-    let removeFlashElements = function () {};
+    let removeFlashElements = function () { };
     if (linkMatched.isLocalMarker()) {
       const { top: viewportTop, left: viewportLeft } = DomUtils.getViewportTopLeft();
       const flashElements = Array.from(clickEl.getClientRects()).map((rect) =>
@@ -1186,13 +1175,13 @@ const LocalHints = {
         break;
       case "body":
         isClickable ||= (element === document.body) && !windowIsFocused() &&
-            (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
-            ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
-              "frameset")
+          (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
+          ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
+            "frameset")
           ? (reason = "Frame.")
           : undefined;
         isClickable ||= (element === document.body) && windowIsFocused() &&
-            Scroller.isScrollableElement(element)
+          Scroller.isScrollableElement(element)
           ? (reason = "Scroll.")
           : undefined;
         break;
