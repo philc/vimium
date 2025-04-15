@@ -424,6 +424,7 @@ class LinkHintsMode {
       this.containerEl.appendChild(el);
     }
 
+    // TODO(philc): 2024-03-27 Remove this hasPopoverSupport check once Firefox has popover support.
     const hasPopoverSupport = this.containerEl.showPopover != null;
     if (hasPopoverSupport) {
       this.containerEl.popover = "manual";
@@ -710,7 +711,7 @@ class LinkHintsMode {
     }
 
     // If flash elements are created, then this function can be used later to remove them.
-    let removeFlashElements = function () {};
+    let removeFlashElements = function () { };
     if (linkMatched.isLocalMarker()) {
       const { top: viewportTop, left: viewportLeft } = DomUtils.getViewportTopLeft();
       const flashElements = Array.from(clickEl.getClientRects()).map((rect) =>
@@ -1174,13 +1175,13 @@ const LocalHints = {
         break;
       case "body":
         isClickable ||= (element === document.body) && !windowIsFocused() &&
-            (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
-            ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
-              "frameset")
+          (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
+          ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
+            "frameset")
           ? (reason = "Frame.")
           : undefined;
         isClickable ||= (element === document.body) && windowIsFocused() &&
-            Scroller.isScrollableElement(element)
+          Scroller.isScrollableElement(element)
           ? (reason = "Scroll.")
           : undefined;
         break;
