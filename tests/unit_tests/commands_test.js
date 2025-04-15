@@ -17,70 +17,6 @@ import "../../content_scripts/vomnibar.js";
 
 await Commands.init();
 
-context("parseKeySequence", () => {
-  const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
-    const keySequence = KeyMappingsParser.parseKeySequence(key);
-    assert.equal(expectedKeyText, keySequence.join("/"));
-    assert.equal(expectedKeyLength, keySequence.length);
-  };
-
-  should("lowercase keys correctly", () => {
-    testKeySequence("a", "a", 1);
-    testKeySequence("A", "A", 1);
-    testKeySequence("ab", "a/b", 2);
-  });
-
-  should("recognise non-alphabetic keys", () => {
-    testKeySequence("#", "#", 1);
-    testKeySequence(".", ".", 1);
-    testKeySequence("##", "#/#", 2);
-    testKeySequence("..", "./.", 2);
-  });
-
-  should("parse keys with modifiers", () => {
-    testKeySequence("<c-a>", "<c-a>", 1);
-    testKeySequence("<c-A>", "<c-A>", 1);
-    testKeySequence("<C-A>", "<c-A>", 1);
-    testKeySequence("<c-a><a-b>", "<c-a>/<a-b>", 2);
-    testKeySequence("<m-a>", "<m-a>", 1);
-    testKeySequence("z<m-a>", "z/<m-a>", 2);
-  });
-
-  should("normalize with modifiers", () => {
-    // Modifiers should be in alphabetical order.
-    testKeySequence("<m-c-a-A>", "<a-c-m-A>", 1);
-  });
-
-  should("parse and normalize named keys", () => {
-    testKeySequence("<space>", "<space>", 1);
-    testKeySequence("<Space>", "<space>", 1);
-    testKeySequence("<C-Space>", "<c-space>", 1);
-    testKeySequence("<f12>", "<f12>", 1);
-    testKeySequence("<F12>", "<f12>", 1);
-  });
-
-  should("handle angle brackets which are part of not modifiers", () => {
-    testKeySequence("<", "<", 1);
-    testKeySequence(">", ">", 1);
-
-    testKeySequence("<<", "</<", 2);
-    testKeySequence(">>", ">/>", 2);
-
-    testKeySequence("<>", "</>", 2);
-    testKeySequence("<>", "</>", 2);
-
-    testKeySequence("<<space>", "</<space>", 2);
-    testKeySequence("<C->>", "<c->>", 1);
-
-    testKeySequence("<a>", "</a/>", 3);
-  });
-
-  should("negative tests", () => {
-    // This should not be parsed as modifiers.
-    testKeySequence("<c-@@>", "</c/-/@/@/>", 6);
-  });
-});
-
 context("KeyMappingsParser", () => {
   should("handle map statements", () => {
     const { keyToRegistryEntry } = KeyMappingsParser.parse("map a scrollDown");
@@ -136,6 +72,70 @@ context("KeyMappingsParser", () => {
     // Reject unknown modifiers.
     assert.equal(0, getErrors("map <a-f> scrollDown").length);
     assert.equal(1, getErrors("map <b-f> scrollDown").length);
+  });
+
+  context("parseKeySequence", () => {
+    const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
+      const keySequence = KeyMappingsParser.parseKeySequence(key);
+      assert.equal(expectedKeyText, keySequence.join("/"));
+      assert.equal(expectedKeyLength, keySequence.length);
+    };
+
+    should("lowercase keys correctly", () => {
+      testKeySequence("a", "a", 1);
+      testKeySequence("A", "A", 1);
+      testKeySequence("ab", "a/b", 2);
+    });
+
+    should("recognise non-alphabetic keys", () => {
+      testKeySequence("#", "#", 1);
+      testKeySequence(".", ".", 1);
+      testKeySequence("##", "#/#", 2);
+      testKeySequence("..", "./.", 2);
+    });
+
+    should("parse keys with modifiers", () => {
+      testKeySequence("<c-a>", "<c-a>", 1);
+      testKeySequence("<c-A>", "<c-A>", 1);
+      testKeySequence("<C-A>", "<c-A>", 1);
+      testKeySequence("<c-a><a-b>", "<c-a>/<a-b>", 2);
+      testKeySequence("<m-a>", "<m-a>", 1);
+      testKeySequence("z<m-a>", "z/<m-a>", 2);
+    });
+
+    should("normalize with modifiers", () => {
+      // Modifiers should be in alphabetical order.
+      testKeySequence("<m-c-a-A>", "<a-c-m-A>", 1);
+    });
+
+    should("parse and normalize named keys", () => {
+      testKeySequence("<space>", "<space>", 1);
+      testKeySequence("<Space>", "<space>", 1);
+      testKeySequence("<C-Space>", "<c-space>", 1);
+      testKeySequence("<f12>", "<f12>", 1);
+      testKeySequence("<F12>", "<f12>", 1);
+    });
+
+    should("handle angle brackets which are part of not modifiers", () => {
+      testKeySequence("<", "<", 1);
+      testKeySequence(">", ">", 1);
+
+      testKeySequence("<<", "</<", 2);
+      testKeySequence(">>", ">/>", 2);
+
+      testKeySequence("<>", "</>", 2);
+      testKeySequence("<>", "</>", 2);
+
+      testKeySequence("<<space>", "</<space>", 2);
+      testKeySequence("<C->>", "<c->>", 1);
+
+      testKeySequence("<a>", "</a/>", 3);
+    });
+
+    should("negative tests", () => {
+      // This should not be parsed as modifiers.
+      testKeySequence("<c-@@>", "</c/-/@/@/>", 6);
+    });
   });
 });
 
