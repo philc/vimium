@@ -26,7 +26,7 @@ function setTextInInputElement(inputElement, text) {
   selection.addRange(range);
 }
 
-function onKeyEvent(event) {
+export function onKeyEvent(event) {
   // Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK
   // translation (see #2915 and #2934).
   let rawQuery;
@@ -86,13 +86,15 @@ function ensureClipboardIsAvailable() {
   return true;
 }
 
-const handlers = {
+// TODO(philc): Move these to individually exported functions for unit testing.
+export const handlers = {
   show(data) {
     document.getElementById("hud").textContent = data.text;
     document.getElementById("hud").classList.add("vimium-ui-component-visible");
     document.getElementById("hud").classList.remove("vimium-ui-component-hidden");
     document.getElementById("hud").classList.remove("hud-find");
   },
+
   hidden() {
     // We get a flicker when the HUD later becomes visible again (with new text) unless we reset its
     // contents here.
@@ -101,7 +103,7 @@ const handlers = {
     document.getElementById("hud").classList.remove("vimium-ui-component-visible");
   },
 
-  showFindMode(data) {
+  showFindMode() {
     let executeQuery;
     const hud = document.getElementById("hud");
     hud.classList.add("hud-find");
