@@ -13,52 +13,40 @@ import "../lib/handler_stack.js";
 import * as UIComponentMessenger from "./ui_component_messenger.js";
 import * as userSearchEngines from "../background_scripts/user_search_engines.js";
 
-class Vomnibar {
-  vomnibarUI; // the dialog instance for this window
+export let ui; // An instance of VomnibarUI.
 
-  getUI() {
-    return this.vomnibarUI;
-  }
-
-  async activate(userOptions) {
-    await Settings.onLoaded();
-    userSearchEngines.set(Settings.get("searchEngines"));
-
-    const options = {
-      completer: "omni",
-      query: "",
-      newTab: false,
-      selectFirst: false,
-      keyword: null,
-    };
-    Object.assign(options, userOptions);
-
-    if (this.vomnibarUI == null) {
-      this.vomnibarUI = new VomnibarUI();
-    }
-    this.vomnibarUI.setCompleterName(options.completer);
-    this.vomnibarUI.refreshCompletions();
-    this.vomnibarUI.setInitialSelectionValue(options.selectFirst ? 0 : -1);
-    this.vomnibarUI.setForceNewTab(options.newTab);
-    this.vomnibarUI.setQuery(options.query);
-    this.vomnibarUI.setActiveUserSearchEngine(userSearchEngines.keywordToEngine[options.keyword]);
-    // Use await here for vomnibar_test.js, so that this page doesn't get unloaded while a test is
-    // running.
-    await this.vomnibarUI.update();
-  }
-
-  hide() {
-    if (this.vomnibarUI) {
-      this.vomnibarUI.hide();
-    }
-  }
-
-  onHidden() {
-    if (this.vomnibarUI) {
-      this.vomnibarUI.onHidden();
-    }
-  }
+// Used for tests.
+export function reset() {
+  ui = null;
 }
+
+export async function activate(eventData) {
+  await Settings.onLoaded();
+  userSearchEngines.set(Settings.get("searchEngines"));
+
+  const options = {
+    completer: "omni",
+    query: "",
+    newTab: false,
+    selectFirst: false,
+    keyword: null,
+  };
+  Object.assign(options, eventData);
+
+  if (ui == null) {
+    ui = new VomnibarUI();
+  }
+  ui.setCompleterName(options.completer);
+  ui.refreshCompletions();
+  ui.setInitialSelectionValue(options.selectFirst ? 0 : -1);
+  ui.setForceNewTab(options.newTab);
+  ui.setQuery(options.query);
+  ui.setActiveUserSearchEngine(userSearchEngines.keywordToEngine[options.keyword]);
+  // Use await here for vomnibar_test.js, so that this page doesn't get unloaded while a test is
+  // running.
+  await ui.update();
+}
+
 
 class VomnibarUI {
   constructor() {
@@ -452,18 +440,17 @@ class VomnibarUI {
 let vomnibarInstance;
 
 function init() {
-  vomnibarInstance = new Vomnibar();
   UIComponentMessenger.init();
   UIComponentMessenger.registerHandler(function (event) {
     switch (event.data.name) {
       case "hide":
-        vomnibarInstance.hide();
+      ui?.hide();
         break;
       case "hidden":
-        vomnibarInstance.onHidden();
+      ui?.onHidden();
         break;
       case "activate":
-        vomnibarInstance.activate(event.data);
+        activate(event.data);
         break;
       default:
         Utils.assert(false, "Unrecognized message type.", event.data);
@@ -480,5 +467,3 @@ if (!testEnv) {
   });
   init();
 }
-
-export { Vomnibar };
