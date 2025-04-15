@@ -74,6 +74,27 @@ context("KeyMappingsParser", () => {
     assert.equal(1, getErrors("map <b-f> scrollDown").length);
   });
 
+  context("parseLines", () => {
+    should("omit whitespace", () => {
+      assert.equal(0, KeyMappingsParser.parseLines("    \n    \n   ").length);
+    });
+
+    should("omit comments", () => {
+      assert.equal(0, KeyMappingsParser.parseLines(' # comment   \n " comment   \n   ').length);
+    });
+
+    should("join lines", () => {
+      assert.equal(1, KeyMappingsParser.parseLines("a\\\nb").length);
+      assert.equal("ab", KeyMappingsParser.parseLines("a\\\nb")[0]);
+    });
+
+    should("trim lines", () => {
+      assert.equal(2, KeyMappingsParser.parseLines("  a  \n  b").length);
+      assert.equal("a", KeyMappingsParser.parseLines("  a  \n  b")[0]);
+      assert.equal("b", KeyMappingsParser.parseLines("  a  \n  b")[1]);
+    });
+  });
+
   context("parseKeySequence", () => {
     const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
       const keySequence = KeyMappingsParser.parseKeySequence(key);

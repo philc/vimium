@@ -155,27 +155,6 @@ context("pick", () => {
   });
 });
 
-context("parseLines", () => {
-  should("omit whitespace", () => {
-    assert.equal(0, Utils.parseLines("    \n    \n   ").length);
-  });
-
-  should("omit comments", () => {
-    assert.equal(0, Utils.parseLines(' # comment   \n " comment   \n   ').length);
-  });
-
-  should("join lines", () => {
-    assert.equal(1, Utils.parseLines("a\\\nb").length);
-    assert.equal("ab", Utils.parseLines("a\\\nb")[0]);
-  });
-
-  should("trim lines", () => {
-    assert.equal(2, Utils.parseLines("  a  \n  b").length);
-    assert.equal("a", Utils.parseLines("  a  \n  b")[0]);
-    assert.equal("b", Utils.parseLines("  a  \n  b")[1]);
-  });
-});
-
 context("UserSearchEngines", () => {
   should("parse out search engine text", () => {
     const config = [

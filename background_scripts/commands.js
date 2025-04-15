@@ -37,6 +37,15 @@ const modifiedKey = `(?:${modifier}+(?:.|${namedKey}))`; // E.g. "c-*" or "c-lef
 const specialKeyRegexp = new RegExp(`^<(${namedKey}|${modifiedKey})>(.*)`, "i");
 
 const KeyMappingsParser = {
+  // Remove comments and leading/trailing whitespace from a list of lines, and merge lines where the
+  // last character on the preceding line is "\".
+  parseLines(text) {
+    return text.replace(/\\\n/g, "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => (line.length > 0) && !(Array.from('#"').includes(line[0])));
+  },
+
   // Parses the text supplied by the user in their "keyMappings" setting.
   // - shouldLogWarnings: if true, logs to the console when part of the user's config is invalid.
   // Returns { keyToRegistryEntry, keyToMappedKey, validationErrors }.
@@ -44,7 +53,7 @@ const KeyMappingsParser = {
     let keyToRegistryEntry = {};
     let mapKeyRegistry = {};
     let errors = [];
-    const configLines = Utils.parseLines(configText);
+    const configLines = this.parseLines(configText);
     const commandsByName = Utils.keyBy(allCommands, "name");
 
     const validModifiers = ["a", "c", "m", "s"];
