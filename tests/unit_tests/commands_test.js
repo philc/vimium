@@ -6,6 +6,7 @@ import {
   Commands,
   defaultKeyMappings,
   KeyMappingsParser,
+  parseLines
 } from "../../background_scripts/commands.js";
 import "../../content_scripts/mode.js";
 import "../../content_scripts/mode_key_handler.js";
@@ -76,22 +77,22 @@ context("KeyMappingsParser", () => {
 
   context("parseLines", () => {
     should("omit whitespace", () => {
-      assert.equal(0, KeyMappingsParser.parseLines("    \n    \n   ").length);
+      assert.equal(0, parseLines("    \n    \n   ").length);
     });
 
     should("omit comments", () => {
-      assert.equal(0, KeyMappingsParser.parseLines(' # comment   \n " comment   \n   ').length);
+      assert.equal(0, parseLines(' # comment   \n " comment   \n   ').length);
     });
 
     should("join lines", () => {
-      assert.equal(1, KeyMappingsParser.parseLines("a\\\nb").length);
-      assert.equal("ab", KeyMappingsParser.parseLines("a\\\nb")[0]);
+      assert.equal(1, parseLines("a\\\nb").length);
+      assert.equal("ab", parseLines("a\\\nb")[0]);
     });
 
     should("trim lines", () => {
-      assert.equal(2, KeyMappingsParser.parseLines("  a  \n  b").length);
-      assert.equal("a", KeyMappingsParser.parseLines("  a  \n  b")[0]);
-      assert.equal("b", KeyMappingsParser.parseLines("  a  \n  b")[1]);
+      assert.equal(2, parseLines("  a  \n  b").length);
+      assert.equal("a", parseLines("  a  \n  b")[0]);
+      assert.equal("b", parseLines("  a  \n  b")[1]);
     });
   });
 

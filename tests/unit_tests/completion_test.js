@@ -3,6 +3,7 @@ import "../../background_scripts/tab_recency.js";
 import "../../background_scripts/bg_utils.js";
 import "../../background_scripts/completion_engines.js";
 import "../../background_scripts/completion_search.js";
+import * as userSearchEngines from "../../background_scripts/user_search_engines.js";
 import {
   BookmarkCompleter,
   DomainCompleter,
@@ -385,7 +386,7 @@ context("SearchEngineCompleter", () => {
   setup(() => {
     completer = new SearchEngineCompleter();
     const searchEngineConfig = `g: ${googleSearchUrl}%s`;
-    UserSearchEngines.set(searchEngineConfig);
+    userSearchEngines.set(searchEngineConfig);
   });
 
   should("complete search results using the given completer", async () => {

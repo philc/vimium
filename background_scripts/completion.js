@@ -13,6 +13,7 @@
 
 import * as bgUtils from "./bg_utils.js";
 import * as completionSearch from "./completion_search.js";
+import * as userSearchEngines from "./user_search_engines.js";
 
 // Set this to true to render relevancy when debugging the ranking scores.
 const showRelevancy = false;
@@ -535,13 +536,13 @@ export class SearchEngineCompleter {
     if (parts.length <= 1) return null;
     // Don't match queries for built-in properties like "constructor". See #4396.
     if (Object.hasOwn(UserSearchEngines.keywordToEngine, keyword)) {
-      return UserSearchEngines.keywordToEngine[keyword];
+      return userSearchEngines.keywordToEngine[keyword];
     }
     return null;
   }
 
   refresh() {
-    UserSearchEngines.set(Settings.get("searchEngines"));
+    userSearchEngines.set(Settings.get("searchEngines"));
   }
 
   async filter(request) {
@@ -550,7 +551,7 @@ export class SearchEngineCompleter {
     const keyword = queryTerms[0];
     const queryTermsWithoutKeyword = queryTerms.slice(1);
 
-    const userSearchEngine = UserSearchEngines.keywordToEngine[keyword];
+    const userSearchEngine = userSearchEngines.keywordToEngine[keyword];
     if (!userSearchEngine) return [];
 
     const searchUrl = userSearchEngine.url;

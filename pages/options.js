@@ -2,6 +2,7 @@ import "./all_content_scripts.js";
 import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
 import { allCommands } from "../background_scripts/all_commands.js";
 import { Commands, KeyMappingsParser } from "../background_scripts/commands.js";
+import * as userSearchEngines from "../background_pages/user_search_engines.js";
 
 const options = {
   filterLinkHints: "boolean",
