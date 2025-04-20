@@ -37,6 +37,7 @@
     {
       "matches": ["<all_urls>"],
       "js": [
+        "lib/types.js",
         "lib/utils.js",
         "lib/keyboard_utils.js",
         "lib/dom_utils.js",

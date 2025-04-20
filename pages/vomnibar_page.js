@@ -4,6 +4,7 @@
 // the page, and simplify key handling in vimium_frontend.js
 //
 
+import "../lib/types.js";
 import "../lib/utils.js";
 import "../lib/url_utils.js";
 import "../lib/settings.js";
@@ -20,18 +21,20 @@ export function reset() {
   ui = null;
 }
 
-export async function activate(eventData) {
+export async function activate(options) {
+  Utils.assertType(VomnibarShowOptions, options || {});
   await Settings.onLoaded();
   userSearchEngines.set(Settings.get("searchEngines"));
 
-  const options = {
+  const defaults = {
     completer: "omni",
     query: "",
     newTab: false,
     selectFirst: false,
     keyword: null,
   };
-  Object.assign(options, eventData);
+
+  options = Object.assign(defaults, options);
 
   if (ui == null) {
     ui = new VomnibarUI();
@@ -46,7 +49,6 @@ export async function activate(eventData) {
   // running.
   await ui.update();
 }
-
 
 class VomnibarUI {
   constructor() {
@@ -444,10 +446,10 @@ function init() {
   UIComponentMessenger.registerHandler(function (event) {
     switch (event.data.name) {
       case "hide":
-      ui?.hide();
+        ui?.hide();
         break;
       case "hidden":
-      ui?.onHidden();
+        ui?.onHidden();
         break;
       case "activate":
         activate(event.data);

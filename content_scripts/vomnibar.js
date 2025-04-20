@@ -64,17 +64,19 @@ const Vomnibar = {
   },
 
   // Opens the vomnibar.
-  // - options: a map with values
-  //     completer   - The name of the completer to fetch results from.
-  //     query       - Optional. Text to prefill the Vomnibar with.
-  //     selectFirst - Optional, boolean. Whether to select the first entry.
-  //     newTab      - Optional, boolean. Whether to open the result in a new tab.
-  open(sourceFrameId, options) {
+  // - vomnibarShowOptions:
+  //     completer: The name of the completer to fetch results from.
+  //     query: Optional. Text to prefill the Vomnibar with.
+  //     selectFirst: Optional. Whether to select the first entry.
+  //     newTab: Optional. Whether to open the result in a new tab.
+  //     keyword: A keyword which will scope the search to a UserSearchEngine.
+  open(sourceFrameId, vomnibarShowOptions) {
     this.init();
     // The Vomnibar cannot coexist with the help dialog (it causes focus issues).
     HelpDialog.abort();
+    Utils.assertType(VomnibarShowOptions, vomnibarShowOptions);
     this.vomnibarUI.show(
-      Object.assign(options, { name: "activate" }),
+      Object.assign(vomnibarShowOptions, { name: "activate" }),
       { sourceFrameId, focus: true },
     );
   },
