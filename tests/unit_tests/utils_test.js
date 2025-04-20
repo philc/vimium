@@ -175,3 +175,36 @@ context("keyBy", () => {
     );
   });
 });
+
+context("assertType", () => {
+  should("fail if schema or object is null", () => {
+    assert.throwsError(() => Utils.assertType(null, { a: 1 }));
+    assert.throwsError(() => Utils.assertType({ a: null }, null));
+  });
+
+  should("not allow unknown fields", () => {
+    const schema = { a: null };
+    Utils.assertType(schema, { a: 1 });
+    assert.throwsError(() => Utils.assertType(schema, { b: 1 }));
+  });
+
+  should("type check fields with types", () => {
+    const schema = {
+      bool: "boolean",
+      num: "number",
+      string: "string"
+    };
+    Utils.assertType(schema, {
+      bool: true,
+      num: 1,
+      string: "example"
+    });
+    assert.throwsError(() => Utils.assertType(schema, { bool: 1 }));
+    assert.throwsError(() => Utils.assertType(schema, { num: "example" }));
+    assert.throwsError(() => Utils.assertType(schema, { string: 1 }));
+  });
+
+  should("allow null values for typed fields", () => {
+    Utils.assertType({ bool: "boolean" }, { bool: null });
+  });
+});
