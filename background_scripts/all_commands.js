@@ -159,6 +159,9 @@ const allCommands = [
   {
     name: "passNextKey",
     desc: "Pass the next key to the page",
+    options: {
+      normal: "Optional. Enter Vimium's normal mode, and ignore any defined pass keys.",
+    },
     group: "navigation",
     advanced: true,
   },
@@ -254,7 +257,15 @@ const allCommands = [
 
   {
     name: "Marks.activateCreateMode",
-    desc: "Create a new mark",
+    desc:
+      "Create a new mark. Do this by typing the key bound to this command, and then a letter. " +
+      "This will set a mark bound to that letter. Lowercase letters are local marks and uppercase " +
+      "letters are global marks.",
+    options: {
+      swap: "Swap global and local marks. This option exists because in a browser, global marks " +
+        "are generally more useful than local marks, and so it may be desirable to make lowercase " +
+        "letters represent global marks rather than local marks.",
+    },
     group: "navigation",
     advanced: true,
     noRepeat: true,
@@ -262,7 +273,12 @@ const allCommands = [
 
   {
     name: "Marks.activateGotoMode",
-    desc: "go to a mark",
+    desc: "Jump to a mark",
+    options: {
+      swap: "Swap global and local marks. This option exists because in a browser, global marks " +
+        "are generally more useful than local marks, and so it may be desirable to make lowercase " +
+        "letters represent global marks rather than local marks.",
+    },
     group: "navigation",
     advanced: true,
     noRepeat: true,
@@ -275,6 +291,11 @@ const allCommands = [
   {
     name: "Vomnibar.activate",
     desc: "Open URL, bookmark or history entry",
+    options: {
+      query: "The text to prefill the Vomnibar with.",
+      keyword: 'The keyword of a search engine defined in the "Custom search engines" ' +
+        "section of the Vimium Options page. The Vomnibar will be scoped to use that search engine.",
+    },
     group: "vomnibar",
     topFrame: true,
   },
@@ -384,6 +405,10 @@ const allCommands = [
     options: {
       "(any url)": "Open this URL, rather than the browser's new tab page. " +
         "E.g.: `map X createTab https://example.com`",
+      window: "Create the tab in a new window",
+      incognito: "Create the tab in an incognito window",
+      position: "Where to place the tab in the tab bar. " +
+        "One of `start`, `before`, `after`, `end`. `after` is the default.",
     },
     group: "tabs",
     background: true,
@@ -443,6 +468,10 @@ const allCommands = [
   {
     name: "toggleMuteTab",
     desc: "Mute or unmute current tab",
+    options: {
+      all: "Mute all tabs.",
+      other: "Mute every tab except the current one.",
+    },
     group: "tabs",
     background: true,
     noRepeat: true,
