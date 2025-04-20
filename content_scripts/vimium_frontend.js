@@ -462,7 +462,7 @@ const HelpDialog = {
       this.helpUI.hide();
     } else {
       return this.helpUI.show(
-        { name: "activate" },
+        { name: "show" },
         { focus: true, sourceFrameId: request.sourceFrameId },
       );
     }

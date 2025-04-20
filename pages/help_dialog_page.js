@@ -186,7 +186,7 @@ function init() {
       case "hide":
         HelpDialogPage.hide();
         break;
-      case "activate":
+      case "show":
         HelpDialogPage.init();
         await HelpDialogPage.show(event.data);
         // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
