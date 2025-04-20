@@ -65,6 +65,14 @@ const KeyMappingsParser = {
         return `${key} has an invalid modifier; valid modifiers are ${validModifiers}`;
       }
     };
+    const validateUrl = function (str) {
+      try {
+        new URL(str);
+        return true;
+      } catch {
+        return false;
+      }
+    };
 
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
@@ -93,11 +101,23 @@ const KeyMappingsParser = {
               allowedOptions.push("count");
             }
             let hasUnknownOption = false;
-            for (const o of Object.keys(options)) {
-              if (!allowedOptions.includes(o)) {
-                hasUnknownOption = true;
-                errors.push(`Command ${command} does not support option ${o}`);
-                break;
+            for (const option of Object.keys(options)) {
+              if (!allowedOptions.includes(option)) {
+                // Since this command allows for any URL as an argument, we perform some basic
+                // validation to ensure the provided option string is indeed a URL.
+                if (allowedOptions.includes("(any url)")) {
+                  if (validateUrl(option)) continue;
+                  hasUnknownOption = true;
+                  errors.push(
+                    `Command ${command} does not support option ${option}. ` +
+                      `Is this meant to be a valid URL?`,
+                  );
+                  break;
+                } else {
+                  hasUnknownOption = true;
+                  errors.push(`Command ${command} does not support option ${option}`);
+                  break;
+                }
               }
             }
             if (hasUnknownOption) break;

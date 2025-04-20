@@ -382,6 +382,10 @@ const allCommands = [
   {
     name: "createTab",
     desc: "Create new tab",
+    options: {
+      "(any url)": "Open this URL, rather than the browser's new tab page. " +
+        "E.g.: <code>map X createTab https://example.com</code>",
+    },
     group: "tabs",
     background: true,
     repeatLimit: 20,
