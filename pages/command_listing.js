@@ -14,6 +14,14 @@ function compareKeys(a, b) {
   }
 }
 
+function replaceBackticksWithCodeTags(str) {
+  let count = 0;
+  return str.replace(/`/g, (match) => {
+    count++;
+    return count % 2 === 1 ? "<code>" : "</code>";
+  });
+}
+
 async function populatePage() {
   const h2s = document.querySelectorAll("h2");
   const byGroup = Object.groupBy(allCommands, (el) => el.group);
@@ -50,7 +58,7 @@ async function populatePage() {
         const ul = el.querySelector(".options ul");
         for (const [name, desc] of Object.entries(command.options)) {
           const li = document.createElement("li");
-          li.innerHTML = `<code>${name}</code>: ${desc}`;
+          li.innerHTML = `<code>${name}</code>: ` + replaceBackticksWithCodeTags(desc);
           ul.appendChild(li);
         }
       } else {

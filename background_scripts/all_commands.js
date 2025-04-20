@@ -173,9 +173,8 @@ const allCommands = [
     name: "LinkHints.activateMode",
     desc: "Open a link in the current tab",
     options: {
-      action: "one of <code>hover</code>, <code>focus</code>, " +
-        "<code>copy-text</code>. When a link is selected, instead of clicking on the link, " +
-        "perform the specified action.",
+      action: "one of `hover`, `focus`, `copy-text`. When a link is selected, " +
+        "instead of clicking on the link, perform the specified action.",
     },
     group: "navigation",
     advanced: true,
@@ -384,7 +383,7 @@ const allCommands = [
     desc: "Create new tab",
     options: {
       "(any url)": "Open this URL, rather than the browser's new tab page. " +
-        "E.g.: <code>map X createTab https://example.com</code>",
+        "E.g.: `map X createTab https://example.com`",
     },
     group: "tabs",
     background: true,
