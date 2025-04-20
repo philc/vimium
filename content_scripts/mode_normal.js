@@ -337,39 +337,27 @@ const NormalModeCommands = {
 
     return new FocusSelector(hints, visibleInputs, selectedInputIndex);
   },
+
+  "LinkHints.activateMode": LinkHints.activateMode.bind(LinkHints),
+  "LinkHints.activateModeToOpenInNewTab": LinkHints.activateModeToOpenInNewTab.bind(LinkHints),
+  "LinkHints.activateModeToOpenInNewForegroundTab": LinkHints.activateModeToOpenInNewForegroundTab
+    .bind(LinkHints),
+  "LinkHints.activateModeWithQueue": LinkHints.activateModeWithQueue.bind(LinkHints),
+  "LinkHints.activateModeToOpenIncognito": LinkHints.activateModeToOpenIncognito.bind(LinkHints),
+  "LinkHints.activateModeToDownloadLink": LinkHints.activateModeToDownloadLink.bind(LinkHints),
+  "LinkHints.activateModeToCopyLinkUrl": LinkHints.activateModeToCopyLinkUrl.bind(LinkHints),
+
+  "Vomnibar.activate": Vomnibar.activate.bind(Vomnibar),
+  "Vomnibar.activateInNewTab": Vomnibar.activateInNewTab.bind(Vomnibar),
+  "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection.bind(Vomnibar),
+  "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks.bind(Vomnibar),
+  "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind(Vomnibar),
+  "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind(Vomnibar),
+  "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind(Vomnibar),
+
+  "Marks.activateCreateMode": Marks.activateCreateMode.bind(Marks),
+  "Marks.activateGotoMode": Marks.activateGotoMode.bind(Marks),
 };
-
-if (typeof LinkHints !== "undefined") {
-  Object.assign(NormalModeCommands, {
-    "LinkHints.activateMode": LinkHints.activateMode.bind(LinkHints),
-    "LinkHints.activateModeToOpenInNewTab": LinkHints.activateModeToOpenInNewTab.bind(LinkHints),
-    "LinkHints.activateModeToOpenInNewForegroundTab": LinkHints.activateModeToOpenInNewForegroundTab
-      .bind(LinkHints),
-    "LinkHints.activateModeWithQueue": LinkHints.activateModeWithQueue.bind(LinkHints),
-    "LinkHints.activateModeToOpenIncognito": LinkHints.activateModeToOpenIncognito.bind(LinkHints),
-    "LinkHints.activateModeToDownloadLink": LinkHints.activateModeToDownloadLink.bind(LinkHints),
-    "LinkHints.activateModeToCopyLinkUrl": LinkHints.activateModeToCopyLinkUrl.bind(LinkHints),
-  });
-}
-
-if (typeof Vomnibar !== "undefined") {
-  Object.assign(NormalModeCommands, {
-    "Vomnibar.activate": Vomnibar.activate.bind(Vomnibar),
-    "Vomnibar.activateInNewTab": Vomnibar.activateInNewTab.bind(Vomnibar),
-    "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection.bind(Vomnibar),
-    "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks.bind(Vomnibar),
-    "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind(Vomnibar),
-    "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind(Vomnibar),
-    "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind(Vomnibar),
-  });
-}
-
-if (typeof Marks !== "undefined") {
-  Object.assign(NormalModeCommands, {
-    "Marks.activateCreateMode": Marks.activateCreateMode.bind(Marks),
-    "Marks.activateGotoMode": Marks.activateGotoMode.bind(Marks),
-  });
-}
 
 // The types in <input type="..."> that we consider for focusInput command. Right now this is
 // recalculated in each content script. Alternatively we could calculate it once in the background
