@@ -50,7 +50,7 @@ async function populatePage() {
         const ul = el.querySelector(".options ul");
         for (const [name, desc] of Object.entries(command.options)) {
           const li = document.createElement("li");
-          li.innerHTML = desc;
+          li.innerHTML = `<code>${name}</code>: ${desc}`;
           ul.appendChild(li);
         }
       } else {

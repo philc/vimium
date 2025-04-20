@@ -173,7 +173,7 @@ const allCommands = [
     name: "LinkHints.activateMode",
     desc: "Open a link in the current tab",
     options: {
-      action: "<code>action</code>: one of <code>hover</code>, <code>focus</code>, " +
+      action: "one of <code>hover</code>, <code>focus</code>, " +
         "<code>copy-text</code>. When a link is selected, instead of clicking on the link, " +
         "perform the specified action.",
     },
