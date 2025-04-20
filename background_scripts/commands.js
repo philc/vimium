@@ -88,6 +88,19 @@ const KeyMappingsParser = {
               continue;
             }
             const options = this.parseCommandOptions(command, optionList, commandInfo);
+            const allowedOptions = Object.keys(commandInfo.options || {});
+            if (!commandInfo.noRepeat) {
+              allowedOptions.push("count");
+            }
+            let hasUnknownOption = false;
+            for (const o of Object.keys(options)) {
+              if (!allowedOptions.includes(o)) {
+                hasUnknownOption = true;
+                errors.push(`Command ${command} does not support option ${o}`);
+                break;
+              }
+            }
+            if (hasUnknownOption) break;
             keyToRegistryEntry[key] = new RegistryEntry({
               keySequence,
               command,
@@ -188,7 +201,7 @@ const KeyMappingsParser = {
     // We parse any `count` option immediately (to avoid having to parse it repeatedly later).
     if ("count" in options) {
       options.count = parseInt(options.count);
-      if (isNaN(options.count) || commandInfo.noRepeat) {
+      if (isNaN(options.count)) {
         delete options.count;
       }
     }
@@ -395,8 +408,8 @@ const defaultKeyMappings = {
 
 export {
   Commands,
-  parseLines,
   // Exported for unit tests.
   defaultKeyMappings,
   KeyMappingsParser,
+  parseLines,
 };

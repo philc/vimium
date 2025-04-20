@@ -6,10 +6,13 @@ import {
   Commands,
   defaultKeyMappings,
   KeyMappingsParser,
-  parseLines
+  parseLines,
 } from "../../background_scripts/commands.js";
 import "../../content_scripts/mode.js";
 import "../../content_scripts/mode_key_handler.js";
+import "../../content_scripts/marks.js";
+import "../../content_scripts/link_hints.js";
+import "../../content_scripts/vomnibar.js";
 // Include mode_normal to check that all commands have been implemented.
 import "../../content_scripts/mode_normal.js";
 import "../../content_scripts/link_hints.js";
@@ -19,6 +22,8 @@ import "../../content_scripts/vomnibar.js";
 await Commands.init();
 
 context("KeyMappingsParser", () => {
+  const getErrors = (config) => KeyMappingsParser.parse(config).validationErrors;
+
   should("handle map statements", () => {
     const { keyToRegistryEntry } = KeyMappingsParser.parse("map a scrollDown");
     assert.equal("scrollDown", keyToRegistryEntry["a"]?.command);
@@ -55,7 +60,6 @@ context("KeyMappingsParser", () => {
   });
 
   should("return validation errors", () => {
-    const getErrors = (config) => KeyMappingsParser.parse(config).validationErrors;
     assert.equal(0, getErrors("map a scrollDown").length);
     // Missing an action (e.g. map).
     assert.equal(1, getErrors("a scrollDown").length);
@@ -73,6 +77,16 @@ context("KeyMappingsParser", () => {
     // Reject unknown modifiers.
     assert.equal(0, getErrors("map <a-f> scrollDown").length);
     assert.equal(1, getErrors("map <b-f> scrollDown").length);
+  });
+
+  should("reject unknown options on map statements", () => {
+    assert.equal(0, getErrors("map j LinkHints.activateMode action=focus").length);
+    assert.equal(1, getErrors("map j LinkHints.activateMode unknownOption=a").length);
+  });
+
+  should("reject count option on commands with noRepeat=true", () => {
+    assert.equal(0, getErrors("map j scrollLeft count=1").length);
+    assert.equal(1, getErrors("map j copyCurrentUrl count=1").length);
   });
 
   context("parseLines", () => {
