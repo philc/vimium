@@ -59,7 +59,7 @@ context("KeyMappingsParser", () => {
     );
   });
 
-  should("return validation errors", () => {
+  should("return parsing validation errors", () => {
     assert.equal(0, getErrors("map a scrollDown").length);
     // Missing an action (e.g. map).
     assert.equal(1, getErrors("a scrollDown").length);
@@ -77,6 +77,11 @@ context("KeyMappingsParser", () => {
     // Reject unknown modifiers.
     assert.equal(0, getErrors("map <a-f> scrollDown").length);
     assert.equal(1, getErrors("map <b-f> scrollDown").length);
+  });
+
+  should("reject unknown commands on map statements", () => {
+    // Reject unknown commands.
+    assert.equal(1, getErrors("map a example-command").length);
   });
 
   should("reject unknown options on map statements", () => {
