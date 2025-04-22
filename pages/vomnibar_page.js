@@ -452,7 +452,9 @@ function init() {
         ui?.onHidden();
         break;
       case "activate":
-        activate(event.data);
+        const options = Object.assign({}, event.data);
+        delete options.name;
+        activate(options);
         break;
       default:
         Utils.assert(false, "Unrecognized message type.", event.data);
