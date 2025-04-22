@@ -28,6 +28,9 @@ const OptionsPage = {
   async init() {
     await Settings.onLoaded();
 
+    const shortcutLabel = document.querySelector("#shortcut-to-save-all");
+    shortcutLabel.textContent = KeyboardUtils.platform == "Mac" ? "Cmd-Enter" : "Ctrl-Enter";
+
     const saveButton = document.querySelector("#save");
 
     const onUpdated = () => {
@@ -75,9 +78,13 @@ const OptionsPage = {
       }
     };
 
-    document.addEventListener("keyup", (event) => {
+    document.addEventListener("keydown", (event) => {
+      // Firefox on Mac doesn't pass ctrl-enter to our page because MacOS Sequoia treats it as a
+      // shortcut for right click; typing it shows a context menu. So, we also allow cmd-enter to
+      // save all options. Note that ctrl-enter still works on Chrome for some reason.
       const isCtrlEnter = event.ctrlKey && event.keyCode === 13;
-      if (isCtrlEnter) {
+      const isCmdEnter = event.metaKey && event.keyCode === 13;
+      if (isCtrlEnter || isCmdEnter) {
         this.saveOptions();
       }
     });
