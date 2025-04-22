@@ -1,5 +1,7 @@
 2.3 (unreleased)
 
+- Add a command listing page, which documents all commands and their options. Access it from the
+  Vimium Options page > Show available commands.
 - Some internal CSS classes were changed for Vimium's UI. This may affect those who have customized
   Vimium's CSS via the options page. [#4668](https://github.com/philc/vimium/issues/4668).
 
