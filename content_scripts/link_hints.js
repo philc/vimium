@@ -38,8 +38,8 @@ class LocalHint {
   element; // The clickable element.
   image; // When element is an <area> (image map), `image` is its associated image.
   rect; // The rectangle where the hint should shown, to avoid overlapping with other hints.
-  linkText; // Used in FilterHints.
-  showLinkText; // Used in FilterHints.
+  linkText;
+  showLinkText;
   // The reason that an element has a link hint when the reason isn't obvious, e.g. the body of a
   // frame so that the frame can be focused. This reason is shown to the user in the hint's caption.
   reason;
@@ -792,18 +792,21 @@ class AlphabetHints {
     this.hintKeystrokeQueue = [];
   }
 
+  renderMarker(marker) {
+    let linkText = marker.linkText;
+    console.log(linkText);
+    const caption = marker.hintString.toUpperCase()
+      + (marker.localHint.showLinkText ? ": " + linkText : "");
+    marker.element.innerHTML = spanWrap(caption);
+  }
+
   fillInMarkers(hintMarkers) {
     const hintStrings = this.hintStrings(hintMarkers.length);
-    if (hintMarkers.length != hintStrings.length) {
-      // This can only happen if the user's linkHintCharacters setting is empty.
-      console.warn("Unable to generate link hint strings.");
-    } else {
-      for (let i = 0; i < hintMarkers.length; i++) {
-        const marker = hintMarkers[i];
-        marker.hintString = hintStrings[i];
-        if (marker.isLocalMarker()) {
-          marker.element.innerHTML = spanWrap(marker.hintString.toUpperCase());
-        }
+    let i = 0;
+    for (const marker of hintMarkers) {
+      marker.hintString = hintStrings[i++];
+      if (marker.isLocalMarker()) {
+        this.renderMarker(marker);
       }
     }
   }
@@ -1186,13 +1189,13 @@ const LocalHints = {
         break;
       case "body":
         isClickable ||= (element === document.body) && !windowIsFocused() &&
-            (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
-            ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
-              "frameset")
+          (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
+          ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
+            "frameset")
           ? (reason = "Frame.")
           : undefined;
         isClickable ||= (element === document.body) && windowIsFocused() &&
-            Scroller.isScrollableElement(element)
+          Scroller.isScrollableElement(element)
           ? (reason = "Scroll.")
           : undefined;
         break;
@@ -1411,10 +1414,8 @@ const LocalHints = {
       hint.rect.left += left;
     }
 
-    if (Settings.get("filterLinkHints")) {
-      for (const hint of nonOverlappingHints) {
-        Object.assign(hint, this.generateLinkText(hint));
-      }
+    for (const hint of nonOverlappingHints) {
+      Object.assign(hint, this.generateLinkText(hint));
     }
     return nonOverlappingHints;
   },
