@@ -389,10 +389,6 @@ class VomnibarUI {
     return null;
   }
 
-  queryIsCustomSearch() {
-    return this.getUserSearchEngineForQuery() != null;
-  }
-
   async update() {
     await this.updateCompletions();
     this.input.focus();
