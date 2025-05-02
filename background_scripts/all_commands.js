@@ -304,6 +304,11 @@ const allCommands = [
     name: "Vomnibar.activateInNewTab",
     desc: "Open URL, bookmark or history entry in a new tab",
     group: "vomnibar",
+    options: {
+      query: "The text to prefill the Vomnibar with.",
+      keyword: 'The keyword of a search engine defined in the "Custom search engines" ' +
+        "section of the Vimium Options page. The Vomnibar will be scoped to use that search engine.",
+    },
     topFrame: true,
   },
 
