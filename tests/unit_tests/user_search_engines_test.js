@@ -1,6 +1,7 @@
 import "./test_helper.js";
 
 import * as userSearchEngines from "../../background_scripts/user_search_engines.js";
+import { UserSearchEngine } from "../../background_scripts/user_search_engines.js";
 
 context("UserSearchEngines", () => {
   should("parse out search engine text", () => {

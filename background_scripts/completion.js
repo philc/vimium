@@ -535,7 +535,7 @@ export class SearchEngineCompleter {
     const keyword = parts[0];
     if (parts.length <= 1) return null;
     // Don't match queries for built-in properties like "constructor". See #4396.
-    if (Object.hasOwn(UserSearchEngines.keywordToEngine, keyword)) {
+    if (Object.hasOwn(userSearchEngines.keywordToEngine, keyword)) {
       return userSearchEngines.keywordToEngine[keyword];
     }
     return null;

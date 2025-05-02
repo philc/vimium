@@ -1,6 +1,17 @@
 import "../lib/url_utils.js";
 import * as commands from "./commands.js";
 
+// A struct representing a search engine entry in the "searchEngine" setting.
+export class UserSearchEngine {
+  keyword;
+  url;
+  description;
+  constructor(o) {
+    Object.seal(this);
+    if (o) Object.assign(this, o);
+  }
+}
+
 // Parses a user's search engine configuration from Settings, and stores the parsed results.
 // TODO(philc): Should this be responsible for updating itself when Settings changes, rather than
 // the callers doing so? Or, remove this class and re-parse the configuration every keystroke in
