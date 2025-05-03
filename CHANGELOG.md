@@ -3,9 +3,10 @@
 - Add a command listing page, which documents all commands and their options. Access it from the
   Vimium Options page > Show available commands.
 - Some internal CSS classes were changed for Vimium's UI. This may affect those who have customized
-  Vimium's CSS via the options page. [#4668](https://github.com/philc/vimium/issues/4668).
-- Breaking change: when creating a mapping for `setZoom` , it now requires a named `level` argument.
+  Vimium's CSS via the options page. (https://github.com/philc/vimium/issues/4668)
+- Breaking change: when creating a mapping for `setZoom`, a `level` argument is now required.
   E.g.: `map z2 setZoom level=2.0`.
+- Make Vomnibar.activateBookmark accept a `query` option. (https://github.com/philc/vimium/pull/4591)
 
 2.2.1 (2025-03-20)
 

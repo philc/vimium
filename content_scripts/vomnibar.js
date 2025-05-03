@@ -24,19 +24,21 @@ const Vomnibar = {
     });
   },
 
-  activateBookmarks(sourceFrameId) {
-    this.open(sourceFrameId, {
+  activateBookmarks(sourceFrameId, registryEntry) {
+    const options = Object.assign({}, registryEntry.options, {
       completer: "bookmarks",
       selectFirst: true,
     });
+    this.open(sourceFrameId, options);
   },
 
-  activateBookmarksInNewTab(sourceFrameId) {
-    this.open(sourceFrameId, {
+  activateBookmarksInNewTab(sourceFrameId, registryEntry) {
+    const options = Object.assign({}, registryEntry.options, {
       completer: "bookmarks",
       selectFirst: true,
       newTab: true,
     });
+    this.open(sourceFrameId, options);
   },
 
   activateEditUrl(sourceFrameId) {

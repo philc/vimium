@@ -316,6 +316,9 @@ const allCommands = [
     name: "Vomnibar.activateBookmarks",
     desc: "Open a bookmark",
     group: "vomnibar",
+    options: {
+      query: "The text to prefill the Vomnibar with.",
+    },
     topFrame: true,
   },
 
@@ -323,6 +326,9 @@ const allCommands = [
     name: "Vomnibar.activateBookmarksInNewTab",
     desc: "Open a bookmark in a new tab",
     group: "vomnibar",
+    options: {
+      query: "The text to prefill the Vomnibar with.",
+    },
     topFrame: true,
   },
 
