@@ -45,6 +45,26 @@ function parseLines(text) {
     .filter((line) => (line.length > 0) && !(Array.from('#"').includes(line[0])));
 }
 
+// Returns the index of the nth occurrence of the regexp in the string. -1 if not found.
+function nthRegexIndex(str, regex, n) {
+  if (!regex.global) {
+    regex = new RegExp(regex.source, regex.flags + "g");
+  }
+  let match;
+  let count = 0;
+  while ((match = regex.exec(str)) !== null) {
+    count++;
+    if (count === n) {
+      return match.index;
+    }
+    // Prevent infinite loop for zero-length matches.
+    if (match.index === regex.lastIndex) {
+      regex.lastIndex++;
+    }
+  }
+  return -1;
+}
+
 const KeyMappingsParser = {
   // Parses the text supplied by the user in their "keyMappings" setting.
   // - shouldLogWarnings: if true, logs to the console when part of the user's config is invalid.
@@ -77,14 +97,20 @@ const KeyMappingsParser = {
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
       const action = tokens[0].toLowerCase();
-      let key;
       switch (action) {
         case "map": {
           if (tokens.length < 3) {
             errors.push(`"map requires at least 2 arguments on line ${line}`);
             continue;
           }
-          const [_, key, command, ...optionList] = tokens;
+          const [_, key, command] = tokens;
+          let optionString;
+          const optionsStart = nthRegexIndex(line, /\s+/, 3);
+          if (optionsStart == -1) {
+            optionString = "";
+          } else {
+            optionString = line.slice(optionsStart).trim();
+          }
           const commandInfo = commandsByName[command];
           if (!commandInfo) {
             errors.push(`"${command}" is not a valid command in the line: ${line}`);
@@ -96,7 +122,7 @@ const KeyMappingsParser = {
             errors = errors.concat(keyErrors);
             continue;
           }
-          const options = this.parseCommandOptions(command, optionList, commandInfo);
+          const options = this.parseCommandOptions(command, optionString, commandInfo);
           const allowedOptions = Object.keys(commandInfo.options || {});
           if (!commandInfo.noRepeat) {
             allowedOptions.push("count");
@@ -129,7 +155,7 @@ const KeyMappingsParser = {
             background: commandInfo.background,
             topFrame: commandInfo.topFrame,
             options,
-            optionList,
+            optionList: null, // TODO(philc): Remove
           });
           break;
         }
@@ -211,14 +237,41 @@ const KeyMappingsParser = {
     }
   },
 
-  // Command options follow command mappings, and are of one of two forms:
+  // Command options follow command mappings, and are of one of these forms:
   //   key=value     - a value
+  //   key="value"   - a value surrounded by quotes
   //   key           - a flag
-  parseCommandOptions(command, optionList, commandInfo) {
+  parseCommandOptions(command, optionString, commandInfo) {
     const options = {};
-    for (const option of Array.from(optionList)) {
-      const parse = option.split("=", 2);
-      options[parse[0]] = parse.length === 1 ? true : parse[1];
+    while (optionString != "") {
+      let match, matchedString, key, value;
+      // Case: option value surrounded by quotes (key= "a b"). Spaces are allowed in the value.
+      if (match = optionString.match(/^(\S+)="([^"]+)"(\s+|$)/)) {
+        matchedString = match[0];
+        key = match[1];
+        value = match[2];
+      } // Case: option value not surrounded by quotes (key=value). Spaces aren't allowed.
+      else if (match = optionString.match(/^(\S+)=(\S+)(\s+|$)/)) {
+        matchedString = match[0];
+        key = match[1];
+        value = match[2];
+      } // Case: single option (flag).
+      else if (match = optionString.match(/^([^\s=]+)(\s+|$)/)) {
+        matchedString = match[0];
+        key = match[1];
+        value = true;
+      }
+      // NOTE(philc): If this string doesn't match any of our option regexps, we could throw an
+      // error here or use an assert. I think this might only happen in the case where there's a
+      // single equals sign. For now, just add the whole string as a flag option. If the command in
+      // question doesn't accept this option, then an error will get surfaced to the user.
+      if (match == null) {
+        options[optionString] = true;
+        break;
+      }
+
+      options[key] = value;
+      optionString = optionString.slice(matchedString.length);
     }
 
     // We parse any `count` option immediately (to avoid having to parse it repeatedly later).

@@ -59,6 +59,18 @@ context("KeyMappingsParser", () => {
     );
   });
 
+  should("parse option values surrounded by quotes", () => {
+    const { keyToRegistryEntry } = KeyMappingsParser.parse('map v Vomnibar.activate query="a b"');
+    const entry = keyToRegistryEntry["v"];
+    assert.equal({ query: "a b" }, entry.options);
+  });
+
+  should("parse options using all 3 syntaxes", () => {
+    // This test exercises some of the edge cases of the underlying regular expressions.
+    const result = KeyMappingsParser.parseCommandOptions(null, 'key1  key2="a b=c"  key3=" ', null);
+    assert.equal({ key1: true, key2: "a b=c", key3: '"' }, result);
+  });
+
   should("return parsing validation errors", () => {
     assert.equal(0, getErrors("map a scrollDown").length);
     // Missing an action (e.g. map).
