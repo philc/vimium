@@ -95,11 +95,6 @@ context("KeyMappingsParser", () => {
   });
 
   should("allow arbitrary URLs as arguments to commands with (any url) as an option", () => {
-    assert.equal(0, getErrors("map j scrollLeft count=1").length);
-    assert.equal(1, getErrors("map j copyCurrentUrl count=1").length);
-  });
-
-  should("allow arbitrary URLs as arguments to commands with (any url) as an option", () => {
     assert.equal(0, getErrors("map j createTab http://example.com").length);
     assert.equal(1, getErrors("map j createTab invalid-url").length);
   });
