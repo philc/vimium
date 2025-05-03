@@ -77,63 +77,63 @@ const KeyMappingsParser = {
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
       const action = tokens[0].toLowerCase();
+      let key;
       switch (action) {
-        case "map":
+        case "map": {
           if (tokens.length < 3) {
             errors.push(`"map requires at least 2 arguments on line ${line}`);
             continue;
-          } else {
-            const [_, key, command, ...optionList] = tokens;
-            const commandInfo = commandsByName[command];
-            if (!commandInfo) {
-              errors.push(`"${command}" is not a valid command in the line: ${line}`);
-              continue;
-            }
-            const keySequence = this.parseKeySequence(key);
-            const keyErrors = keySequence.map((k) => validateParsedKey(k)).filter((e) => e);
-            if (keyErrors.length > 0) {
-              errors = errors.concat(keyErrors);
-              continue;
-            }
-            const options = this.parseCommandOptions(command, optionList, commandInfo);
-            const allowedOptions = Object.keys(commandInfo.options || {});
-            if (!commandInfo.noRepeat) {
-              allowedOptions.push("count");
-            }
-            let hasUnknownOption = false;
-            for (const option of Object.keys(options)) {
-              if (!allowedOptions.includes(option)) {
-                // Since this command allows for any URL as an argument, we perform some basic
-                // validation to ensure the provided option string is indeed a URL.
-                if (allowedOptions.includes("(any url)")) {
-                  if (validateUrl(option)) continue;
-                  hasUnknownOption = true;
-                  errors.push(
-                    `Command ${command} does not support option ${option}. ` +
-                      `Is this meant to be a valid URL?`,
-                  );
-                  break;
-                } else {
-                  hasUnknownOption = true;
-                  errors.push(`Command ${command} does not support option ${option}`);
-                  break;
-                }
-              }
-            }
-            if (hasUnknownOption) break;
-            keyToRegistryEntry[key] = new RegistryEntry({
-              keySequence,
-              command,
-              noRepeat: commandInfo.noRepeat,
-              repeatLimit: commandInfo.repeatLimit,
-              background: commandInfo.background,
-              topFrame: commandInfo.topFrame,
-              options,
-              optionList,
-            });
           }
+          const [_, key, command, ...optionList] = tokens;
+          const commandInfo = commandsByName[command];
+          if (!commandInfo) {
+            errors.push(`"${command}" is not a valid command in the line: ${line}`);
+            continue;
+          }
+          const keySequence = this.parseKeySequence(key);
+          const keyErrors = keySequence.map((k) => validateParsedKey(k)).filter((e) => e);
+          if (keyErrors.length > 0) {
+            errors = errors.concat(keyErrors);
+            continue;
+          }
+          const options = this.parseCommandOptions(command, optionList, commandInfo);
+          const allowedOptions = Object.keys(commandInfo.options || {});
+          if (!commandInfo.noRepeat) {
+            allowedOptions.push("count");
+          }
+          let hasUnknownOption = false;
+          for (const option of Object.keys(options)) {
+            if (allowedOptions.includes(option)) continue;
+            if (allowedOptions.includes("(any url)")) {
+              // Since this command allows for any URL as an argument, we perform some basic
+              // validation to ensure the provided option string is indeed a URL.
+              if (validateUrl(option)) continue;
+              hasUnknownOption = true;
+              errors.push(
+                `Command ${command} does not support option ${option}. ` +
+                  `Is this meant to be a valid URL?`,
+              );
+              break;
+            } else {
+              hasUnknownOption = true;
+              errors.push(`Command ${command} does not support option ${option}`);
+              break;
+            }
+          }
+          if (hasUnknownOption) break;
+          keyToRegistryEntry[key] = new RegistryEntry({
+            keySequence,
+            command,
+            noRepeat: commandInfo.noRepeat,
+            repeatLimit: commandInfo.repeatLimit,
+            background: commandInfo.background,
+            topFrame: commandInfo.topFrame,
+            options,
+            optionList,
+          });
           break;
-        case "unmap":
+        }
+        case "unmap": {
           if (tokens.length != 2) {
             errors.push(`Incorrect usage for unmap in the line: ${line}`);
             continue;
@@ -142,11 +142,13 @@ const KeyMappingsParser = {
           delete keyToRegistryEntry[key];
           delete mapKeyRegistry[key];
           break;
-        case "unmapall":
+        }
+        case "unmapall": {
           keyToRegistryEntry = {};
           mapKeyRegistry = {};
           break;
-        case "mapkey":
+        }
+        case "mapkey": {
           if (tokens.length != 3) {
             errors.push(`Incorrect usage for mapKey in the line: ${line}`);
             continue;
@@ -164,6 +166,7 @@ const KeyMappingsParser = {
             );
           }
           break;
+        }
         default:
           errors.push(`"${action}" is not a valid config command in line: ${line}`);
       }
