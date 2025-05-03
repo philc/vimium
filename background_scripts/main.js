@@ -245,11 +245,10 @@ const BackgroundCommands = {
         request.urls = [request.url];
       } else {
         // Otherwise, if we have a registryEntry containing URLs, then use them.
-        // TODO(philc): This would be clearer if we try to detect options (a=b) rather than URLs,
-        // because the syntax for options is well defined ([a-zA-Z]+=\S+).
-        const promises = request.registryEntry.optionList.map((opt) => UrlUtils.isUrl(opt));
+        const options = Object.keys(request.registryEntry.options);
+        const promises = options.map((opt) => UrlUtils.isUrl(opt));
         const isUrl = await Promise.all(promises);
-        const urlList = request.registryEntry.optionList.filter((_, i) => isUrl[i]);
+        const urlList = options.filter((_, i) => isUrl[i]);
         if (urlList.length > 0) {
           request.urls = urlList;
         } else {
@@ -346,7 +345,13 @@ const BackgroundCommands = {
   moveTabRight: moveTab,
 
   async setZoom({ tabId, registryEntry }) {
-    const zoomLevel = registryEntry.optionList[0] ?? 1;
+    let level = Object.keys(registryEntry.options ?? {})[0];
+    if (level) {
+      level = parseInt(level);
+    } else {
+      level = 1;
+    }
+    const zoomLevel = level;
     const newZoom = parseFloat(zoomLevel);
     if (!isNaN(newZoom)) {
       chrome.tabs.setZoom(tabId, newZoom);

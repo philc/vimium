@@ -18,11 +18,6 @@ class RegistryEntry {
   // The map of options for this command. This is a parsed, sanitized version of the user's options
   // for this command.
   options;
-  // The (optional) raw list of options for this command provided in the user's settings.
-  // E.g. "count=10" in "map j scrollDown count=10".
-  // NOTE(philc): This is used only by the createTab command.
-  // TODO(philc): Can we remove this?
-  optionList;
 
   constructor(o) {
     Object.seal(this);
@@ -155,7 +150,6 @@ const KeyMappingsParser = {
             background: commandInfo.background,
             topFrame: commandInfo.topFrame,
             options,
-            optionList: null, // TODO(philc): Remove
           });
           break;
         }
@@ -385,9 +379,21 @@ const Commands = {
       }
     */
     const commandToOptionsToKeys = {};
+    const formatOptionString = (options) => {
+      return Object.entries(options)
+        .map(([k, v]) => {
+          // When the value of an option is true, then it was parsed as a flag.
+          if (v === true) {
+            return k;
+          } else {
+            return `${k}=${v}`;
+          }
+        })
+        .join(" ");
+    };
     for (const key of Object.keys(this.keyToRegistryEntry || {})) {
       const registryEntry = this.keyToRegistryEntry[key];
-      const optionString = registryEntry.optionList?.join(" ") || "";
+      const optionString = formatOptionString(registryEntry.options || {});
       commandToOptionsToKeys[registryEntry.command] ||= {};
       commandToOptionsToKeys[registryEntry.command][optionString] ||= [];
       commandToOptionsToKeys[registryEntry.command][optionString].push(key);
