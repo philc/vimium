@@ -67,7 +67,7 @@ context("KeyMappingsParser", () => {
 
   should("parse options using all 3 syntaxes", () => {
     // This test exercises some of the edge cases of the underlying regular expressions.
-    const result = KeyMappingsParser.parseCommandOptions(null, 'key1  key2="a b=c"  key3=" ', null);
+    const result = KeyMappingsParser.parseCommandOptions('key1  key2="a b=c"  key3=" ');
     assert.equal({ key1: true, key2: "a b=c", key3: '"' }, result);
   });
 

@@ -117,7 +117,7 @@ const KeyMappingsParser = {
             errors = errors.concat(keyErrors);
             continue;
           }
-          const options = this.parseCommandOptions(command, optionString, commandInfo);
+          const options = this.parseCommandOptions(optionString);
           const allowedOptions = Object.keys(commandInfo.options || {});
           if (!commandInfo.noRepeat) {
             allowedOptions.push("count");
@@ -235,7 +235,7 @@ const KeyMappingsParser = {
   //   key=value     - a value
   //   key="value"   - a value surrounded by quotes
   //   key           - a flag
-  parseCommandOptions(command, optionString, commandInfo) {
+  parseCommandOptions(optionString) {
     const options = {};
     while (optionString != "") {
       let match, matchedString, key, value;
