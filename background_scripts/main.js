@@ -832,7 +832,7 @@ async function showUpgradeMessageIfNecessary(onInstalledDetails) {
   // We do not show an upgrade message for patch/silent releases. Such releases have the same
   // major and minor version numbers.
   if (!majorVersionHasIncreased(onInstalledDetails.previousVersion) 
-    || Settings.get("hideUpdateNotifcations")) {
+    || Settings.get("hideUpdateNotifications")) {
     return;
   }
 
