@@ -345,14 +345,8 @@ const BackgroundCommands = {
   moveTabRight: moveTab,
 
   async setZoom({ tabId, registryEntry }) {
-    let level = Object.keys(registryEntry.options ?? {})[0];
-    if (level) {
-      level = parseInt(level);
-    } else {
-      level = 1;
-    }
-    const zoomLevel = level;
-    const newZoom = parseFloat(zoomLevel);
+    const level = registryEntry.options?.["level"] ?? "1";
+    const newZoom = parseFloat(level);
     if (!isNaN(newZoom)) {
       chrome.tabs.setZoom(tabId, newZoom);
     }

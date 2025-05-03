@@ -555,6 +555,9 @@ const allCommands = [
     group: "tabs",
     advanced: true,
     background: true,
+    options: {
+      level: "The zoom level. This can be a range of [0.25, 5.0]. 1.0 is the default.",
+    },
   },
 
   {
