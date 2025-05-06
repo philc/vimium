@@ -1,7 +1,6 @@
 //
-// Methods for opening URLs in tabs.
+// Functions for opening URLs in tabs.
 //
-// TODO(philc): Convert these to Promise-based APIs.
 
 import * as bgUtils from "../background_scripts/bg_utils.js";
 
@@ -46,20 +45,14 @@ async function openUrlInCurrentTab(request) {
 }
 
 // Opens request.url in new tab and switches to it.
-async function openUrlInNewTab(request, callback) {
-  if (callback == null) {
-    callback = function () {};
-  }
+async function openUrlInNewTab(request) {
   const tabConfig = {
     url: await UrlUtils.convertToUrl(request.url),
     active: true,
     windowId: request.tab.windowId,
   };
-
   const position = request.position;
-
   let tabIndex = null;
-
   switch (position) {
     case "start":
       tabIndex = 0;
@@ -85,15 +78,8 @@ async function openUrlInNewTab(request, callback) {
   if (tabConfig["url"] === chromeNewTabUrl) {
     delete tabConfig["url"];
   }
-
   tabConfig.openerTabId = request.tab.id;
-
-  // clean position and active, so following `openUrlInNewTab(request)` will create a tab just next
-  // to this new tab
-  await chrome.tabs.create(
-    tabConfig,
-    (tab) => callback(Object.assign(request, { tab, tabId: tab.id, position: "", active: false })),
-  );
+  return await chrome.tabs.create(tabConfig);
 }
 
 // Open request.url in new window and switch to it.

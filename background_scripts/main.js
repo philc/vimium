@@ -195,14 +195,17 @@ function moveTab({ count, tab, registryEntry }) {
   });
 }
 
-const createRepeatCommand = (command) => (function (request) {
-  request.count--;
-  if (request.count >= 0) {
-    // TODO(philc): I think we can remove this return statement, and all returns
-    // from commands built using createRepeatCommand.
-    return command(request, (request) => (createRepeatCommand(command))(request));
-  }
-});
+function createRepeatCommand(command) {
+  return async function (request) {
+    let i = request.count - 1;
+    const r = Object.assign({}, request);
+    delete r.count;
+    while (i >= 0) {
+      i--;
+      await command(r);
+    }
+  };
+}
 
 function nextZoomLevel(currentZoom, steps) {
   // Chrome's default zoom levels.
@@ -238,7 +241,7 @@ const BackgroundCommands = {
   // Create a new tab. Also, with:
   //     map X createTab http://www.bbc.com/news
   // create a new tab with the given URL.
-  createTab: createRepeatCommand(async function (request, callback) {
+  createTab: createRepeatCommand(async function (request) {
     if (request.urls == null) {
       if (request.url) {
         // If the request contains a URL, then use it.
@@ -274,36 +277,28 @@ const BackgroundCommands = {
         incognito: request.registryEntry.options.incognito || false,
       };
       await chrome.windows.create(windowConfig);
-      callback(request);
     } else {
-      let openNextUrl;
       const urls = request.urls.slice().reverse();
       if (request.position == null) {
         request.position = request.registryEntry.options.position;
       }
-      // TODO(philc): This is hard to read; clean up.
-      return (openNextUrl = async function (request) {
-        if (urls.length > 0) {
-          await TabOperations.openUrlInNewTab(
-            Object.assign(request, { url: urls.pop() }),
-            openNextUrl,
-          );
-          return;
-        } else {
-          return callback(request);
-        }
-      })(request);
+      while (urls.length > 0) {
+        const url = urls.pop();
+        const tab = await TabOperations.openUrlInNewTab(Object.assign(request, { url }));
+        // Ensure subsequent invocations of this command place the next tab directly after this one.
+        Object.assign(request, { tabId: tab.id, position: "", active: false });
+      }
     }
   }),
 
-  duplicateTab: createRepeatCommand((request, callback) => {
-    return chrome.tabs.duplicate(
-      request.tabId,
-      (tab) => callback(Object.assign(request, { tab, tabId: tab.id })),
-    );
+  duplicateTab: createRepeatCommand(async (request) => {
+    const tab = await chrome.tabs.duplicate(request.tabId);
+    // Ensure subsequent invocations of this command place the next tab directly after this one.
+    request.tabId = tab.id;
   }),
 
   moveTabToNewWindow({ count, tab }) {
+    // TODO(philc): Switch to the promise API of chrome.tabs.query.
     chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
       const activeTabIndex = getTabIndex(tab, tabs);
       const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
@@ -334,9 +329,9 @@ const BackgroundCommands = {
       chrome.tabs.remove(tab.id);
     });
   },
-  restoreTab: createRepeatCommand((request, callback) =>
-    chrome.sessions.restore(null, callback(request))
-  ),
+  restoreTab: createRepeatCommand(async (request) => {
+    await chrome.sessions.restore(null);
+  }),
   async togglePinTab({ count, tab }) {
     await forCountTabs(count, tab, (tab) => {
       chrome.tabs.update(tab.id, { pinned: !tab.pinned });
@@ -609,8 +604,8 @@ const sendRequestHandlers = {
   getCurrentTabUrl({ tab }) {
     return tab.url;
   },
-  openUrlInNewTab: createRepeatCommand((request, callback) => {
-    TabOperations.openUrlInNewTab(request, callback);
+  openUrlInNewTab: createRepeatCommand(async (request, callback) => {
+    await TabOperations.openUrlInNewTab(request, callback);
   }),
   async openUrlInNewWindow(request) {
     await TabOperations.openUrlInNewWindow(request);
