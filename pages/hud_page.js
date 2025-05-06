@@ -173,7 +173,7 @@ export const handlers = {
   },
 
   copyToClipboard(message) {
-    if (!this.ensureClipboardIsAvailable()) return;
+    if (!ensureClipboardIsAvailable()) return;
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
@@ -191,7 +191,7 @@ export const handlers = {
   },
 
   pasteFromClipboard() {
-    if (!this.ensureClipboardIsAvailable()) return;
+    if (!ensureClipboardIsAvailable()) return;
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
