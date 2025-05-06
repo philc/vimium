@@ -96,11 +96,8 @@ async function openUrlInNewTab(request, callback) {
   );
 }
 
-// Opens request.url in new window and switches to it.
-async function openUrlInNewWindow(request, callback) {
-  if (callback == null) {
-    callback = function () {};
-  }
+// Open request.url in new window and switch to it.
+async function openUrlInNewWindow(request) {
   const winConfig = {
     url: await UrlUtils.convertToUrl(request.url),
     active: true,
@@ -112,7 +109,7 @@ async function openUrlInNewWindow(request, callback) {
   if (tabConfig["url"] === chromeNewTabUrl) {
     delete winConfig["url"];
   }
-  await chrome.windows.create(winConfig, callback);
+  await chrome.windows.create(winConfig);
 }
 
 export { openUrlInCurrentTab, openUrlInNewTab, openUrlInNewWindow };

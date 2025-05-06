@@ -612,8 +612,8 @@ const sendRequestHandlers = {
   openUrlInNewTab: createRepeatCommand((request, callback) => {
     TabOperations.openUrlInNewTab(request, callback);
   }),
-  openUrlInNewWindow(request) {
-    TabOperations.openUrlInNewWindow(request);
+  async openUrlInNewWindow(request) {
+    await TabOperations.openUrlInNewWindow(request);
   },
   async openUrlInIncognito(request) {
     await chrome.windows.create({
