@@ -90,7 +90,7 @@ async function openUrlInNewTab(request, callback) {
 
   // clean position and active, so following `openUrlInNewTab(request)` will create a tab just next
   // to this new tab
-  return chrome.tabs.create(
+  await chrome.tabs.create(
     tabConfig,
     (tab) => callback(Object.assign(request, { tab, tabId: tab.id, position: "", active: false })),
   );
@@ -112,7 +112,7 @@ async function openUrlInNewWindow(request, callback) {
   if (tabConfig["url"] === chromeNewTabUrl) {
     delete winConfig["url"];
   }
-  return chrome.windows.create(winConfig, callback);
+  await chrome.windows.create(winConfig, callback);
 }
 
 export { openUrlInCurrentTab, openUrlInNewTab, openUrlInNewWindow };

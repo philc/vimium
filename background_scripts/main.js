@@ -281,12 +281,14 @@ const BackgroundCommands = {
       if (request.position == null) {
         request.position = request.registryEntry.options.position;
       }
-      return (openNextUrl = function (request) {
+      // TODO(philc): This is hard to read; clean up.
+      return (openNextUrl = async function (request) {
         if (urls.length > 0) {
-          return TabOperations.openUrlInNewTab(
+          await TabOperations.openUrlInNewTab(
             Object.assign(request, { url: urls.pop() }),
             openNextUrl,
           );
+          return;
         } else {
           return callback(request);
         }
@@ -607,14 +609,14 @@ const sendRequestHandlers = {
   getCurrentTabUrl({ tab }) {
     return tab.url;
   },
-  openUrlInNewTab: createRepeatCommand((request, callback) =>
-    TabOperations.openUrlInNewTab(request, callback)
-  ),
+  openUrlInNewTab: createRepeatCommand((request, callback) => {
+    TabOperations.openUrlInNewTab(request, callback);
+  }),
   openUrlInNewWindow(request) {
-    return TabOperations.openUrlInNewWindow(request);
+    TabOperations.openUrlInNewWindow(request);
   },
   async openUrlInIncognito(request) {
-    return chrome.windows.create({
+    await chrome.windows.create({
       incognito: true,
       url: await UrlUtils.convertToUrl(request.url),
     });
@@ -831,8 +833,10 @@ async function showUpgradeMessageIfNecessary(onInstalledDetails) {
   const currentVersion = Utils.getCurrentVersion();
   // We do not show an upgrade message for patch/silent releases. Such releases have the same
   // major and minor version numbers.
-  if (!majorVersionHasIncreased(onInstalledDetails.previousVersion) 
-    || Settings.get("hideUpdateNotifications")) {
+  if (
+    !majorVersionHasIncreased(onInstalledDetails.previousVersion) ||
+    Settings.get("hideUpdateNotifications")
+  ) {
     return;
   }
 
@@ -856,7 +860,7 @@ async function showUpgradeMessageIfNecessary(onInstalledDetails) {
       if (id != notificationId) return;
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const tab = tabs[0];
-      return TabOperations.openUrlInNewTab({
+      TabOperations.openUrlInNewTab({
         tab,
         tabId: tab.id,
         url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md",
