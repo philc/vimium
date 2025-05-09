@@ -3,12 +3,13 @@
 //
 
 import * as bgUtils from "../background_scripts/bg_utils.js";
+import "../lib/url_utils.js";
 
 const chromeNewTabUrl = "about:newtab";
 
 // Opens the url in the current tab.
 // If the URL is a JavaScript snippet, execute that snippet in the current tab.
-async function openUrlInCurrentTab(request) {
+export async function openUrlInCurrentTab(request) {
   // Note that when injecting JavaScript, it's subject to the site's CSP. Sites with strict CSPs
   // (like github.com, developer.mozilla.org) will raise an error when we try to run this code. See
   // https://github.com/philc/vimium/issues/4331.
@@ -45,7 +46,7 @@ async function openUrlInCurrentTab(request) {
 }
 
 // Opens request.url in new tab and switches to it.
-async function openUrlInNewTab(request) {
+export async function openUrlInNewTab(request) {
   const tabConfig = {
     url: await UrlUtils.convertToUrl(request.url),
     active: true,
@@ -83,7 +84,7 @@ async function openUrlInNewTab(request) {
 }
 
 // Open request.url in new window and switch to it.
-async function openUrlInNewWindow(request) {
+export async function openUrlInNewWindow(request) {
   const winConfig = {
     url: await UrlUtils.convertToUrl(request.url),
     active: true,
@@ -97,5 +98,3 @@ async function openUrlInNewWindow(request) {
   }
   await chrome.windows.create(winConfig);
 }
-
-export { openUrlInCurrentTab, openUrlInNewTab, openUrlInNewWindow };
