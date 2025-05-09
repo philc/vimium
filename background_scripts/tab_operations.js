@@ -7,13 +7,17 @@ import "../lib/url_utils.js";
 
 const chromeNewTabUrl = "about:newtab";
 
-// Opens the url in the current tab.
-// If the URL is a JavaScript snippet, execute that snippet in the current tab.
+// Opens request.url in the current tab. If the URL is keywords, search for them in the default
+// search engine. If the URL is a javascript: snippet, execute it in the current tab.
 export async function openUrlInCurrentTab(request) {
-  // Note that when injecting JavaScript, it's subject to the site's CSP. Sites with strict CSPs
-  // (like github.com, developer.mozilla.org) will raise an error when we try to run this code. See
-  // https://github.com/philc/vimium/issues/4331.
-  if (UrlUtils.hasJavascriptProtocol(request.url)) {
+  const urlStr = await UrlUtils.convertToUrl(request.url);
+  if (urlStr == null) {
+    // The requested destination is not a URL, so treat it like a search query.
+    chrome.search.query({ text: request.url });
+  } else if (UrlUtils.hasJavascriptProtocol(urlStr)) {
+    // Note that when injecting JavaScript, it's subject to the site's CSP. Sites with strict CSPs
+    // (like github.com, developer.mozilla.org) will raise an error when we try to run this code. See
+    // https://github.com/philc/vimium/issues/4331.
     const scriptingArgs = {
       target: { tabId: request.tabId },
       func: (text) => {
@@ -30,19 +34,18 @@ export async function openUrlInCurrentTab(request) {
         el.textContent = text;
         document.head.appendChild(el);
       },
-      args: [request.url],
+      args: [urlStr],
     };
-
     if (!bgUtils.isFirefox()) {
       // The MAIN world -- where the webpage runs -- is less privileged than the ISOLATED world.
       // Specifying a world is required for Chrome, but not Firefox.
       // As of Firefox 118, specifying "MAIN" as the world is not yet supported.
       scriptingArgs.world = "MAIN";
     }
-
     chrome.scripting.executeScript(scriptingArgs);
   } else {
-    chrome.tabs.update(request.tabId, { url: await UrlUtils.convertToUrl(request.url) });
+    // It's a regular URL.
+    chrome.tabs.update(request.tabId, { url: urlStr });
   }
 }
 

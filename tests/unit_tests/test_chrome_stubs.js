@@ -98,8 +98,11 @@ globalThis.chrome = {
   },
 
   scripting: {
-    executeScript() {
-    },
+    executeScript() {},
+  },
+
+  search: {
+    query() {},
   },
 
   tabs: {

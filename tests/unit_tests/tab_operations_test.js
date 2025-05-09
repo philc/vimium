@@ -13,6 +13,16 @@ context("TabOperations openurlInCurrentTab", () => {
     assert.equal(expected, url);
   });
 
+  should("open a non-URL in the default search engine", async () => {
+    let searchQuery = null;
+    stub(chrome.search, "query", (queryInfo) => {
+      searchQuery = queryInfo.text;
+    });
+    const expected = "example query";
+    await to.openUrlInCurrentTab({ url: expected });
+    assert.equal(expected, searchQuery);
+  });
+
   should("open a javascript URL", async () => {
     let details = null;
     // NOTE(philc): This is a shallow test.
