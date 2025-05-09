@@ -19,6 +19,7 @@ export async function openUrlInCurrentTab(request) {
       func: (text) => {
         const prefix = "javascript:";
         text = text.slice(prefix.length).trim();
+        // TODO(philc): Why do we try to double decode here? Discover and then document it.
         text = decodeURIComponent(text);
         try {
           text = decodeURIComponent(text);
