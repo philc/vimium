@@ -50,6 +50,7 @@ export async function openUrlInCurrentTab(request) {
 }
 
 // Opens request.url in new tab and switches to it.
+// Returns the created tab.
 export async function openUrlInNewTab(request) {
   const urlStr = await UrlUtils.convertToUrl(request.url);
   const tabConfig = { windowId: request.tab.windowId };
@@ -75,6 +76,8 @@ export async function openUrlInNewTab(request) {
   tabConfig.active = request.active ?? true;
   tabConfig.openerTabId = request.tab.id;
 
+  let newTab;
+
   if (urlStr == null) {
     // The requested destination is not a URL, so treat it like a search query.
     //
@@ -86,17 +89,18 @@ export async function openUrlInNewTab(request) {
     // which we don't want. To work around that, first create an empty page. This is not needed in
     // Firefox. And in fact, firefox doesn't support a data:text URL to the chrome.tab.create API.
     tabConfig.url = bgUtils.isFirefox() ? null : "data:text/html,<html></html>";
-    const tab = await chrome.tabs.create(tabConfig);
+    newTab = await chrome.tabs.create(tabConfig);
     const query = request.url;
-    await chrome.search.query({ text: query, tabId: tab.id });
+    await chrome.search.query({ text: query, tabId: newTab.id });
   } else {
     // The requested destination is a regular URL.
     if (urlStr != chromeNewTabUrl) {
       // Firefox does not support "about:newtab" in chrome.tabs.create.
       tabConfig.url = urlStr;
     }
-    await chrome.tabs.create(tabConfig);
+    newTab = await chrome.tabs.create(tabConfig);
   }
+  return newTab;
 }
 
 // Open request.url in new window and switch to it.

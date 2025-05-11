@@ -286,7 +286,7 @@ const BackgroundCommands = {
         const url = urls.pop();
         const tab = await TabOperations.openUrlInNewTab(Object.assign(request, { url }));
         // Ensure subsequent invocations of this command place the next tab directly after this one.
-        Object.assign(request, { tabId: tab.id, position: "", active: false });
+        Object.assign(request, { tab, position: "after", active: false });
       }
     }
   }),

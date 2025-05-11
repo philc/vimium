@@ -40,15 +40,17 @@ context("TabOperations openUrlInNewTab", () => {
     let config = null;
     stub(chrome.tabs, "create", (_config) => {
       config = _config;
+      const newTab = { url: config.url };
+      return newTab;
     });
     const expected = "http://example.com";
-    await to.openUrlInNewTab({
+    const tab = await to.openUrlInNewTab({
       tab: { index: 1 },
       position: "after",
       url: expected,
     });
-    assert.equal(expected, config.url);
     assert.equal(2, config.index);
+    assert.equal(expected, tab.url);
   });
 
   should("open a non-URL in the default search engine", async () => {
