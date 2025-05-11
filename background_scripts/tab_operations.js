@@ -16,8 +16,8 @@ export async function openUrlInCurrentTab(request) {
     chrome.search.query({ text: request.url });
   } else if (UrlUtils.hasJavascriptProtocol(urlStr)) {
     // Note that when injecting JavaScript, it's subject to the site's CSP. Sites with strict CSPs
-    // (like github.com, developer.mozilla.org) will raise an error when we try to run this code. See
-    // https://github.com/philc/vimium/issues/4331.
+    // (like github.com, developer.mozilla.org) will raise an error when we try to run this code.
+    // See https://github.com/philc/vimium/issues/4331.
     const scriptingArgs = {
       target: { tabId: request.tabId },
       func: (text) => {
@@ -44,18 +44,15 @@ export async function openUrlInCurrentTab(request) {
     }
     chrome.scripting.executeScript(scriptingArgs);
   } else {
-    // It's a regular URL.
+    // The requested destination is a regular URL.
     chrome.tabs.update(request.tabId, { url: urlStr });
   }
 }
 
 // Opens request.url in new tab and switches to it.
 export async function openUrlInNewTab(request) {
-  const tabConfig = {
-    url: await UrlUtils.convertToUrl(request.url),
-    active: true,
-    windowId: request.tab.windowId,
-  };
+  const urlStr = await UrlUtils.convertToUrl(request.url);
+  const tabConfig = { windowId: request.tab.windowId };
   const position = request.position;
   let tabIndex = null;
   switch (position) {
@@ -75,16 +72,31 @@ export async function openUrlInNewTab(request) {
       tabIndex = request.tab.index + 1;
   }
   tabConfig.index = tabIndex;
-
-  if (request.active != null) {
-    tabConfig.active = request.active;
-  }
-  // Firefox does not support "about:newtab" in chrome.tabs.create.
-  if (tabConfig["url"] === chromeNewTabUrl) {
-    delete tabConfig["url"];
-  }
+  tabConfig.active = request.active ?? true;
   tabConfig.openerTabId = request.tab.id;
-  return await chrome.tabs.create(tabConfig);
+
+  if (urlStr == null) {
+    // The requested destination is not a URL, so treat it like a search query.
+    //
+    // The chrome.search.query API lets us open the search in a new tab, but it doesn't let us
+    // control the precise position of that tab. So, we open a new blank tab using our position
+    // parameter, and then execute the search in that tab.
+
+    // In Chrome, if we create a blank tab and call chrome.search.query, the omnibar is focused,
+    // which we don't want. To work around that, first create an empty page. This is not needed in
+    // Firefox. And in fact, firefox doesn't support a data:text URL to the chrome.tab.create API.
+    tabConfig.url = bgUtils.isFirefox() ? null : "data:text/html,<html></html>";
+    const tab = await chrome.tabs.create(tabConfig);
+    const query = request.url;
+    await chrome.search.query({ text: query, tabId: tab.id });
+  } else {
+    // The requested destination is a regular URL.
+    if (urlStr != chromeNewTabUrl) {
+      // Firefox does not support "about:newtab" in chrome.tabs.create.
+      tabConfig.url = urlStr;
+    }
+    await chrome.tabs.create(tabConfig);
+  }
 }
 
 // Open request.url in new window and switch to it.

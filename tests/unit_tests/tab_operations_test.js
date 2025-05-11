@@ -50,4 +50,25 @@ context("TabOperations openUrlInNewTab", () => {
     assert.equal(expected, config.url);
     assert.equal(2, config.index);
   });
+
+  should("open a non-URL in the default search engine", async () => {
+    let createConfig, queryInfo;
+    stub(chrome.tabs, "create", (config) => {
+      createConfig = config;
+      const newTab = { id: config.index };
+      return newTab;
+    });
+    stub(chrome.search, "query", (info) => {
+      queryInfo = info;
+    });
+    await to.openUrlInNewTab({
+      tab: { index: 1 },
+      position: "after",
+      url: "example query",
+    });
+    assert.equal("data:text/html,<html></html>", createConfig.url);
+    assert.equal(2, createConfig.index);
+    assert.equal("example query", queryInfo.text);
+    assert.equal(2, queryInfo.tabId);
+  });
 });
