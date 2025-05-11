@@ -34,3 +34,20 @@ context("TabOperations openurlInCurrentTab", () => {
     assert.equal(expected, details.args[0]);
   });
 });
+
+context("TabOperations openUrlInNewTab", () => {
+  should("open a regular URL", async () => {
+    let config = null;
+    stub(chrome.tabs, "create", (_config) => {
+      config = _config;
+    });
+    const expected = "http://example.com";
+    await to.openUrlInNewTab({
+      tab: { index: 1 },
+      position: "after",
+      url: expected,
+    });
+    assert.equal(expected, config.url);
+    assert.equal(2, config.index);
+  });
+});
