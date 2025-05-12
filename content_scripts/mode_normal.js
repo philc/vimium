@@ -176,9 +176,14 @@ const NormalModeCommands = {
     });
   },
 
-  openCopiedUrlInNewTab(count) {
+  openCopiedUrlInNewTab(count, request) {
     HUD.pasteFromClipboard((url) =>
-      chrome.runtime.sendMessage({ handler: "openUrlInNewTab", url, count })
+      chrome.runtime.sendMessage({
+        handler: "openUrlInNewTab",
+        position: request.registryEntry.options.position,
+        url,
+        count,
+      })
     );
   },
 

@@ -118,6 +118,10 @@ const allCommands = [
     desc: "Open the clipboard's URL in a new tab",
     group: "navigation",
     noRepeat: true,
+    options: {
+      position: "Where to place the tab in the tab bar. " +
+        "One of `start`, `before`, `after`, `end`. `after` is the default.",
+    },
   },
 
   {
