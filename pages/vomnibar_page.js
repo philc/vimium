@@ -87,33 +87,35 @@ class VomnibarUI {
     return this.activeUserSearchEngine != null;
   }
 
-  // The sequence of events when the vomnibar is hidden is as follows:
+  // The sequence of events when the vomnibar is hidden:
   // 1. Post a "hide" message to the host page.
   // 2. The host page hides the vomnibar.
   // 3. When that page receives the focus, it posts back a "hidden" message.
   // 4. Only once the "hidden" message is received here is onHiddenCallback called.
   //
   // This ensures that the vomnibar is actually hidden before any new tab is created, and avoids
-  // flicker after opening a link in a new tab then returning to the original tab (see #1485).
+  // flicker after opening a link in a new tab then returning to the original tab. See #1485.
   hide(onHiddenCallback = null) {
     this.onHiddenCallback = onHiddenCallback;
     this.input.blur();
-    UIComponentMessenger.postMessage({ name: "hide" });
     this.reset();
+    // Wait until this iframe's DOM has been rendered before hiding the iframe. This is to prevent
+    // Chrome caching the previous visual state of the vomnibar iframe. See #4708.
+    setTimeout(() => {
+      UIComponentMessenger.postMessage({ name: "hide" });
+    }, 0);
   }
 
   onHidden() {
-    if (typeof this.onHiddenCallback === "function") {
-      this.onHiddenCallback();
-    }
+    this.onHiddenCallback?.();
     this.onHiddenCallback = null;
     this.reset();
   }
 
   reset() {
-    this.completionList.style.display = "";
     this.input.value = "";
     this.completions = [];
+    this.renderCompletions(this.completions);
     this.previousInputValue = null;
     this.activeUserSearchEngine = null;
     this.selection = this.initialSelectionValue;
@@ -129,7 +131,9 @@ class VomnibarUI {
     const shouldReplaceInputWithSuggestion = this.selection >= 0 &&
       completion.insertText != null;
     if (shouldReplaceInputWithSuggestion) {
-      if (this.previousInputValue == null) this.previousInputValue = this.input.value;
+      if (this.previousInputValue == null) {
+        this.previousInputValue = this.input.value;
+      }
       this.input.value = completion.insertText;
     } else if (this.previousInputValue != null) {
       this.input.value = this.previousInputValue;
@@ -328,14 +332,17 @@ class VomnibarUI {
 
     this.completions = results;
     this.selection = this.completions[0]?.autoSelect ? 0 : this.initialSelectionValue;
-    // Update completion list with the new suggestions.
-    this.completionList.innerHTML = this.completions.map((c) => `<li>${c.html}</li>`).join("");
-    this.completionList.style.display = this.completions.length > 0 ? "block" : "";
+    this.renderCompletions(this.completions);
     this.selection = Math.min(
       this.completions.length - 1,
       Math.max(this.initialSelectionValue, this.selection),
     );
     this.updateSelection();
+  }
+
+  renderCompletions(completions) {
+    this.completionList.innerHTML = completions.map((c) => `<li>${c.html}</li>`).join("");
+    this.completionList.style.display = completions.length > 0 ? "block" : "";
   }
 
   refreshCompletions() {
@@ -371,7 +378,7 @@ class VomnibarUI {
       this.previousInputValue = null;
       this.selection = -1;
     }
-    return this.update();
+    this.update();
   }
 
   // Returns the UserSearchEngine for the given query. Returns null if the query does not begin with
