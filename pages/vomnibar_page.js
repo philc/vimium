@@ -140,9 +140,9 @@ class VomnibarUI {
       this.previousInputValue = null;
     }
 
-    // Highlight the selected entry, and only the selected entry.
-    for (let i = 0, end = this.completionList.children.length; i < end; i++) {
-      this.completionList.children[i].className = i === this.selection ? "selected" : "";
+    // Highlight the selected entry.
+    for (const [i, el] of Object.entries(this.completionList.children)) {
+      el.className = i == this.selection ? "selected" : "";
     }
   }
 
