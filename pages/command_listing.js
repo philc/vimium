@@ -53,6 +53,9 @@ async function populatePage() {
       }
 
       el.querySelector(".desc").textContent = command.desc;
+      if (command.details) {
+        el.querySelector(".details").textContent = command.details;
+      }
 
       if (command.options) {
         const ul = el.querySelector(".options ul");

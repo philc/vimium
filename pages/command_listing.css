@@ -68,7 +68,7 @@ h3 code {
   margin-right: auto;
 }
 
-p.desc {
+p.desc, p.details {
   margin-left: 1rem;
 }
 

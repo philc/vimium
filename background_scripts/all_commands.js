@@ -4,6 +4,7 @@
 // - advanced: advanced commands are not shown in the help dialog by default.
 // - background: whether this command has to be run by the background page.
 // - desc: shown in the help dialog and command listing page.
+// - details: extra help information that will only be shown on the command listing page.
 // - group: commands are displayed in groups in the help dialog and command listing.
 // - noRepeat: whether this command can be used with a count key prefix.
 // - repeatLimit: the number of allowed repetitions of this command before the user is prompted for
@@ -261,8 +262,8 @@ const allCommands = [
 
   {
     name: "Marks.activateCreateMode",
-    desc:
-      "Create a new mark. Do this by typing the key bound to this command, and then a letter. " +
+    desc: "Create a new mark",
+    details: "Do this by typing the key bound to this command, and then a letter. " +
       "This will set a mark bound to that letter. Lowercase letters are local marks and uppercase " +
       "letters are global marks.",
     options: {
