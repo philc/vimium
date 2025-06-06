@@ -6,7 +6,12 @@
   Vimium's CSS via the options page. (https://github.com/philc/vimium/issues/4668)
 - Breaking change: when creating a mapping for `setZoom`, a `level` argument is now required.
   E.g.: `map z2 setZoom level=2.0`.
-- Make Vomnibar.activateBookmark accept a `query` option. (https://github.com/philc/vimium/pull/4591)
+- Make Vomnibar.activateBookmark accept a `query` option.
+  (https://github.com/philc/vimium/pull/4591)
+- Fix `openCopiedUrlInCurrentTab` doesn't launch search queries.
+  (https://github.com/philc/vimium/issues/4657)
+- Update `goPrevious` and `goNext` commands to work on again on google.com.
+  (https://github.com/philc/vimium/issues/4650)
 
 2.2.1 (2025-03-20)
 
