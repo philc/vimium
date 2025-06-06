@@ -258,13 +258,15 @@ const NormalModeCommands = {
   goPrevious() {
     const previousPatterns = Settings.get("previousPatterns") || "";
     const previousStrings = previousPatterns.split(",").filter((s) => s.trim().length);
-    return findAndFollowRel("prev") || findAndFollowLink(previousStrings);
+    const target = findElementWithRelValue("prev") || findLink(previousStrings);
+    if (target) followLink(target);
   },
 
   goNext() {
     const nextPatterns = Settings.get("nextPatterns") || "";
     const nextStrings = nextPatterns.split(",").filter((s) => s.trim().length);
-    return findAndFollowRel("next") || findAndFollowLink(nextStrings);
+    const target = findElementWithRelValue("next") || findLink(nextStrings);
+    if (target) followLink(target);
   },
 
   focusInput(count) {
@@ -396,14 +398,12 @@ const followLink = function (linkElement) {
   }
 };
 
-//
-// Find and follow a link which matches any one of a list of strings. If there are multiple such
-// links, they are prioritized for shortness, by their position in `linkStrings`, how far down the
-// page they are located, and finally by whether the match is exact. Practically speaking, this
-// means we favor 'next page' over 'the next big thing', and 'more' over 'nextcompany', even if
-// 'next' occurs before 'more' in `linkStrings`.
-//
-const findAndFollowLink = function (linkStrings) {
+// Find links which have text matching any one of `linkStrings`. If there are multiple candidates,
+// they are prioritized for shortness, by their position in `linkStrings`, how far down the page
+// they are located, and finally by whether the match is exact. Practically speaking, this means we
+// favor 'next page' over 'the next big thing', and 'more' over 'nextcompany', even if 'next' occurs
+// before 'more' in `linkStrings`.
+function findLink(linkStrings) {
   const linksXPath = DomUtils.makeXPath([
     "a",
     "*[@onclick or @role='link' or contains(@class, 'button')]",
@@ -411,17 +411,16 @@ const findAndFollowLink = function (linkStrings) {
   const links = DomUtils.evaluateXPath(linksXPath, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
   let candidateLinks = [];
 
-  // at the end of this loop, candidateLinks will contain all visible links that match our patterns
+  // At the end of this loop, candidateLinks will contain all visible links that match our patterns
   // links lower in the page are more likely to be the ones we want, so we loop through the snapshot
-  // backwards
+  // backwards.
   for (let i = links.snapshotLength - 1; i >= 0; i--) {
     const link = links.snapshotItem(i);
 
-    // ensure link is visible (we don't mind if it is scrolled offscreen)
-    const boundingClientRect = link.getBoundingClientRect();
-    if ((boundingClientRect.width === 0) || (boundingClientRect.height === 0)) {
-      continue;
-    }
+    // NOTE(philc): We used to enforce the bounding client rect on the link had nonzero width and
+    // height. However, that's not a valid requirement. If an anchor tag has a single floated span
+    // as a child, the anchor is still clickable even though it appears to have zero height. This is
+    // the case with Google Search's "next" links as of 2025-06. See #4650.
 
     const computedStyle = globalThis.getComputedStyle(link, null);
     const isHidden = computedStyle.getPropertyValue("visibility") != "visible" ||
@@ -479,26 +478,23 @@ const findAndFollowLink = function (linkStrings) {
         candidateLink.getAttribute("title")?.match(exactWordRegex) ||
         candidateLink.getAttribute("aria-label")?.match(exactWordRegex)
       ) {
-        followLink(candidateLink);
-        return true;
+        return candidateLink;
       }
     }
   }
-  return false;
-};
+}
 
-const findAndFollowRel = function (value) {
+function findElementWithRelValue(value) {
   const relTags = ["link", "a", "area"];
   for (const tag of relTags) {
-    const elements = document.getElementsByTagName(tag);
-    for (const element of Array.from(elements)) {
-      if (element.hasAttribute("rel") && (element.rel.toLowerCase() === value)) {
-        followLink(element);
-        return true;
+    const els = document.getElementsByTagName(tag);
+    for (const el of Array.from(els)) {
+      if (el.hasAttribute("rel") && (el.rel.toLowerCase() === value)) {
+        return el;
       }
     }
   }
-};
+}
 
 class FocusSelector extends Mode {
   constructor(hints, visibleInputs, selectedInputIndex) {
