@@ -37,7 +37,7 @@ export function parseConfig(configText) {
     const description = tokens.length > 2 ? tokens.slice(2).join(" ") : `search (${keyword})`;
 
     if (!UrlUtils.urlHasProtocol(url) && !UrlUtils.hasJavascriptProtocol(url)) {
-      errors.push(`This search engine doens't have a valid URL: ${line}`);
+      errors.push(`This search engine doesn't have a valid URL: ${line}`);
       continue;
     }
     results[keyword] = new UserSearchEngine({ keyword, url, description });
