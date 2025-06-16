@@ -188,11 +188,11 @@ const CoreScroller = {
   init() {
     this.time = 0;
     this.lastEvent = this.keyIsDown = null;
-    this.installCanceEventListener();
+    this.installCancelEventListener();
   },
 
   // This installs listeners for events which should cancel smooth scrolling.
-  installCanceEventListener() {
+  installCancelEventListener() {
     // NOTE(smblott) With extreme keyboard configurations, Chrome sometimes does not get a keyup
     // event for every keydown, in which case tapping "j" scrolls indefinitely. This appears to be a
     // Chrome/OS/XOrg bug of some kind. See #1549.
@@ -201,15 +201,17 @@ const CoreScroller = {
       _name: "scroller/track-key-status",
       keydown: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
-          this.keyIsDown = true;
+          this.keyIsDown = event.code;
           if (!event.repeat) this.time += 1;
           this.lastEvent = event;
         });
       },
-      keyup: (_event) => {
+      keyup: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
-          this.keyIsDown = false;
-          this.time += 1;
+          if (event.code === this.keyIsDown) {
+            this.keyIsDown = null;
+            this.time += 1;
+          }
         });
       },
       blur: (event) => {
@@ -272,7 +274,7 @@ const CoreScroller = {
     let totalElapsed = 0.0;
     let calibration = 1.0;
     let previousTimestamp = null;
-    const cancelEventListener = this.installCanceEventListener();
+    const cancelEventListener = this.installCancelEventListener();
 
     const animate = (timestamp) => {
       if (previousTimestamp == null) {
