@@ -132,6 +132,7 @@ const allCommands = [
     advanced: true,
     options: {
       popAnchor: "Remove the anchor/fragment/hash from the URL, if present.",
+      popQuery: "Remove query parameters from the URL, if present.",
     },
   },
 

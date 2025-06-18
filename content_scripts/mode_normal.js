@@ -144,6 +144,13 @@ const NormalModeCommands = {
       --c;
     }
 
+    // Pop query params.
+    if (c > 0 && registryEntry.options.popQuery && url.search !== "") {
+      url.search = "";
+      url.hash = "";
+      --c;
+    }
+
     // Pop path segments.
     if (c > 0 && url.pathname != "/") {
       url.pathname = url.pathname.split("/").slice(0, -c).join("/");
