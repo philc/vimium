@@ -134,14 +134,22 @@ const NormalModeCommands = {
   },
 
   // Url manipulation.
-  goUp(count) {
+  goUp(count, { registryEntry }) {
+    let c = count;
     const url = new URL(globalThis.location.href);
 
+    // Pop anchor.
+    if (c > 0 && registryEntry.options.popAnchor && url.hash !== "") {
+      url.hash = "";
+      --c;
+    }
+
     // Pop path segments.
-    if (url.pathname != "/") {
-      url.pathname = url.pathname.split("/").slice(0, -count).join("/");
+    if (c > 0 && url.pathname != "/") {
+      url.pathname = url.pathname.split("/").slice(0, -c).join("/");
       url.search = "";
       url.hash = "";
+      --c;
     }
 
     if (globalThis.location.href !== url.toString()) {
