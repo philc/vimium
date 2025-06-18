@@ -135,16 +135,17 @@ const NormalModeCommands = {
 
   // Url manipulation.
   goUp(count) {
-    let url = globalThis.location.href;
-    if (url.endsWith("/")) {
-      url = url.substring(0, url.length - 1);
+    const url = new URL(globalThis.location.href);
+
+    // Pop path segments.
+    if (url.pathname != "/") {
+      url.pathname = url.pathname.split("/").slice(0, -count).join("/");
+      url.search = "";
+      url.hash = "";
     }
 
-    let urlsplit = url.split("/");
-    // make sure we haven't hit the base domain yet
-    if (urlsplit.length > 3) {
-      urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count));
-      globalThis.location.href = urlsplit.join("/");
+    if (globalThis.location.href !== url.toString()) {
+      globalThis.location.href = url.toString();
     }
   },
 
