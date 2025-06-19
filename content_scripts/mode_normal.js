@@ -152,11 +152,13 @@ const NormalModeCommands = {
     }
 
     // Pop path segments.
-    if (c > 0 && url.pathname != "/") {
-      url.pathname = url.pathname.split("/").slice(0, -c).join("/");
+    if (c > 0 && url.pathname !== "/") {
+      const initialSegments = url.pathname.substring(1).split("/");
+      const segments = initialSegments.slice(0, -c);
+      url.pathname = `/${segments.join("/")}`;
       url.search = "";
       url.hash = "";
-      --c;
+      c -= initialSegments.length - segments.length;
     }
 
     if (globalThis.location.href !== url.toString()) {
