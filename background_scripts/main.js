@@ -715,24 +715,6 @@ const sendRequestHandlers = {
     };
   },
 
-  async reloadVimiumExtension() {
-    // Clear the background page's console log, if its console window is open.
-    console.clear();
-    browser.runtime.reload();
-    // Refresh all open tabs, so they get the latest content scripts, and a clear console.
-    const tabs = await chrome.tabs.query({});
-    for (const tab of tabs) {
-      // Don't refresh the console window for the background page again. We just did that,
-      // effectively.
-      if (tab.url.startsWith("about:debugging")) continue;
-      // Our extension's reload.html page should automatically close when the extension is reloaded,
-      // but if there's an error in manifest.json, it will not, and the extension will enter a
-      // continuous reload loop. Avoid that by not reloading the reload.html page.
-      if (tab.url.endsWith("reload.html")) continue;
-      chrome.tabs.reload(tab.id);
-    }
-  },
-
   async filterCompletions(request) {
     const completer = completers[request.completerName];
     let response = await completer.filter(request);

@@ -242,8 +242,9 @@ const initializePreDomReady = async function () {
   Utils.addChromeRuntimeOnMessageListener(
     Object.keys(requestHandlers),
     async function (request, sender) {
-      // Some requests are so frequent and noisy (like checkEnabledAfterURLChange docs.google.com)
-      // that we silence debug logging for just those requests so the rest remains useful.
+      // Some requests are so frequent and noisy (like checkEnabledAfterURLChange on
+      // docs.google.com) that we silence debug logging for just those requests so the rest remain
+      // useful.
       if (!request.silenceLogging) {
         Utils.debugLog(
           "frontend.js: onMessage:%otype:%o",
