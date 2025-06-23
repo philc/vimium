@@ -202,8 +202,7 @@ const initializePreDomReady = async function () {
   installListeners();
   // NOTE(philc): I'm blocking further Vimium initialization on this, for simplicity. If necessary
   // we could allow other tasks to run concurrently.
-  await Settings.onLoaded();
-  checkIfEnabledForUrl();
+  await checkIfEnabledForUrl();
 
   const requestHandlers = {
     getFocusStatus(_request, _sender) {
@@ -414,7 +413,12 @@ globalThis.lastFocusedInput = (function () {
 
 // Checks if Vimium should be enabled or not based on the top frame's URL.
 const checkIfEnabledForUrl = async () => {
-  const response = await chrome.runtime.sendMessage({ handler: "initializeFrame" });
+  const promises = [];
+  promises.push(chrome.runtime.sendMessage({ handler: "initializeFrame" }));
+  if (!Settings.isLoaded()) {
+    promises.push(Settings.onLoaded());
+  }
+  const [response, ...unused] = await Promise.all(promises);
 
   isEnabledForUrl = response.isEnabledForUrl;
 
