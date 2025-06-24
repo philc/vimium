@@ -47,12 +47,6 @@ const HUD = {
         "vimium-hud-frame",
         this.handleUIComponentMessage.bind(this),
       );
-      // Allow to access to the clipboard through iframes.
-      // This is only valid/necessary for Chrome. Firefox will show this console warning:
-      // 'Feature Policy: Skipping unsupported feature name "clipboard-read"'
-      if (!Utils.isFirefox()) {
-        this.hudUI.iframeElement.allow = "clipboard-read; clipboard-write";
-      }
     }
     // this[data.name]? data
     if (this.tween == null) {
