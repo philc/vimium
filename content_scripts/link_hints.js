@@ -207,7 +207,7 @@ const HintCoordinator = {
     this.onExit = [onExit];
     const protocol = window.location.protocol;
     // chrome-extension, moz-extension (Firefox), extension (Edge).
-    const isExtensionPage = protocol.endsWith("extension");
+    const isExtensionPage = protocol.endsWith("extension:");
     chrome.runtime.sendMessage({
       handler: "prepareToActivateLinkHintsMode",
       modeIndex: availableModes.indexOf(mode),
