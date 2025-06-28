@@ -187,7 +187,7 @@ const checkVisibility = function (element) {
 const CoreScroller = {
   init() {
     this.time = 0;
-    this.lastEvent = this.keyIsDown = null;
+    this.lastEvent = this.keyDownKey = null;
     this.installCancelEventListener();
   },
 
@@ -201,15 +201,15 @@ const CoreScroller = {
       _name: "scroller/track-key-status",
       keydown: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
-          this.keyIsDown = event.code;
+          this.keyDownKey = event.code;
           if (!event.repeat) this.time += 1;
           this.lastEvent = event;
         });
       },
       keyup: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
-          if (event.code === this.keyIsDown) {
-            this.keyIsDown = null;
+          if (event.code === this.keyDownKey) {
+            this.keyDownKey = null;
             this.time += 1;
           }
         });
@@ -260,7 +260,7 @@ const CoreScroller = {
     }
 
     const activationTime = ++this.time;
-    const myKeyIsStillDown = () => (this.time === activationTime) && this.keyIsDown;
+    const myKeyIsStillDown = () => (this.time === activationTime) && this.keyDownKey != null;
 
     // Store amount's sign and make amount positive; the arithmetic is clearer when amount is
     // positive.
