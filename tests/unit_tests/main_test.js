@@ -3,7 +3,7 @@ import "../../lib/settings.js";
 import "../../background_scripts/main.js";
 
 context("HintCoordinator", () => {
-  should("prepareToActivateLinKhintsMode", async () => {
+  should("prepareToActivateLinkHintsMode", async () => {
     let receivedMessages = [];
     const frameIdToHintDescriptors = {
       "0": { frameId: 0, localIndex: 123, linkText: null },
