@@ -156,7 +156,7 @@ async function buildStorePackage() {
   ]);
 }
 
-const runUnitTests = async () => {
+async function runUnitTests() {
   // Import every test file.
   const dir = path.join(projectPath, "tests/unit_tests");
   const files = Array.from(Deno.readDirSync(dir)).map((f) => f.name).sort();
@@ -167,7 +167,7 @@ const runUnitTests = async () => {
   }
 
   return await shoulda.run();
-};
+}
 
 function setupPuppeteerPageForTests(page) {
   // The "console" event emitted has arguments which are promises. To obtain the values to be
