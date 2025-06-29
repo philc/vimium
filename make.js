@@ -330,8 +330,14 @@ desc("Run unit and DOM tests");
 task("test", ["test-unit", "test-dom"]);
 
 desc("Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/");
-task("package", [], async () => {
+task("package", ["write-command-listing"], async () => {
   await buildStorePackage();
+});
+
+desc("Build a static version of command_listing.html, to be hosted on vimium.gihub.io");
+task("write-command-listing", [], async () => {
+  // Run this script in a separate shell so it doesn't pollute our JS environment.
+  await shell("./build_scripts/write_command_listing_page.js", []);
 });
 
 desc("Replaces manifest.json with a Firefox-compatible version, for development");
