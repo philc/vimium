@@ -95,6 +95,7 @@ async function buildStorePackage() {
     ".*",
     "CREDITS",
     "MIT-LICENSE.txt",
+    "build_scripts",
     "dist",
     "make.js",
     "deno.json",
