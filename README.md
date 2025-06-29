@@ -110,17 +110,18 @@ Vimium supports command repetition so, for example, hitting `5t` will open 5 tab
 succession. `<Esc>` (or `<c-[>`) will clear any partial commands in the queue and will also exit
 insert and find modes.
 
-There are some advanced commands which aren't documented here; refer to the help dialog (type `?`)
-for a full list.
+There are additional commands which aren't included in this README; refer to the help dialog (type `?`) for a
+full list.
 
 ## Custom Key Mappings
 
 You may remap or unmap any of the default key bindings in the "Custom key mappings" on the options
 page.
 
-Enter one of the following key mapping commands per line:
+Enter one of the following key mapping statements per line:
 
-- `map key command`: Maps a key to a Vimium command. Overrides Chrome's default behavior (if any).
+- `map key command`: Maps a key to a Vimium command. Overrides Chrome's default behavior for that
+  key, if any.
 - `unmap key`: Unmaps a key and restores Chrome's default behavior (if any).
 - `unmapAll`: Unmaps all bindings. This is useful if you want to completely wipe Vimium's defaults
   and start from scratch with your own setup.
@@ -128,13 +129,13 @@ Enter one of the following key mapping commands per line:
 Examples:
 
 - `map <c-d> scrollPageDown` maps ctrl+d to scrolling the page down. Chrome's default behavior of
-  bringing up a bookmark dialog is suppressed.
-- `map r reload` maps the r key to reloading the page.
+  showing a bookmark dialog is suppressed.
+- `map r reload hard` maps the r key to reloading the page, and also includes the "hard"
+  option to hard-reload the page.
 - `unmap <c-d>` removes any mapping for ctrl+d and restores Chrome's default behavior.
 - `unmap r` removes any mapping for the r key.
 
-Available Vimium commands can be found via the "Show available commands" link near the key mapping
-box on the options page. The command name appears to the right of the description in parenthesis.
+See the [docs](https://vimium.github.io/commands/) for every Vimium command and its options.
 
 You can add comments to key mappings by starting a line with `"` or `#`.
 
@@ -153,9 +154,10 @@ keyboard.
 
 ## More documentation
 
-Many of the more advanced or involved features are documented on
-[Vimium's GitHub wiki](https://github.com/philc/vimium/wiki). Also see the
-[FAQ](https://github.com/philc/vimium/wiki/FAQ).
+* [FAQ](https://github.com/philc/vimium/wiki/FAQ)
+* [Command listing](https://vimium.github.io/commands/)
+* [Vimium's GitHub wiki](https://github.com/philc/vimium/wiki): documentation the more advanced
+  features.
 
 ## Contributing
 
