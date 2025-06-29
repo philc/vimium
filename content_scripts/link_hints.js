@@ -623,27 +623,40 @@ class LinkHintsMode {
 
   // Rotate the hints' z-index values so that hidden hints become visible.
   rotateHints() {
+    // Partitions array into two arrays, based on the bool return value of predicate.
+    function partition(array, predicate) {
+      const a = [];
+      const b = [];
+      for (const item of array) {
+        const target = predicate(item) ? a : b;
+        target.push(item);
+      }
+      return [a, b];
+    }
+
     // Get local, visible hint markers.
-    const localHintMarkers = this.hintMarkers.filter((m) =>
-      m.isLocalMarker() && (m.element.style.display !== "none")
+    const [localMarkers, otherMarkers] = partition(
+      this.hintMarkers,
+      (m) => m.isLocalMarker() && (m.element.style.display !== "none"),
     );
+
     // Fill in the markers' rects, if necessary.
-    for (const marker of localHintMarkers) {
-      if (marker.markerRect == null) {
-        marker.markerRect = marker.element.getClientRects()[0];
+    for (const m of localMarkers) {
+      if (m.markerRect == null) {
+        m.markerRect = m.element.getClientRects()[0];
       }
     }
 
     // Calculate the overlapping groups of hints. We call each group a "stack". This is O(n^2).
     let stacks = [];
-    for (const marker of localHintMarkers) {
+    for (const m of localMarkers) {
       let stackForThisMarker = null;
       const results = [];
       for (const stack of stacks) {
-        const markerOverlapsThisStack = this.markerOverlapsStack(marker, stack);
+        const markerOverlapsThisStack = this.markerOverlapsStack(m, stack);
         if (markerOverlapsThisStack && (stackForThisMarker == null)) {
           // We've found an existing stack for this marker.
-          stack.push(marker);
+          stack.push(m);
           stackForThisMarker = stack;
           results.push(stack);
         } else if (markerOverlapsThisStack && (stackForThisMarker != null)) {
@@ -659,11 +672,11 @@ class LinkHintsMode {
       stacks = results;
 
       if (stackForThisMarker == null) {
-        stacks.push([marker]);
+        stacks.push([m]);
       }
     }
 
-    const newMarkers = [];
+    let newMarkers = [];
     for (let stack of stacks) {
       if (stack.length > 1) {
         // Push the last element to the beginning.
@@ -671,6 +684,8 @@ class LinkHintsMode {
       }
       newMarkers.push(...stack);
     }
+
+    newMarkers = newMarkers.concat(otherMarkers);
     this.hintMarkers = newMarkers;
     this.renderHints();
   }
