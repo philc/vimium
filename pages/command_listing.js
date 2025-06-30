@@ -42,7 +42,8 @@ async function populatePage() {
       const keys = Object.values(commandToOptionsToKeys[command.name] || {})
         .flat(1);
       const el = commandTemplate.cloneNode(true);
-      el.querySelector(".command").dataset.command = command.name; // used by tests
+      // Used for linking to commands using the URL fragment, and by the tests.
+      el.querySelector(".command").id = command.name;
       el.querySelector("h3 code").textContent = command.name;
 
       const keysEl = el.querySelector(".key-bindings");
