@@ -12,7 +12,12 @@
   </head>
 
   <body class="vimium-body">
-    <header>Vimium Commands</header>
+    <header>
+      Vimium Commands
+      <a id="github-link" href="https://www.github.com/philc/vimium">
+        <img id="github" src="../github.svg">
+      </a>
+    </header>
     <nav>
       <ul>
         <li><a href="#navigation">Navigating the page</a></li>
@@ -33,12 +38,13 @@
     </main>
 
     <template id="command">
-      <div class="command">
+      <div class="command" id="example-command-name">
         <h3>
           <code>an-example-command</code>
           <span class="key-bindings"></span>
         </h3>
         <p class="desc">Example description.</p>
+        <p class="details"></p>
         <div class="options">
           <p><strong>Options</strong></p>
           <ul></ul>

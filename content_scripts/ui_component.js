@@ -32,6 +32,16 @@ class UIComponent {
     const isDomTests = iframeUrl.includes("?dom_tests=true");
     this.iframeElement = DomUtils.createElement("iframe");
 
+    // Allow Vimium's iframes to have clipboard access in Chrome. This is needed when triggering
+    // some commands, like link hints or copyCurrentUrl, from within the help dialog. Firefox does
+    // not support clipboard-read and clipboard-write in the allow attribute. NOTE(philc): this
+    // permission has to be set before we append the iframe to the DOM, or Chrome will log the
+    // console error "Potential permissions policy violation: clipboard-read is not allowed in this
+    // document."
+    if (!Utils.isFirefox()) {
+      this.iframeElement.allow = "clipboard-read; clipboard-write";
+    }
+
     const styleSheet = DomUtils.createElement("style");
     styleSheet.type = "text/css";
     // Default to everything hidden while the stylesheet loads.

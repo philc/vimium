@@ -97,6 +97,14 @@ globalThis.chrome = {
     },
   },
 
+  scripting: {
+    executeScript() {},
+  },
+
+  search: {
+    query() {},
+  },
+
   tabs: {
     get(_id) {},
     onUpdated: {

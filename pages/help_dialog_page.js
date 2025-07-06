@@ -186,7 +186,7 @@ function init() {
       case "hide":
         HelpDialogPage.hide();
         break;
-      case "activate":
+      case "show":
         HelpDialogPage.init();
         await HelpDialogPage.show(event.data);
         // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
@@ -202,6 +202,9 @@ function init() {
   });
 }
 
+globalThis.HelpDialogPage = HelpDialogPage;
+globalThis.isVimiumHelpDialogPage = true;
+
 const testEnv = globalThis.window == null;
 if (!testEnv) {
   document.addEventListener("DOMContentLoaded", async () => {
@@ -210,8 +213,5 @@ if (!testEnv) {
   });
   init();
 }
-
-globalThis.HelpDialogPage = HelpDialogPage;
-globalThis.isVimiumHelpDialogPage = true;
 
 export { HelpDialogPage };

@@ -1,9 +1,7 @@
 import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
-
 import { Suggestion } from "../../background_scripts/completion.js";
-import "../../background_scripts/completion.js";
-import { Vomnibar } from "../../pages/vomnibar_page.js";
+import * as vomnibarPage from "../../pages/vomnibar_page.js";
 
 function newKeyEvent(properties) {
   return Object.assign(
@@ -21,7 +19,8 @@ function newKeyEvent(properties) {
   );
 }
 
-context("vomnibar", () => {
+context("vomnibar page", () => {
+  let ui;
   setup(async () => {
     await testHelper.jsdomStub("pages/vomnibar_page.html");
     stub(chrome.runtime, "sendMessage", async (message) => {
@@ -29,12 +28,12 @@ context("vomnibar", () => {
         return [];
       }
     });
+    vomnibarPage.reset();
+    await vomnibarPage.activate();
+    ui = vomnibarPage.ui;
   });
 
   should("hide when escape is pressed", async () => {
-    const instance = new Vomnibar();
-    await instance.activate();
-    const ui = instance.vomnibarUI;
     ui.setQuery("www.example.com");
     // Here we assert that the dialog has been reset when esc is pressed, which happens as part of
     // hiding the dialog. It would be better to check more directly that the dialog was hidden, but
@@ -50,9 +49,7 @@ context("vomnibar", () => {
         return [s];
       }
     });
-    const instance = new Vomnibar();
-    await instance.activate();
-    const ui = instance.vomnibarUI;
+    await ui.update();
     await ui.onKeyEvent(newKeyEvent({ type: "keydown", key: "up" }));
     // TODO(philc): Why does this need to be lowercase enter?
     await ui.onKeyEvent(newKeyEvent({ type: "keypress", ctrlKey: true, key: "enter" }));
@@ -60,9 +57,6 @@ context("vomnibar", () => {
   });
 
   should("open a URL-like query when enter is pressed", async () => {
-    const instance = new Vomnibar();
-    await instance.activate();
-    const ui = instance.vomnibarUI;
     ui.setQuery("www.example.com");
     let handler = null;
     let url = null;
@@ -76,9 +70,6 @@ context("vomnibar", () => {
   });
 
   should("search for a non-URL query when enter is pressed", async () => {
-    const instance = new Vomnibar();
-    await instance.activate();
-    const ui = instance.vomnibarUI;
     ui.setQuery("example");
     let handler = null;
     let query = null;
@@ -94,9 +85,6 @@ context("vomnibar", () => {
 
   // This test covers #4396.
   should("not treat javascript keywords as user-defined search engines", async () => {
-    const instance = new Vomnibar();
-    await instance.activate();
-    const ui = instance.vomnibarUI;
     ui.setQuery("constructor "); // "constructor" is a built-in JS property
     ui.onInput();
     // The query should not be treated as a user search engine.

@@ -1,38 +1,36 @@
 /*
  * A unit testing micro framework. Tests are grouped into "contexts", each of which can share common
- * setup functions.
+ * setup and teardown functions.
  */
 
 /*
  * Assertions.
  */
 const assert = {
-  isTrue: function (value) {
+  isTrue(value) {
     if (!value) {
       this.fail("Expected true, but got " + value);
     }
   },
 
-  isFalse: function (value) {
+  isFalse(value) {
     if (value) {
       this.fail("Expected false, but got " + value);
     }
   },
 
   // Does a deep-equal check on complex objects.
-  equal: function (expected, actual) {
+  equal(expected, actual) {
     const areEqual = typeof expected === "object"
       ? JSON.stringify(expected) === JSON.stringify(actual)
       : expected === actual;
     if (!areEqual) {
-      this.fail(
-        `\nExpected:\n${this._print(expected)}\nGot:\n${this._print(actual)}\n`,
-      );
+      this.fail(`Expected:\n${this._print(expected)}\nGot:\n${this._print(actual)}`);
     }
   },
 
   // We cannot name this function simply "throws", because it's a reserved JavaScript keyword.
-  throwsError: function (expression, errorName) {
+  throwsError(expression, errorName) {
     try {
       expression();
     } catch (error) {
@@ -55,12 +53,12 @@ const assert = {
     }
   },
 
-  fail: function (message) {
+  fail(message) {
     throw new AssertionError(message);
   },
 
   // Used for printing the arguments passed to assertions.
-  _print: function (object) {
+  _print(object) {
     if (object === null) return "null";
     else if (object === undefined) return "undefined";
     else if (typeof object === "string") return '"' + object + '"';
@@ -86,22 +84,24 @@ function ensureCalled(fn) {
     if (i >= 0) {
       Tests.requiredCallbacks.splice(i, 1); // Delete.
     }
-    return fn.apply(null, arguments);
+    return fn?.apply(null, arguments);
   };
   Tests.requiredCallbacks.push(wrappedFunction);
   return wrappedFunction;
 }
 
-function AssertionError(message) {
-  this.name = AssertionError;
-  this.message = message;
+class AssertionError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "AssertionError";
+    // Omit this constructor from the error's backtrace.
+    Error.captureStackTrace?.(this, AssertionError);
+  }
 }
-AssertionError.prototype = new Error();
-AssertionError.prototype.constructor = AssertionError;
 
 /*
  * A Context is a named set of test methods and nested contexts, with optional setup and teardown
- * blocks.
+ * methods.
  */
 function Context(name) {
   this.name = name;
@@ -166,8 +166,7 @@ const Tests = {
   testsRun: 0,
   testsFailed: 0,
 
-  // The list of callbacks to ensure are called by the end of the test. This list is appended to by
-  // `ensureCalled`.
+  // The list of callbacks created by `ensureCalled` which must be called by the end of the test.
   requiredCallbacks: [],
 
   // True if, during the collection phase, should.only or context.only was used.
@@ -177,7 +176,7 @@ const Tests = {
    * Run all contexts which have been defined.
    * - testNameFilter: a String. If provided, only run tests which match testNameFilter will be run.
    */
-  run: async function (testNameFilter) {
+  async run(testNameFilter) {
     // Run every top level context (i.e. those not defined within another context). These will in
     // turn run any nested contexts. The very last context ever added to Tests.testContexts is a top
     // level context. Note that any contexts which have not already been run by a previous top level
@@ -196,7 +195,7 @@ const Tests = {
    * useful when running shoulda tests in a REPL environment, to prevent tests from getting defined
    * multiple times when a file is re-evaluated.
    */
-  reset: function () {
+  reset() {
     this.topLevelContexts = [];
     this.focusedTests = [];
     this.focusIsUsed = false;
@@ -206,7 +205,7 @@ const Tests = {
    * Run a context. This runs the test methods defined in the context first, and then any nested
    * contexts.
    */
-  runContext: async function (context, parentContexts, testNameFilter) {
+  async runContext(context, parentContexts, testNameFilter) {
     parentContexts = parentContexts.concat([context]);
     for (const test of context.tests) {
       if (test instanceof Context) {
@@ -218,19 +217,16 @@ const Tests = {
   },
 
   /*
-   * Run a test method. This will run all setup methods in all contexts, and then all teardown
-   * methods.
+   * Run a test. This will run all setup methods in all contexts, and then all teardown methods.
    * - testMethod: an object with keys name, fn.
    * - contexts: an array of Contexts, ordered outer to inner.
    * - testNameFilter: A String. If provided, only run the test if it matches testNameFilter.
    */
-  runTest: async function (testMethod, contexts, testNameFilter) {
-    if (
-      this.focusIsUsed && !testMethod.isFocused &&
-      !contexts.some((c) => c.isFocused)
-    ) {
-      return;
-    }
+  async runTest(testMethod, contexts, testNameFilter) {
+    const shouldSkip = this.focusIsUsed && !testMethod.isFocused &&
+      !contexts.some((c) => c.isFocused);
+    if (shouldSkip) return;
+
     const fullTestName = this.fullyQualifiedName(testMethod.name, contexts);
     if (testNameFilter && !fullTestName.includes(testNameFilter)) {
       return;
@@ -238,40 +234,68 @@ const Tests = {
 
     this.testsRun++;
     let failureMessage = null;
-    // This is the scope which all references to "this" in the setup and test methods will resolve to.
+    // This is the scope which all references to "this" in the setup and test methods resolve to.
     const testScope = {};
 
-    try {
+    const errors = [];
+
+    for (const context of contexts.filter((c) => c.setupMethod)) {
       try {
-        for (const context of contexts) {
-          if (context.setupMethod) {
-            await context.setupMethod.call(testScope, testScope);
-          }
-        }
-        await testMethod.fn.call(testScope, testScope);
-      } finally {
-        for (const context of contexts) {
-          if (context.teardownMethod) {
-            await context.teardownMethod.call(testScope, testScope);
-          }
-        }
-      }
-    } catch (error) {
-      // Note that error can be either a String or an Error.
-      const failedAssertion = error instanceof AssertionError;
-      failureMessage = failedAssertion ? error.message : error.toString();
-      if (!failedAssertion && error.stack) {
-        failureMessage += "\n" + error.stack;
+        await context.setupMethod.call(testScope, testScope);
+      } catch (error) {
+        errors.push(error);
+        break;
       }
     }
 
-    if (!failureMessage && this.requiredCallbacks.length > 0) {
-      failureMessage =
-        "A callback function should have been called during this test, but it wasn't.";
+    if (errors.length == 0) {
+      try {
+        await testMethod.fn.call(testScope, testScope);
+      } catch (error) {
+        errors.push(error);
+      }
     }
-    if (failureMessage) {
+
+    for (const context of contexts.filter((c) => c.teardownMethod)) {
+      try {
+        await context.teardownMethod.call(testScope, testScope);
+      } catch (error) {
+        errors.push(error);
+        break;
+      }
+    }
+
+    if (this.requiredCallbacks.length > 0) {
+      errors.push("A callback function should have been called during this test, but wasn't.");
+    }
+
+    if (errors.length > 0) {
       Tests.testsFailed++;
-      Tests.printFailure(fullTestName, failureMessage);
+    }
+
+    // Print the errors in the order they occurred in the setup, test, teardown chain.
+    for (const [i, error] of Object.entries(errors)) {
+      // Note that in JavaScript, any object can be thrown, even a string or null.
+      let message;
+      if (Error.isError(error)) {
+        if (error instanceof AssertionError) {
+          message = error.message;
+        } else {
+          // In Deno and Chrome, error.stack also includes the error's message.
+          message = error.stack;
+        }
+      } else {
+        // Thrown types which are not Errors will not have a backtrace.
+        message = String(error);
+      }
+
+      // For the first failure only, print the failed test header message.
+      if (i == 0) {
+        Tests.printFailure(fullTestName, message);
+      } else {
+        console.log("---"); // Add a visual separator between backtraces when there are many.
+        console.log(message);
+      }
     }
 
     this.requiredCallbacks = [];
@@ -279,11 +303,11 @@ const Tests = {
   },
 
   // The fully-qualified name of the test or context, e.g. "context1: context2: testName".
-  fullyQualifiedName: function (testName, contexts) {
+  fullyQualifiedName(testName, contexts) {
     return contexts.map((c) => c.name).concat(testName).join(": ");
   },
 
-  printTestSummary: function () {
+  printTestSummary() {
     if (this.testsFailed > 0) {
       console.log(`Fail (${Tests.testsFailed}/${Tests.testsRun})`);
     } else {
@@ -291,8 +315,8 @@ const Tests = {
     }
   },
 
-  printFailure: function (testName, failureMessage) {
-    console.log(`Fail "${testName}"`, failureMessage);
+  printFailure(testName, failureMessage) {
+    console.log(`Fail "${testName}"\n${failureMessage}`);
   },
 };
 

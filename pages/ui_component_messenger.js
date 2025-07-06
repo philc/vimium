@@ -5,9 +5,9 @@
 let ownerPagePort = null;
 let handleMessage = null;
 
-async function registerPortWithOwnerPage(event) {
+export async function registerPortWithOwnerPage(event) {
   if (event.source !== globalThis.parent) return;
-  // The Vimium content script that's running on the parent page has access to this vimiumsecret
+  // The Vimium content script that's running on the parent page has access to this vimiumSecret
   // fetched from session storage, so if it matches, then we know that event.ports came from the
   // Vimium extension.
   const secret = (await chrome.storage.session.get("vimiumSecret")).vimiumSecret;
@@ -19,6 +19,12 @@ async function registerPortWithOwnerPage(event) {
   // Once we complete a handshake with the parent page hosting this page's iframe, stop listening
   // for messages on the window object.
   globalThis.removeEventListener("message", registerPortWithOwnerPage);
+}
+
+// Used by unit tests.
+export async function unregister() {
+  ownerPagePort = null;
+  handleMessage = null;
 }
 
 export function init() {

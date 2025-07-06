@@ -1,12 +1,14 @@
 import "./all_content_scripts.js";
 import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
 import { allCommands } from "../background_scripts/all_commands.js";
-import { Commands } from "../background_scripts/commands.js";
+import { Commands, KeyMappingsParser } from "../background_scripts/commands.js";
+import * as userSearchEngines from "../background_scripts/user_search_engines.js";
 
 const options = {
   filterLinkHints: "boolean",
   waitForEnterForFilteredHints: "boolean",
   hideHud: "boolean",
+  hideUpdateNotifications: "boolean",
   keyMappings: "string",
   linkHintCharacters: "string",
   linkHintNumbers: "string",
@@ -26,6 +28,9 @@ const options = {
 const OptionsPage = {
   async init() {
     await Settings.onLoaded();
+
+    const shortcutLabel = document.querySelector("#shortcut-to-save-all");
+    shortcutLabel.textContent = KeyboardUtils.platform == "Mac" ? "Cmd-Enter" : "Ctrl-Enter";
 
     const saveButton = document.querySelector("#save");
 
@@ -74,9 +79,13 @@ const OptionsPage = {
       }
     };
 
-    document.addEventListener("keyup", (event) => {
+    document.addEventListener("keydown", (event) => {
+      // Firefox on Mac doesn't pass ctrl-enter to our page because MacOS Sequoia treats it as a
+      // shortcut for right click; typing it shows a context menu. So, we also allow cmd-enter to
+      // save all options. Note that ctrl-enter still works on Chrome for some reason.
       const isCtrlEnter = event.ctrlKey && event.keyCode === 13;
-      if (isCtrlEnter) {
+      const isCmdEnter = event.metaKey && event.keyCode === 13;
+      if (isCtrlEnter || isCmdEnter) {
         this.saveOptions();
       }
     });
@@ -163,14 +172,14 @@ const OptionsPage = {
 
     // keyMappings field.
     text = this.getOptionEl("keyMappings").value.trim();
-    parsed = Commands.parseKeyMappingsConfig(text);
+    parsed = KeyMappingsParser.parse(text);
     if (parsed.validationErrors.length > 0) {
       results["keyMappings"] = parsed.validationErrors.join("\n");
     }
 
     // searchEngines field.
     text = this.getOptionEl("searchEngines").value.trim();
-    parsed = UserSearchEngines.parseConfig(text);
+    parsed = userSearchEngines.parseConfig(text);
     if (parsed.validationErrors.length > 0) {
       results["searchEngines"] = parsed.validationErrors.join("\n");
     }

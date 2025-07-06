@@ -95,10 +95,14 @@ async function buildStorePackage() {
     ".*",
     "CREDITS",
     "MIT-LICENSE.txt",
+    "build_scripts",
     "dist",
     "make.js",
     "deno.json",
     "deno.lock",
+    // These reload scripts are used for development only and shouldn't appear in the build.
+    "reload.html",
+    "reload.js",
     "test_harnesses",
     "tests",
   ];
@@ -153,7 +157,7 @@ async function buildStorePackage() {
   ]);
 }
 
-const runUnitTests = async () => {
+async function runUnitTests() {
   // Import every test file.
   const dir = path.join(projectPath, "tests/unit_tests");
   const files = Array.from(Deno.readDirSync(dir)).map((f) => f.name).sort();
@@ -164,7 +168,7 @@ const runUnitTests = async () => {
   }
 
   return await shoulda.run();
-};
+}
 
 function setupPuppeteerPageForTests(page) {
   // The "console" event emitted has arguments which are promises. To obtain the values to be
@@ -327,8 +331,14 @@ desc("Run unit and DOM tests");
 task("test", ["test-unit", "test-dom"]);
 
 desc("Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/");
-task("package", [], async () => {
+task("package", ["write-command-listing"], async () => {
   await buildStorePackage();
+});
+
+desc("Build a static version of command_listing.html, to be hosted on vimium.gihub.io");
+task("write-command-listing", [], async () => {
+  // Run this script in a separate shell so it doesn't pollute our JS environment.
+  await shell("./build_scripts/write_command_listing_page.js", []);
 });
 
 desc("Replaces manifest.json with a Firefox-compatible version, for development");

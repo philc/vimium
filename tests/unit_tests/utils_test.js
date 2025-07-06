@@ -155,67 +155,6 @@ context("pick", () => {
   });
 });
 
-context("parseLines", () => {
-  should("omit whitespace", () => {
-    assert.equal(0, Utils.parseLines("    \n    \n   ").length);
-  });
-
-  should("omit comments", () => {
-    assert.equal(0, Utils.parseLines(' # comment   \n " comment   \n   ').length);
-  });
-
-  should("join lines", () => {
-    assert.equal(1, Utils.parseLines("a\\\nb").length);
-    assert.equal("ab", Utils.parseLines("a\\\nb")[0]);
-  });
-
-  should("trim lines", () => {
-    assert.equal(2, Utils.parseLines("  a  \n  b").length);
-    assert.equal("a", Utils.parseLines("  a  \n  b")[0]);
-    assert.equal("b", Utils.parseLines("  a  \n  b")[1]);
-  });
-});
-
-context("UserSearchEngines", () => {
-  should("parse out search engine text", () => {
-    const config = [
-      "g: http://google.com/%s Google Search",
-      "random line",
-      "# comment",
-      " w: http://wikipedia.org/%s",
-    ].join("\n");
-
-    const results = UserSearchEngines.parseConfig(config).keywordToEngine;
-
-    assert.equal(
-      {
-        g: new UserSearchEngine({
-          keyword: "g",
-          url: "http://google.com/%s",
-          description: "Google Search",
-        }),
-        w: new UserSearchEngine({
-          keyword: "w",
-          url: "http://wikipedia.org/%s",
-          description: "search (w)",
-        }),
-      },
-      results,
-    );
-  });
-
-  should("return validation errors", () => {
-    const getErrors = (config) => UserSearchEngines.parseConfig(config).validationErrors;
-    assert.equal(0, getErrors("g: http://google.com").length);
-    // Missing colon.
-    assert.equal(1, getErrors("g http://google.com").length);
-    // Not enough tokens.
-    assert.equal(1, getErrors("g:").length);
-    // Invalid search engine URL.
-    assert.equal(1, getErrors("g: invalid-url").length);
-  });
-});
-
 context("keyBy", () => {
   const array = [
     { key: "a" },
@@ -234,5 +173,38 @@ context("keyBy", () => {
       { a: array[0], b: array[1] },
       Utils.keyBy(array, (el) => el.key),
     );
+  });
+});
+
+context("assertType", () => {
+  should("fail if schema or object is null", () => {
+    assert.throwsError(() => Utils.assertType(null, { a: 1 }));
+    assert.throwsError(() => Utils.assertType({ a: null }, null));
+  });
+
+  should("not allow unknown fields", () => {
+    const schema = { a: null };
+    Utils.assertType(schema, { a: 1 });
+    assert.throwsError(() => Utils.assertType(schema, { b: 1 }));
+  });
+
+  should("type check fields with types", () => {
+    const schema = {
+      bool: "boolean",
+      num: "number",
+      string: "string"
+    };
+    Utils.assertType(schema, {
+      bool: true,
+      num: 1,
+      string: "example"
+    });
+    assert.throwsError(() => Utils.assertType(schema, { bool: 1 }));
+    assert.throwsError(() => Utils.assertType(schema, { num: "example" }));
+    assert.throwsError(() => Utils.assertType(schema, { string: 1 }));
+  });
+
+  should("allow null values for typed fields", () => {
+    Utils.assertType({ bool: "boolean" }, { bool: null });
   });
 });

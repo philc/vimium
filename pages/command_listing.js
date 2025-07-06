@@ -14,6 +14,14 @@ function compareKeys(a, b) {
   }
 }
 
+function replaceBackticksWithCodeTags(str) {
+  let count = 0;
+  return str.replace(/`/g, (match) => {
+    count++;
+    return count % 2 === 1 ? "<code>" : "</code>";
+  });
+}
+
 async function populatePage() {
   const h2s = document.querySelectorAll("h2");
   const byGroup = Object.groupBy(allCommands, (el) => el.group);
@@ -34,7 +42,8 @@ async function populatePage() {
       const keys = Object.values(commandToOptionsToKeys[command.name] || {})
         .flat(1);
       const el = commandTemplate.cloneNode(true);
-      el.querySelector(".command").dataset.command = command.name; // used by tests
+      // Used for linking to commands using the URL fragment, and by the tests.
+      el.querySelector(".command").id = command.name;
       el.querySelector("h3 code").textContent = command.name;
 
       const keysEl = el.querySelector(".key-bindings");
@@ -45,12 +54,15 @@ async function populatePage() {
       }
 
       el.querySelector(".desc").textContent = command.desc;
+      if (command.details) {
+        el.querySelector(".details").textContent = command.details;
+      }
 
       if (command.options) {
         const ul = el.querySelector(".options ul");
         for (const [name, desc] of Object.entries(command.options)) {
           const li = document.createElement("li");
-          li.innerHTML = desc;
+          li.innerHTML = `<code>${name}</code>: ` + replaceBackticksWithCodeTags(desc);
           ul.appendChild(li);
         }
       } else {

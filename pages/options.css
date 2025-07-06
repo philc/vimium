@@ -381,9 +381,9 @@ input#upload-backup {
     border-color: rgba(255, 255, 255, 0.1);
   }
 
-  /* Our dark mode style for buttons matches MacOS Mojave's dark mode style for HTML buttons.
-     MacOS will automatically apply a dark mode style to unstyled ubttons, but that doesn't
-     happen on other OSes, so to be cross-platform, we have to set these styles ourselves. */
+  /* Our dark mode style for buttons matches MacOS Mojave's dark mode style for HTML buttons. MacOS
+     will automatically apply a dark mode style to unstyled buttons, but that doesn't happen on
+     other OSes, so to be cross-platform, we have to set these styles ourselves. */
   button {
     background: none;
     background-color: #2b2a32;

@@ -14,19 +14,19 @@ let findMode = null;
 const TIME_TO_WAIT_FOR_IPC_MESSAGES = 17;
 
 // Set the input element's text, and move the cursor to the end.
-function setTextInInputElement(inputElement, text) {
-  inputElement.textContent = text;
+function setTextInInputElement(inputEl, text) {
+  inputEl.textContent = text;
   // Move the cursor to the end. Based on one of the solutions here:
   // http://stackoverflow.com/questions/1125292/how-to-move-cursor-to-end-of-contenteditable-entity
   const range = document.createRange();
-  range.selectNodeContents(inputElement);
+  range.selectNodeContents(inputEl);
   range.collapse(false);
   const selection = globalThis.getSelection();
   selection.removeAllRanges();
   selection.addRange(range);
 }
 
-function onKeyEvent(event) {
+export function onKeyEvent(event) {
   // Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK
   // translation (see #2915 and #2934).
   let rawQuery;
@@ -37,16 +37,15 @@ function onKeyEvent(event) {
     return null;
   }
 
-  const inputElement = document.getElementById("hud-find-input");
-  if (inputElement == null) { // Don't do anything if we're not in find mode.
-    return;
-  }
+  const inputEl = document.querySelector("#hud-find-input");
+  // Don't do anything if we're not in find mode.
+  if (inputEl == null) return;
 
   if (
-    (KeyboardUtils.isBackspace(event) && (inputElement.textContent.length === 0)) ||
+    (KeyboardUtils.isBackspace(event) && (inputEl.textContent.length === 0)) ||
     (event.key === "Enter") || KeyboardUtils.isEscape(event)
   ) {
-    inputElement.blur();
+    inputEl.blur();
     UIComponentMessenger.postMessage({
       name: "hideFindMode",
       exitEventIsEnter: event.key === "Enter",
@@ -58,7 +57,7 @@ function onKeyEvent(event) {
       if (findMode.historyIndex === 0) {
         findMode.partialQuery = findMode.rawQuery;
       }
-      setTextInInputElement(inputElement, rawQuery);
+      setTextInInputElement(inputEl, rawQuery);
       findMode.executeQuery();
     }
   } else if (event.key === "ArrowDown") {
@@ -66,7 +65,7 @@ function onKeyEvent(event) {
     rawQuery = 0 <= findMode.historyIndex
       ? FindModeHistory.getQuery(findMode.historyIndex)
       : findMode.partialQuery;
-    setTextInInputElement(inputElement, rawQuery);
+    setTextInInputElement(inputEl, rawQuery);
     findMode.executeQuery();
   } else {
     return;
@@ -86,38 +85,42 @@ function ensureClipboardIsAvailable() {
   return true;
 }
 
-const handlers = {
+// Exported for unit tests.
+export const handlers = {
   show(data) {
-    document.getElementById("hud").textContent = data.text;
-    document.getElementById("hud").classList.add("vimium-ui-component-visible");
-    document.getElementById("hud").classList.remove("vimium-ui-component-hidden");
-    document.getElementById("hud").classList.remove("hud-find");
+    const el = document.querySelector("#hud");
+    el.textContent = data.text;
+    el.classList.add("vimium-ui-component-visible");
+    el.classList.remove("vimium-ui-component-hidden");
+    el.classList.remove("hud-find");
   },
+
   hidden() {
+    const el = document.querySelector("#hud");
     // We get a flicker when the HUD later becomes visible again (with new text) unless we reset its
     // contents here.
-    document.getElementById("hud").textContent = "";
-    document.getElementById("hud").classList.add("vimium-ui-component-hidden");
-    document.getElementById("hud").classList.remove("vimium-ui-component-visible");
+    el.textContent = "";
+    el.classList.add("vimium-ui-component-hidden");
+    el.classList.remove("vimium-ui-component-visible");
   },
 
-  showFindMode(data) {
+  showFindMode() {
     let executeQuery;
-    const hud = document.getElementById("hud");
-    hud.classList.add("hud-find");
+    const hudEl = document.querySelector("#hud");
+    hudEl.classList.add("hud-find");
 
-    const inputElement = document.createElement("span");
+    const inputEl = document.createElement("span");
     // NOTE(mrmr1993): Chrome supports non-standard "plaintext-only", which is what we *really*
     // want.
     try {
-      inputElement.contentEditable = "plaintext-only";
+      inputEl.contentEditable = "plaintext-only";
     } catch (error) { // Fallback to standard-compliant version.
-      inputElement.contentEditable = "true";
+      inputEl.contentEditable = "true";
     }
-    inputElement.id = "hud-find-input";
-    hud.appendChild(inputElement);
+    inputEl.id = "hud-find-input";
+    hudEl.appendChild(inputEl);
 
-    inputElement.addEventListener(
+    inputEl.addEventListener(
       "input",
       executeQuery = function (event) {
         // On Chrome when IME is on, the order of events is:
@@ -129,22 +132,22 @@ const handlers = {
           return;
         }
         // Replace \u00A0 (&nbsp;) with a normal space.
-        findMode.rawQuery = inputElement.textContent.replace("\u00A0", " ");
+        findMode.rawQuery = inputEl.textContent.replace("\u00A0", " ");
         UIComponentMessenger.postMessage({ name: "search", query: findMode.rawQuery });
       },
     );
 
-    const countElement = document.createElement("span");
-    countElement.id = "hud-match-count";
-    countElement.style.float = "right";
-    hud.appendChild(countElement);
+    const countEl = document.createElement("span");
+    countEl.id = "hud-match-count";
+    countEl.style.float = "right";
+    hudEl.appendChild(countEl);
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, function () {
       // On Firefox, the page must first be focused before the HUD input element can be focused.
       // #3460.
       if (Utils.isFirefox()) {
         globalThis.focus();
       }
-      inputElement.focus();
+      inputEl.focus();
     });
 
     findMode = {
@@ -156,21 +159,21 @@ const handlers = {
   },
 
   updateMatchesCount({ matchCount, showMatchText }) {
-    const countElement = document.getElementById("hud-match-count");
+    const countEl = document.querySelector("#hud-match-count");
     // Don't do anything if we're not in find mode.
-    if (countElement == null) return;
+    if (countEl == null) return;
 
     if (Utils.isFirefox()) {
-      document.getElementById("hud-find-input").focus();
+      document.querySelector("#hud-find-input").focus();
     }
     const countText = matchCount > 0
       ? ` (${matchCount} Match${matchCount === 1 ? "" : "es"})`
       : " (No matches)";
-    countElement.textContent = showMatchText ? countText : "";
+    countEl.textContent = showMatchText ? countText : "";
   },
 
   copyToClipboard(message) {
-    if (!this.ensureClipboardIsAvailable()) return;
+    if (!ensureClipboardIsAvailable()) return;
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
@@ -188,7 +191,7 @@ const handlers = {
   },
 
   pasteFromClipboard() {
-    if (!this.ensureClipboardIsAvailable()) return;
+    if (!ensureClipboardIsAvailable()) return;
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,

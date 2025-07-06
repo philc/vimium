@@ -146,6 +146,15 @@ b: http://b.com/?q=%s description
 
         <h2></h2>
         <label>
+          <input name="hideUpdateNotifications" type="checkbox" />
+          Hide update notifications
+        </label>
+        <div class="example">
+          When enabled, "Vimium has been updated" notifications will not be shown.
+        </div>
+
+        <h2></h2>
+        <label>
           <input name="regexFindMode" type="checkbox" />
           Treat find queries as JavaScript regular expressions
         </label>
@@ -222,7 +231,7 @@ b: http://b.com/?q=%s description
           <div id="footer-help-text">
             Type <strong>?</strong> to show the help dialog.
             <br>
-            Type <strong>Ctrl-Enter</strong> to save <i>all</i> options.
+            Type <strong id="shortcut-to-save-all"></strong> to save all options.
           </div>
           <div id="footer-save-options">
             <button id="save" disabled="disabled">No changes</button>

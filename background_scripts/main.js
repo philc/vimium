@@ -195,14 +195,17 @@ function moveTab({ count, tab, registryEntry }) {
   });
 }
 
-const createRepeatCommand = (command) => (function (request) {
-  request.count--;
-  if (request.count >= 0) {
-    // TODO(philc): I think we can remove this return statement, and all returns
-    // from commands built using createRepeatCommand.
-    return command(request, (request) => (createRepeatCommand(command))(request));
-  }
-});
+function createRepeatCommand(command) {
+  return async function (request) {
+    let i = request.count - 1;
+    const r = Object.assign({}, request);
+    delete r.count;
+    while (i >= 0) {
+      i--;
+      await command(r);
+    }
+  };
+}
 
 function nextZoomLevel(currentZoom, steps) {
   // Chrome's default zoom levels.
@@ -238,18 +241,17 @@ const BackgroundCommands = {
   // Create a new tab. Also, with:
   //     map X createTab http://www.bbc.com/news
   // create a new tab with the given URL.
-  createTab: createRepeatCommand(async function (request, callback) {
+  createTab: createRepeatCommand(async function (request) {
     if (request.urls == null) {
       if (request.url) {
         // If the request contains a URL, then use it.
         request.urls = [request.url];
       } else {
         // Otherwise, if we have a registryEntry containing URLs, then use them.
-        // TODO(philc): This would be clearer if we try to detect options (a=b) rather than URLs,
-        // because the syntax for options is well defined ([a-zA-Z]+=\S+).
-        const promises = request.registryEntry.optionList.map((opt) => UrlUtils.isUrl(opt));
+        const options = Object.keys(request.registryEntry.options);
+        const promises = options.map((opt) => UrlUtils.isUrl(opt));
         const isUrl = await Promise.all(promises);
-        const urlList = request.registryEntry.optionList.filter((_, i) => isUrl[i]);
+        const urlList = options.filter((_, i) => isUrl[i]);
         if (urlList.length > 0) {
           request.urls = urlList;
         } else {
@@ -275,34 +277,28 @@ const BackgroundCommands = {
         incognito: request.registryEntry.options.incognito || false,
       };
       await chrome.windows.create(windowConfig);
-      callback(request);
     } else {
-      let openNextUrl;
       const urls = request.urls.slice().reverse();
       if (request.position == null) {
         request.position = request.registryEntry.options.position;
       }
-      return (openNextUrl = function (request) {
-        if (urls.length > 0) {
-          return TabOperations.openUrlInNewTab(
-            Object.assign(request, { url: urls.pop() }),
-            openNextUrl,
-          );
-        } else {
-          return callback(request);
-        }
-      })(request);
+      while (urls.length > 0) {
+        const url = urls.pop();
+        const tab = await TabOperations.openUrlInNewTab(Object.assign(request, { url }));
+        // Ensure subsequent invocations of this command place the next tab directly after this one.
+        Object.assign(request, { tab, position: "after", active: false });
+      }
     }
   }),
 
-  duplicateTab: createRepeatCommand((request, callback) => {
-    return chrome.tabs.duplicate(
-      request.tabId,
-      (tab) => callback(Object.assign(request, { tab, tabId: tab.id })),
-    );
+  duplicateTab: createRepeatCommand(async (request) => {
+    const tab = await chrome.tabs.duplicate(request.tabId);
+    // Ensure subsequent invocations of this command place the next tab directly after this one.
+    request.tabId = tab.id;
   }),
 
   moveTabToNewWindow({ count, tab }) {
+    // TODO(philc): Switch to the promise API of chrome.tabs.query.
     chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
       const activeTabIndex = getTabIndex(tab, tabs);
       const startTabIndex = Math.max(0, Math.min(activeTabIndex, tabs.length - count));
@@ -333,9 +329,9 @@ const BackgroundCommands = {
       chrome.tabs.remove(tab.id);
     });
   },
-  restoreTab: createRepeatCommand((request, callback) =>
-    chrome.sessions.restore(null, callback(request))
-  ),
+  restoreTab: createRepeatCommand(async (request) => {
+    await chrome.sessions.restore(null);
+  }),
   async togglePinTab({ count, tab }) {
     await forCountTabs(count, tab, (tab) => {
       chrome.tabs.update(tab.id, { pinned: !tab.pinned });
@@ -346,8 +342,8 @@ const BackgroundCommands = {
   moveTabRight: moveTab,
 
   async setZoom({ tabId, registryEntry }) {
-    const zoomLevel = registryEntry.optionList[0] ?? 1;
-    const newZoom = parseFloat(zoomLevel);
+    const level = registryEntry.options?.["level"] ?? "1";
+    const newZoom = parseFloat(level);
     if (!isNaN(newZoom)) {
       chrome.tabs.setZoom(tabId, newZoom);
     }
@@ -608,14 +604,14 @@ const sendRequestHandlers = {
   getCurrentTabUrl({ tab }) {
     return tab.url;
   },
-  openUrlInNewTab: createRepeatCommand((request, callback) =>
-    TabOperations.openUrlInNewTab(request, callback)
-  ),
-  openUrlInNewWindow(request) {
-    return TabOperations.openUrlInNewWindow(request);
+  openUrlInNewTab: createRepeatCommand(async (request, callback) => {
+    await TabOperations.openUrlInNewTab(request, callback);
+  }),
+  async openUrlInNewWindow(request) {
+    await TabOperations.openUrlInNewWindow(request);
   },
   async openUrlInIncognito(request) {
-    return chrome.windows.create({
+    await chrome.windows.create({
       incognito: true,
       url: await UrlUtils.convertToUrl(request.url),
     });
@@ -719,24 +715,6 @@ const sendRequestHandlers = {
     };
   },
 
-  async reloadVimiumExtension() {
-    // Clear the background page's console log, if its console window is open.
-    console.clear();
-    browser.runtime.reload();
-    // Refresh all open tabs, so they get the latest content scripts, and a clear console.
-    const tabs = await chrome.tabs.query({});
-    for (const tab of tabs) {
-      // Don't refresh the console window for the background page again. We just did that,
-      // effectively.
-      if (tab.url.startsWith("about:debugging")) continue;
-      // Our extension's reload.html page should automatically close when the extension is reloaded,
-      // but if there's an error in manifest.json, it will not, and the extension will enter a
-      // continuous reload loop. Avoid that by not reloading the reload.html page.
-      if (tab.url.endsWith("reload.html")) continue;
-      chrome.tabs.reload(tab.id);
-    }
-  },
-
   async filterCompletions(request) {
     const completer = completers[request.completerName];
     let response = await completer.filter(request);
@@ -832,7 +810,10 @@ async function showUpgradeMessageIfNecessary(onInstalledDetails) {
   const currentVersion = Utils.getCurrentVersion();
   // We do not show an upgrade message for patch/silent releases. Such releases have the same
   // major and minor version numbers.
-  if (!majorVersionHasIncreased(onInstalledDetails.previousVersion)) {
+  if (
+    !majorVersionHasIncreased(onInstalledDetails.previousVersion) ||
+    Settings.get("hideUpdateNotifications")
+  ) {
     return;
   }
 
@@ -856,7 +837,7 @@ async function showUpgradeMessageIfNecessary(onInstalledDetails) {
       if (id != notificationId) return;
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const tab = tabs[0];
-      return TabOperations.openUrlInNewTab({
+      TabOperations.openUrlInNewTab({
         tab,
         tabId: tab.id,
         url: "https://github.com/philc/vimium/blob/master/CHANGELOG.md",

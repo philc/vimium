@@ -187,12 +187,12 @@ const checkVisibility = function (element) {
 const CoreScroller = {
   init() {
     this.time = 0;
-    this.lastEvent = this.keyIsDown = null;
-    this.installCanceEventListener();
+    this.lastEvent = this.keyDownKey = null;
+    this.installCancelEventListener();
   },
 
   // This installs listeners for events which should cancel smooth scrolling.
-  installCanceEventListener() {
+  installCancelEventListener() {
     // NOTE(smblott) With extreme keyboard configurations, Chrome sometimes does not get a keyup
     // event for every keydown, in which case tapping "j" scrolls indefinitely. This appears to be a
     // Chrome/OS/XOrg bug of some kind. See #1549.
@@ -201,15 +201,17 @@ const CoreScroller = {
       _name: "scroller/track-key-status",
       keydown: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
-          this.keyIsDown = true;
+          this.keyDownKey = event.code;
           if (!event.repeat) this.time += 1;
           this.lastEvent = event;
         });
       },
-      keyup: (_event) => {
+      keyup: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
-          this.keyIsDown = false;
-          this.time += 1;
+          if (event.code === this.keyDownKey) {
+            this.keyDownKey = null;
+            this.time += 1;
+          }
         });
       },
       blur: (event) => {
@@ -258,7 +260,7 @@ const CoreScroller = {
     }
 
     const activationTime = ++this.time;
-    const myKeyIsStillDown = () => (this.time === activationTime) && this.keyIsDown;
+    const myKeyIsStillDown = () => (this.time === activationTime) && this.keyDownKey != null;
 
     // Store amount's sign and make amount positive; the arithmetic is clearer when amount is
     // positive.
@@ -272,7 +274,7 @@ const CoreScroller = {
     let totalElapsed = 0.0;
     let calibration = 1.0;
     let previousTimestamp = null;
-    const cancelEventListener = this.installCanceEventListener();
+    const cancelEventListener = this.installCancelEventListener();
 
     const animate = (timestamp) => {
       if (previousTimestamp == null) {
