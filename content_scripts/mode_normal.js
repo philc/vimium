@@ -134,17 +134,35 @@ const NormalModeCommands = {
   },
 
   // Url manipulation.
-  goUp(count) {
-    let url = globalThis.location.href;
-    if (url.endsWith("/")) {
-      url = url.substring(0, url.length - 1);
+  goUp(count, { registryEntry }) {
+    let c = count;
+    const url = new URL(globalThis.location.href);
+
+    // Pop anchor.
+    if (c > 0 && registryEntry.options.popAnchor && url.hash !== "") {
+      url.hash = "";
+      --c;
     }
 
-    let urlsplit = url.split("/");
-    // make sure we haven't hit the base domain yet
-    if (urlsplit.length > 3) {
-      urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - count));
-      globalThis.location.href = urlsplit.join("/");
+    // Pop query params.
+    if (c > 0 && registryEntry.options.popQuery && url.search !== "") {
+      url.search = "";
+      url.hash = "";
+      --c;
+    }
+
+    // Pop path segments.
+    if (c > 0 && url.pathname !== "/") {
+      const initialSegments = url.pathname.substring(1).split("/");
+      const segments = initialSegments.slice(0, -c);
+      url.pathname = `/${segments.join("/")}`;
+      url.search = "";
+      url.hash = "";
+      c -= initialSegments.length - segments.length;
+    }
+
+    if (globalThis.location.href !== url.toString()) {
+      globalThis.location.href = url.toString();
     }
   },
 
