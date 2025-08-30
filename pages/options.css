@@ -311,6 +311,9 @@ footer {
 
 #save,
 #exclusion-add-button {
+  align-items: center;
+  display: flex;
+  justify-content: center;
   white-space: nowrap;
   width: 110px;
 }
