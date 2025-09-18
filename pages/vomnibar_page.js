@@ -3,49 +3,52 @@
 // selection on the page (useful for bookmarklets), ensure that the Vomnibar style is unaffected by
 // the page, and simplify key handling in vimium_frontend.js
 //
-const Vomnibar = {
-  vomnibarUI: null, // the dialog instance for this window
-  getUI() {
-    return this.vomnibarUI;
-  },
 
-  async activate(userOptions) {
-    await Settings.onLoaded();
-    UserSearchEngines.set(Settings.get("searchEngines"));
+import "../lib/types.js";
+import "../lib/utils.js";
+import "../lib/url_utils.js";
+import "../lib/settings.js";
+import "../lib/keyboard_utils.js";
+import "../lib/dom_utils.js";
+import "../lib/handler_stack.js";
+import * as UIComponentMessenger from "./ui_component_messenger.js";
+import * as userSearchEngines from "../background_scripts/user_search_engines.js";
 
-    const options = {
-      completer: "omni",
-      query: "",
-      newTab: false,
-      selectFirst: false,
-      keyword: null,
-    };
-    Object.assign(options, userOptions);
+export let ui; // An instance of VomnibarUI.
 
-    if (this.vomnibarUI == null) {
-      this.vomnibarUI = new VomnibarUI();
-    }
-    this.vomnibarUI.setCompleterName(options.completer);
-    this.vomnibarUI.refreshCompletions();
-    this.vomnibarUI.setInitialSelectionValue(options.selectFirst ? 0 : -1);
-    this.vomnibarUI.setForceNewTab(options.newTab);
-    this.vomnibarUI.setQuery(options.query);
-    this.vomnibarUI.setActiveUserSearchEngine(UserSearchEngines.keywordToEngine[options.keyword]);
-    this.vomnibarUI.update();
-  },
+// Used for tests.
+export function reset() {
+  ui = null;
+}
 
-  hide() {
-    if (this.vomnibarUI) {
-      this.vomnibarUI.hide();
-    }
-  },
+export async function activate(options) {
+  Utils.assertType(VomnibarShowOptions, options || {});
+  await Settings.onLoaded();
+  userSearchEngines.set(Settings.get("searchEngines"));
 
-  onHidden() {
-    if (this.vomnibarUI) {
-      this.vomnibarUI.onHidden();
-    }
-  },
-};
+  const defaults = {
+    completer: "omni",
+    query: "",
+    newTab: false,
+    selectFirst: false,
+    keyword: null,
+  };
+
+  options = Object.assign(defaults, options);
+
+  if (ui == null) {
+    ui = new VomnibarUI();
+  }
+  ui.setCompleterName(options.completer);
+  ui.refreshCompletions();
+  ui.setInitialSelectionValue(options.selectFirst ? 0 : -1);
+  ui.setForceNewTab(options.newTab);
+  ui.setQuery(options.query);
+  ui.setActiveUserSearchEngine(userSearchEngines.keywordToEngine[options.keyword]);
+  // Use await here for vomnibar_test.js, so that this page doesn't get unloaded while a test is
+  // running.
+  await ui.update();
+}
 
 class VomnibarUI {
   constructor() {
@@ -84,33 +87,35 @@ class VomnibarUI {
     return this.activeUserSearchEngine != null;
   }
 
-  // The sequence of events when the vomnibar is hidden is as follows:
+  // The sequence of events when the vomnibar is hidden:
   // 1. Post a "hide" message to the host page.
   // 2. The host page hides the vomnibar.
-  // 3. When that page receives the focus, and it posts back a "hidden" message.
-  // 4. Only once the "hidden" message is received here is any required action invoked (in
-  //    onHidden).
+  // 3. When that page receives the focus, it posts back a "hidden" message.
+  // 4. Only once the "hidden" message is received here is onHiddenCallback called.
+  //
   // This ensures that the vomnibar is actually hidden before any new tab is created, and avoids
-  // flicker after opening a link in a new tab then returning to the original tab (see #1485).
+  // flicker after opening a link in a new tab then returning to the original tab. See #1485.
   hide(onHiddenCallback = null) {
     this.onHiddenCallback = onHiddenCallback;
     this.input.blur();
-    UIComponentServer.postMessage("hide");
     this.reset();
+    // Wait until this iframe's DOM has been rendered before hiding the iframe. This is to prevent
+    // Chrome caching the previous visual state of the vomnibar iframe. See #4708.
+    setTimeout(() => {
+      UIComponentMessenger.postMessage({ name: "hide" });
+    }, 0);
   }
 
   onHidden() {
-    if (typeof this.onHiddenCallback === "function") {
-      this.onHiddenCallback();
-    }
+    this.onHiddenCallback?.();
     this.onHiddenCallback = null;
     this.reset();
   }
 
   reset() {
-    this.completionList.style.display = "";
     this.input.value = "";
     this.completions = [];
+    this.renderCompletions(this.completions);
     this.previousInputValue = null;
     this.activeUserSearchEngine = null;
     this.selection = this.initialSelectionValue;
@@ -126,16 +131,18 @@ class VomnibarUI {
     const shouldReplaceInputWithSuggestion = this.selection >= 0 &&
       completion.insertText != null;
     if (shouldReplaceInputWithSuggestion) {
-      if (this.previousInputValue == null) this.previousInputValue = this.input.value;
+      if (this.previousInputValue == null) {
+        this.previousInputValue = this.input.value;
+      }
       this.input.value = completion.insertText;
     } else if (this.previousInputValue != null) {
       this.input.value = this.previousInputValue;
       this.previousInputValue = null;
     }
 
-    // Highlight the selected entry, and only the selected entry.
-    for (let i = 0, end = this.completionList.children.length; i < end; i++) {
-      this.completionList.children[i].className = i === this.selection ? "vomnibarSelected" : "";
+    // Highlight the selected entry.
+    for (const [i, el] of Object.entries(this.completionList.children)) {
+      el.className = i == this.selection ? "selected" : "";
     }
   }
 
@@ -144,7 +151,7 @@ class VomnibarUI {
   // complexity.
   actionFromKeyEvent(event) {
     const key = KeyboardUtils.getKeyChar(event);
-    // Handle <Enter> on "keypress", and other events on "keydown"; this avoids interence with CJK
+    // Handle <Enter> on "keypress", and other events on "keydown". This avoids interence with CJK
     // translation (see #2915 and #2934).
     if ((event.type === "keypress") && (key !== "enter")) return null;
     if ((event.type === "keydown") && (key === "enter")) return null;
@@ -176,14 +183,12 @@ class VomnibarUI {
     return null;
   }
 
-  onKeyEvent(event) {
+  async onKeyEvent(event) {
     const action = this.actionFromKeyEvent(event);
     if (!action) {
-      return true; // pass through
+      return;
     }
 
-    const openInNewTab = this.forceNewTab || event.shiftKey || event.ctrlKey || event.altKey ||
-      event.metaKey;
     if (action === "dismiss") {
       this.hide();
     } else if (["tab", "down"].includes(action)) {
@@ -209,46 +214,14 @@ class VomnibarUI {
       }
       this.updateSelection();
     } else if (action === "enter") {
-      const isPrimarySearchSuggestion = (c) => c?.isPrimarySuggestion && c?.isCustomSearch;
-      let query = this.input.value.trim();
-
-      // Note that it's possible that this.completions is empty. This can happen in practice if the
-      // user hits enter quickly after loading the vomnibar, before the filterCompletions request to
-      // the background page finishes.
-      const waitingOnCompletions = this.completions.length == 0;
-      const completion = this.completions[this.selection];
-
-      // If the user types something and hits enter without selecting a completion from the list,
-      // then:
-      //   - If they've activated a custom search engine in the Vomnibar, then launch that search
-      //     using the typed-in query.
-      //   - Otherwise, open the query as a URL or create a default search as appropriate.
-      //
-      //  When launching a query in a custom search engine, the user may have typed more text than
-      //  that which is included in the URL associated with the primary suggestion, because the
-      //  suggestions are updated asynchronously. Therefore, to avoid a race condition, we construct
-      //  the search URL from the actual contents of the input (query).
-      if (waitingOnCompletions || this.selection == -1) {
-        // <Enter> on an empty query is a no-op.
-        if (query.length == 0) return;
-        const firstCompletion = this.completions[0];
-        if (isPrimarySearchSuggestion(firstCompletion)) {
-          query = UrlUtils.createSearchUrl(query, firstCompletion?.searchUrl);
-        }
-        this.hide(() => this.launchUrl(query, openInNewTab));
-      } else if (isPrimarySearchSuggestion(completion)) {
-        query = UrlUtils.createSearchUrl(query, completion.searchUrl);
-        this.hide(() => this.launchUrl(query, openInNewTab));
-      } else {
-        this.hide(() => this.openCompletion(completion, openInNewTab));
-      }
+      await this.handleEnterKey(event);
     } else if (action === "ctrl-enter") {
       // Populate the vomnibar with the current selection's URL.
       if (!this.isUserSearchEngineActive() && (this.selection >= 0)) {
-        if (this.previousInputValue == null) this.previousInputValue = this.input.value;
-        this.input.value = this.completions[this.selection] != null
-          ? this.completions[this.selection].url
-          : undefined;
+        if (this.previousInputValue == null) {
+          this.previousInputValue = this.input.value;
+        }
+        this.input.value = this.completions[this.selection]?.url;
         this.input.scrollLeft = this.input.scrollWidth;
       }
     } else if (action === "delete") {
@@ -265,17 +238,71 @@ class VomnibarUI {
         this.seenTabToOpenCompletionList = false;
         this.update();
       } else {
-        return true; // Do not suppress event.
+        return; // Do not suppress event.
       }
-    } else if ((action === "remove") && (0 <= this.selection)) {
+    } else if ((action === "remove") && (this.selection >= 0)) {
       const completion = this.completions[this.selection];
       console.log(completion);
     }
 
-    // It seems like we have to manually suppress the event here and still return true.
     event.stopImmediatePropagation();
     event.preventDefault();
-    return true;
+  }
+
+  async handleEnterKey(event) {
+    const isPrimarySearchSuggestion = (c) => c?.isPrimarySuggestion && c?.isCustomSearch;
+    let query = this.input.value.trim();
+
+    // Note that it's possible that this.completions is empty. This can happen in practice if the
+    // user hits enter quickly after loading the vomnibar, before the filterCompletions request to
+    // the background page finishes.
+    const waitingOnCompletions = this.completions.length == 0;
+    const completion = this.completions[this.selection];
+
+    const openInNewTab = this.forceNewTab || event.shiftKey || event.ctrlKey || event.altKey ||
+      event.metaKey;
+
+    // If the user types something and hits enter without selecting a completion from the list,
+    // then:
+    //   - If they've activated a custom search engine in the Vomnibar, then launch that search
+    //     using the typed-in query.
+    //   - Otherwise, open the query as a URL or create a default search as appropriate.
+    //
+    //  When launching a query in a custom search engine, the user may have typed more text than
+    //  that which is included in the URL associated with the primary suggestion, because the
+    //  suggestions are updated asynchronously. Therefore, to avoid a race condition, we construct
+    //  the search URL from the actual contents of the input (query).
+    if (waitingOnCompletions || this.selection == -1) {
+      // <Enter> on an empty query is a no-op.
+      if (query.length == 0) return;
+      const firstCompletion = this.completions[0];
+      const isPrimary = isPrimarySearchSuggestion(firstCompletion);
+      if (isPrimary) {
+        query = UrlUtils.createSearchUrl(query, firstCompletion.searchUrl);
+        await this.launchUrl(query);
+      } else {
+        // If the query looks like a URL, try to open it directly. Otherwise, pass the query to
+        // the user's default search engine.
+        // TODO(philc):
+        const isUrl = await UrlUtils.isUrl(query);
+        if (isUrl) {
+          await this.launchUrl(query, openInNewTab);
+        } else {
+          this.hide(() =>
+            chrome.runtime.sendMessage({
+              handler: "launchSearchQuery",
+              query,
+              openInNewTab,
+            })
+          );
+        }
+      }
+    } else if (isPrimarySearchSuggestion(completion)) {
+      query = UrlUtils.createSearchUrl(query, completion.searchUrl);
+      this.hide(() => this.launchUrl(query, openInNewTab));
+    } else {
+      this.hide(() => this.openCompletion(completion, openInNewTab));
+    }
   }
 
   // Return the background-page query corresponding to the current input state. In other words,
@@ -305,14 +332,17 @@ class VomnibarUI {
 
     this.completions = results;
     this.selection = this.completions[0]?.autoSelect ? 0 : this.initialSelectionValue;
-    // Update completion list with the new suggestions.
-    this.completionList.innerHTML = this.completions.map((c) => `<li>${c.html}</li>`).join("");
-    this.completionList.style.display = this.completions.length > 0 ? "block" : "";
+    this.renderCompletions(this.completions);
     this.selection = Math.min(
       this.completions.length - 1,
       Math.max(this.initialSelectionValue, this.selection),
     );
     this.updateSelection();
+  }
+
+  renderCompletions(completions) {
+    this.completionList.innerHTML = completions.map((c) => `<li>${c.html}</li>`).join("");
+    this.completionList.style.display = completions.length > 0 ? "block" : "";
   }
 
   refreshCompletions() {
@@ -348,24 +378,26 @@ class VomnibarUI {
       this.previousInputValue = null;
       this.selection = -1;
     }
-    return this.update();
+    this.update();
   }
 
-  // Returns the UserSearchEngine for the given Vomnibar input. Returns null if the Vomnibar does
-  // not start with a keyword from one of the user's search engines.
+  // Returns the UserSearchEngine for the given query. Returns null if the query does not begin with
+  // a keyword from one of the user's search engines.
   getUserSearchEngineForQuery() {
     // This logic is duplicated from SearchEngineCompleter.getEngineForQueryPrefix
     const parts = this.input.value.trimStart().split(/\s+/);
+    // For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
     const keyword = parts[0];
-    return parts.length > 1 ? UserSearchEngines.keywordToEngine[keyword] : null;
+    if (parts.length <= 1) return null;
+    // Don't match queries for built-in properties like "constructor". See #4396.
+    if (Object.hasOwn(userSearchEngines.keywordToEngine, keyword)) {
+      return userSearchEngines.keywordToEngine[keyword];
+    }
+    return null;
   }
 
-  queryIsCustomSearch() {
-    return this.getUserSearchEngineForQuery() != null;
-  }
-
-  update() {
-    this.updateCompletions();
+  async update() {
+    await this.updateCompletions();
     this.input.focus();
   }
 
@@ -377,13 +409,13 @@ class VomnibarUI {
     }
   }
 
-  launchUrl(url, openInNewTab) {
-    // If the URL is a bookmarklet (so, prefixed with "javascript:"), then we always open it in the
+  async launchUrl(url, openInNewTab) {
+    // If the URL is a bookmarklet (so, prefixed with "javascript:"), then always open it in the
     // current tab.
-    if (openInNewTab) {
-      openInNewTab = !Utils.hasJavascriptPrefix(url);
+    if (openInNewTab && UrlUtils.hasJavascriptProtocol(url)) {
+      openInNewTab = false;
     }
-    chrome.runtime.sendMessage({
+    await chrome.runtime.sendMessage({
       handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
       url,
     });
@@ -410,23 +442,35 @@ class VomnibarUI {
   }
 }
 
-UIComponentServer.registerHandler(function (event) {
-  switch (event.data.name != null ? event.data.name : event.data) {
-    case "hide":
-      Vomnibar.hide();
-      break;
-    case "hidden":
-      Vomnibar.onHidden();
-      break;
-    case "activate":
-      Vomnibar.activate(event.data);
-      break;
-  }
-});
+let vomnibarInstance;
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  DomUtils.injectUserCss(); // Manually inject custom user styles.
-});
+function init() {
+  UIComponentMessenger.init();
+  UIComponentMessenger.registerHandler(function (event) {
+    switch (event.data.name) {
+      case "hide":
+        ui?.hide();
+        break;
+      case "hidden":
+        ui?.onHidden();
+        break;
+      case "activate":
+        const options = Object.assign({}, event.data);
+        delete options.name;
+        activate(options);
+        break;
+      default:
+        Utils.assert(false, "Unrecognized message type.", event.data);
+    }
+  });
+}
 
-window.Vomnibar = Vomnibar;
+const testEnv = globalThis.window == null ||
+  globalThis.window.location.search.includes("dom_tests=true");
+if (!testEnv) {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await Settings.onLoaded();
+    DomUtils.injectUserCss(); // Manually inject custom user styles.
+  });
+  init();
+}

@@ -1,8 +1,22 @@
 import "./test_helper.js";
+import "../../background_scripts/tab_recency.js";
 import "../../background_scripts/bg_utils.js";
 import "../../background_scripts/completion_engines.js";
 import "../../background_scripts/completion_search.js";
-import "../../background_scripts/completion.js";
+import * as userSearchEngines from "../../background_scripts/user_search_engines.js";
+import {
+  BookmarkCompleter,
+  DomainCompleter,
+  HistoryCache,
+  HistoryCompleter,
+  MultiCompleter,
+  RankingUtils,
+  RegexpCache,
+  SearchEngineCompleter,
+  Suggestion,
+  TabCompleter,
+} from "../../background_scripts/completion.js";
+import "../../lib/url_utils.js";
 
 const hours = (n) => 1000 * 60 * 60 * n;
 
@@ -21,7 +35,7 @@ context("bookmark completer", () => {
   let completer;
 
   setup(() => {
-    stub(window.chrome.bookmarks, "getTree", () => [bookmark1]);
+    stub(globalThis.chrome.bookmarks, "getTree", () => [bookmark1]);
     completer = new BookmarkCompleter();
   });
 
@@ -109,7 +123,7 @@ context("HistoryCache", () => {
       onVisitedListener = null;
       onVisitRemovedListener = null;
 
-      stub(window.chrome, "history", {
+      stub(globalThis.chrome, "history", {
         search: (_options) => history,
         onVisited: {
           addListener(listener) {
@@ -179,7 +193,7 @@ context("history completer", () => {
 
   setup(() => {
     completer = new HistoryCompleter();
-    stub(window.chrome, "history", {
+    stub(globalThis.chrome, "history", {
       search: (_options) => [history1, history2],
       onVisited: { addListener() {}, removeListener() {} },
       onVisitRemoved: { addListener() {}, removeListener() {} },
@@ -208,7 +222,7 @@ context("domain completer", () => {
   let completer = null;
 
   setup(() => {
-    stub(window.chrome, "history", {
+    stub(globalThis.chrome, "history", {
       search: (_options) => [history1, history2, undef],
       onVisited: { addListener() {}, removeListener() {} },
       onVisitRemoved: { addListener() {}, removeListener() {} },
@@ -259,7 +273,7 @@ context("domain completer (removing entries)", () => {
 
   setup(async () => {
     onVisitRemovedListener = null;
-    stub(window.chrome, "history", {
+    stub(globalThis.chrome, "history", {
       search: (_options) => [history1, history2, history3],
       onVisited: {
         addListener(_listener) {
@@ -320,7 +334,7 @@ context("domain completer (removing entries)", () => {
 });
 
 context("multi completer", () => {
-  const tabs = [{ url: "tab1.com", title: "tab1", id: 1 },];
+  const tabs = [{ url: "tab1.com", title: "tab1", id: 1 }];
   const tabCompleter = new TabCompleter();
   let multiCompleter;
 
@@ -333,7 +347,7 @@ context("multi completer", () => {
     // Even though a TabCompleter returns results when the query is empty, a MultiCompleter which
     // wraps a TabCompleter should not.
     assert.equal(1, (await filterCompleter(tabCompleter, [])).length);
-    assert.equal([], (await filterCompleter(multiCompleter, [])));
+    assert.equal([], await filterCompleter(multiCompleter, []));
   });
 });
 
@@ -372,12 +386,12 @@ context("SearchEngineCompleter", () => {
   setup(() => {
     completer = new SearchEngineCompleter();
     const searchEngineConfig = `g: ${googleSearchUrl}%s`;
-    UserSearchEngines.set(searchEngineConfig);
+    userSearchEngines.set(searchEngineConfig);
   });
 
   should("complete search results using the given completer", async () => {
     const googleResults = ["blue", ["blue1", "blue2"]];
-    stub(window, "fetch", () => createResponse(JSON.stringify(googleResults)));
+    stub(globalThis, "fetch", () => createResponse(JSON.stringify(googleResults)));
     const results = await filterCompleter(completer, ["g", "blue"]);
     assert.equal(
       [googleSearchUrl + "blue", googleSearchUrl + "blue1", googleSearchUrl + "blue2"],
@@ -410,8 +424,7 @@ context("suggestions", () => {
       title: "ninjawords",
       relevancyFunction: returns(1),
     });
-    const expected =
-      "<span class='vomnibarMatch'>ninj</span>a<span class='vomnibarMatch'>words</span>";
+    const expected = "<span class='match'>ninj</span>a<span class='match'>words</span>";
     assert.isTrue(suggestion.generateHtml({}).indexOf(expected) >= 0);
   });
 
@@ -423,7 +436,7 @@ context("suggestions", () => {
       title: "ninjawords",
       relevancyFunction: returns(1),
     });
-    const expected = "<span class='vomnibarMatch'>ninjaword</span>s";
+    const expected = "<span class='match'>ninjaword</span>s";
     assert.isTrue(suggestion.generateHtml({}).indexOf(expected) >= 0);
   });
 
@@ -646,66 +659,5 @@ context("RegexpCache", () => {
 
   should("search for a string with a prefix/suffix (negative case)", () => {
     assert.isTrue("hound dog".search(RegexpCache.get("do", "\\b", "\\b")) === -1);
-  });
-});
-
-let fakeTimeDeltaElapsing = () => {};
-
-context("TabRecency", () => {
-  const tabRecency = BgUtils.tabRecency;
-
-  setup(() => {
-    fakeTimeDeltaElapsing = () => {
-      if (tabRecency.lastVisitedTime != null) {
-        tabRecency.lastVisitedTime = new Date(tabRecency.lastVisitedTime - BgUtils.TIME_DELTA);
-      }
-    };
-
-    tabRecency.register(3);
-    fakeTimeDeltaElapsing();
-    tabRecency.register(2);
-    fakeTimeDeltaElapsing();
-    tabRecency.register(9);
-    fakeTimeDeltaElapsing();
-    tabRecency.register(1);
-    tabRecency.deregister(9);
-    fakeTimeDeltaElapsing();
-    tabRecency.register(4);
-    fakeTimeDeltaElapsing();
-  });
-
-  should("have entries for recently active tabs", () => {
-    assert.isTrue(tabRecency.cache[1]);
-    assert.isTrue(tabRecency.cache[2]);
-    assert.isTrue(tabRecency.cache[3]);
-  });
-
-  should("not have entries for removed tabs", () => {
-    assert.isFalse(tabRecency.cache[9]);
-  });
-
-  should("give a high score to the most recent tab", () => {
-    assert.isTrue(tabRecency.recencyScore(4) < tabRecency.recencyScore(1));
-    assert.isTrue(tabRecency.recencyScore(3) < tabRecency.recencyScore(1));
-    assert.isTrue(tabRecency.recencyScore(2) < tabRecency.recencyScore(1));
-  });
-
-  should("give a low score to the current tab", () => {
-    assert.isTrue(tabRecency.recencyScore(1) > tabRecency.recencyScore(4));
-    assert.isTrue(tabRecency.recencyScore(2) > tabRecency.recencyScore(4));
-    assert.isTrue(tabRecency.recencyScore(3) > tabRecency.recencyScore(4));
-  });
-
-  should("rank tabs by recency", () => {
-    assert.isTrue(tabRecency.recencyScore(3) < tabRecency.recencyScore(2));
-    assert.isTrue(tabRecency.recencyScore(2) < tabRecency.recencyScore(1));
-    tabRecency.register(3);
-    fakeTimeDeltaElapsing();
-    tabRecency.register(4); // Making 3 the most recent tab which isn't the current tab.
-    assert.isTrue(tabRecency.recencyScore(1) < tabRecency.recencyScore(3));
-    assert.isTrue(tabRecency.recencyScore(2) < tabRecency.recencyScore(3));
-    assert.isTrue(tabRecency.recencyScore(4) < tabRecency.recencyScore(3));
-    assert.isTrue(tabRecency.recencyScore(4) < tabRecency.recencyScore(1));
-    assert.isTrue(tabRecency.recencyScore(4) < tabRecency.recencyScore(2));
   });
 });

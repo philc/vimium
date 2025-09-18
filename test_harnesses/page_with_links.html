@@ -1,72 +1,81 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Page with many links</title>
-  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <style type="text/css" media="screen">
-    body {
-      background-color: black;
-      color: #eee;
-    }
-    a {
-      background-color:#666;
-      color: #eee;
-    }
+  <head>
+    <title>Page with many links</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style type="text/css" media="screen">
+      body {
+        background-color: black;
+        color: #eee;
+      }
+      a {
+        background-color: #666;
+        color: #eee;
+      }
 
-    a:hover {
-      background-color:#123456;
-    }
+      a:hover {
+        background-color: #123456;
+      }
 
-    a#paddingLink {
-      padding: 30px;
-    }
+      a#paddingLink {
+        padding: 30px;
+      }
 
-    a#paddingLinkTop {
-      padding-top: 50px;
-    }
-    #div-a {
-      border: 1px solid #333;
-      padding: 5px;
-    }
+      a#paddingLinkTop {
+        padding-top: 50px;
+      }
+      #div-a {
+        border: 1px solid #333;
+        padding: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#multilineLink" id="multilineLink">This will be a link spanning two<br> lines</a>
 
-  </style>
-</head>
-<body>
-  <a href="#multilineLink" id="multilineLink">This will be a link spanning two<br/> lines</a>
+    <br>
+    <br>
+    <br>
+    <br>
 
-  <br/><br/>
-  <br/><br/>
+    <a href="#paddingLink" id="paddingLink">This link has a lot of vertical padding</a>
 
-  <a href="#paddingLink" id="paddingLink">This link has a lot of vertical padding</a>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
 
-  <br/><br/>
-  <br/><br/>
-  <br/><br/>
-  <br/><br/>
+    <a href="#paddingLinkTop" id="paddingLinkTop"
+    >This link has a lot of vertical padding on the top</a>
 
-  <a href="#paddingLinkTop" id="paddingLinkTop">This link has a lot of vertical padding on the top</a>
+    <br>
+    <br>
+    <div id="div-a" onclick="alert('hi')">div with an onclick attribute</div>
 
-  <br/><br/>
-  <div id="div-a" onclick="alert('hi')">div with an onclick attribute</div>
+    <br>
+    <br>
 
-  <br/><br/>
+    <a name="anchorSpot">An anchor with just a name</a>
 
-  <a name="anchorSpot">An anchor with just a name</a>
+    <br>
+    <br>
+    <a href="https://www.google.com">Next</a> and <a href="https://www.ninjawords.com">previous</a>
+    links.
 
-  <br/><br/>
-  <a href="https://www.google.com">Next</a> and <a href="https://www.ninjawords.com">previous</a>
-  links.
+    <br>
+    <br>
 
-  <br/><br/>
+    Below is an image map:<br>
+    <img src="./image_map.png" usemap="#the-image-map">
 
-  Below is an image map:<br/>
-  <img src="./image_map.png" usemap="#the-image-map">
-
-  <map name="the-image-map">
-    <area shape="rect" coords="0,0,100,50" alt="Section A" href="#section-A">
-    <area shape="rect" coords="200,0,300,50" alt="Section B" href="http://google.com">
-  </map>
-
-</body>
+    <map name="the-image-map">
+      <area shape="rect" coords="0,0,100,50" alt="Section A" href="#section-A">
+      <area shape="rect" coords="200,0,300,50" alt="Section B" href="http://google.com">
+    </map>
+  </body>
 </html>

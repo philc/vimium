@@ -13,7 +13,7 @@ class Movement {
   constructor(alterMethod) {
     this.alterMethod = alterMethod;
     this.opposite = { forward: backward, backward: forward };
-    this.selection = window.getSelection();
+    this.selection = globalThis.getSelection();
   }
 
   // Return the character following (to the right of) the focus, and leave the selection unchanged,
@@ -62,35 +62,48 @@ class Movement {
     // Native word movements behave differently on Linux and Windows, see #1441. So we implement
     // some of them character-by-character.
     if ((granularity === vimword) && (direction === forward)) {
+      // Extend selection to the end of the 'vimword'.
       while (this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
       }
+      // Extend selection after the 'vimword' to position before next word.
       while (this.getNextForwardCharacter() && !this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
       }
-    } else if (granularity === vimword) {
-      this.selection.modify(this.alterMethod, backward, word);
+      // In Caret Mode collapse selection to the end.
+      if (this.alterMethod === "move") {
+        this.selection.collapseToEnd();
+      }
+      return;
     }
 
     // As above, we implement this character-by-character to get consistent behavior on Windows and
     // Linux.
     if ((granularity === word) && (direction === forward)) {
+      // Extend selection to the start of the next 'word' (non-word characters, e.g. whitespace).
       while (this.getNextForwardCharacter() && !this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
       }
+      // Extend selection to the end of the 'word'.
       while (this.nextCharacterIsWordCharacter()) {
         if (this.extendByOneCharacter(forward) === 0) {
           return;
         }
       }
+      // In Caret Mode collapse selection to the end.
+      if (this.alterMethod === "move") {
+        this.selection.collapseToEnd();
+      }
+      return;
     } else {
-      return this.selection.modify(this.alterMethod, direction, granularity);
+      this.selection.modify(this.alterMethod, direction, granularity);
+      return;
     }
   }
 
@@ -148,16 +161,20 @@ class Movement {
   }
 
   collapseSelectionToAnchor() {
-    if (this.selection.toString().length > 0) {
-      return this.selection
-        [this.getDirection() === backward ? "collapseToEnd" : "collapseToStart"]();
+    if (this.selection.toString().length == 0) return;
+    if (this.getDirection() === backward) {
+      this.selection.collapseToEnd();
+    } else {
+      this.selection.collapseToStart();
     }
   }
 
   collapseSelectionToFocus() {
-    if (this.selection.toString().length > 0) {
-      return this.selection
-        [this.getDirection() === forward ? "collapseToEnd" : "collapseToStart"]();
+    if (this.selection.toString().length == 0) return;
+    if (this.getDirection() === forward) {
+      this.selection.collapseToEnd();
+    } else {
+      this.selection.collapseToStart();
     }
   }
 
@@ -199,7 +216,7 @@ class Movement {
 
   // Scroll the focus into view.
   scrollIntoView() {
-    if (DomUtils.getSelectionType(this.selection) !== "None") {
+    if (this.selection.type !== "None") {
       const elementWithFocus = DomUtils.getElementWithFocus(
         this.selection,
         this.getDirection() === backward,
@@ -266,12 +283,11 @@ class VisualMode extends KeyHandlerMode {
     // If there was a range selection when the user lanuched visual mode, then we retain the
     // selection on exit.
     this.shouldRetainSelectionOnExit = this.options.userLaunchedMode &&
-      (DomUtils.getSelectionType(this.selection) === "Range");
+      (this.selection.type === "Range");
 
     this.onExit((event = null) => {
       // Retain any selection, regardless of how we exit.
       if (this.shouldRetainSelectionOnExit) {
-        null;
         // This mimics vim: when leaving visual mode via Escape, collapse to focus, otherwise
         // collapse to anchor.
       } else if (
@@ -314,9 +330,9 @@ class VisualMode extends KeyHandlerMode {
 
     // Establish or use the initial selection. If that's not possible, then enter caret mode.
     if (this.name !== "caret") {
-      if (["Caret", "Range"].includes(DomUtils.getSelectionType(this.selection))) {
+      if (["Caret", "Range"].includes(this.selection.type)) {
         let selectionRect = this.selection.getRangeAt(0).getBoundingClientRect();
-        if (window.vimiumDomTestsAreRunning) {
+        if (globalThis.vimiumDomTestsAreRunning) {
           // We're running the DOM tests, where getBoundingClientRect() isn't available.
           if (!selectionRect) {
             selectionRect = { top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 };
@@ -324,11 +340,11 @@ class VisualMode extends KeyHandlerMode {
         }
         selectionRect = Rect.intersect(
           selectionRect,
-          Rect.create(0, 0, window.innerWidth, window.innerHeight),
+          Rect.create(0, 0, globalThis.innerWidth, globalThis.innerHeight),
         );
         if ((selectionRect.height >= 0) && (selectionRect.width >= 0)) {
           // The selection is visible in the current viewport.
-          if (DomUtils.getSelectionType(this.selection) === "Caret") {
+          if (this.selection.type === "Caret") {
             // The caret is in the viewport. Make make it visible.
             this.movement.extendByOneCharacter(forward) ||
               this.movement.extendByOneCharacter(backward);
@@ -340,7 +356,7 @@ class VisualMode extends KeyHandlerMode {
         }
       }
 
-      if ((DomUtils.getSelectionType(this.selection) !== "Range") && (this.name !== "caret")) {
+      if ((this.selection.type !== "Range") && (this.name !== "caret")) {
         new CaretMode().init();
         return HUD.show("No usable selection, entering caret mode...", 2500);
       }
@@ -542,10 +558,10 @@ class CaretMode extends VisualMode {
     );
 
     // Establish the initial caret.
-    switch (DomUtils.getSelectionType(this.selection)) {
+    switch (this.selection.type) {
       case "None":
         this.establishInitialSelectionAnchor();
-        if (DomUtils.getSelectionType(this.selection) === "None") {
+        if (this.selection.type === "None") {
           this.exit();
           HUD.show("Create a selection before entering visual mode.", 2500);
           return;
@@ -595,5 +611,5 @@ class CaretMode extends VisualMode {
   }
 }
 
-window.VisualMode = VisualMode;
-window.VisualLineMode = VisualLineMode;
+globalThis.VisualMode = VisualMode;
+globalThis.VisualLineMode = VisualLineMode;

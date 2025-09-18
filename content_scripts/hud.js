@@ -20,69 +20,78 @@ const HUD = {
   // limitation of our HUD display is that it doesn't sit on top of horizontal scrollbars like
   // Chrome's HUD does.
 
+  handleUIComponentMessage({ data }) {
+    const handlers = {
+      hideFindMode: this.hideFindMode,
+      search: this.search,
+      unfocusIfFocused: this.unfocusIfFocused,
+      pasteResponse: this.pasteResponse,
+      showClipboardUnavailableMessage: this.showClipboardUnavailableMessage,
+    };
+    const handler = handlers[data.name];
+    if (handler) {
+      return handler.bind(this)(data);
+    }
+  },
+
   async init(focusable) {
     await Settings.onLoaded();
     if (focusable == null) {
       focusable = true;
     }
     if (this.hudUI == null) {
-      const queryString = window.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
-      this.hudUI = new UIComponent(`pages/hud.html${queryString}`, "vimiumHUDFrame", ({ data }) => {
-        if (this[data.name]) {
-          return this[data.name](data);
-        }
-      });
-      // Allow to access to the clipboard through iframes.
-      // This is only valid/necessary for Chrome. Firefox will show this console warning:
-      // 'Feature Policy: Skipping unsupported feature name "clipboard-read"'
-      if (!Utils.isFirefox()) {
-        this.hudUI.iframeElement.allow = "clipboard-read; clipboard-write";
-      }
+      const queryString = globalThis.vimiumDomTestsAreRunning ? "?dom_tests=true" : "";
+      this.hudUI = new UIComponent();
+      this.hudUI.load(
+        `pages/hud_page.html${queryString}`,
+        "vimium-hud-frame",
+        this.handleUIComponentMessage.bind(this),
+      );
     }
     // this[data.name]? data
     if (this.tween == null) {
       this.tween = new Tween(
-        "iframe.vimiumHUDFrame.vimiumUIComponentVisible",
+        "iframe.vimium-hud-frame.vimium-ui-component-visible",
         this.hudUI.shadowDOM,
       );
     }
+    const classList = this.hudUI.iframeElement.classList;
     if (focusable) {
-      this.hudUI.toggleIframeElementClasses("vimiumNonClickable", "vimiumClickable");
+      classList.remove("vimium-non-clickable");
+      classList.add("vimium-clickable");
       // Note(gdh1995): Chrome 74 only acknowledges text selection when a frame has been visible.
       // See more in #3277.
       // Note(mrmr1993): Show the HUD frame, so Firefox will actually perform the paste.
-      this.hudUI.toggleIframeElementClasses("vimiumUIComponentHidden", "vimiumUIComponentVisible");
+      this.hudUI.setIframeVisible(true);
       // Force the re-computation of styles, so Chrome sends a visibility change message to the
       // child frame. See https://github.com/philc/vimium/pull/3277#issuecomment-487363284
-
       getComputedStyle(this.hudUI.iframeElement).display;
     } else {
-      this.hudUI.toggleIframeElementClasses("vimiumClickable", "vimiumNonClickable");
+      classList.remove("vimium-non-clickable");
+      classList.add("vimium-clickable");
     }
   },
 
   // duration - if omitted, the message will show until dismissed.
-  show(text, duration) {
-    DomUtils.documentComplete(async () => {
-      clearTimeout(this._showForDurationTimerId);
-      // @hudUI.activate will take charge of making it visible
-      await this.init(false);
-      this.hudUI.activate({ name: "show", text });
-      this.tween.fade(1.0, 150);
+  async show(text, duration) {
+    await DomUtils.documentComplete();
+    clearTimeout(this._showForDurationTimerId);
+    // @hudUI.activate will take charge of making it visible
+    await this.init(false);
+    this.hudUI.show({ name: "show", text });
+    this.tween.fade(1.0, 150);
 
-      if (duration != null) {
-        this._showForDurationTimerId = setTimeout(() => this.hide(), duration);
-      }
-    });
+    if (duration != null) {
+      this._showForDurationTimerId = setTimeout(() => this.hide(), duration);
+    }
   },
 
-  showFindMode(findMode = null) {
+  async showFindMode(findMode = null) {
     this.findMode = findMode;
-    DomUtils.documentComplete(async () => {
-      await this.init();
-      this.hudUI.activate({ name: "showFindMode" });
-      this.tween.fade(1.0, 150);
-    });
+    await DomUtils.documentComplete();
+    await this.init();
+    this.hudUI.show({ name: "showFindMode" });
+    this.tween.fade(1.0, 150);
   },
 
   search(data) {
@@ -133,7 +142,7 @@ const HUD = {
     // An element won't receive a focus event if the search landed on it while we were in the HUD
     // iframe. To end up with the correct modes active, we create a focus/blur event manually after
     // refocusing this window.
-    window.focus();
+    globalThis.focus();
 
     const focusNode = DomUtils.getSelectionFocusElement();
     if (document.activeElement != null) {
@@ -167,25 +176,23 @@ const HUD = {
   // * we don't want to disrupt the focus in the page, in case the page is listening for focus/blur
   // * events.
   // * the HUD shouldn't be active for this frame while any of the copy/paste commands are running.
-  copyToClipboard(text) {
-    DomUtils.documentComplete(async () => {
-      await this.init();
-      this.hudUI.postMessage({ name: "copyToClipboard", data: text });
-    });
+  async copyToClipboard(text) {
+    await DomUtils.documentComplete();
+    await this.init();
+    this.hudUI.postMessage({ name: "copyToClipboard", data: text });
   },
 
-  pasteFromClipboard(pasteListener) {
+  async pasteFromClipboard(pasteListener) {
     this.pasteListener = pasteListener;
-    DomUtils.documentComplete(async () => {
-      await this.init();
-      this.tween.fade(0, 0);
-      this.hudUI.postMessage({ name: "pasteFromClipboard" });
-    });
+    await DomUtils.documentComplete();
+    await this.init();
+    this.tween.fade(0, 0);
+    this.hudUI.postMessage({ name: "pasteFromClipboard" });
   },
 
   pasteResponse({ data }) {
     // Hide the HUD frame again.
-    this.hudUI.toggleIframeElementClasses("vimiumUIComponentVisible", "vimiumUIComponentHidden");
+    this.hudUI.setIframeVisible(false);
     this.unfocusIfFocused();
     this.pasteListener(data);
   },
@@ -195,8 +202,17 @@ const HUD = {
     // means keyboard events will always be dispatched to the HUD iframe
     if (this.hudUI && this.hudUI.showing) {
       this.hudUI.iframeElement.blur();
-      window.focus();
+      globalThis.focus();
     }
+  },
+
+  // Navigator.clipboard is only available in secure contexts. Show a warning when clipboard actions
+  // fail on non-HTTPS sites. See #4572.
+  async showClipboardUnavailableMessage() {
+    await DomUtils.documentComplete();
+    await this.init();
+    // Since the message is long and surprising, show it for longer to allow more time to reading.
+    this.show("Clipboard actions available only on HTTPS sites", 4000);
   },
 };
 
@@ -259,4 +275,4 @@ ${this.cssSelector} {
   }
 }
 
-window.HUD = HUD;
+globalThis.HUD = HUD;

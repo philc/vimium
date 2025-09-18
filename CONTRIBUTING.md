@@ -75,7 +75,7 @@ Here's the rationale behind this policy:
 - Adding a new feature is only part of the work. Once it's added, a feature must be maintained
   forever.
 - Vimium is a project which suffers from the
-  [stadium model of open source](https://645ventures.com/voices/articles/github-at-scale-and-how-to-help-stadium-model-maintainers):
+  [stadium model of open source](https://github.com/philc/book-notes/blob/master/engineering/working%20in%20public%20-%20nadia%20eghbal.md#the-structure-of-an-open-source-project-chap-2):
   there are many users but unfortunately few maintainers. As a result, there is bandwidth to
   maintain only a limited number of features in the main repo.
 
@@ -100,6 +100,7 @@ After that:
 
 1. Open Firefox
 1. Enter "about:debugging" in the URL bar
+1. Click "This Firefox" on the left side
 1. Click "Load Temporary Add-on"
 1. Open the Vimium directory you've cloned from Github, and select any file inside.
 
@@ -109,9 +110,8 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
 [Puppeteer](https://github.com/puppeteer/puppeteer). To run the tests:
 
 1. Install [Deno](https://deno.land/) if you don't have it already.
-1. `PUPPETEER_PRODUCT=chrome deno run -A --unstable https://deno.land/x/puppeteer@16.2.0/install.ts`
-   to install [Puppeteer](https://github.com/lucacasonato/deno-puppeteer)
-1. `./make.js test` to build the code and run the tests.
+2. `deno run -A npm:puppeteer browsers install chrome` to install puppeteer
+3. `./make.js test` to build the code and run the tests.
 
 ### Coding Style
 

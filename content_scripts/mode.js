@@ -324,4 +324,4 @@ class CacheAllKeydownEvents extends SuppressAllKeyboardEvents {
   }
 }
 
-Object.assign(window, { Mode, SuppressAllKeyboardEvents, CacheAllKeydownEvents });
+Object.assign(globalThis, { Mode, SuppressAllKeyboardEvents, CacheAllKeydownEvents });

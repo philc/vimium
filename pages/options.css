@@ -1,164 +1,192 @@
 /* This stylesheet is included in both options.html and action.html, so changes affect both. */
 :root {
   --closeButtonWidth: 25px;
+  --validationErrorColor: #ff5300;
 }
+
 body {
   font: 14px "DejaVu Sans", "Arial", sans-serif;
   color: #303942;
   margin: 0 auto;
 }
-a, a:visited { color: #15c; }
-a:active { color: #052577; }
-div#wrapper, #footerWrapper {
-  width: 540px;
-  margin-left: 35px;
+
+a,
+a:visited {
+  color: #15c;
 }
+
+a:active {
+  color: #052577;
+}
+
+div#wrapper,
+#footer-content {
+  max-width: 1050px;
+  margin: 0 25px;
+}
+
 header {
   font-size: 18px;
   font-weight: normal;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ccc;
   padding: 20px 0 15px 0;
   width: 100%;
 }
+
 button {
   -webkit-user-select: none;
   -webkit-appearance: none;
-  background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  border-radius: 2px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
-  color: #444;
   font: inherit;
-  text-shadow: 0 1px 0 #f0f0f0;
-  height: 24px;
-  font-size: 12px;
-  padding: 0 10px;
+  border-width: 1px;
+  border-radius: 3px;
+  padding: 2px 10px;
 }
-button:hover {
-  background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
-  border-color: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
-  color: black;
-}
-button:active {
-  background-image: -webkit-linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
-  box-shadow: none;
-  text-shadow: none;
-}
-button[disabled], button[disabled]:hover, button[disabled]:active {
-  background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
-  text-shadow: 0 1px 0 #f0f0f0;
-  color: #888;
-}
+
 input[type="checkbox"] {
   -webkit-user-select: none;
 }
-label:hover {
-  color: black;
-}
-pre, code, .code {
+
+pre,
+code,
+.code {
   font-family: Consolas, "Liberation Mono", Courier, monospace;
 }
+
 pre {
   margin: 5px;
   border-left: 1px solid #eee;
   padding-left: 5px;
-
 }
-input, textarea {
+
+input,
+textarea {
   box-sizing: border-box;
 }
+
 textarea {
-  /* Horizontal resizing is pretty screwy-looking. */
+  /* Horizontal resizing breaks the page's layout, so we just allow vertical. */
   resize: vertical;
 }
-table#options{
-  width: 100%;
-  font-size: 14px;
-  position: relative;
-  border-spacing: 0 23px;
-  /* This should match the height of the footer, so that the footer UI doesn't sit on top of this
-     options table, covering some of the options UI. */
-  margin-bottom: 50px;
+
+h2 {
+  margin: 12px 0;
+  font-size: 16px;
+  font-weight: normal;
 }
+
+#settings-grid-container {
+  display: grid;
+  font-size: 14px;
+  grid-template-columns: auto 320px;
+  /* This is required so the "save changes" panel at the bottom of the options page doesn't cover
+   * any settings content. */
+  margin-bottom: 100px;
+}
+
+/* Adds a blank line in the grid. */
+#settings-grid-container .spacer {
+  grid-column-start: 1;
+  grid-column-end: 3;
+  height: 10px;
+}
+
+/* These should span the full width of the grid. */
+#settings-grid-container h2,
+#settings-grid-container header {
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
 .example {
   font-size: 12px;
   line-height: 16px;
   color: #979ca0;
   margin-left: 20px;
 }
-.info {
-  margin-left: 0px;
-}
+
 .reset-link {
+  margin-left: 0px;
   text-align: right;
 }
+
 .reset-link a {
   text-decoration: none;
 }
-.caption {
-  margin-right: 10px;
-  min-width: 130px;
-  padding-top: 3px;
-  vertical-align: top;
+
+.validation-message {
+  color: var(--validationErrorColor);
 }
-td { padding: 0; }
+
+/* This longer selector is required to take precedence over our dark scheme textarea colors which
+ * are defined in vimium.css. */
+body.vimium-body textarea.validation-error, body.vimium-body input.validation-error {
+  border: 2px solid var(--validationErrorColor);
+}
+
 div#exampleKeyMapping {
   margin-left: 10px;
   margin-top: 5px;
 }
-input#linkHintCharacters {
+
+#link-hint-characters-container,
+#link-hint-numbers-container,
+#wait-for-enter {
+  display: contents;
+}
+
+.link-hint-characters-field {
+  width: 100%;
+  /* These text fields look strange when they're excessively long. */
+  max-width: 400px;
+}
+
+.link-hint-characters-field input {
   width: 100%;
 }
-input#linkHintNumbers {
-  width: 100%;
-}
-input#linkHintCharacters {
-  width: 100%;
-}
-input#scrollStepSize {
-  width: 50px;
+
+input[name="scrollStepSize"] {
+  width: 80px;
   margin-right: 3px;
   padding-left: 3px;
 }
-textarea#userDefinedLinkHintCss, textarea#keyMappings, textarea#searchEngines {
-  width: 100%;;
+
+textarea[name="userDefinedLinkHintCss"],
+textarea[name="keyMappings"],
+textarea[name="searchEngines"] {
+  width: 100%;
   min-height: 140px;
   white-space: pre;
 }
-input#previousPatterns, input#nextPatterns {
+
+input[name="previousPatterns"],
+input[name="nextPatterns"] {
   width: 100%;
 }
-input#newTabUrl {
+
+input[name="newTabUrl"] {
   width: 100%;
 }
+
 input#searchUrl {
   width: 100%;
 }
+
 #status {
   margin-left: 10px;
   font-size: 80%;
 }
-/* Make the caption in the settings table as small as possible, to pull the other fields to the right. */
-.caption {
-  width: 1px;
-  white-space: nowrap;
-}
-#buttonsPanel { width: 100%; }
-.help {
-  position: absolute;
-  right: -320px;
-  width: 320px;
-}
-input[type=text]:read-only, input[type=number]:read-only, textarea:read-only {
+
+input[type="text"]:read-only,
+input[type="number"]:read-only,
+textarea:read-only {
   background-color: #eee;
   color: #666;
   pointer-events: none;
   -webkit-user-select: none;
 }
-input[type="text"], textarea {
+
+input[type="text"],
+textarea {
   border: 1px solid #bfbfbf;
   border-radius: 2px;
   color: #444;
@@ -166,107 +194,212 @@ input[type="text"], textarea {
   font: inherit;
   padding: 3px;
 }
-button:focus, input[type="text"]:focus, textarea:focus {
+
+button:focus,
+input[type="text"]:focus,
+textarea:focus {
   -webkit-transition: border-color 200ms;
   border-color: #4d90fe;
   outline: none;
 }
-/* Boolean options have a tighter form representation than text options. */
-td.booleanOption { font-size: 12px; }
 
-/* Ids and classes for rendering exclusionRules */
+/*
+ * CSS for exclusion rules.
+ */
 
-#exclusionRulesSection #exclusionScrollBox {
-  /* When there are no rules, we want to enforce a minimum height for this section, or the help text
-     will run together.*/
-  min-height: 45px;
-}
-
-#exclusionScrollBox {
+#exclusion-scroll-box {
   overflow: scroll;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Each exclusion rule is about 30px, so this allows 7 before scrolling */
+  /* Each exclusion rule is about 30px tall, so this allows 7 rules before scrolling. */
   max-height: 215px;
   border-radius: 2px;
   color: #444;
   width: 100%;
 }
-#exclusionRules {
+
+#exclusion-rules {
   width: 100%;
   border-collapse: collapse;
 }
-#exclusionRules td {
+
+#exclusion-rules td {
   vertical-align: top;
   border: 2px solid transparent;
+  padding: 0px;
 }
-#exclusionRules td:nth-of-type(2) {
+
+#exclusion-rules td:nth-of-type(2) {
   width: 33%;
 }
-#exclusionRules td:nth-of-type(3) {
+
+#exclusion-rules td:nth-of-type(3) {
   /* Make the close button td use only the minimum width needed. */
   width: var(--closeButtonWidth);
   padding-top: 3px;
 }
 
-#exclusionRules tr.validationError .validationMessage {
+#exclusion-rules tr.validationError .validationMessage {
   display: block;
 }
 
-#exclusionRules tr.validationError td:nth-of-type(1) input {
+#exclusion-rules tr.validationError td:nth-of-type(1) input {
   border-color: orange;
 }
 
-#exclusionRules .validationMessage {
+#exclusion-rules .validationMessage {
   display: block;
   color: orange;
   margin-top: 2px;
   margin-left: 2px;
 }
-#exclusionRules .remove {
+
+#exclusion-rules .remove {
   border: none;
   color: #979ca0;
 }
-#exclusionRules .remove:hover {
+
+#exclusion-rules .remove:hover {
   color: #444;
 }
-input[name=pattern], input[name=passKeys], .exclusionHeaderText {
+
+input[name="pattern"],
+input[name="passKeys"],
+.exclusion-header-text {
   width: 100%;
   font-family: Consolas, "Liberation Mono", Courier, monospace;
   font-size: 14px;
 }
-.exclusionHeaderText {
+
+.exclusion-header-text {
   padding-left: 3px;
   color: #979ca0;
 }
-#exclusionAddButton {
+
+#exclusion-add-button {
   float: right;
   /* Add the spacing between the table's cells to the right margin of this button. */
   margin-right: calc(var(--closeButtonWidth) + 4px);
   margin-top: 10px;
 }
-#footer {
+
+footer {
   background: #f5f5f5;
   border-top: 1px solid #979ca0;
   position: fixed;
   bottom: 0px;
+  left: 0;
   padding: 15px 0;
   z-index: 10;
-}
-#footer, #footerTable, #footerTableData {
   width: 100%;
 }
 
-#helpText, #versionAndOptions {
+#footer-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+#footer-help-text {
+  flex-grow: 1;
   font-size: 12px;
 }
-#saveOptionsTableData {
-  float: right;
+
+#footer-save-options {
+  flex-grow: 0;
 }
-#saveOptions, #exclusionAddButton {
+
+#save,
+#exclusion-add-button {
   white-space: nowrap;
   width: 110px;
 }
+
 #backupLink {
   cursor: pointer;
+}
+
+input#upload-backup {
+  max-width: 400px;
+}
+
+@media (prefers-color-scheme: light) {
+  button {
+    background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+    border-color: rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+    color: #444;
+    text-shadow: 0 1px 0 #f0f0f0;
+  }
+
+  button:hover {
+    background-image: -webkit-linear-gradient(#f0f0f0, #f0f0f0 38%, #e0e0e0);
+    border-color: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+    color: black;
+  }
+
+  button:active {
+    background-image: -webkit-linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);
+    box-shadow: none;
+    text-shadow: none;
+  }
+
+  button[disabled],
+  button[disabled]:hover,
+  button[disabled]:active {
+    background-image: -webkit-linear-gradient(#ededed, #ededed 38%, #dedede);
+    border-color: rgba(0, 0, 0, 0.25);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);
+    text-shadow: 0 1px 0 #f0f0f0;
+    color: #888;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  header {
+    border-bottom: 1px solid #999;
+  }
+
+  pre {
+    border-left: 1px solid #666;
+  }
+
+  #exclusion-rules .remove {
+    border: none;
+    color: var(--vimium-foreground-text-color);
+  }
+
+  #exclusion-rules .remove:hover {
+    color: #444;
+    color: #15c;
+    color: var(--vimium-link-color);
+  }
+
+  footer {
+    background-color: var(--vimium-foreground-color);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Our dark mode style for buttons matches MacOS Mojave's dark mode style for HTML buttons. MacOS
+     will automatically apply a dark mode style to unstyled buttons, but that doesn't happen on
+     other OSes, so to be cross-platform, we have to set these styles ourselves. */
+  button {
+    background: none;
+    background-color: #2b2a32;
+    border-color: #8f8f9c;
+    border-width: 1px;
+    color: var(--vimium-foreground-text-color);
+    text-shadow: none;
+  }
+  button:hover {}
+  button:active {}
+
+  button[disabled],
+  button[disabled]:hover,
+  button[disabled]:active {
+    color: #75747a;
+    border-color: #75747a;
+    background-color: #222127;
+  }
 }

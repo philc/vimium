@@ -1,15 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Vimium",
-  "version": "2.0.6",
+  "version": "2.3",
   "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
   "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
   "minimum_chrome_version": "105.0",
   "background": {
-    "service_worker": "background_scripts/background.js",
+    "service_worker": "background_scripts/main.js",
     "type": "module"
     // Uncomment when developing in Firefox.
-    // "scripts": ["background_scripts/background.js"]
+    // "scripts": ["background_scripts/main.js"]
   },
   "options_ui": {
     "page": "pages/options.html",
@@ -30,12 +30,14 @@
     // loads. This permission was required when moving to manifest V3.
     "scripting",
     "favicon", // The favicon permission is not yet supported by Firefox.
-    "webNavigation"
+    "webNavigation",
+    "search"
   ],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": [
+        "lib/types.js",
         "lib/utils.js",
         "lib/keyboard_utils.js",
         "lib/dom_utils.js",
@@ -79,8 +81,8 @@
   // },
   "action": {
     "default_icon": {
-      "16": "icons/action_enabled_16.png",
-      "32": "icons/action_enabled_32.png"
+      "16": "icons/action_disabled_16.png",
+      "32": "icons/action_disabled_32.png"
     },
     // Uncomment for Firefox.
     // "default_area": "navbar",
@@ -89,11 +91,12 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "pages/vomnibar.html",
+        "pages/vomnibar_page.html",
         "content_scripts/vimium.css",
-        "pages/hud.html",
-        "pages/help_dialog.html",
-        "pages/completion_engines.html",
+        "pages/hud_page.html",
+        "pages/help_dialog_page.html",
+        "pages/completion_engines_page.html",
+        "pages/command_listing.html",
         "resources/tlds.txt",
         // This allows one to script the reloading of Vimium.
         // This should only be enabled in development.

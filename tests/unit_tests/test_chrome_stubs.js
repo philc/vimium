@@ -2,13 +2,6 @@
 // This file contains stubs for a number of browser and chrome APIs which are missing in Deno.
 //
 
-window.document = {
-  createElement() {
-    return {};
-  },
-  addEventListener() {},
-};
-
 // There are 3 chrome.storage.* objects with identical APIs.
 // - areaName: one of "local", "sync", "session".
 const createStorageAPI = (areaName) => {
@@ -24,7 +17,7 @@ const createStorageAPI = (areaName) => {
       }
       for (key of Object.keys(items)) {
         value = items[key];
-        window.chrome.storage.onChanged.call(key, value, areaName);
+        globalThis.chrome.storage.onChanged.call(key, value, areaName);
       }
     },
 
@@ -50,7 +43,7 @@ const createStorageAPI = (areaName) => {
       if (key in this.store) {
         delete this.store[key];
       }
-      window.chrome.storage.onChanged.callEmpty(key);
+      globalThis.chrome.storage.onChanged.callEmpty(key);
     },
 
     async clear() {
@@ -64,7 +57,7 @@ const createStorageAPI = (areaName) => {
   return storage;
 };
 
-window.chrome = {
+globalThis.chrome = {
   areRunningVimiumTests: true,
 
   runtime: {
@@ -102,6 +95,14 @@ window.chrome = {
     getViews() {
       return [];
     },
+  },
+
+  scripting: {
+    executeScript() {},
+  },
+
+  search: {
+    query() {},
   },
 
   tabs: {

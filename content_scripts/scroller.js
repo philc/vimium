@@ -53,7 +53,7 @@ const getDimension = function (el, direction, amount) {
     // only be the part visible through the window
     if ((name === "viewSize") && (el === getScrollingElement())) {
       // TODO(smblott) Should we not be returning the width/height of element, here?
-      return (direction === "x") ? window.innerWidth : window.innerHeight;
+      return (direction === "x") ? globalThis.innerWidth : globalThis.innerHeight;
     } else {
       return el[scrollProperties[direction][name]];
     }
@@ -78,7 +78,7 @@ const performScroll = function (element, direction, amount) {
 
 // Test whether `element` should be scrolled. E.g. hidden elements should not be scrolled.
 const shouldScroll = function (element, direction) {
-  const computedStyle = window.getComputedStyle(element);
+  const computedStyle = globalThis.getComputedStyle(element);
   // Elements with `overflow: hidden` must not be scrolled.
   if (computedStyle.getPropertyValue(`overflow-${direction}`) === "hidden") {
     return false;
@@ -166,8 +166,8 @@ const checkVisibility = function (element) {
   // it so that subsequent scrolls affect the parent element.
   const rect = activatedElement.getBoundingClientRect();
   if (
-    (rect.bottom < 0) || (rect.top > window.innerHeight) || (rect.right < 0) ||
-    (rect.left > window.innerWidth)
+    (rect.bottom < 0) || (rect.top > globalThis.innerHeight) || (rect.right < 0) ||
+    (rect.left > globalThis.innerWidth)
   ) {
     return activatedElement = element;
   }
@@ -187,12 +187,12 @@ const checkVisibility = function (element) {
 const CoreScroller = {
   init() {
     this.time = 0;
-    this.lastEvent = this.keyIsDown = null;
-    this.installCanceEventListener();
+    this.lastEvent = this.keyDownKey = null;
+    this.installCancelEventListener();
   },
 
   // This installs listeners for events which should cancel smooth scrolling.
-  installCanceEventListener() {
+  installCancelEventListener() {
     // NOTE(smblott) With extreme keyboard configurations, Chrome sometimes does not get a keyup
     // event for every keydown, in which case tapping "j" scrolls indefinitely. This appears to be a
     // Chrome/OS/XOrg bug of some kind. See #1549.
@@ -201,15 +201,17 @@ const CoreScroller = {
       _name: "scroller/track-key-status",
       keydown: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
-          this.keyIsDown = true;
+          this.keyDownKey = event.code;
           if (!event.repeat) this.time += 1;
           this.lastEvent = event;
         });
       },
-      keyup: (_event) => {
+      keyup: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
-          this.keyIsDown = false;
-          this.time += 1;
+          if (event.code === this.keyDownKey) {
+            this.keyDownKey = null;
+            this.time += 1;
+          }
         });
       },
       blur: (event) => {
@@ -258,7 +260,7 @@ const CoreScroller = {
     }
 
     const activationTime = ++this.time;
-    const myKeyIsStillDown = () => (this.time === activationTime) && this.keyIsDown;
+    const myKeyIsStillDown = () => (this.time === activationTime) && this.keyDownKey != null;
 
     // Store amount's sign and make amount positive; the arithmetic is clearer when amount is
     // positive.
@@ -272,7 +274,7 @@ const CoreScroller = {
     let totalElapsed = 0.0;
     let calibration = 1.0;
     let previousTimestamp = null;
-    const cancelEventListener = this.installCanceEventListener();
+    const cancelEventListener = this.installCancelEventListener();
 
     const animate = (timestamp) => {
       if (previousTimestamp == null) {
@@ -367,9 +369,9 @@ const Scroller = {
     }
     if (!getScrollingElement() && amount instanceof Number) {
       if (direction === "x") {
-        window.scrollBy(amount, 0);
+        globalThis.scrollBy(amount, 0);
       } else {
-        window.scrollBy(0, amount);
+        globalThis.scrollBy(0, amount);
       }
       return;
     }
@@ -427,22 +429,22 @@ const Scroller = {
       // Scroll y axis.
       let amount;
       if (rect.bottom < 0) {
-        amount = rect.bottom - Math.min(rect.height, window.innerHeight);
+        amount = rect.bottom - Math.min(rect.height, globalThis.innerHeight);
         element = findScrollableElement(element, "y", amount, 1);
         CoreScroller.scroll(element, "y", amount, false);
-      } else if (window.innerHeight < rect.top) {
-        amount = rect.top + Math.min(rect.height - window.innerHeight, 0);
+      } else if (globalThis.innerHeight < rect.top) {
+        amount = rect.top + Math.min(rect.height - globalThis.innerHeight, 0);
         element = findScrollableElement(element, "y", amount, 1);
         CoreScroller.scroll(element, "y", amount, false);
       }
 
       // Scroll x axis.
       if (rect.right < 0) {
-        amount = rect.right - Math.min(rect.width, window.innerWidth);
+        amount = rect.right - Math.min(rect.width, globalThis.innerWidth);
         element = findScrollableElement(element, "x", amount, 1);
         CoreScroller.scroll(element, "x", amount, false);
-      } else if (window.innerWidth < rect.left) {
-        amount = rect.left + Math.min(rect.width - window.innerWidth, 0);
+      } else if (globalThis.innerWidth < rect.left) {
+        amount = rect.left + Math.min(rect.width - globalThis.innerWidth, 0);
         element = findScrollableElement(element, "x", amount, 1);
         CoreScroller.scroll(element, "x", amount, false);
       }
@@ -451,7 +453,7 @@ const Scroller = {
 };
 
 const getSpecialScrollingElement = function () {
-  const selector = specialScrollingElementMap[window.location.host];
+  const selector = specialScrollingElementMap[globalThis.location.host];
   if (selector) {
     return document.querySelector(selector);
   }
@@ -465,4 +467,4 @@ const specialScrollingElementMap = {
   "web.telegram.org": ".MessageList",
 };
 
-window.Scroller = Scroller;
+globalThis.Scroller = Scroller;

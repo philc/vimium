@@ -1,5 +1,13 @@
 {
   "fmt": {
     "lineWidth": 100
+  },
+  "imports": {
+    "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@^0.1.49",
+    "@std/fs": "jsr:@std/fs@^1.0.8",
+    "@std/http": "jsr:@std/http@^1.0.12",
+    "@std/path": "jsr:@std/path@^1.0.8",
+    "jsdom": "npm:jsdom@^26.0.0",
+    "json5": "npm:json5@^2.2.3"
   }
 }
