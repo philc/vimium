@@ -286,7 +286,7 @@ class VomnibarUI {
         // TODO(philc):
         const isUrl = await UrlUtils.isUrl(query);
         if (isUrl) {
-          await this.launchUrl(query, openInNewTab);
+          this.hide(() => this.launchUrl(query, openInNewTab));
         } else {
           this.hide(() =>
             chrome.runtime.sendMessage({
