@@ -142,6 +142,22 @@ div#exampleKeyMapping {
   margin-top: 5px;
 }
 
+#new-tab-url-container {
+  display: grid;
+  grid-template-columns: auto 100%;
+  grid-auto-rows: 1.5em;
+  row-gap: 10px;
+  align-items: center;
+}
+
+input[name=newTabCustomUrl] {
+  grid-column-start: 2;
+}
+
+input[name="newTabCustomUrl"] {
+  width: 400px;
+}
+
 #link-hint-characters-container,
 #link-hint-numbers-container,
 #wait-for-enter {
@@ -174,10 +190,6 @@ textarea[name="searchEngines"] {
 
 input[name="previousPatterns"],
 input[name="nextPatterns"] {
-  width: 100%;
-}
-
-input[name="newTabUrl"] {
   width: 100%;
 }
 

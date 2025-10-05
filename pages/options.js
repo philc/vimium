@@ -12,7 +12,8 @@ const options = {
   keyMappings: "string",
   linkHintCharacters: "string",
   linkHintNumbers: "string",
-  newTabUrl: "string",
+  newTabDestination: "option",
+  newTabCustomUrl: "string",
   nextPatterns: "string",
   previousPatterns: "string",
   regexFindMode: "boolean",
@@ -35,6 +36,7 @@ const OptionsPage = {
     const saveButton = document.querySelector("#save");
 
     const onUpdated = () => {
+      this.maintainNewTabUrlView();
       saveButton.disabled = false;
       saveButton.textContent = "Save changes";
     };
@@ -126,6 +128,10 @@ const OptionsPage = {
         case "string":
           el.value = value;
           break;
+        case "option":
+          const optionEl = document.querySelector(`input[name="${optionName}"][value="${value}"]`);
+          optionEl.checked = true;
+          break;
         default:
           throw new Error(`Unrecognized option type ${optionType}`);
       }
@@ -135,6 +141,7 @@ const OptionsPage = {
 
     document.querySelector("#upload-backup").value = "";
     this.maintainLinkHintsView();
+    this.maintainNewTabUrlView();
   },
 
   getSettingsFromForm() {
@@ -151,6 +158,10 @@ const OptionsPage = {
           break;
         case "string":
           value = el.value.trim();
+          break;
+        case "option":
+          const optionEl = document.querySelector(`input[name="${optionName}"]:checked`);
+          value = optionEl.value;
           break;
         default:
           throw new Error(`Unrecognized option type ${optionType}`);
@@ -268,6 +279,16 @@ const OptionsPage = {
 
   showElement(el, visible) {
     el.style.display = visible ? null : "none";
+  },
+
+  // Hide or show the form element newTabCustomUrl, depending on the radio button selection
+  // for newTabDestination.
+  maintainNewTabUrlView() {
+    const destination = document.querySelector("[name=newTabDestination]:checked").value;
+    this.showElement(
+      document.querySelector("[name=newTabCustomUrl]"),
+      destination == Settings.newTabDestinations.customUrl,
+    );
   },
 
   // Display the UI for link hint numbers vs. characters, depending upon the value of
