@@ -65,6 +65,32 @@ b: http://b.com/?q=%s description
           >here</a>.
         </div>
 
+        <h2>New tab URL</h2>
+        <div id="new-tab-url-container">
+          <input
+            id="vimiumNewTabPage"
+            type="radio"
+            name="newTabDestination"
+            value="vimiumNewTabPage"
+          />
+          <label for="vimiumNewTabPage">Vimium blank new tab page</label>
+          <input
+            id="browserNewTabPage"
+            type="radio"
+            name="newTabDestination"
+            value="browserNewTabPage"
+          />
+          <label for="browserNewTabPage">Browser's default new tab page</label>
+          <input id="customUrl" type="radio" name="newTabDestination" value="customUrl" />
+          <label for="customUrl">Custom URL</label>
+          <input type="text" name="newTabCustomUrl" style="display: none" />
+        </div>
+        <div class="example">
+          The page to open when using Vimium's "create new tab" command. To have Vimium commands
+          work on <em>all</em> new tab pages opened by the browser, a separate Vimium new tab
+          extension is required. See the full details <a href="TODO" target="_blank">here</a>.
+        </div>
+
         <header>Advanced Options</header>
 
         <h2>Scroll step size</h2>
@@ -187,16 +213,6 @@ b: http://b.com/?q=%s description
         </div>
         <div class="example">
           The "navigate to next page" command uses these patterns to find the link to follow.
-        </div>
-
-        <h2>New tab URL</h2>
-        <div>
-          <input name="newTabUrl" type="text" />
-          <div class="example reset-link"><a href="#">Reset</a></div>
-        </div>
-        <div class="example">
-          The page to open with the "create new tab" command. Set this to "<tt>pages/blank.html</tt
-          >" for a blank page (except incognito mode).<br>
         </div>
 
         <h2>CSS for Vimium UI</h2>
