@@ -44,6 +44,20 @@ button {
 
 input[type="checkbox"] {
   -webkit-user-select: none;
+  margin: 0;
+  margin-right: 8px;
+}
+
+input[type=radio] {
+  margin: 0;
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+.boolean-label {
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 pre,
