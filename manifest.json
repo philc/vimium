@@ -4,7 +4,7 @@
   "version": "2.3.1",
   "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
   "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
-  "minimum_chrome_version": "105.0",
+  "minimum_chrome_version": "117.0",
   "background": {
     "service_worker": "background_scripts/main.js",
     "type": "module"
