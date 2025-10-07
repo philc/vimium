@@ -6,25 +6,25 @@ import * as userSearchEngines from "../background_scripts/user_search_engines.js
 
 const options = {
   filterLinkHints: "boolean",
-  waitForEnterForFilteredHints: "boolean",
+  grabBackFocus: "boolean",
   hideHud: "boolean",
   hideUpdateNotifications: "boolean",
+  ignoreKeyboardLayout: "boolean",
   keyMappings: "string",
   linkHintCharacters: "string",
   linkHintNumbers: "string",
-  newTabDestination: "option",
   newTabCustomUrl: "string",
-  openVomnibarOnNewTabPage: "boolean",
+  newTabDestination: "option",
   nextPatterns: "string",
+  openVomnibarOnNewTabPage: "boolean",
   previousPatterns: "string",
   regexFindMode: "boolean",
-  ignoreKeyboardLayout: "boolean",
   scrollStepSize: "number",
-  smoothScroll: "boolean",
-  grabBackFocus: "boolean",
   searchEngines: "string",
   settingsVersion: "string", // This is a hidden field.
+  smoothScroll: "boolean",
   userDefinedLinkHintCss: "string",
+  waitForEnterForFilteredHints: "boolean",
 };
 
 const OptionsPage = {
