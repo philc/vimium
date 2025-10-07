@@ -1,0 +1,16 @@
+body.documentation {
+  max-width: 730px;
+  margin: 0 25px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+li {
+  margin: 10px;
+}
+
+p {
+  line-height: 1.5em;
+}

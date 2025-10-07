@@ -95,7 +95,7 @@
         "content_scripts/vimium.css",
         "pages/hud_page.html",
         "pages/help_dialog_page.html",
-        "pages/completion_engines_page.html",
+        "pages/doc_completion_engines.html",
         "pages/command_listing.html",
         "resources/tlds.txt",
         // This allows one to script the reloading of Vimium.
