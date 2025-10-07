@@ -14,6 +14,7 @@ const options = {
   linkHintNumbers: "string",
   newTabDestination: "option",
   newTabCustomUrl: "string",
+  openVomnibarOnNewTabPage: "boolean",
   nextPatterns: "string",
   previousPatterns: "string",
   regexFindMode: "boolean",
@@ -281,10 +282,14 @@ const OptionsPage = {
     el.style.display = visible ? null : "none";
   },
 
-  // Hide or show the form element newTabCustomUrl, depending on the radio button selection
-  // for newTabDestination.
+  // Hide or show extra form elements depending on which radio button is selected for
+  // newTabDestination.
   maintainNewTabUrlView() {
     const destination = document.querySelector("[name=newTabDestination]:checked").value;
+    this.showElement(
+      document.querySelector("#openVomnibarContainer"),
+      destination == Settings.newTabDestinations.vimiumNewTabPage,
+    );
     this.showElement(
       document.querySelector("[name=newTabCustomUrl]"),
       destination == Settings.newTabDestinations.customUrl,

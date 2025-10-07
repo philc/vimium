@@ -154,6 +154,12 @@ input[name=newTabCustomUrl] {
   grid-column-start: 2;
 }
 
+#openVomnibarContainer {
+  display: flex;
+  align-items: center;
+  grid-column-start: 2;
+}
+
 input[name="newTabCustomUrl"] {
   width: 400px;
 }
