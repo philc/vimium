@@ -3,11 +3,11 @@ import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../lib/utils.js";
 import "../../lib/settings.js";
 import * as completionEngines from "../../background_scripts/completion_engines.js";
-import * as page from "../../pages/completion_engines_page.js";
+import * as page from "../../pages/doc_completion_engines.js";
 
 context("completion engines page", () => {
   setup(async () => {
-    await testHelper.jsdomStub("pages/completion_engines_page.html");
+    await testHelper.jsdomStub("pages/doc_completion_engines.html");
   });
 
   should("have a section in the html for every engine", () => {
