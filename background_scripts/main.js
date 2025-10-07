@@ -256,22 +256,26 @@ const BackgroundCommands = {
           request.urls = urlList;
         } else {
           // Otherwise, just create a new tab.
-          let newTabUrl = Settings.get("newTabUrl");
-          if (newTabUrl == "pages/blank.html") {
-            // "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab"
-            // instead.
-            newTabUrl = request.tab.incognito
-              ? Settings.defaultOptions.newTabUrl
-              : chrome.runtime.getURL(newTabUrl);
+          let url;
+          const destination = Settings.get("newTabDestination");
+          const customUrl = Settings.get("newTabCustomUrl");
+          if (destination == Settings.newTabDestinations.vimiumNewTabPage) {
+            url = Settings.vimiumNewTabPageUrl;
+          } else if (destination == Settings.newTabDestinations.customUrl && customUrl.length > 0) {
+            url = customUrl;
+          } else {
+            // This value should be equal to `chromeNewTabUrl` in tab_operations.js.
+            // TODO(philc): Can these two declarations be merged into one place?
+            url = "about:newtab";
           }
-          request.urls = [newTabUrl];
+          request.urls = [url];
         }
       }
     }
     if (request.registryEntry.options.incognito || request.registryEntry.options.window) {
       // Firefox does not allow an incognito window to be created with the URL about:newtab. It
       // throws this error: "Illegal URL: about:newtab".
-      const urls = request.urls.filter((u) => u != Settings.defaultOptions.newTabUrl);
+      const urls = request.urls.filter((u) => u != "about:newtab");
       const windowConfig = {
         url: urls,
         incognito: request.registryEntry.options.incognito || false,
