@@ -154,6 +154,14 @@ The following special keys are available for mapping:
 Shifts are automatically detected so, for example, `<c-&>` corresponds to ctrl+shift+7 on an English
 keyboard.
 
+## How to allow Vimium commands to work on new tab pages
+
+* Vimium commands will work on new tab pages which are opened via Vimium commands like the
+  `createTab` command (mapped to `t` by default).
+* To have Vimium commands work on <em>all</em> new tab pages opened by the browser (e.g. via `cmd-t`
+  or `ctrl-t` shortcuts), a companion Vimium New Tab Page extension is required.
+* Once installed, all new tabs will open a blank Vimium new tab page.
+
 ## More documentation
 
 * [FAQ](https://github.com/philc/vimium/wiki/FAQ)
