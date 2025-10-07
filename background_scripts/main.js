@@ -264,9 +264,7 @@ const BackgroundCommands = {
           } else if (destination == Settings.newTabDestinations.customUrl && customUrl.length > 0) {
             url = customUrl;
           } else {
-            // This value should be equal to `chromeNewTabUrl` in tab_operations.js.
-            // TODO(philc): Can these two declarations be merged into one place?
-            url = "about:newtab";
+            url = UrlUtils.chromeNewTabUrl;
           }
           request.urls = [url];
         }
@@ -275,7 +273,7 @@ const BackgroundCommands = {
     if (request.registryEntry.options.incognito || request.registryEntry.options.window) {
       // Firefox does not allow an incognito window to be created with the URL about:newtab. It
       // throws this error: "Illegal URL: about:newtab".
-      const urls = request.urls.filter((u) => u != "about:newtab");
+      const urls = request.urls.filter((u) => u != UrlUtils.chromeNewTabUrl);
       const windowConfig = {
         url: urls,
         incognito: request.registryEntry.options.incognito || false,

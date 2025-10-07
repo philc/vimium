@@ -5,8 +5,6 @@
 import * as bgUtils from "../background_scripts/bg_utils.js";
 import "../lib/url_utils.js";
 
-const chromeNewTabUrl = "about:newtab";
-
 // Opens request.url in the current tab. If the URL is keywords, search for them in the default
 // search engine. If the URL is a javascript: snippet, execute it in the current tab.
 export async function openUrlInCurrentTab(request) {
@@ -94,8 +92,8 @@ export async function openUrlInNewTab(request) {
     await chrome.search.query({ text: query, tabId: newTab.id });
   } else {
     // The requested destination is a regular URL.
-    if (urlStr != chromeNewTabUrl) {
-      // Firefox does not support "about:newtab" in chrome.tabs.create.
+    // Firefox does not support "about:newtab" in chrome.tabs.create, so omit it.
+    if (urlStr != UrlUtils.chromeNewTabUrl) {
       tabConfig.url = urlStr;
     }
     newTab = await chrome.tabs.create(tabConfig);
@@ -112,8 +110,8 @@ export async function openUrlInNewWindow(request) {
   if (request.active != null) {
     winConfig.active = request.active;
   }
-  // Firefox does not support "about:newtab" in chrome.tabs.create.
-  if (tabConfig["url"] === chromeNewTabUrl) {
+  // Firefox does not support "about:newtab" in chrome.tabs.create, so omit it.
+  if (tabConfig["url"] === UrlUtils.chromeNewTabUrl) {
     delete winConfig["url"];
   }
   await chrome.windows.create(winConfig);
