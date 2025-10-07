@@ -158,7 +158,7 @@ keyboard.
 
 * [FAQ](https://github.com/philc/vimium/wiki/FAQ)
 * [Command listing](https://vimium.github.io/commands/)
-* [Vimium's GitHub wiki](https://github.com/philc/vimium/wiki): documentation the more advanced
+* [Vimium's GitHub wiki](https://github.com/philc/vimium/wiki): documentation for the more advanced
   features.
 
 ## Contributing
