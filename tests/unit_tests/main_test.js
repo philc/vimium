@@ -38,110 +38,86 @@ context("HintCoordinator", () => {
 });
 
 context("Next zoom level", () => {
-  // NOTE: All these tests use the Chrome zoom levels, which are the default!
+  // All these tests use the Chrome zoom levels, which are the default.
   should("Zoom in 0 times", async () => {
-    const count = 0;
-    const currentZoom = 1.00;
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(1.00, nextZoom);
+    const zoom = await nextZoomLevel(1.00, 0);
+    assert.equal(1.00, zoom);
   });
 
   should("Zoom in 1", async () => {
-    const count = 1;
-    const currentZoom = 1.00;
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(1.10, nextZoom);
+    const zoom = await nextZoomLevel(1.00, 1);
+    assert.equal(1.10, zoom);
   });
 
   should("Zoom out 1", async () => {
-    const count = -1;
-    const currentZoom = 1.00;
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(0.90, nextZoom);
+    const zoom = await nextZoomLevel(1.00, -1);
+    assert.equal(0.90, zoom);
   });
 
   should("Zoom in 2", async () => {
-    const count = 2;
-    const currentZoom = 1.00;
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(1.25, nextZoom);
+    const zoom = await nextZoomLevel(1.00, 2);
+    assert.equal(1.25, zoom);
   });
 
   should("Zoom out 2", async () => {
-    const count = -2;
-    const currentZoom = 1.00;
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(0.80, nextZoom);
+    const zoom = await nextZoomLevel(1.00, -2);
+    assert.equal(0.80, zoom);
   });
 
   should("Zoom in from between values", async () => {
-    const count = 1;
-    const currentZoom = 1.05;
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(1.10, nextZoom);
+    const zoom = await nextZoomLevel(1.05, 1);
+    assert.equal(1.10, zoom);
   });
 
   should("Zoom out from between values", async () => {
-    const count = -1;
-    const currentZoom = 1.05;
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(1.00, nextZoom);
+    const zoom = await nextZoomLevel(1.05, -1);
+    assert.equal(1.00, zoom);
   });
 
   should("Zoom in past the maximum", async () => {
-    const count = 15;
-    const currentZoom = 1.00;
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(5.00, nextZoom);
+    const zoom = await nextZoomLevel(1.00, 15);
+    assert.equal(5.00, zoom);
   });
 
   should("Zoom out past the minimum", async () => {
-    const count = -15;
-    const currentZoom = 1.00;
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(0.25, nextZoom);
+    const zoom = await nextZoomLevel(1.00, -15);
+    assert.equal(0.25, zoom);
   });
 
   should("Zoom in from below the minimum", async () => {
-    const count = 1;
-    const currentZoom = 0.01; // lowest non-broken Chrome zoom level
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(0.25, nextZoom);
+    const lowZoom = 0.01; // Lowest non-broken Chrome zoom level
+    const zoom = await nextZoomLevel(lowZoom, 1);
+    assert.equal(0.25, zoom);
   });
 
   should("Zoom out from above the maximum", async () => {
-    const count = -1;
-    const currentZoom = 9.99; // highest non-broken Chrome zoom level
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(5.00, nextZoom);
+    const highZoom = 9.99; // highest non-broken Chrome zoom level
+    const zoom = await nextZoomLevel(highZoom, -1);
+    assert.equal(5.00, zoom);
   });
 
   should("Zoom in from above the maximum", async () => {
-    const count = 1;
-    const currentZoom = 9.99; // highest non-broken Chrome zoom level
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(5.00, nextZoom);
+    const highZoom = 9.99; // highest non-broken Chrome zoom level
+    const zoom = await nextZoomLevel(highZoom, 1);
+    assert.equal(5.00, zoom);
   });
 
   should("Zoom out from below the minimum", async () => {
-    const count = -1;
-    const currentZoom = 0.01; // lowest non-broken Chrome zoom level
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(0.25, nextZoom);
+    const lowZoom = 0.01; // lowest non-broken Chrome zoom level
+    const zoom = await nextZoomLevel(lowZoom, -1);
+    assert.equal(0.25, zoom);
   });
 
   should("Test Chrome 33% zoom in with float error", async () => {
-    const count = 1;
-    const currentZoom = 0.32999999999999996; // The value chrome actually gives for 33%.
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(0.50, nextZoom);
+    const floatZoom = 0.32999999999999996; // The value chrome actually gives for 33%.
+    const zoom = await nextZoomLevel(floatZoom, 1);
+    assert.equal(0.50, zoom);
   });
 
   should("Test Chrome 175% zoom in with float error", async () => {
-    const count = 1;
-    const currentZoom = 1.7499999999999998; // The value chrome actually gives for 175%.
-    const nextZoom = await nextZoomLevel(currentZoom, count);
-    assert.equal(2.00, nextZoom);
+    const floatZoom = 1.7499999999999998; // The value chrome actually gives for 175%.
+    const zoom = await nextZoomLevel(floatZoom, 1);
+    assert.equal(2.00, zoom);
   });
 });
 
