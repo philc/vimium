@@ -1,6 +1,7 @@
 import "./test_helper.js";
 import "../../lib/settings.js";
 import "../../background_scripts/main.js";
+import { RegistryEntry } from "../../background_scripts/commands.js";
 
 context("HintCoordinator", () => {
   should("prepareToActivateLinkHintsMode", async () => {
@@ -34,6 +35,61 @@ context("HintCoordinator", () => {
       { frameId: 0, frameIdToHintDescriptors: { "1": frameIdToHintDescriptors[1] } },
       { frameId: 1, frameIdToHintDescriptors: { "0": frameIdToHintDescriptors[0] } },
     ], receivedMessages);
+  });
+});
+
+context("createTab command", () => {
+  let tabCreated;
+  let requestStub;
+
+  setup(async () => {
+    stub(chrome.tabs, "create", (args) => {
+      tabCreated = args;
+    });
+    requestStub = {
+      registryEntry: new RegistryEntry({ options: {} }),
+      tab: {},
+      count: 1,
+    }
+    await Settings.load();
+  });
+
+  should("open the provided URL", async () => {
+    requestStub.url = "https://example.com";
+    await BackgroundCommands.createTab(requestStub);
+    assert.equal("https://example.com", tabCreated.url);
+  });
+
+  should("open the vimium new tab page", async () => {
+    await Settings.set("newTabDestination", Settings.newTabDestinations.vimiumNewTabPage);
+    await BackgroundCommands.createTab(requestStub);
+    assert.equal(Settings.vimiumNewTabPageUrl, tabCreated.url);
+  });
+
+  should("open the browser's new tab page", async () => {
+    await Settings.set("newTabDestination", Settings.newTabDestinations.browserNewTabPage);
+    await BackgroundCommands.createTab(requestStub);
+    // The URL argument to chrome.tabs.create is omitted when we want to use the browser's NTP.
+    assert.isTrue(tabCreated != null);
+    assert.equal(undefined, tabCreated.url);
+  });
+
+  should("open custom URL", async () => {
+    await Settings.set("newTabDestination", Settings.newTabDestinations.customUrl);
+    await BackgroundCommands.createTab(requestStub);
+    // If a specific custom URL isn't provided, the browser's new tab page will be used.
+    // The URL argument to chrome.tabs.create is omitted when we want to use the browser's NTP.
+    assert.isTrue(tabCreated != null);
+    assert.equal(undefined, tabCreated.url);
+
+    await Settings.set("newTabCustomUrl", "http://example.com");
+    await BackgroundCommands.createTab(requestStub);
+    assert.equal("http://example.com", tabCreated.url);
+  });
+
+  teardown(() => {
+    tabCreated = null;
+    Settings.clear();
   });
 });
 
