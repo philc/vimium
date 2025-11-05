@@ -58,6 +58,9 @@ function createFirefoxManifest(manifest) {
         // development mode, or many extension APIs don't work.
         "id": "{d7742d87-e61d-4b78-b8a1-b469842139fa}",
         "strict_min_version": "112.0",
+        "data_collection_permissions": {
+          "required": ["none"],
+        },
       },
     },
   });
@@ -131,6 +134,7 @@ async function buildStorePackage() {
   ]);
   await shell("rsync", rsyncOptions);
 
+  // Build the Firefox / Mozilla Addons store package.
   const firefoxManifest = createFirefoxManifest(chromeManifest);
   await writeDistManifest(firefoxManifest);
   // Exclude PNG icons from the Firefox build, because we use the SVG directly.
