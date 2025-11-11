@@ -14,7 +14,7 @@ export function isFirefox() {
 }
 
 export async function getFirefoxVersion() {
-  return globalThis.browser ? (await browser.runtime.getBrowserInfo()).version : null;
+  return isFirefox() ? (await browser.runtime.getBrowserInfo()).version : null;
 }
 
 // TODO(philc): tabRecency imports bg_utils. We should resovle the cycle for the sake of clarity.
