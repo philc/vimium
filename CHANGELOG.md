@@ -1,4 +1,8 @@
-2.3 (2025-06-30)
+2.3.1 (2025-11-12)
+
+- Fix Vimium to work with Chrome 144. (https://github.com/philc/vimium/issues/4785)
+
+2.3.0 (2025-06-30)
 
 - Add a command listing page, which documents all commands and their options. Access it
   [on the web](https://vimium.github.io/commands/), or from the Vimium Options page > Show available
