@@ -187,4 +187,9 @@ ul {
   #vomnibar li .title .match {
     color: white;
   }
+
+  #vomnibar input::selection {
+    background-color: #ffffff;
+    color: #000000;
+  }
 }
