@@ -371,6 +371,10 @@ class LinkHintsMode {
     this.hintMode = null;
     // A count of the number of Tab presses since the last non-Tab keyboard event.
     this.tabCount = 0;
+    // If set, we will fade this element out for a short time before removing all markers.
+    this.pendingActivatedFadeEl = null;
+    this.pendingFadeRemovalScheduled = false;
+    this.fadeDurationMs = 300;
 
     if (hintDescriptors.length === 0) {
       HUD.show("No links to select.", 2000);
@@ -698,7 +702,45 @@ class LinkHintsMode {
     if (userMightOverType == null) {
       userMightOverType = false;
     }
-    this.removeHintMarkers();
+    // Delay removing all markers so the activated hint can fade out.
+    // We'll remove the container after the fade completes.
+    const activatedMarkerEl = linkMatched.isLocalMarker() ? linkMatched.element : null;
+    if (activatedMarkerEl) {
+      this.pendingActivatedFadeEl = activatedMarkerEl;
+      // Hide all other markers immediately so only the activated marker remains visible to fade.
+      if (this.containerEl) {
+        for (const child of Array.from(this.containerEl.children)) {
+          if (child !== activatedMarkerEl) child.style.display = "none";
+        }
+      } else {
+        for (const m of this.hintMarkers) {
+          if (m.isLocalMarker() && m.element !== activatedMarkerEl) m.element.style.display = "none";
+        }
+      }
+      // Keep all hints visible for now; we'll start a fade on the activated one and then remove all.
+      // Prepare starting state for smooth transform; then animate to 150% and opacity 0 inline.
+      activatedMarkerEl.style.willChange = "opacity, transform";
+      activatedMarkerEl.style.transition = `opacity ${this.fadeDurationMs}ms ease, transform ${this.fadeDurationMs}ms ease`;
+      activatedMarkerEl.style.transformOrigin = "center center";
+      activatedMarkerEl.style.transform = "scale(1)";
+      activatedMarkerEl.style.opacity = "1";
+      // Force a reflow so the browser registers the initial styles before we change them.
+      void activatedMarkerEl.getBoundingClientRect();
+      // Next tick, apply the end state to trigger the transition.
+      Utils.nextTick(() => {
+        activatedMarkerEl.style.transform = "scale(1.5)";
+        activatedMarkerEl.style.opacity = "0";
+      });
+      if (!this.pendingFadeRemovalScheduled) {
+        this.pendingFadeRemovalScheduled = true;
+        Utils.setTimeout(this.fadeDurationMs, () => {
+          this.removeHintMarkers();
+          this.pendingFadeRemovalScheduled = false;
+        });
+      }
+    } else {
+      this.removeHintMarkers();
+    }
 
     if (linkMatched.isLocalMarker()) {
       const localHint = linkMatched.localHint;
@@ -784,8 +826,11 @@ class LinkHintsMode {
   }
 
   deactivateMode() {
-    this.removeHintMarkers();
+    // Exit the mode immediately, but if we're in the middle of a fade-out, defer DOM removal
+    // until the scheduled timeout in activateLink() fires.
     if (this.hintMode != null) this.hintMode.exit();
+    if (this.pendingFadeRemovalScheduled) return;
+    this.removeHintMarkers();
   }
 
   removeHintMarkers() {
@@ -793,6 +838,8 @@ class LinkHintsMode {
       DomUtils.removeElement(this.containerEl);
     }
     this.containerEl = null;
+    this.pendingActivatedFadeEl = null;
+    this.pendingFadeRemovalScheduled = false;
   }
 }
 
