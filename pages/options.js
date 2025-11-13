@@ -17,6 +17,7 @@ const options = {
   previousPatterns: "string",
   regexFindMode: "boolean",
   ignoreKeyboardLayout: "boolean",
+  suppressOverlappingHintMarkers: "boolean",
   scrollStepSize: "number",
   smoothScroll: "boolean",
   grabBackFocus: "boolean",

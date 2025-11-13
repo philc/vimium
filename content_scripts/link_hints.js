@@ -445,6 +445,10 @@ class LinkHintsMode {
     }
 
     this.setIndicator();
+    // Ensure overlapping markers don't visually stack on top of each other.
+    if (Settings.get("suppressOverlappingHintMarkers")) {
+      this.suppressOverlappingMarkers();
+    }
   }
 
   setOpenLinkMode(mode, shouldPropagateToOtherFrames) {
@@ -607,6 +611,10 @@ class LinkHintsMode {
       for (const matched of linksMatched) {
         this.showMarker(matched, this.markerMatcher.hintKeystrokeQueue.length);
       }
+      // After visibility changes, suppress overlaps so only one marker per overlapping region shows.
+      if (Settings.get("suppressOverlappingHintMarkers")) {
+        this.suppressOverlappingMarkers();
+      }
     }
 
     return this.setIndicator();
@@ -688,6 +696,54 @@ class LinkHintsMode {
     newMarkers = newMarkers.concat(otherMarkers);
     this.hintMarkers = newMarkers;
     this.renderHints();
+  }
+
+  // Hide all but one visible marker in any overlapping group of markers.
+  suppressOverlappingMarkers() {
+    if (!this.containerEl) return;
+    // Consider only local, visible markers.
+    const visibleMarkers = this.hintMarkers.filter((m) => m.isLocalMarker() && (m.element.style.display !== "none"));
+    if (visibleMarkers.length <= 1) return;
+
+    // Refresh marker rects.
+    for (const m of visibleMarkers) {
+      const rect = m.element.getClientRects()[0];
+      m.markerRect = rect;
+    }
+
+    // Build stacks of overlapping markers (O(n^2)), merging stacks if necessary.
+    let stacks = [];
+    for (const m of visibleMarkers) {
+      if (!m.markerRect) continue;
+      let stackForThisMarker = null;
+      const results = [];
+      for (const stack of stacks) {
+        const overlaps = this.markerOverlapsStack(m, stack);
+        if (overlaps && (stackForThisMarker == null)) {
+          stack.push(m);
+          stackForThisMarker = stack;
+          results.push(stack);
+        } else if (overlaps && (stackForThisMarker != null)) {
+          // Merge overlapping stacks.
+          stackForThisMarker.push(...stack);
+          // Do not push this stack into results to effectively discard it.
+        } else {
+          results.push(stack);
+        }
+      }
+      stacks = results;
+      if (stackForThisMarker == null) stacks.push([m]);
+    }
+
+    // For each overlapping stack, hide all but the last marker (topmost after current ordering).
+    for (const stack of stacks) {
+      if (stack.length <= 1) continue;
+      for (let i = 0; i < stack.length - 1; i++) {
+        stack[i].element.style.display = "none";
+      }
+      // Ensure one remains visible.
+      stack[stack.length - 1].element.style.display = "";
+    }
   }
 
   // When only one hint remains, activate it in the appropriate way. The current frame may or may
