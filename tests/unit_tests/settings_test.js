@@ -28,7 +28,6 @@ context("settings", () => {
 
   context("v2.4 migration", () => {
     setup(async () => {
-      // Prior to Vimium 2.0.0, the settings values were encoded as JSON strings.
       await chrome.storage.sync.set({
         settingsVersion: "2.3",
       });
