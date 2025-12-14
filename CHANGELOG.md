@@ -1,3 +1,10 @@
+2.4.0 (unreleased)
+
+- Support a Vimium new tab experience: the browser can be configured to open a blank Vimium page as
+  the new tab page. In Vimium's settings, the Vomnibar can configured to open on new tabs. See
+  [instructions](https://github.com/philc/vimium?tab=readme-ov-file#how-to-allow-vimium-to-work-on-new-tab-pages).
+  (https://github.com/philc/vimium/pull/4795)
+
 2.3.1 (2025-11-12)
 
 - Fix Vimium to work with Chrome 144. (https://github.com/philc/vimium/issues/4785)
