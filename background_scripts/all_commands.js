@@ -541,7 +541,7 @@ const allCommands = [
     group: "tabs",
     advanced: true,
     background: true,
-    noRepat: true,
+    noRepeat: true,
   },
 
   {
