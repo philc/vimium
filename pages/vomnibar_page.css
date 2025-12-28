@@ -150,11 +150,15 @@ ul {
   }
 
   #vomnibar input {
-    background-color: #202124;
-    color: white;
     background-color: var(--vimium-foreground-color);
     color: var(--vimium-foreground-text-color);
     border: none;
+  }
+
+  /* Ensure selected text is visible in dark mode. */
+  #vomnibar input::selection {
+    color: var(--vimium-foreground-color);
+    background-color: var(--vimium-foreground-text-color);
   }
 
   #vomnibar li {
