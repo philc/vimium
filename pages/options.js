@@ -317,7 +317,9 @@ const OptionsPage = {
 
   onDownloadBackupClicked() {
     const backup = Settings.pruneOutDefaultValues(this.getSettingsFromForm());
-    const settingsBlob = new Blob([JSON.stringify(backup, null, 2) + "\n"]);
+    // Serialize the JSON keys so they're stable across backups. See #4764.
+    const keys = Object.keys(backup).sort();
+    const settingsBlob = new Blob([JSON.stringify(backup, keys, 2) + "\n"]);
     document.querySelector("#download-backup").href = URL.createObjectURL(settingsBlob);
   },
 
