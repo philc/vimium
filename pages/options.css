@@ -129,6 +129,9 @@ h2 {
 
 .validation-message {
   color: var(--validationErrorColor);
+  /* Render newlines in validation messages. When there are multiple errors, they are separated by a
+     newline. */
+  white-space: pre-line;
 }
 
 /* This longer selector is required to take precedence over our dark scheme textarea colors which
