@@ -67,8 +67,14 @@ context("KeyMappingsParser", () => {
 
   should("parse options using all 3 syntaxes", () => {
     // This test exercises some of the edge cases of the underlying regular expressions.
-    const result = KeyMappingsParser.parseCommandOptions('key1  key2="a b=c"  key3=" ');
-    assert.equal({ key1: true, key2: "a b=c", key3: '"' }, result);
+    const result = KeyMappingsParser.parseCommandOptions('keyA  keyB="a b=c"  keyC=" ');
+    assert.equal({ keyA: true, keyB: "a b=c", keyC: '"' }, result);
+  });
+
+  should("parse a URL parameter alongside an option value", () => {
+    // URLs alongside the "position" option occurs in the createTab command.
+    const result = KeyMappingsParser.parseCommandOptions('abc.com/?param=val position="end"');
+    assert.equal({ "abc.com/?param=val": true, position: "end"}, result);
   });
 
   should("return parsing validation errors", () => {

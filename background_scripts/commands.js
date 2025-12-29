@@ -238,19 +238,22 @@ const KeyMappingsParser = {
   parseCommandOptions(optionString) {
     const options = {};
     while (optionString != "") {
+      // Note that option names are allowed to be letters only; no numbers.
       let match, matchedString, key, value;
       // Case: option value surrounded by quotes (key= "a b"). Spaces are allowed in the value.
-      if (match = optionString.match(/^(\S+)="([^"]+)"(\s+|$)/)) {
+      if (match = optionString.match(/^([a-zA-Z]+)="([^"]+)"(\s+|$)/)) {
         matchedString = match[0];
         key = match[1];
         value = match[2];
       } // Case: option value not surrounded by quotes (key=value). Spaces aren't allowed.
-      else if (match = optionString.match(/^(\S+)=(\S+)(\s+|$)/)) {
+      else if (match = optionString.match(/^([a-zA-Z]+)=(\S+)(\s+|$)/)) {
         matchedString = match[0];
         key = match[1];
         value = match[2];
-      } // Case: single option (flag).
-      else if (match = optionString.match(/^([^\s=]+)(\s+|$)/)) {
+      } // Case: single option (flag), or "any URL". This correctly parses URLs because URLs cannot
+      // contain unescaped equals or space characters. The key will be the option's name (or the
+      // URL), and the value will be true.
+      else if (match = optionString.match(/^([^\s"]+)(\s+|$)/)) {
         matchedString = match[0];
         key = match[1];
         value = true;
@@ -260,6 +263,7 @@ const KeyMappingsParser = {
       // single equals sign. For now, just add the whole string as a flag option. If the command in
       // question doesn't accept this option, then an error will get surfaced to the user.
       if (match == null) {
+        console.log(`Warning: '${optionString}' isn't a valid option string.`);
         options[optionString] = true;
         break;
       }
