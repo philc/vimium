@@ -4,6 +4,8 @@
   the new tab page. In Vimium's settings, the Vomnibar can configured to open on new tabs. See
   [instructions](https://github.com/philc/vimium?tab=readme-ov-file#how-to-allow-vimium-to-work-on-new-tab-pages).
   (https://github.com/philc/vimium/pull/4795)
+- Make Google search result links work on sub-tabs like "Web".
+  (https://github.com/philc/vimium/issues/4750)
 
 2.3.1 (2025-11-12)
 
