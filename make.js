@@ -91,8 +91,29 @@ async function parseManifestFile() {
   return JSON5.parse(await Deno.readTextFile("./manifest.json"));
 }
 
+async function checkForBuildIssues() {
+  // Ensure the version number is properly formed.
+  const chromeManifest = await parseManifestFile();
+  const version = chromeManifest["version"];
+  const versionRegexp = /^\d\.\d+\.\d+$/;
+  if (!versionRegexp.test(version)) {
+    throw new Error(`The version string "${version}" is malformed.`);
+  }
+
+  // Ensure debug logging is turned off.
+  const text = await Deno.readTextFile("./lib/utils.js");
+  if (!text.includes("debug: false")) {
+    throw new Error(
+      "It looks like debug logging is turned on in lib/utils.js. " +
+        "It should be off in builds for the store.",
+    );
+  }
+}
+
 // Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/.
 async function buildStorePackage() {
+  await checkForBuildIssues();
+
   const excludeList = [
     "*.md",
     ".*",
