@@ -65,6 +65,7 @@ context("vomnibar page", () => {
       url = message.url;
     });
     await ui.onKeyEvent(newKeyEvent({ type: "keypress", key: "Enter" }));
+    ui.onHidden();
     assert.equal("openUrlInCurrentTab", handler);
     assert.equal("www.example.com", url);
   });
