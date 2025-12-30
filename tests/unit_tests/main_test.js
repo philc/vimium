@@ -50,7 +50,7 @@ context("createTab command", () => {
       registryEntry: new RegistryEntry({ options: {} }),
       tab: {},
       count: 1,
-    }
+    };
     await Settings.load();
   });
 

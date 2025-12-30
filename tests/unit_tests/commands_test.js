@@ -74,7 +74,7 @@ context("KeyMappingsParser", () => {
   should("parse a URL parameter alongside an option value", () => {
     // URLs alongside the "position" option occurs in the createTab command.
     const result = KeyMappingsParser.parseCommandOptions('abc.com/?param=val position="end"');
-    assert.equal({ "abc.com/?param=val": true, position: "end"}, result);
+    assert.equal({ "abc.com/?param=val": true, position: "end" }, result);
   });
 
   should("return parsing validation errors", () => {

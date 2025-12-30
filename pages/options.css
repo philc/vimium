@@ -48,7 +48,7 @@ input[type="checkbox"] {
   margin-right: 8px;
 }
 
-input[type=radio] {
+input[type="radio"] {
   margin: 0;
   margin-left: 0;
   margin-right: 8px;
@@ -153,7 +153,7 @@ div#exampleKeyMapping {
   align-items: center;
 }
 
-input[name=newTabCustomUrl] {
+input[name="newTabCustomUrl"] {
   grid-column-start: 2;
 }
 

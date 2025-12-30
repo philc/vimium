@@ -1,9 +1,9 @@
 ---
 name: Bug report
 about: File a bug
-title: ''
-labels: ''
-assignees: ''
+title: ""
+labels: ""
+assignees: ""
 ---
 
 **Describe the bug**
