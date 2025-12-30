@@ -35,7 +35,7 @@
         </div>
 
         <h2>Custom key mappings</h2>
-        <textarea name="keyMappings" type="text"></textarea>
+        <textarea name="keyMappings" type="text" spellcheck="false"></textarea>
         <div class="example">
           Example syntax:<br>
           <pre
@@ -51,7 +51,7 @@ unmapAll
         </div>
 
         <h2>Custom search engines</h2>
-        <textarea name="searchEngines"></textarea>
+        <textarea name="searchEngines" spellcheck="false"></textarea>
         <div class="example">
           Add search-engine shortcuts to the Vomnibar. Format:<br>
           <pre
@@ -226,7 +226,12 @@ b: http://b.com/?q=%s description
 
         <h2>CSS for Vimium UI</h2>
         <div>
-          <textarea name="userDefinedLinkHintCss" class="code" type="text"></textarea>
+          <textarea
+            name="userDefinedLinkHintCss"
+            class="code"
+            type="text"
+            spellcheck="false"
+          ></textarea>
           <div class="example reset-link"><a href="#">Reset</a></div>
         </div>
         <div class="example">
