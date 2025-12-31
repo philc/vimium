@@ -98,6 +98,12 @@ const OptionsPage = {
 
     const settings = Settings.getSettings();
     this.setFormFromSettings(settings);
+
+    for (const option of Settings.getManagedSettingsKeys()) {
+      let elem = this.getOptionEl(option);
+
+      elem.setAttribute("disabled", "true");
+    }
   },
 
   getOptionEl(optionName) {
