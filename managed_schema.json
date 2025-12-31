@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "properties": {
+    "scrollStepSize": {
+      "type": "integer"
+    },
+    "smoothScroll": {
+      "type": "boolean"
+    },
+    "keyMappings": {
+      "type": "string"
+    },
+    "linkHintCharacters": {
+      "type": "string"
+    },
+    "linkHintNumbers": {
+      "type": "string"
+    },
+    "filterLinkHints": {
+      "type": "boolean"
+    },
+    "hideHud": {
+      "type": "boolean"
+    },
+    "hideUpdateNotifications": {
+      "type": "boolean"
+    },
+    "userDefinedLinkHintCss": {
+      "type": "string"
+    },
+    "exclusionRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "passKeys": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "previousPatterns": {
+      "type": "string"
+    },
+    "nextPatterns": {
+      "type": "string"
+    },
+    "searchUrl": {
+      "type": "string"
+    },
+    "searchEngines": {
+      "type": "string"
+    },
+    "newTabDestination": {
+      "type": "string",
+      "enum": ["vimiumNewTabPage", "customUrl"]
+    },
+    "newTabCustomUrl": {
+      "type": "string"
+    },
+    "openVomnibarOnNewTabPage": {
+      "type": "boolean"
+    },
+    "grabBackFocus": {
+      "type": "boolean"
+    },
+    "regexFindMode": {
+      "type": "boolean"
+    },
+    "waitForEnterForFilteredHints": {
+      "type": "boolean"
+    },
+    "helpDialog_showAdvancedCommands": {
+      "type": "boolean"
+    },
+    "ignoreKeyboardLayout": {
+      "type": "boolean"
+    }
+  }
+}
