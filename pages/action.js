@@ -5,7 +5,7 @@ import "../lib/settings.js";
 import * as bgUtils from "../background_scripts/bg_utils.js";
 import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
 
-const ActionPage = {
+export const ActionPage = {
   async init() {
     // Is it possible for the current tab's URL to change while this action popup is open?
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -123,7 +123,7 @@ const ActionPage = {
       const hasBlankPassKeysRule = rules.find((r) => r.passKeys.length == 0);
       caption = hasBlankPassKeysRule ? "No" : "Some";
     }
-    document.querySelector("#how-many-enabled").textContent = caption;
+    document.querySelector("#howManyEnabled").textContent = caption;
   },
 
   async onSave() {
@@ -162,7 +162,9 @@ const ActionPage = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await Settings.onLoaded();
-  ActionPage.init();
-});
+if (!globalThis.isUnitTests) {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await Settings.onLoaded();
+    ActionPage.init();
+  });
+}
