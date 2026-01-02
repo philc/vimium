@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  - pull_request
+  - push
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/puppeteer/puppeteer:23.11.1
+      # Run as root to fix permission issues with Github Actions workspace.
+      # SYS_ADMIN is recommended for running Chrome in Docker.
+      options: --user root --cap-add=SYS_ADMIN
+      env:
+        # Point Puppeteer to the Chrome binary installed in the pptruser home directory, since running as root changes $HOME.
+        PUPPETEER_CACHE_DIR: /home/pptruser/.cache/puppeteer
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
+
+      - name: Verify formatting
+        run: deno fmt --check
+
+      - name: Run tests
+        run: ./make.js test

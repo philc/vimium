@@ -317,7 +317,10 @@ async function testDom() {
   });
 
   const files = ["dom_tests.html"];
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    // When running in CI, this is run as root. This flag is needed to avoid https://crbug.com/638180.
+    args: [`--no-sandbox`],
+  });
   let success = true;
   for (const file of files) {
     const page = await browser.newPage();
