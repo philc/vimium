@@ -9,6 +9,9 @@
     "128": "icons/icon128.png"
   },
   "minimum_chrome_version": "117.0",
+  "storage": {
+    "managed_schema": "managed_schema.json"
+  },
   "background": {
     "service_worker": "background_scripts/main.js",
     "type": "module"
