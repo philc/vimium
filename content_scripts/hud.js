@@ -6,6 +6,7 @@ const HUD = {
   tween: null,
   hudUI: null,
   findMode: null,
+  searchTimeout: null,
   abandon() {
     if (this.hudUI) {
       this.hudUI.hide(false);
@@ -95,16 +96,22 @@ const HUD = {
   },
 
   search(data) {
-    // NOTE(mrmr1993): On Firefox, window.find moves the window focus away from the HUD. We use
-    // postFindFocus to put it back, so the user can continue typing.
-    this.findMode.findInPlace(data.query, {
-      "postFindFocus": this.hudUI.iframeElement.contentWindow,
-    });
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
 
-    // Show the number of matches in the HUD UI.
-    const matchCount = FindMode.query.parsedQuery.length > 0 ? FindMode.query.matchCount : 0;
-    const showMatchText = FindMode.query.rawQuery.length > 0;
-    this.hudUI.postMessage({ name: "updateMatchesCount", matchCount, showMatchText });
+    this.searchTimeout = Utils.setTimeout(300, () => {
+      // NOTE(mrmr1993): On Firefox, window.find moves the window focus away from the HUD. We use
+      // postFindFocus to put it back, so the user can continue typing.
+      this.findMode.findInPlace(data.query, {
+        "postFindFocus": this.hudUI.iframeElement.contentWindow,
+      });
+
+      // Show the number of matches in the HUD UI.
+      const matchCount = FindMode.query.parsedQuery.length > 0 ? FindMode.query.matchCount : 0;
+      const showMatchText = FindMode.query.rawQuery.length > 0;
+      this.hudUI.postMessage({ name: "updateMatchesCount", matchCount, showMatchText });
+    });
   },
 
   // Hide the HUD.
