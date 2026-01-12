@@ -90,6 +90,7 @@ export const handlers = {
   show(data) {
     const el = document.querySelector("#hud");
     el.textContent = data.text;
+    el.dataset.text = data.text;
     el.classList.add("vimium-ui-component-visible");
     el.classList.remove("vimium-ui-component-hidden");
     el.classList.remove("hud-find");
@@ -100,6 +101,7 @@ export const handlers = {
     // We get a flicker when the HUD later becomes visible again (with new text) unless we reset its
     // contents here.
     el.textContent = "";
+    delete el.dataset.text;
     el.classList.add("vimium-ui-component-hidden");
     el.classList.remove("vimium-ui-component-visible");
   },
