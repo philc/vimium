@@ -118,6 +118,13 @@ div.internal-vimium-hint-marker {
   z-index: 2147483647;
 }
 
+/* Applied briefly when a hint is activated to fade it out before removal. */
+div.internal-vimium-hint-marker.vimium-hint-fade-out {
+  opacity: 0;
+  transform: scale(1.5);
+  transform-origin: center center;
+}
+
 div.internal-vimium-hint-marker span {
   color: #302505;
   font-family: Helvetica, Arial, sans-serif;
