@@ -417,6 +417,10 @@ const Scroller = {
     return (element !== activatedElement) && isScrollableElement(element);
   },
 
+  selectElement(element) {
+    activatedElement = element;
+  },
+
   // Scroll the top, bottom, left and right of element into view. The is used by visual mode to
   // ensure the focus remains visible.
   scrollIntoView(element) {
