@@ -74,7 +74,6 @@ const allCommands = [
     name: "scrollRight",
     desc: "Scroll right",
     group: "navigation",
-    advanced: true,
   },
 
   {
@@ -88,6 +87,7 @@ const allCommands = [
     name: "scrollToRight",
     desc: "Scroll all the way to the right",
     group: "navigation",
+    advanced: true,
   },
 
   {
