@@ -1,4 +1,4 @@
-2.4.0 (unreleased)
+2.4.0 (2026-01-27)
 
 - Support a Vimium new tab experience: the browser can be configured to open a blank Vimium page as
   the new tab page. In Vimium's settings, the Vomnibar can configured to open on new tabs. See
