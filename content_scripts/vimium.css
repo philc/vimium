@@ -118,6 +118,11 @@ div.internal-vimium-hint-marker {
   z-index: 2147483647;
 }
 
+div.internal-vimium-hint-marker.scroll-hint-marker {
+  /* This class is used for marking scrollable areas or frames */
+  background: linear-gradient(to bottom, #ffb2b2 0%, #ff7a7a 100%);
+}
+
 div.internal-vimium-hint-marker span {
   color: #302505;
   font-family: Helvetica, Arial, sans-serif;

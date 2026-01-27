@@ -371,6 +371,8 @@ class LinkHintsMode {
     this.hintMode = null;
     // A count of the number of Tab presses since the last non-Tab keyboard event.
     this.tabCount = 0;
+    // Track whether we've already applied overlap offsets for link hints
+    this.overlapOffsetsApplied = false;
 
     if (hintDescriptors.length === 0) {
       HUD.show("No links to select.", 2000);
@@ -423,6 +425,12 @@ class LinkHintsMode {
     const markerEls = this.hintMarkers.filter((m) => m.isLocalMarker()).map((m) => m.element);
     for (const el of markerEls) {
       this.containerEl.appendChild(el);
+    }
+
+    // Only apply overlap offsets to link hints once during initial setup 
+    if (!this.overlapOffsetsApplied) {
+      this.applyOverlapOffsets();
+      this.overlapOffsetsApplied = true;
     }
 
     // TODO(philc): 2024-03-27 Remove this hasPopoverSupport check once Firefox has popover support.
@@ -484,6 +492,13 @@ class LinkHintsMode {
       // Note that Vimium's CSS is user-customizable. We're adding the "vimiumHintMarker" class here
       // for users to customize. See further comments about this in vimium.css.
       el.className = "vimium-reset internal-vimium-hint-marker vimiumHintMarker";
+      // Add scroll-hint-marker class for frames or scrollable areas in alphabet hints mode.
+      if (
+        (localHint.reason === "Frame." || localHint.reason === "Scroll.") &&
+        !Settings.get("filterLinkHints")
+      ) {
+        el.classList.add("scroll-hint-marker");
+      }
       Object.assign(marker, {
         element: el,
         localHint,
@@ -495,6 +510,68 @@ class LinkHintsMode {
       linkText: desc.linkText,
       stableSortCount: ++this.stableSortCount,
     });
+  }
+
+  // Add a new method to detect and handle overlapping markers
+  applyOverlapOffsets() {
+    const localMarkers = this.hintMarkers.filter(m => m.isLocalMarker() && m.element);
+    
+    // Cache marker rectangles
+    localMarkers.forEach(marker => {
+      marker.markerRect = marker.element.getBoundingClientRect();
+    });
+    
+    // Group overlapping markers into stacks
+    const stacks = this.groupOverlappingMarkers(localMarkers);
+    
+    // Apply position offsets to overlapping markers
+    stacks.forEach(stack => {
+      if (stack.length > 1) {
+        stack.forEach((marker, index) => {
+          if (index > 0) {
+            const offset = index * 2;
+            const currentLeft = parseInt(marker.element.style.left) || 0;
+            const currentTop = parseInt(marker.element.style.top) || 0;
+            
+            marker.element.style.left = (currentLeft + offset) + "px";
+            marker.element.style.top = (currentTop + offset) + "px";
+          }
+        });
+      }
+    });
+  }
+
+  // Helper to group overlapping markers
+  groupOverlappingMarkers(markers) {
+    const stacks = [];
+    
+    for (const marker of markers) {
+      let assignedStack = null;
+      
+      // Find stacks that overlap with this marker
+      const overlappingStacks = stacks.filter(stack => 
+        stack.some(otherMarker => Rect.intersects(marker.markerRect, otherMarker.markerRect))
+      );
+      
+      if (overlappingStacks.length === 0) {
+        // No overlaps, create new stack
+        stacks.push([marker]);
+      } else if (overlappingStacks.length === 1) {
+        // Overlaps with one stack, add to it
+        overlappingStacks[0].push(marker);
+      } else {
+        // Overlaps with multiple stacks, merge them
+        const mergedStack = [marker, ...overlappingStacks.flat()];
+        // Remove old stacks and add merged stack
+        overlappingStacks.forEach(stack => {
+          const index = stacks.indexOf(stack);
+          if (index > -1) stacks.splice(index, 1);
+        });
+        stacks.push(mergedStack);
+      }
+    }
+    
+    return stacks;
   }
 
   // Handles all keyboard events.
@@ -808,18 +885,24 @@ class AlphabetHints {
     this.hintKeystrokeQueue = [];
   }
 
+  renderMarker(marker) {
+    let linkText = marker.linkText;
+    const caption = marker.hintString.toUpperCase()
+      + (marker.localHint.showLinkText ? ": " + linkText : "");
+    marker.element.innerHTML = spanWrap(caption);
+  }
+
   fillInMarkers(hintMarkers) {
     const hintStrings = this.hintStrings(hintMarkers.length);
     if (hintMarkers.length != hintStrings.length) {
       // This can only happen if the user's linkHintCharacters setting is empty.
       console.warn("Unable to generate link hint strings.");
-    } else {
-      for (let i = 0; i < hintMarkers.length; i++) {
-        const marker = hintMarkers[i];
-        marker.hintString = hintStrings[i];
-        if (marker.isLocalMarker()) {
-          marker.element.innerHTML = spanWrap(marker.hintString.toUpperCase());
-        }
+    }
+    let i = 0;
+    for (const marker of hintMarkers) {
+      marker.hintString = hintStrings[i++];
+      if (marker.isLocalMarker()) {
+        this.renderMarker(marker);
       }
     }
   }
@@ -1203,13 +1286,13 @@ const LocalHints = {
         break;
       case "body":
         isClickable ||= (element === document.body) && !windowIsFocused() &&
-            (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
-            ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
-              "frameset")
+          (globalThis.innerWidth > 3) && (globalThis.innerHeight > 3) &&
+          ((document.body != null ? document.body.tagName.toLowerCase() : undefined) !==
+            "frameset")
           ? (reason = "Frame.")
           : undefined;
         isClickable ||= (element === document.body) && windowIsFocused() &&
-            Scroller.isScrollableElement(element)
+          Scroller.isScrollableElement(element)
           ? (reason = "Scroll.")
           : undefined;
         break;
