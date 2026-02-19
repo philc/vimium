@@ -250,22 +250,6 @@ const onFocus = forTrusted(function (event) {
 globalThis.addEventListener("focus", onFocus, true);
 globalThis.addEventListener("hashchange", checkEnabledAfterURLChange, true);
 
-/*async function initializeOnDomReady() {
-  // Tell the background page we're in the domReady state.
-  await chrome.runtime.sendMessage({ handler: "domReady" });
-
-  const isVimiumNewTabPage = document.location.href == Settings.vimiumNewTabPageUrl;
-  if (!isVimiumNewTabPage) return;
-
-  // Show the Vomnibar.
-  await Settings.onLoaded();
-  if (Settings.get("openVomnibarOnNewTabPage")) {
-    await Utils.populateBrowserInfo();
-    DomUtils.injectUserCss();
-    Vomnibar.activate(0, {});
-  }
-}*/
-
 async function initializeOnDomReady(){
   // Tell the background page we're in the domReady state.
   await chrome.runtime.sendMessage({handler: "domReady"});
