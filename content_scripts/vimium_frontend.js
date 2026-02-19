@@ -250,7 +250,7 @@ const onFocus = forTrusted(function (event) {
 globalThis.addEventListener("focus", onFocus, true);
 globalThis.addEventListener("hashchange", checkEnabledAfterURLChange, true);
 
-async function initializeOnDomReady() {
+/*async function initializeOnDomReady() {
   // Tell the background page we're in the domReady state.
   await chrome.runtime.sendMessage({ handler: "domReady" });
 
@@ -264,8 +264,33 @@ async function initializeOnDomReady() {
     DomUtils.injectUserCss();
     Vomnibar.activate(0, {});
   }
-}
+}*/
 
+async function initializeOnDomReady(){
+  // Tell the background page we're in the domReady state.
+  await chrome.runtime.sendMessage({handler: "domReady"});
+  
+  const isVimiumNewTabPage = document.location.href == Settings.vimiumNewTabPageUrl;
+
+  //Ensure Settings are loaded before accessing them.
+  await Settings.onLoaded();
+
+  //On Vimium's new-tab page, optionally show the Vomnibar.
+  if(isVimiumNewTabPage) {
+    if (Settings.get("openVomnibarOnNewTabPage")){
+      await Utils.populateBrowserInfo();
+      DomUtils.injectUserCss();
+      Vomnibar.activate(0, {});
+    }
+  }
+
+  // Automatically enter link-hints mode on page load if enabled in settings.
+  // Just mirrors what happens when user presses "f" on page load.
+  if (isEnabledForUrl && Settings.get("autoActivateLinkHints") && globalThis.LinkHints){
+    // Pass an empty options obbject so activateMode's destructing succeeds.
+    globalThis.LinkHints.activateMode(1, {});
+  }
+}
 const onUnload = Utils.makeIdempotent(() => {
   HintCoordinator.exit({ isSuccess: false });
   handlerStack.reset();
