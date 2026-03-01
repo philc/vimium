@@ -1,8 +1,9 @@
-// A completion engine provides search suggestions for a custom search engine. A custom search
-// engine is identified by a "searchUrl". An "engineUrl" is used for fetching suggestions, whereas a
-// "searchUrl" is used for the actual search itself.
+// An engine provides search suggestions for a online search engine.
 //
-// Each completion engine defines:
+// An "engineUrl" is used for fetching suggestions, whereas a "searchUrl" is used for the actual
+// search itself.
+//
+// Each engine defines:
 //
 //   1. An "engineUrl". This is the URL to use for search completions and is passed as the option
 //      "engineUrl" to the "BaseEngine" constructor.
@@ -22,13 +23,15 @@
 // Each new completion engine must be added to the list "CompletionEngines" at the bottom of this
 // file.
 //
-// The lookup logic which uses these completion engines is in "./completion_search.js".
+// The lookup logic which uses these completion engines is in "./completers.js".
 //
 
 // A base class for common regexp-based matching engines. "options" must define:
 //   options.engineUrl: the URL to use for the completion engine. This must be a string.
-//   options.regexps: one or regular expressions.  This may either a single string or a list of strings.
-//   options.example: an example object containing at least "keyword" and "searchUrl", and optional "description".
+//   options.regexps: one or regular expressions. This may either a single string or a list of
+//   strings.
+//   options.example: an example object containing at least "keyword" and "searchUrl", and optional
+//   "description".
 // TODO(philc): This base class is doing very little. We should remove it and use composition.
 class BaseEngine {
   constructor(options) {
@@ -246,7 +249,7 @@ export class Kagi extends BaseEngine {
   }
 }
 
-// On the user-facing documentation page pages/completion_engines_page.html, the completion search
+// On the user-facing documentation page pages/doc_search_completion.html, the completion search
 // engines will be shown in this order.
 export const list = [
   Youtube,

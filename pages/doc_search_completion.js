@@ -1,5 +1,5 @@
 import "./all_content_scripts.js";
-import * as completionEngines from "../background_scripts/completion_engines.js";
+import * as completionEngines from "../background_scripts/completion/search_engines.js";
 
 function cleanUpRegexp(re) {
   return re.toString()

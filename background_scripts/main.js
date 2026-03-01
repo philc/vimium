@@ -6,9 +6,9 @@ import * as bgUtils from "../background_scripts/bg_utils.js";
 import "../background_scripts/all_commands.js";
 import { Commands } from "../background_scripts/commands.js";
 import * as exclusions from "../background_scripts/exclusions.js";
-import "../background_scripts/completion_engines.js";
-import "../background_scripts/completion_search.js";
-import "../background_scripts/completion.js";
+import "../background_scripts/completion/search_engines.js";
+import "../background_scripts/completion/search_wrapper.js";
+import "../background_scripts/completion/completers.js";
 import "../background_scripts/tab_operations.js";
 import * as marks from "../background_scripts/marks.js";
 
@@ -19,7 +19,7 @@ import {
   MultiCompleter,
   SearchEngineCompleter,
   TabCompleter,
-} from "./completion.js";
+} from "./completion/completers.js";
 
 // NOTE(philc): This file has many superfluous return statements in its functions, as a result of
 // converting from coffeescript to es6. Many can be removed, but I didn't take the time to
@@ -256,22 +256,24 @@ const BackgroundCommands = {
           request.urls = urlList;
         } else {
           // Otherwise, just create a new tab.
-          let newTabUrl = Settings.get("newTabUrl");
-          if (newTabUrl == "pages/blank.html") {
-            // "pages/blank.html" does not work in incognito mode, so fall back to "chrome://newtab"
-            // instead.
-            newTabUrl = request.tab.incognito
-              ? Settings.defaultOptions.newTabUrl
-              : chrome.runtime.getURL(newTabUrl);
+          let url;
+          const destination = Settings.get("newTabDestination");
+          const customUrl = Settings.get("newTabCustomUrl");
+          if (destination == Settings.newTabDestinations.vimiumNewTabPage) {
+            url = Settings.vimiumNewTabPageUrl;
+          } else if (destination == Settings.newTabDestinations.customUrl && customUrl.length > 0) {
+            url = customUrl;
+          } else {
+            url = UrlUtils.chromeNewTabUrl;
           }
-          request.urls = [newTabUrl];
+          request.urls = [url];
         }
       }
     }
     if (request.registryEntry.options.incognito || request.registryEntry.options.window) {
       // Firefox does not allow an incognito window to be created with the URL about:newtab. It
       // throws this error: "Illegal URL: about:newtab".
-      const urls = request.urls.filter((u) => u != Settings.defaultOptions.newTabUrl);
+      const urls = request.urls.filter((u) => u != UrlUtils.chromeNewTabUrl);
       const windowConfig = {
         url: urls,
         incognito: request.registryEntry.options.incognito || false,

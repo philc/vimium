@@ -192,12 +192,12 @@ context("assertType", () => {
     const schema = {
       bool: "boolean",
       num: "number",
-      string: "string"
+      string: "string",
     };
     Utils.assertType(schema, {
       bool: true,
       num: 1,
-      string: "example"
+      string: "example",
     });
     assert.throwsError(() => Utils.assertType(schema, { bool: 1 }));
     assert.throwsError(() => Utils.assertType(schema, { num: "example" }));

@@ -1,7 +1,7 @@
-import "./test_helper.js";
-import "../../background_scripts/bg_utils.js";
-import * as Engines from "../../background_scripts/completion_engines.js";
-import "../../background_scripts/completion.js";
+import "../test_helper.js";
+import "../../../background_scripts/bg_utils.js";
+import * as Engines from "../../../background_scripts/completion/search_engines.js";
+import "../../../background_scripts/completion/completers.js";
 
 context("Amazon completion", () => {
   should("parses results", () => {

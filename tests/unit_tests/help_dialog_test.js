@@ -1,6 +1,6 @@
 import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
-import "../../background_scripts/completion.js";
+import "../../background_scripts/completion/completers.js";
 import { allCommands } from "../../background_scripts/all_commands.js";
 import { HelpDialogPage } from "../../pages/help_dialog_page.js";
 

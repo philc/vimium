@@ -1237,9 +1237,17 @@ const LocalHints = {
     // An element with a class name containing the text "button" might be clickable. However, real
     // clickables are often wrapped in elements with such class names. So, when we find clickables
     // based only on their class name, we mark them as unreliable.
-    const className = element.getAttribute("class");
-    if (!isClickable && className?.toLowerCase().includes("button")) {
-      isClickable = true;
+    if (!isClickable) {
+      const className = element.getAttribute("class")?.toLowerCase();
+      if (className?.includes("button") || className?.includes("btn")) {
+        isClickable = true;
+        possibleFalsePositive = true;
+      }
+    }
+
+    // If the span is clickable but wraps something else that is clickable, we want to instead favor
+    // showing hints for descendants which are clickable. Flag the span as a possible false postive.
+    if (tagName == "span") {
       possibleFalsePositive = true;
     }
 

@@ -35,33 +35,64 @@
         </div>
 
         <h2>Custom key mappings</h2>
-        <textarea name="keyMappings" type="text"></textarea>
+        <textarea name="keyMappings" type="text" spellcheck="false"></textarea>
         <div class="example">
-          Enter commands to remap your keys. Available commands:<br>
+          Example syntax:<br>
           <pre
             id="exampleKeyMapping"
           >
 map j scrollDown
+map z2 setZoom level=2
 unmap j
 unmapAll
 " this is a comment
 # this is also a comment</pre>
-          <a href="/pages/command_listing.html" target="_blank">Show available commands</a>.
+          <a href="/pages/command_listing.html" target="_blank">See all available commands</a>.
         </div>
 
         <h2>Custom search engines</h2>
-        <textarea name="searchEngines"></textarea>
+        <textarea name="searchEngines" spellcheck="false"></textarea>
         <div class="example">
           Add search-engine shortcuts to the Vomnibar. Format:<br>
-          <pre
-          >
+          <pre>
 a: http://a.com/?q=%s
 b: http://b.com/?q=%s description
 " this is a comment
-# this is also a comment</pre
-          >
+# this is also a comment</pre>
           %s is replaced with the search terms. <br>
-          For search completion, see <a href="completion_engines_page.html" target="_blank"
+          For search completion, see <a href="doc_search_completion.html" target="_blank">here</a>.
+        </div>
+
+        <h2>New tab URL</h2>
+        <div id="new-tab-url-container">
+          <input
+            id="vimiumNewTabPage"
+            type="radio"
+            name="newTabDestination"
+            value="vimiumNewTabPage"
+          />
+          <label for="vimiumNewTabPage">Vimium blank new tab page</label>
+          <div id="openVomnibarContainer">
+            <input id="openVomnibarOnNewTabPage" type="checkbox" name="openVomnibarOnNewTabPage">
+            <label for="openVomnibarOnNewTabPage">Open the Vomnibar when the page loads</label>
+          </div>
+          <input
+            id="browserNewTabPage"
+            type="radio"
+            name="newTabDestination"
+            value="browserNewTabPage"
+          />
+          <label for="browserNewTabPage">Browser's default new tab page</label>
+          <input id="customUrl" type="radio" name="newTabDestination" value="customUrl" />
+          <label for="customUrl">Custom URL</label>
+          <input type="text" name="newTabCustomUrl" style="display: none" />
+        </div>
+        <div class="example">
+          The page to open when using Vimium's "create new tab" command. To have Vimium commands
+          work on <em>all</em> new tab pages opened by the browser, a separate Vimium new tab
+          extension is required. See the full details <a
+            href="https://github.com/philc/vimium/blob/master/README.md#how-to-allow-vimium-to-work-on-new-tab-pages"
+            target="_blank"
           >here</a>.
         </div>
 
@@ -99,14 +130,13 @@ b: http://b.com/?q=%s description
 
         <div class="spacer"></div>
 
-        <label>
+        <label class="boolean-label">
           <input name="smoothScroll" type="checkbox" />
-          Use smooth scrolling
-        </label>
+          Use smooth scrolling</label>
         <div class="example"></div>
 
         <h2></h2>
-        <label>
+        <label class="boolean-label">
           <input name="filterLinkHints" type="checkbox" />
           Use the link's name and characters for link-hint filtering
         </label>
@@ -116,7 +146,7 @@ b: http://b.com/?q=%s description
 
         <div id="wait-for-enter">
           <h2></h2>
-          <label>
+          <label class="boolean-label">
             <input name="waitForEnterForFilteredHints" type="checkbox" />
             Require <tt>Enter</tt> when filtering hints
           </label>
@@ -127,7 +157,7 @@ b: http://b.com/?q=%s description
         </div>
 
         <h2></h2>
-        <label>
+        <label class="boolean-label">
           <input name="grabBackFocus" type="checkbox" />
           Don't let pages steal the focus on load
         </label>
@@ -136,7 +166,7 @@ b: http://b.com/?q=%s description
         </div>
 
         <h2></h2>
-        <label>
+        <label class="boolean-label">
           <input name="hideHud" type="checkbox" />
           Hide the Heads Up Display (HUD) in insert mode
         </label>
@@ -145,7 +175,7 @@ b: http://b.com/?q=%s description
         </div>
 
         <h2></h2>
-        <label>
+        <label class="boolean-label">
           <input name="hideUpdateNotifications" type="checkbox" />
           Hide update notifications
         </label>
@@ -154,7 +184,7 @@ b: http://b.com/?q=%s description
         </div>
 
         <h2></h2>
-        <label>
+        <label class="boolean-label">
           <input name="regexFindMode" type="checkbox" />
           Treat find queries as JavaScript regular expressions
         </label>
@@ -163,7 +193,7 @@ b: http://b.com/?q=%s description
         </div>
 
         <h2></h2>
-        <label>
+        <label class="boolean-label">
           <input name="ignoreKeyboardLayout" type="checkbox" />
           Ignore keyboard layout
         </label>
@@ -190,19 +220,14 @@ b: http://b.com/?q=%s description
           The "navigate to next page" command uses these patterns to find the link to follow.
         </div>
 
-        <h2>New tab URL</h2>
-        <div>
-          <input name="newTabUrl" type="text" />
-          <div class="example reset-link"><a href="#">Reset</a></div>
-        </div>
-        <div class="example">
-          The page to open with the "create new tab" command. Set this to "<tt>pages/blank.html</tt
-          >" for a blank page (except incognito mode).<br>
-        </div>
-
         <h2>CSS for Vimium UI</h2>
         <div>
-          <textarea name="userDefinedLinkHintCss" class="code" type="text"></textarea>
+          <textarea
+            name="userDefinedLinkHintCss"
+            class="code"
+            type="text"
+            spellcheck="false"
+          ></textarea>
           <div class="example reset-link"><a href="#">Reset</a></div>
         </div>
         <div class="example">

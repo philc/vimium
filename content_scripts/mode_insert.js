@@ -32,7 +32,7 @@ class InsertMode extends Mode {
       }
 
       // See comment here:
-      // https://github.com/philc/vimium/commit/48c169bd5a61685bb4e67b1e76c939dbf360a658.
+      // https://github.com/philc/vimium/commit/48c169bd5a61685bb4e67b1e76c939dbf360a658
       const activeElement = this.getActiveElement();
       if ((activeElement === document.body) && activeElement.isContentEditable) {
         return this.passEventToPage;

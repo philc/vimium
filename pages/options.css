@@ -7,7 +7,7 @@
 body {
   font: 14px "DejaVu Sans", "Arial", sans-serif;
   color: #303942;
-  margin: 0 auto;
+  margin: 0;
 }
 
 a,
@@ -44,6 +44,20 @@ button {
 
 input[type="checkbox"] {
   -webkit-user-select: none;
+  margin: 0;
+  margin-right: 8px;
+}
+
+input[type="radio"] {
+  margin: 0;
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+.boolean-label {
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 pre,
@@ -115,6 +129,9 @@ h2 {
 
 .validation-message {
   color: var(--validationErrorColor);
+  /* Render newlines in validation messages. When there are multiple errors, they are separated by a
+     newline. */
+  white-space: pre-line;
 }
 
 /* This longer selector is required to take precedence over our dark scheme textarea colors which
@@ -126,6 +143,28 @@ body.vimium-body textarea.validation-error, body.vimium-body input.validation-er
 div#exampleKeyMapping {
   margin-left: 10px;
   margin-top: 5px;
+}
+
+#new-tab-url-container {
+  display: grid;
+  grid-template-columns: auto 100%;
+  grid-auto-rows: 1.5em;
+  row-gap: 10px;
+  align-items: center;
+}
+
+input[name="newTabCustomUrl"] {
+  grid-column-start: 2;
+}
+
+#openVomnibarContainer {
+  display: flex;
+  align-items: center;
+  grid-column-start: 2;
+}
+
+input[name="newTabCustomUrl"] {
+  width: 400px;
 }
 
 #link-hint-characters-container,
@@ -160,10 +199,6 @@ textarea[name="searchEngines"] {
 
 input[name="previousPatterns"],
 input[name="nextPatterns"] {
-  width: 100%;
-}
-
-input[name="newTabUrl"] {
   width: 100%;
 }
 
@@ -312,7 +347,6 @@ footer {
 #save,
 #exclusion-add-button {
   white-space: nowrap;
-  width: 110px;
 }
 
 #backupLink {

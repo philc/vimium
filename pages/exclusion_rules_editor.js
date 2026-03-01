@@ -16,7 +16,9 @@ const ExclusionRulesEditor = {
     const rulesTable = document.querySelector("#exclusion-rules");
     // Remove any previous rows.
     const existingRuleEls = rulesTable.querySelectorAll(".rule");
-    for (const el of existingRuleEls) el.remove();
+    for (const el of existingRuleEls) {
+      el.remove();
+    }
 
     const rowTemplate = document.querySelector("#exclusion-rule-template").content;
     for (const rule of exclusionRules) {
