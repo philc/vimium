@@ -25,6 +25,7 @@
   ],
   "permissions": [
     "tabs",
+    "tabGroups",
     "bookmarks",
     "history",
     "storage",
