@@ -168,7 +168,10 @@ const HelpDialogPage = {
 
   showAdvancedCommands(visible) {
     const caption = visible ? "Hide advanced commands" : "Show advanced commands";
-    document.querySelector("#toggle-advanced a").textContent = caption;
+    const toggleLink = document.querySelector("#toggle-advanced a");
+    toggleLink.textContent = caption;
+    // Update aria-expanded for accessibility
+    toggleLink.setAttribute("aria-expanded", visible);
     if (visible) {
       HelpDialogPage.dialogElement.classList.add("show-advanced");
     } else {

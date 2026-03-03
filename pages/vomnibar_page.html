@@ -9,11 +9,20 @@
     <link rel="stylesheet" type="text/css" href="vomnibar_page.css" />
   </head>
   <body>
-    <div id="vomnibar">
-      <div id="vomnibar-search-area">
-        <input type="text" autocomplete="off">
+    <div id="vomnibar" role="application" aria-label="Vomnibar">
+      <div id="vomnibar-search-area" role="search">
+        <input 
+          type="text" 
+          autocomplete="off"
+          aria-label="Search or enter URL"
+          aria-autocomplete="list"
+          aria-controls="vomnibar-results"
+          placeholder="Enter search or URL">
       </div>
-      <ul></ul>
+      <ul id="vomnibar-results" role="listbox" aria-label="Search results"></ul>
     </div>
+
+    <!-- Live region for announcing result count -->
+    <div id="a11y-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
   </body>
 </html>

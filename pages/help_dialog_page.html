@@ -12,9 +12,12 @@
   </head>
 
   <body>
+    <!-- Skip link for keyboard navigation -->
+    <a href="#commands-section" class="skip-link">Skip to commands</a>
+
     <!-- Note that the command placeholders (data-group=navigation) will be replaced by the
          background page with the user's key bindings when the dialog is shown. -->
-    <div id="container">
+    <div id="container" role="main">
       <div id="dialog">
         <header>
           <h1>
@@ -23,50 +26,50 @@
           </h1>
 
           <!-- These buttons are wrapped in a div so they vertically center more evenly. -->
-          <div>
-            <a id="options-page" href="#">Options</a>
-            <a href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
-            <a id="close" href="#">&times;</a>
+          <div role="navigation" aria-label="Help dialog navigation">
+            <a id="options-page" href="#" aria-label="Open Vimium options page">Options</a>
+            <a href="https://github.com/philc/vimium/wiki" target="_blank" aria-label="Vimium Wiki (opens in new tab)">Wiki</a>
+            <a id="close" href="#" role="button" aria-label="Close help dialog">&times;</a>
           </div>
         </header>
 
-        <div class="divider"></div>
+        <div class="divider" role="separator"></div>
 
-        <div id="commands-section">
+        <div id="commands-section" role="region" aria-label="Command list">
           <div class="column">
             <div></div>
             <h2>Navigating the page</h2>
-            <div data-group="navigation"></div>
+            <div data-group="navigation" role="list"></div>
           </div>
 
           <div class="column">
             <div></div>
             <h2>Using the Vomnibar</h2>
-            <div data-group="vomnibar"></div>
+            <div data-group="vomnibar" role="list"></div>
 
             <div></div>
             <h2>Using find</h2>
-            <div data-group="find"></div>
+            <div data-group="find" role="list"></div>
 
             <div></div>
             <h2>Navigating history</h2>
-            <div data-group="history"></div>
+            <div data-group="history" role="list"></div>
 
             <div></div>
             <h2>Manipulating tabs</h2>
-            <div data-group="tabs"></div>
+            <div data-group="tabs" role="list"></div>
 
             <div></div>
             <h2>Miscellaneous</h2>
-            <div data-group="misc"></div>
+            <div data-group="misc" role="list"></div>
           </div>
         </div>
 
         <div id="toggle-advanced">
-          <a href="#">Show advanced commands</a>
+          <a href="#" role="button" aria-expanded="false" aria-controls="commands-section">Show advanced commands</a>
         </div>
 
-        <div class="divider"></div>
+        <div class="divider" role="separator"></div>
 
         <footer>
           <div>
@@ -74,10 +77,12 @@
             <a
               target="_blank"
               href="https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb/reviews"
-            >Leave us feedback</a>.<br>
+              aria-label="Leave feedback on Chrome Web Store (opens in new tab)"
+            >Leave us feedback</a>.
             Found a bug? <a
               target="_blank"
               href="https://github.com/philc/vimium/issues"
+              aria-label="Report a bug on GitHub (opens in new tab)"
             >Report it here</a>.
           </div>
 
@@ -87,14 +92,18 @@
             <a
               href="https://github.com/philc/vimium/blob/master/CHANGELOG.md"
               target="_blank"
+              aria-label="View changelog (opens in new tab)"
             >What's new?</a>
           </div>
         </footer>
       </div>
     </div>
 
+    <!-- Live region for dynamic announcements -->
+    <div id="a11y-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
     <template id="row">
-      <div class="row">
+      <div class="row" role="listitem">
         <div class="key-bindings"></div>
         <div class="help-description"></div>
       </div>

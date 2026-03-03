@@ -1,3 +1,41 @@
+/* Accessibility: Visually hidden but accessible to screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Accessibility: Enhanced focus indicators */
+#vomnibar input:focus {
+  outline: 3px solid #4d90fe;
+  outline-offset: 2px;
+}
+
+#vomnibar li.selected:focus {
+  outline: 2px solid #2f508e;
+  outline-offset: -2px;
+}
+
+/* Accessibility: High contrast selected state */
+#vomnibar li.selected {
+  background-color: #bbcee9;
+}
+
+/* Ensure selected item has strong contrast */
+@media (prefers-color-scheme: dark) {
+  #vomnibar li.selected {
+    background-color: #37383a;
+    outline: 2px solid #5ca1f7;
+    outline-offset: -2px;
+  }
+}
+
 ul {
   list-style: none;
   display: none;

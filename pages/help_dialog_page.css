@@ -1,3 +1,52 @@
+/* Accessibility: Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #2f508e;
+  color: white;
+  padding: 8px;
+  z-index: 100;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #000;
+  outline-offset: 2px;
+}
+
+/* Accessibility: Visually hidden but accessible to screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Accessibility: Enhanced focus indicators */
+a:focus,
+button:focus,
+[role="button"]:focus {
+  outline: 3px solid #2f508e;
+  outline-offset: 2px;
+}
+
+/* Ensure focus is visible in dark mode too */
+@media (prefers-color-scheme: dark) {
+  a:focus,
+  button:focus,
+  [role="button"]:focus {
+    outline-color: #4d90fe;
+  }
+}
+
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }

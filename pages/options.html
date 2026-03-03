@@ -10,33 +10,43 @@
   </head>
 
   <body class="vimium-body">
-    <div id="wrapper">
-      <header>Vimium Options</header>
+    <!-- Skip link for keyboard navigation -->
+    <a href="#settings-grid-container" class="skip-link">Skip to settings</a>
+
+    <div id="wrapper" role="main">
+      <header role="banner">Vimium Options</header>
       <input type="hidden" name="settingsVersion" />
 
-      <div id="settings-grid-container">
-        <h2>Excluded URLs and keys</h2>
-        <div>
+      <div id="settings-grid-container" role="form" aria-label="Vimium settings">
+
+        <h2 id="excluded-urls-heading">Excluded URLs and keys</h2>
+        <div role="group" aria-labelledby="excluded-urls-heading">
           <div id="exclusion-scroll-box">
-            <table id="exclusion-rules">
+            <table id="exclusion-rules" aria-labelledby="excluded-urls-heading">
               <tr>
-                <td><span class="exclusion-header-text">Patterns</span></td>
-                <td><span class="exclusion-header-text">Keys to exclude</span></td>
+                <th scope="col"><span class="exclusion-header-text">Patterns</span></th>
+                <th scope="col"><span class="exclusion-header-text">Keys to exclude</span></th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
               </tr>
             </table>
           </div>
-          <button id="exclusion-add-button">Add rule</button>
+          <button id="exclusion-add-button" aria-describedby="exclusion-help">Add rule</button>
         </div>
-        <div class="example">
+        <div class="example" id="exclusion-help">
           Disable Vimium on URLs.<br>
           "Patterns" are URL regular expressions. <code>*</code> will match zero or more characters.
           <br>
           "Keys": Vimium will exclude these keys and pass them through to the page.
         </div>
 
-        <h2>Custom key mappings</h2>
-        <textarea name="keyMappings" type="text" spellcheck="false"></textarea>
-        <div class="example">
+        <h2 id="key-mappings-heading">Custom key mappings</h2>
+        <textarea 
+          name="keyMappings" 
+          type="text" 
+          spellcheck="false"
+          aria-labelledby="key-mappings-heading"
+          aria-describedby="key-mappings-help"></textarea>
+        <div class="example" id="key-mappings-help">
           Example syntax:<br>
           <pre
             id="exampleKeyMapping"
@@ -47,12 +57,16 @@ unmap j
 unmapAll
 " this is a comment
 # this is also a comment</pre>
-          <a href="/pages/command_listing.html" target="_blank">See all available commands</a>.
+          <a href="/pages/command_listing.html" target="_blank" aria-label="See all available commands (opens in new tab)">See all available commands</a>.
         </div>
 
-        <h2>Custom search engines</h2>
-        <textarea name="searchEngines" spellcheck="false"></textarea>
-        <div class="example">
+        <h2 id="search-engines-heading">Custom search engines</h2>
+        <textarea 
+          name="searchEngines" 
+          spellcheck="false"
+          aria-labelledby="search-engines-heading"
+          aria-describedby="search-engines-help"></textarea>
+        <div class="example" id="search-engines-help">
           Add search-engine shortcuts to the Vomnibar. Format:<br>
           <pre>
 a: http://a.com/?q=%s
@@ -60,11 +74,11 @@ b: http://b.com/?q=%s description
 " this is a comment
 # this is also a comment</pre>
           %s is replaced with the search terms. <br>
-          For search completion, see <a href="doc_search_completion.html" target="_blank">here</a>.
+          For search completion, see <a href="doc_search_completion.html" target="_blank" aria-label="Documentation on search completion (opens in new tab)">here</a>.
         </div>
 
-        <h2>New tab URL</h2>
-        <div id="new-tab-url-container">
+        <h2 id="new-tab-heading">New tab URL</h2>
+        <div id="new-tab-url-container" role="group" aria-labelledby="new-tab-heading">
           <input
             id="vimiumNewTabPage"
             type="radio"
@@ -85,7 +99,7 @@ b: http://b.com/?q=%s description
           <label for="browserNewTabPage">Browser's default new tab page</label>
           <input id="customUrl" type="radio" name="newTabDestination" value="customUrl" />
           <label for="customUrl">Custom URL</label>
-          <input type="text" name="newTabCustomUrl" style="display: none" />
+          <input type="text" name="newTabCustomUrl" style="display: none" aria-label="Custom new tab URL" />
         </div>
         <div class="example">
           The page to open when using Vimium's "create new tab" command. To have Vimium commands
@@ -93,24 +107,32 @@ b: http://b.com/?q=%s description
           extension is required. See the full details <a
             href="https://github.com/philc/vimium/blob/master/README.md#how-to-allow-vimium-to-work-on-new-tab-pages"
             target="_blank"
+            aria-label="Learn how to allow Vimium on new tab pages (opens in new tab)"
           >here</a>.
         </div>
 
-        <header>Advanced Options</header>
+        <header id="advanced-heading">Advanced Options</header>
 
-        <h2>Scroll step size</h2>
+        <h2 id="scroll-step-heading">Scroll step size</h2>
         <span>
-          <input name="scrollStepSize" type="number" />px
+          <input 
+            name="scrollStepSize" 
+            type="number" 
+            aria-labelledby="scroll-step-heading"
+            aria-describedby="scroll-step-help" />px
         </span>
-        <div class="example">
+        <div class="example" id="scroll-step-help">
           The size for basic movements (usually j/k/h/l).
         </div>
 
         <div id="link-hint-characters-container">
-          <h2>Characters used for link hints</h2>
+          <h2 id="link-chars-heading">Characters used for link hints</h2>
           <div class="link-hint-characters-field">
-            <input name="linkHintCharacters" type="text" />
-            <div class="example reset-link"><a href="#">Reset</a></div>
+            <input 
+              name="linkHintCharacters" 
+              type="text"
+              aria-labelledby="link-chars-heading" />
+            <div class="example reset-link"><a href="#" role="button" aria-label="Reset link hint characters to default">Reset</a></div>
           </div>
           <div class="example">
             The characters placed next to each link after typing "f" to enter link-hint mode.
@@ -118,10 +140,13 @@ b: http://b.com/?q=%s description
         </div>
 
         <div id="link-hint-numbers-container">
-          <h2>Numbers used for link hints</h2>
+          <h2 id="link-numbers-heading">Numbers used for link hints</h2>
           <div class="link-hint-characters-field">
-            <input name="linkHintNumbers" type="text" />
-            <div class="example reset-link"><a href="#">Reset</a></div>
+            <input 
+              name="linkHintNumbers" 
+              type="text"
+              aria-labelledby="link-numbers-heading" />
+            <div class="example reset-link"><a href="#" role="button" aria-label="Reset link hint numbers to default">Reset</a></div>
           </div>
           <div class="example">
             The characters placed next to each link after typing "f" to enter link-hint mode.
@@ -202,35 +227,44 @@ b: http://b.com/?q=%s description
           keyboards.
         </div>
 
-        <h2>Previous patterns</h2>
+        <h2 id="prev-patterns-heading">Previous patterns</h2>
         <div>
-          <input name="previousPatterns" type="text" />
-          <div class="example reset-link"><a href="#">Reset</a></div>
+          <input 
+            name="previousPatterns" 
+            type="text"
+            aria-labelledby="prev-patterns-heading"
+            aria-describedby="prev-patterns-help" />
+          <div class="example reset-link"><a href="#" role="button" aria-label="Reset previous patterns to default">Reset</a></div>
         </div>
-        <div class="example">
+        <div class="example" id="prev-patterns-help">
           The "navigate to previous page" command uses these patterns to find the link to follow.
         </div>
 
-        <h2>Next patterns</h2>
+        <h2 id="next-patterns-heading">Next patterns</h2>
         <div>
-          <input name="nextPatterns" type="text" />
-          <div class="example reset-link"><a href="#">Reset</a></div>
+          <input 
+            name="nextPatterns" 
+            type="text"
+            aria-labelledby="next-patterns-heading"
+            aria-describedby="next-patterns-help" />
+          <div class="example reset-link"><a href="#" role="button" aria-label="Reset next patterns to default">Reset</a></div>
         </div>
-        <div class="example">
+        <div class="example" id="next-patterns-help">
           The "navigate to next page" command uses these patterns to find the link to follow.
         </div>
 
-        <h2>CSS for Vimium UI</h2>
+        <h2 id="css-heading">CSS for Vimium UI</h2>
         <div>
           <textarea
             name="userDefinedLinkHintCss"
             class="code"
             type="text"
             spellcheck="false"
-          ></textarea>
-          <div class="example reset-link"><a href="#">Reset</a></div>
+            aria-labelledby="css-heading"
+            aria-describedby="css-help"></textarea>
+          <div class="example reset-link"><a href="#" role="button" aria-label="Reset custom CSS to default">Reset</a></div>
         </div>
-        <div class="example">
+        <div class="example" id="css-help">
           These styles are applied to link hints, the Vomnibar, the help dialog, the exclusions
           pop-up and the HUD.<br>
           By default, this CSS is used to style the characters next to each link hint.<br>
@@ -238,20 +272,20 @@ b: http://b.com/?q=%s description
           These styles are used in addition to and take precedence over Vimium's default styles.
         </div>
 
-        <header>Backup and Restore</header>
+        <header id="backup-heading">Backup and Restore</header>
 
-        <h2>Backup</h2>
-        <a id="download-backup" download="vimium-options.json" href="#">Download backup</a>
+        <h2 id="backup-download-heading">Backup</h2>
+        <a id="download-backup" download="vimium-options.json" href="#" aria-label="Download a backup of your Vimium settings">Download backup</a>
         <div class="example">Download a backup of your settings.</div>
 
-        <h2>Restore</h2>
-        <input id="upload-backup" type="file" accept=".json" />
+        <h2 id="restore-heading">Restore</h2>
+        <input id="upload-backup" type="file" accept=".json" aria-labelledby="restore-heading" />
         <div class="example">
           Choose a backup file to restore.
         </div>
       </div>
 
-      <footer>
+      <footer role="contentinfo">
         <div id="footer-content">
           <div id="footer-help-text">
             Type <strong>?</strong> to show the help dialog.
@@ -259,7 +293,7 @@ b: http://b.com/?q=%s description
             Type <strong id="shortcut-to-save-all"></strong> to save all options.
           </div>
           <div id="footer-save-options">
-            <button id="save" disabled="disabled">No changes</button>
+            <button id="save" disabled="disabled" aria-live="polite">No changes</button>
           </div>
         </div>
       </footer>
@@ -268,13 +302,13 @@ b: http://b.com/?q=%s description
     <template id="exclusion-rule-template">
       <tr class="rule">
         <td>
-          <input type="text" name="pattern" spellcheck="false" placeholder="URL pattern" />
+          <input type="text" name="pattern" spellcheck="false" placeholder="URL pattern" aria-label="URL pattern" />
         </td>
         <td>
-          <input type="text" name="passKeys" spellcheck="false" placeholder="All" />
+          <input type="text" name="passKeys" spellcheck="false" placeholder="All" aria-label="Keys to exclude" />
         </td>
         <td>
-          <input type="button" class="remove" value="&#x2716;" />
+          <input type="button" class="remove" value="&#x2716;" aria-label="Remove this rule" />
         </td>
       </tr>
     </template>
