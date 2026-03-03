@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Vomnibar</title>
     <meta name="color-scheme" content="light dark">
@@ -9,11 +9,12 @@
     <link rel="stylesheet" type="text/css" href="vomnibar_page.css" />
   </head>
   <body>
-    <div id="vomnibar">
+    <div id="vomnibar" role="combobox" aria-haspopup="listbox" aria-label="Vomnibar">
       <div id="vomnibar-search-area">
-        <input type="text" autocomplete="off">
+        <label for="vomnibar-search" class="visually-hidden">Search or enter URL</label>
+        <input id="vomnibar-search" type="text" autocomplete="off" aria-label="Search or enter URL" aria-autocomplete="list">
       </div>
-      <ul></ul>
+      <ul role="listbox" aria-label="Search results"></ul>
     </div>
   </body>
 </html>

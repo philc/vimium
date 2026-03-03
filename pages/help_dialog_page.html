@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Vimium Help</title>
     <meta name="color-scheme" content="light dark">
@@ -14,19 +14,19 @@
   <body>
     <!-- Note that the command placeholders (data-group=navigation) will be replaced by the
          background page with the user's key bindings when the dialog is shown. -->
-    <div id="container">
+    <div id="container" role="dialog" aria-modal="true" aria-labelledby="help-dialog-title">
       <div id="dialog">
-        <header>
+        <header role="banner">
           <h1>
             <span class="vim">Vim</span>ium Help
             <span id="help-dialog-title"></span>
           </h1>
 
           <!-- These buttons are wrapped in a div so they vertically center more evenly. -->
-          <div>
-            <a id="options-page" href="#">Options</a>
-            <a href="https://github.com/philc/vimium/wiki" target="_blank">Wiki</a>
-            <a id="close" href="#">&times;</a>
+          <div role="navigation" aria-label="Help dialog navigation">
+            <a id="options-page" href="#" aria-label="Open Vimium options page">Options</a>
+            <a href="https://github.com/philc/vimium/wiki" target="_blank" aria-label="Vimium Wiki (opens in new tab)">Wiki</a>
+            <a id="close" href="#" aria-label="Close help dialog">&times;</a>
           </div>
         </header>
 
@@ -63,7 +63,7 @@
         </div>
 
         <div id="toggle-advanced">
-          <a href="#">Show advanced commands</a>
+          <a href="#" aria-expanded="false" aria-controls="advanced-commands">Show advanced commands</a>
         </div>
 
         <div class="divider"></div>
