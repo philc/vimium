@@ -68,4 +68,27 @@ context("settings", () => {
       assert.equal("https://example.com", settings.newTabCustomUrl);
     });
   });
+
+  context("v2.4.1 migration", () => {
+    setup(async () => {
+      await chrome.storage.sync.set({ settingsVersion: "2.4.0" });
+    });
+
+    teardown(async () => {
+      await Settings.clear();
+    });
+
+    should("Sets default/missing newTabDestination to browserNewTabPage", async () => {
+      await Settings.load();
+      const settings = Settings.getSettings();
+      assert.equal(Settings.newTabDestinations.browserNewTabPage, settings.newTabDestination);
+    });
+
+    should("Preserve customUrl destination", async () => {
+      await chrome.storage.sync.set({ newTabDestination: Settings.newTabDestinations.customUrl });
+      await Settings.load();
+      const settings = Settings.getSettings();
+      assert.equal(Settings.newTabDestinations.customUrl, settings.newTabDestination);
+    });
+  });
 });
