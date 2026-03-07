@@ -1,3 +1,10 @@
+2.4.1 (2026-03-07)
+
+- Fix issue where existing users were mistakenly opted-in to
+  [Vimium's new tab page](https://github.com/philc/vimium/pull/4795) for the `createTab` command.
+  (https://github.com/philc/vimium/issues/4859)
+- Fix exclusion rules is empty in downloaded backups. (https://github.com/philc/vimium/issues/4839)
+
 2.4.0 (2026-01-27)
 
 - Support a Vimium new tab experience: the browser can be configured to open a blank Vimium page as
