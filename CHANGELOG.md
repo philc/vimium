@@ -1,4 +1,4 @@
-2.4.1 (2026-03-07)
+2.4.1, 2.4.2 (2026-03-07)
 
 - Fix issue where existing users were mistakenly opted-in to
   [Vimium's new tab page](https://github.com/philc/vimium/pull/4795) for the `createTab` command.
