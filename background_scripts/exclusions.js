@@ -1,5 +1,5 @@
-// This module manages manages the exclusion rule setting. An exclusion is an object with two
-// attributes: pattern and passKeys. The exclusion rules are an array of such objects.
+// This module manages manages the exclusion rule setting. An exclusion is an object with three
+// attributes: pattern, passKeys and blockedKeys. The exclusion rules are an array of such objects.
 
 const ExclusionRegexpCache = {
   cache: {},
@@ -46,10 +46,16 @@ function getRule(url, rules) {
   }
   // Strip whitespace from all matching passKeys strings, and join them together.
   const passKeys = matchingRules.map((r) => r.passKeys.split(/\s+/).join("")).join("");
+  const blockedKeys = matchingRules.map((r) => (r.blockedKeys ?? "").split(/\s+/).join("")).join(
+    "",
+  );
   // TODO(philc): Remove this commented out code.
   // passKeys = (rule.passKeys.split(/\s+/).join "" for rule in matchingRules).join ""
   if (matchingRules.length > 0) {
-    return { passKeys: Utils.distinctCharacters(passKeys) };
+    return {
+      passKeys: Utils.distinctCharacters(passKeys),
+      blockedKeys: Utils.distinctCharacters(blockedKeys),
+    };
   } else {
     return null;
   }
@@ -60,6 +66,7 @@ export function isEnabledForUrl(url) {
   return {
     isEnabledForUrl: !rule || (rule.passKeys.length > 0),
     passKeys: rule ? rule.passKeys : "",
+    blockedKeys: rule ? rule.blockedKeys ?? "" : "",
   };
 }
 
