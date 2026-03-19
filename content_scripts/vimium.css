@@ -212,6 +212,7 @@ iframe.vomnibar-frame {
   height: calc(100% - 70px);
   top: 70px;
   left: 50%;
+  /* TODO(philc): Why are we doing this negative margin, rather than just using right: 20% ? */
   margin: 0 0 0 -40%;
   border: none;
   font-family: sans-serif;
