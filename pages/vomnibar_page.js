@@ -288,13 +288,22 @@ class VomnibarUI {
         if (isUrl) {
           this.hide(() => this.launchUrl(query, openInNewTab));
         } else {
-          this.hide(() =>
-            chrome.runtime.sendMessage({
-              handler: "launchSearchQuery",
-              query,
-              openInNewTab,
-            })
-          );
+          if (openInNewTab) {
+            this.hide(() =>
+              chrome.runtime.sendMessage({
+                handler: "openUrlInNewTab",
+                url: query,
+              })
+            );
+          } else {
+            this.hide(() =>
+              chrome.runtime.sendMessage({
+                handler: "launchSearchQuery",
+                query,
+                openInNewTab,
+              })
+            );
+          }
         }
       }
     } else if (isPrimarySearchSuggestion(completion)) {
