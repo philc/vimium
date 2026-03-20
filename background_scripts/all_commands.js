@@ -494,6 +494,30 @@ const allCommands = [
   },
 
   {
+    name: "collapseTabGroup",
+    desc: "Collapse current tab's group",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "previousTabGroup",
+    desc: "Switch to previous tab group",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "nextTabGroup",
+    desc: "Switch to next tab group",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
     name: "removeTab",
     desc: "Close current tab",
     group: "tabs",

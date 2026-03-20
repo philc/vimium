@@ -340,6 +340,22 @@ const BackgroundCommands = {
     });
   },
   toggleMuteTab,
+  // Tab group commands (Chrome only; no-op on Firefox).
+  async collapseTabGroup({ tab }) {
+    if (bgUtils.isFirefox() || !chrome.tabGroups || tab.groupId == -1) return;
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    let nextTab = tabs.find((t) => t.index > tab.index && t.groupId != tab.groupId) ||
+      tabs.findLast((t) => t.index < tab.index && t.groupId != tab.groupId);
+    if (!nextTab) nextTab = await chrome.tabs.create({}); // All tabs are in this group.
+    await chrome.tabs.update(nextTab.id, { active: true });
+    chrome.tabGroups.update(tab.groupId, { collapsed: true });
+  },
+  previousTabGroup({ tab }) {
+    return goToTabGroup(tab, -1);
+  },
+  nextTabGroup({ tab }) {
+    return goToTabGroup(tab, 1);
+  },
   moveTabLeft: moveTab,
   moveTabRight: moveTab,
 
@@ -464,11 +480,33 @@ async function removeTabsRelative(direction, { count, tab }) {
   await chrome.tabs.remove(toRemove.map((t) => t.id));
 }
 
+// Jump to the next (direction=1) or previous (direction=-1) tab group.
+async function goToTabGroup(tab, direction) {
+  if (bgUtils.isFirefox() || !chrome.tabGroups) return;
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const inDifferentGroup = (t) => t.groupId != -1 && t.groupId != tab.groupId;
+  const target = direction > 0
+    ? tabs.find((t) => t.index > tab.index && inDifferentGroup(t))
+    : tabs.findLast((t) => t.index < tab.index && inDifferentGroup(t));
+  if (target) {
+    await chrome.tabGroups.update(target.groupId, { collapsed: false });
+    chrome.tabs.update(target.id, { active: true });
+  }
+}
+
 // Selects a tab before or after the currently selected tab.
 // - direction: "next", "previous", "first" or "last".
 function selectTab(direction, { count, tab }) {
-  chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
+  chrome.tabs.query(visibleTabsQueryArgs, async function (tabs) {
     if (tabs.length > 1) {
+      // On Chrome, skip tabs in collapsed tab groups.
+      if (!bgUtils.isFirefox() && chrome.tabGroups) {
+        const groups = await chrome.tabGroups.query({ windowId: tab.windowId, collapsed: true });
+        const collapsedGroupIds = new Set(groups.map((g) => g.id));
+        tabs = tabs.filter((t) => t.id === tab.id || !collapsedGroupIds.has(t.groupId));
+        if (tabs.length <= 1) return;
+      }
+
       const toSelect = (() => {
         switch (direction) {
           case "next":
