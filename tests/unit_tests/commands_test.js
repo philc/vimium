@@ -38,6 +38,11 @@ context("KeyMappingsParser", () => {
     assert.equal({ "a": "b" }, keyToMappedKey);
   });
 
+  should("handle langmap statements", () => {
+    const { keyToMappedKey } = KeyMappingsParser.parse("langmap фы;as,a\\bAB");
+    assert.equal({ "ф": "a", "ы": "s", "a": "b", "A": "B" }, keyToMappedKey);
+  });
+
   should("handle unmap statements", () => {
     const input = "mapkey a b \n unmap a";
     const { keyToMappedKey } = KeyMappingsParser.parse(input);
