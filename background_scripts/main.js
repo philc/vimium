@@ -235,6 +235,35 @@ function nextZoomLevel(currentZoom, steps) {
   }
 }
 
+const moveTabToExistingWindow = function(orientation, currentTab) {
+  chrome.windows.getCurrent({}, currentWindow => {
+    chrome.windows.getAll({populate: true}, windows => {
+      const filteredWindows = windows.filter(window => {
+        if (window.id !== currentWindow.id) {
+          if (orientation === 'left') {
+            return window.left < currentWindow.left;
+          } else if (orientation === 'right') {
+            return window.left > currentWindow.left;
+          } else if (orientation === 'top') {
+            return window.top < currentWindow.top;
+          } else if (orientation === 'bottom') {
+            return window.top > currentWindow.top;
+          }
+        }
+      });
+      if (filteredWindows.length > 0) {
+        const destinationWindow = filteredWindows[0];
+        chrome.tabs.move(currentTab.id, { windowId: destinationWindow.id, index: -1 }).then(() => {
+          chrome.windows.get(destinationWindow.id, {populate: true}, newWindow => {
+            const newTab = newWindow.tabs.slice(-1)[0];
+            selectSpecificTab({ id: newTab.id });
+          });
+        });
+      }
+    });
+  });
+};
+
 // These are commands which are bound to keystrokes which must be handled by the background page.
 // They are mapped in commands.js.
 const BackgroundCommands = {
@@ -309,6 +338,19 @@ const BackgroundCommands = {
         chrome.tabs.move(tabs.map((t) => t.id), { windowId: window.id, index: -1 });
       });
     });
+  },
+
+  mergeTabToExistingWindowOnLeft(request) {
+    moveTabToExistingWindow("left", request.tab);
+  },
+  mergeTabToExistingWindowOnRight(request) {
+    moveTabToExistingWindow("right", request.tab);
+  },
+  mergeTabToExistingWindowAbove(request) {
+    moveTabToExistingWindow("top", request.tab);
+  },
+  mergeTabToExistingWindowBelow(request) {
+    moveTabToExistingWindow("bottom", request.tab);
   },
 
   nextTab(request) {
