@@ -256,13 +256,27 @@ async function buildStorePackage() {
   ]);
 }
 
+function collectFiles(dir) {
+  const results = [];
+  for (const entry of Deno.readDirSync(dir)) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory) {
+      results.push(...collectFiles(fullPath));
+    } else if (entry.isFile) {
+      results.push(fullPath);
+    }
+  }
+  return results.sort();
+}
+
 async function runUnitTests() {
   // Import every test file.
   const dir = path.join(projectPath, "tests/unit_tests");
-  const files = Array.from(Deno.readDirSync(dir)).map((f) => f.name).sort();
+  const files = collectFiles(dir);
+
   for (let f of files) {
     if (f.endsWith("_test.js")) {
-      await import(path.join(dir, f));
+      await import(f);
     }
   }
 
