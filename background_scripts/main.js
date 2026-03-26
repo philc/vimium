@@ -49,7 +49,7 @@ const completionSources = {
   searchEngines: new SearchEngineCompleter(),
 };
 
-const completers = {
+export const completers = {
   omni: new MultiCompleter([
     completionSources.bookmarks,
     completionSources.history,

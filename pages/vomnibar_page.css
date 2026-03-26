@@ -22,23 +22,39 @@ ul {
   z-index: 2139999999;
 }
 
-#vomnibar input {
+#vomnibar-search-area * {
   font-size: 20px;
   height: 34px;
   margin-bottom: 0;
   padding: 4px;
-  background-color: white;
-  color: black;
   border-radius: 3px;
   border: 1px solid #e8e8e8;
   box-shadow: #444 0px 0px 1px;
-  width: 100%;
   outline: none;
   box-sizing: border-box;
 }
 
+#vomnibar #completer-name {
+  margin-right: 8px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  background: unset;
+  color: #990000;
+}
+
+#vomnibar-search-area .mode:empty {
+  display: none;
+}
+
+#vomnibar-search-area input {
+  background-color: white;
+  color: black;
+  width: 100%;
+}
+
 #vomnibar-search-area {
-  display: block;
+  display: flex;
   padding: 10px;
   border-radius: 4px 4px 0 0;
   border-bottom: 1px solid #c6c9ce;
@@ -147,6 +163,11 @@ ul {
 
   #vomnibar-search-area {
     border-bottom: 1px solid var(--vimium-foreground-color);
+  }
+
+  #vomnibar-search-area #completer-name {
+    color: #999000;
+    border: 1px solid var(--vimium-foreground-color);
   }
 
   #vomnibar input {

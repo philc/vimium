@@ -17,6 +17,8 @@ import {
 import * as ranking from "../../../background_scripts/completion/ranking.js";
 import { RegexpCache } from "../../../background_scripts/completion/ranking.js";
 import "../../../lib/url_utils.js";
+import { completers } from "../../../background_scripts/main.js";
+import { completerNames } from "../../../background_scripts/completion/all_completers.js";
 
 const hours = (n) => 1000 * 60 * 60 * n;
 
@@ -27,6 +29,12 @@ const filterCompleter = async (completer, queryTerms) => {
     query: queryTerms.join(" "),
   });
 };
+
+context("completer list", () => {
+  should("define all completers", () => {
+    assert.equal(Object.keys(completers), completerNames);
+  });
+});
 
 context("bookmark completer", () => {
   const bookmark3 = { title: "bookmark3", url: "bookmark3.com" };
