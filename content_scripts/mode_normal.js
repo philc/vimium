@@ -22,9 +22,20 @@ class NormalMode extends KeyHandlerMode {
         this.setKeyMapping(changes.normalModeKeyStateMapping.newValue);
       }
     });
+
+    // Listen and handle 'command' events coming from the background and
+    // originally sent from the omnibar page.
+    Utils.addChromeRuntimeOnMessageListener(["runNormalModeCommand"], (request, _sender) => {
+      this.commandHandler(request);
+    });
   }
 
   commandHandler({ command: registryEntry, count }) {
+    // Set the raw 'count' for the omni bar, before doing any additional 'count' processing.
+    // If the command to handle is Vomnibar.activateCommand, the omni bar will later propagate this
+    // 'count' to the selected command.
+    registryEntry.options.omniCommandCount = count;
+
     if (registryEntry.options.count) {
       count = (count ?? 1) * registryEntry.options.count;
     }
@@ -359,6 +370,7 @@ const NormalModeCommands = {
   "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection.bind(Vomnibar),
   "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks.bind(Vomnibar),
   "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind(Vomnibar),
+  "Vomnibar.activateCommand": Vomnibar.activateCommand.bind(Vomnibar),
   "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind(Vomnibar),
   "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind(Vomnibar),
 

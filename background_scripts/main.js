@@ -14,6 +14,7 @@ import * as marks from "../background_scripts/marks.js";
 
 import {
   BookmarkCompleter,
+  CommandCompleter,
   DomainCompleter,
   HistoryCompleter,
   MultiCompleter,
@@ -43,6 +44,7 @@ chrome.storage.session.set({ vimiumSecret: secretToken });
 
 const completionSources = {
   bookmarks: new BookmarkCompleter(),
+  commands: new CommandCompleter(),
   history: new HistoryCompleter(),
   domains: new DomainCompleter(),
   tabs: new TabCompleter(),
@@ -58,6 +60,7 @@ const completers = {
     completionSources.searchEngines,
   ]),
   bookmarks: new MultiCompleter([completionSources.bookmarks]),
+  commands: new MultiCompleter([completionSources.commands]),
   tabs: new MultiCompleter([completionSources.tabs]),
 };
 
@@ -600,6 +603,12 @@ const HintCoordinator = {
 const sendRequestHandlers = {
   runBackgroundCommand(request, sender) {
     return BackgroundCommands[request.registryEntry.command](request, sender);
+  },
+  // 'runNormalModeCommand' is used as a proxy in order to execute a command as if it was run in
+  // normal mode.
+  // The 'request' must contain a 'count' and a valid 'command: RegistryEntry' parameter.
+  runNormalModeCommand(request, sender) {
+    chrome.tabs.sendMessage(sender.tab.id, request);
   },
   // getCurrentTabUrl is used by the content scripts to get their full URL, because window.location
   // cannot help with Chrome-specific URLs like "view-source:http:..".

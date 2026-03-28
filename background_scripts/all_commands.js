@@ -32,12 +32,14 @@ const allCommands = [
     name: "scrollToTop",
     desc: "Scroll to the top of the page",
     group: "navigation",
+    noRepeat: true,
   },
 
   {
     name: "scrollToBottom",
     desc: "Scroll to the bottom of the page",
     group: "navigation",
+    noRepeat: true,
   },
 
   {
@@ -82,12 +84,15 @@ const allCommands = [
     desc: "Scroll all the way to the left",
     group: "navigation",
     advanced: true,
+    noRepeat: true,
   },
 
   {
     name: "scrollToRight",
     desc: "Scroll all the way to the right",
     group: "navigation",
+    advanced: true,
+    noRepeat: true,
   },
 
   {
@@ -98,6 +103,7 @@ const allCommands = [
     options: {
       hard: "Perform a hard reload, forcing the browser to bypass its cache.",
     },
+    noRepeat: true,
   },
 
   {
@@ -137,6 +143,7 @@ const allCommands = [
     desc: "Go to the root of current URL hierarchy",
     group: "navigation",
     advanced: true,
+    noRepeat: true,
   },
 
   {
@@ -175,6 +182,7 @@ const allCommands = [
     name: "focusInput",
     desc: "Focus the first text input on the page",
     group: "navigation",
+    noRepeat: true,
   },
 
   {
@@ -303,6 +311,7 @@ const allCommands = [
     },
     group: "vomnibar",
     topFrame: true,
+    noRepeat: true,
   },
 
   {
@@ -315,6 +324,7 @@ const allCommands = [
         "section of the Vimium Options page. The Vomnibar will be scoped to use that search engine.",
     },
     topFrame: true,
+    noRepeat: true,
   },
 
   {
@@ -325,6 +335,7 @@ const allCommands = [
       query: "The text to prefill the Vomnibar with.",
     },
     topFrame: true,
+    noRepeat: true,
   },
 
   {
@@ -335,6 +346,15 @@ const allCommands = [
       query: "The text to prefill the Vomnibar with.",
     },
     topFrame: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "Vomnibar.activateCommand",
+    desc: "Execute a Vimium command",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
   },
 
   {
@@ -342,6 +362,7 @@ const allCommands = [
     desc: "Search through your open tabs",
     group: "vomnibar",
     topFrame: true,
+    noRepeat: true,
   },
 
   {
@@ -349,6 +370,7 @@ const allCommands = [
     desc: "Edit the current URL",
     group: "vomnibar",
     topFrame: true,
+    noRepeat: true,
   },
 
   {
@@ -356,6 +378,7 @@ const allCommands = [
     desc: "Edit the current URL and open in a new tab",
     group: "vomnibar",
     topFrame: true,
+    noRepeat: true,
   },
 
   //
@@ -433,14 +456,14 @@ const allCommands = [
 
   {
     name: "previousTab",
-    desc: "Go one tab left",
+    desc: "Go one tab left (vertical: up)",
     group: "tabs",
     background: true,
   },
 
   {
     name: "nextTab",
-    desc: "Go one tab right",
+    desc: "Go one tab right (vertical: down)",
     group: "tabs",
     background: true,
   },
@@ -457,6 +480,7 @@ const allCommands = [
     desc: "Go to the first tab",
     group: "tabs",
     background: true,
+    noRepeat: true,
   },
 
   {
@@ -464,6 +488,7 @@ const allCommands = [
     desc: "Go to the last tab",
     group: "tabs",
     background: true,
+    noRepeat: true,
   },
 
   {
@@ -479,6 +504,7 @@ const allCommands = [
     desc: "Pin or unpin current tab",
     group: "tabs",
     background: true,
+    noRepeat: true,
   },
 
   {
@@ -517,11 +543,12 @@ const allCommands = [
     group: "tabs",
     advanced: true,
     background: true,
+    noRepeat: true,
   },
 
   {
     name: "closeTabsOnLeft",
-    desc: "Close tabs on the left",
+    desc: "Close tabs on the left (vertical: up)",
     group: "tabs",
     advanced: true,
     background: true,
@@ -529,7 +556,7 @@ const allCommands = [
 
   {
     name: "closeTabsOnRight",
-    desc: "Close tabs on the right",
+    desc: "Close tabs on the right (vertical: down)",
     group: "tabs",
     advanced: true,
     background: true,
@@ -546,7 +573,7 @@ const allCommands = [
 
   {
     name: "moveTabLeft",
-    desc: "Move tab to the left",
+    desc: "Move tab to the left (vertical: up)",
     group: "tabs",
     advanced: true,
     background: true,
@@ -554,7 +581,7 @@ const allCommands = [
 
   {
     name: "moveTabRight",
-    desc: "Move tab to the right",
+    desc: "Move tab to the right (vertical: down)",
     group: "tabs",
     advanced: true,
     background: true,
@@ -569,6 +596,7 @@ const allCommands = [
     options: {
       level: "The zoom level. This can be a range of [0.25, 5.0]. 1.0 is the default.",
     },
+    noRepeat: true,
   },
 
   {
@@ -593,6 +621,7 @@ const allCommands = [
     group: "tabs",
     advanced: true,
     background: true,
+    noRepeat: true,
   },
 
   //

@@ -1,7 +1,14 @@
 import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
-import { Suggestion } from "../../background_scripts/completion/completers.js";
+import {
+  CommandCompleter,
+  MultiCompleter,
+  Suggestion,
+} from "../../background_scripts/completion/completers.js";
 import * as vomnibarPage from "../../pages/vomnibar_page.js";
+import { allCommands } from "../../background_scripts/all_commands.js";
+import { Commands, RegistryEntry } from "../../background_scripts/commands.js";
+import { filterCompleter } from "./completion/completers_test.js";
 
 function newKeyEvent(properties) {
   return Object.assign(
@@ -90,5 +97,86 @@ context("vomnibar page", () => {
     ui.onInput();
     // The query should not be treated as a user search engine.
     assert.equal("constructor ", ui.input.value);
+  });
+
+  should("fill the suggestions list with correct HTML", async () => {
+    const setZoom = allCommands.filter((command) => command.name == "setZoom")[0];
+    const multiCompleter = new MultiCompleter([new CommandCompleter()]);
+
+    stub(chrome.storage.session, "get", async () => ({
+      commandToOptionsToKeys: {
+        "setZoom": {
+          "value=1.1": ["z1"],
+          "value=1.2": ["z2"],
+        },
+      },
+    }));
+
+    stub(Commands, "keyToRegistryEntry", {
+      "z1": new RegistryEntry({
+        keySequence: ["z", "1"],
+        command: setZoom.name,
+        noRepeat: setZoom.noRepeat,
+        repeatLimit: setZoom.repeatLimit,
+        background: setZoom.background,
+        topFrame: setZoom.topFrame,
+        options: {
+          "value": 1.1,
+        },
+      }),
+      "z2": new RegistryEntry({
+        keySequence: ["z", "2"],
+        command: setZoom.name,
+        noRepeat: setZoom.noRepeat,
+        repeatLimit: setZoom.repeatLimit,
+        background: setZoom.background,
+        topFrame: setZoom.topFrame,
+        options: {
+          "value": 1.2,
+        },
+      }),
+    });
+
+    const suggestions = await filterCompleter(multiCompleter, ["set", "zoom"]);
+    stub(chrome.runtime, "sendMessage", async () => suggestions);
+
+    await ui.updateCompletions();
+
+    assert.equal(
+      `\
+<li class="">
+  <div class="top-half">
+    <span class="source no-insert-text">↪</span><span class="source">command</span>
+    <span class="title"><span class="match">Set</span> <span class="match">zoom</span></span>
+  </div>
+</li>
+<li class="">
+  <div class="top-half">
+    <span class="source no-insert-text">↪</span><span class="source">command</span>
+    <span class="title"><span class="match">Set</span> <span class="match">zoom</span> (value=1.1)</span>
+    <span class="key-block">
+      <span class="key">z1</span>
+      <span class="comma">, </span>
+    </span>
+  </div>
+</li>
+<li class="">
+  <div class="top-half">
+    <span class="source no-insert-text">↪</span><span class="source">command</span>
+    <span class="title"><span class="match">Set</span> <span class="match">zoom</span> (value=1.2)</span>
+    <span class="key-block">
+      <span class="key">z2</span>
+      <span class="comma">, </span>
+    </span>
+  </div>
+</li>
+<li class="">
+  <div class="top-half">
+    <span class="source no-insert-text">↪</span><span class="source">command</span>
+    <span class="title">Re<span class="match">set</span> <span class="match">zoom</span></span>
+  </div>
+</li>`,
+      ui.completionList.innerHTML,
+    );
   });
 });

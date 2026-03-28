@@ -15,6 +15,8 @@ import * as bgUtils from "./../bg_utils.js";
 import * as completionSearch from "./search_wrapper.js";
 import * as userSearchEngines from "../user_search_engines.js";
 import * as ranking from "./ranking.js";
+import { allCommands } from "../all_commands.js";
+import { Commands, RegistryEntry } from "../commands.js";
 import { RegexpCache } from "./ranking.js";
 
 // Set this to true to render relevancy when debugging the ranking scores.
@@ -47,6 +49,14 @@ export class Suggestion {
   tabId;
   // Whether this is a suggestion provided by a user's custom search engine.
   isCustomSearch;
+  // Suggestion in 'command' mode.
+  // command = {
+  //   // 'RegistryEntry' to execute the command in 'NormalMode.commandHandler'.
+  //   registryEntry: RegistryEntry,
+  //   // Key mapping to show in the omni bar suggestions
+  //   keys: Array[string]
+  // }
+  command;
   // Whether this is meant to be the first suggestion from the user's custom search engine which
   // represents their query as typed, verbatim.
   isPrimarySuggestion = false;
@@ -72,7 +82,8 @@ export class Suggestion {
   generateHtml() {
     if (this.html) return this.html;
     const relevancyHtml = showRelevancy
-      ? `<span class='relevancy'>${this.computeRelevancy()}</span>`
+      ? `
+    <span class='relevancy'>${this.computeRelevancy()}</span>`
       : "";
     const insertTextClass = this.insertText ? "" : "no-insert-text";
     const insertTextIndicator = "&#8618;"; // A right hooked arrow.
@@ -87,12 +98,32 @@ export class Suggestion {
       faviconHtml = `<img class="icon" src="${faviconUrl.toString()}" />`;
     }
     if (this.isCustomSearch) {
-      this.html = `\
-<div class="top-half">
-   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
-   <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
-   ${relevancyHtml}
- </div>\
+      this.html = `
+  <div class="top-half">
+    <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
+    <span class="title">${
+        this.highlightQueryTerms(Utils.escapeHtml(this.title))
+      }</span>${relevancyHtml}
+  </div>
+`;
+    } else if (this.command) {
+      // Key mappings containing key-modifiers are represented in the form of '<modifier-key>'
+      // (e.g <c-e>) and are parsed as HTML tags when used in a raw string. Escape them properly.
+      const escapeKeyForHtml = (key) => {
+        return key.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      };
+      const keybindings = this.command.keys.map((key) => `
+    <span class="key-block">
+      <span class="key">${escapeKeyForHtml(key)}</span>
+      <span class="comma">, </span>
+    </span>`).join("\n");
+      this.html = `
+  <div class="top-half">
+    <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
+    <span class="title">${
+        this.highlightQueryTerms(`${this.title}`)
+      }</span>${keybindings}${relevancyHtml}
+  </div>
 `;
     } else {
       this.html = `\
@@ -103,9 +134,8 @@ export class Suggestion {
  <div class="bottom-half">
   <span class="source no-insert-text">${insertTextIndicator}</span>${faviconHtml}<span class="url">${
         this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
-      }</span>
-  ${relevancyHtml}
-</div>\
+      }</span>${relevancyHtml}
+</div>
 `;
     }
     return this.html;
@@ -350,6 +380,86 @@ export class BookmarkCompleter {
       suggestion.shortUrl || suggestion.url,
       suggestion.title,
     );
+  }
+}
+
+export class CommandCompleter {
+  async filter({ queryTerms }) {
+    // Get the key mapping for a command.
+    // Each entry contains the user-specified options and an array of possible mappings.
+    // Example:
+    // "closeTabsOnRight" : {
+    //    "count=2": ["c2l", "c2k"],
+    //    "count=3": ["c3l", "c3k"],
+    // }
+    const commandToOptionsToKeys =
+      (await chrome.storage.session.get("commandToOptionsToKeys")).commandToOptionsToKeys;
+
+    // Create a RegistryEntry for the default action (no options specified) of a command.
+    const createUnboundRegistryEntry = (command) => {
+      return new RegistryEntry({
+        keySequence: [],
+        command: command.name,
+        noRepeat: command.noRepeat,
+        repeatLimit: command.repeatLimit,
+        background: command.background,
+        topFrame: command.topFrame,
+        options: {},
+      });
+    };
+
+    // Option suffix to add to the suggestion entry based on the command options for a mapping.
+    // Used in two places:
+    // - title: to set the actual visible text in the omni bar
+    // - url: used as a key of difference during the clean-up of the suggestions.
+    const optionsSuffix = (option) => {
+      return option ? ` (${option})` : "";
+    };
+
+    let suggestions = [];
+    allCommands.filter((command) => ranking.matches(queryTerms, command.desc))
+      .map((command) => {
+        const variations = commandToOptionsToKeys[command.name] || {};
+
+        // Indicates if the default action of the command (no additional options) is bound to a key.
+        const isDefaultBound = Object.keys(variations).some((option) => option.length === 0);
+
+        // If the default action is not bound, add the entry explicitly to the suggestions.
+        // This makes unbound commands accessible from the omni bar in 'command' mode.
+        if (!isDefaultBound) {
+          suggestions.push(
+            new Suggestion({
+              queryTerms,
+              description: "command",
+              title: command.desc,
+              url: command.name,
+              command: {
+                registryEntry: createUnboundRegistryEntry(command),
+                keys: [],
+              },
+              relevancy: 1,
+            }),
+          );
+        }
+
+        // Add all bound/mapped command variations to the suggestions.
+        for (const [options, keys] of Object.entries(variations)) {
+          suggestions.push(
+            new Suggestion({
+              queryTerms,
+              description: "command",
+              title: command.desc + optionsSuffix(options),
+              url: command.name + optionsSuffix(options),
+              command: {
+                registryEntry: Commands.keyToRegistryEntry[keys[0]],
+                keys: keys,
+              },
+              relevancy: 1,
+            }),
+          );
+        }
+      });
+    return suggestions;
   }
 }
 
