@@ -32,6 +32,14 @@ const Vomnibar = {
     this.open(sourceFrameId, options);
   },
 
+  activateCommandSelection(sourceFrameId, registryEntry) {
+    const options = Object.assign({}, registryEntry.options, {
+      completer: "commands",
+      selectFirst: true,
+    });
+    this.open(sourceFrameId, options);
+  },
+
   activateBookmarksInNewTab(sourceFrameId, registryEntry) {
     const options = Object.assign({}, registryEntry.options, {
       completer: "bookmarks",
