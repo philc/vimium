@@ -405,14 +405,6 @@ export class CommandCompleter {
       });
     };
 
-    // Option suffix to add to the suggestion entry based on the command options for a mapping.
-    // Used in two places:
-    // - title: to set the actual visible text in the omni bar
-    // - url: used as a key of difference during the clean-up of the suggestions.
-    const optionsSuffix = (option) => {
-      return option ? ` (${option})` : "";
-    };
-
     const matchingCommands = allCommands.filter((command) =>
       ranking.matches(queryTerms, command.desc)
     );
@@ -432,7 +424,7 @@ export class CommandCompleter {
             queryTerms,
             description: "command",
             title: command.desc,
-            url: command.name,
+            deDuplicate: false,
             command: {
               registryEntry: createUnboundRegistryEntry(command),
               keys: [],
@@ -448,8 +440,8 @@ export class CommandCompleter {
           new Suggestion({
             queryTerms,
             description: "command",
-            title: command.desc + optionsSuffix(options),
-            url: command.name + optionsSuffix(options),
+            title: command.desc + (options ? ` (${options})` : ""),
+            deDuplicate: false,
             command: {
               registryEntry: Commands.keyToRegistryEntry[keys[0]],
               keys: keys,
@@ -783,17 +775,12 @@ export class MultiCompleter {
     }
     suggestions.sort((a, b) => b.relevancy - a.relevancy);
 
-    // Simplify URLs and remove duplicates (duplicate simplified URLs, that is).
-    let count = 0;
-    const seenUrls = {};
-
     const dedupedSuggestions = [];
     for (const s of suggestions) {
-      const url = s.shortenUrl();
-      if (s.deDuplicate && seenUrls[url]) continue;
-      if (count++ === maxResults) break;
-      seenUrls[url] = s;
-      dedupedSuggestions.push(s);
+      if (dedupedSuggestions.length === maxResults) break;
+      if (!s.deDuplicate || !dedupedSuggestions.includes(s.shortenUrl())) {
+        dedupedSuggestions.push(s);
+      }
     }
 
     // Give each completer the opportunity to tweak the suggestions.
