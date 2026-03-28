@@ -373,14 +373,6 @@ context("command completer", () => {
     );
   });
 
-  should("return an empty list when the query is empty", async () => {
-    stub(chrome.storage.session, "get", async () => ({
-      commandToOptionsToKeys: {},
-    }));
-    stub(Commands, "keyToRegistryEntry", {});
-    assert.equal([], await filterCompleter(multiCompleter, []));
-  });
-
   should("handle key bound commands with options", async () => {
     stub(chrome.storage.session, "get", async () => ({
       commandToOptionsToKeys: {

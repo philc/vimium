@@ -32,7 +32,7 @@ const Vomnibar = {
     this.open(sourceFrameId, options);
   },
 
-  activateCommand(sourceFrameId, registryEntry) {
+  activateCommandSelection(sourceFrameId, registryEntry) {
     const options = Object.assign({}, registryEntry.options, {
       completer: "commands",
       selectFirst: true,

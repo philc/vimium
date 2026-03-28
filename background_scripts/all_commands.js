@@ -350,7 +350,7 @@ const allCommands = [
   },
 
   {
-    name: "Vomnibar.activateCommand",
+    name: "Vomnibar.activateCommandSelection",
     desc: "Execute a Vimium command",
     group: "vomnibar",
     topFrame: true,

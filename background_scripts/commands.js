@@ -369,19 +369,19 @@ const Commands = {
   // This is used by the help page and commands listing.
   prepareHelpPageData() {
     /*
-      Map of commands to option sets to keys to trigger that command option set.
-      Commands with no options will have the empty string options set.
-      Example:
-      {
-        "zoomReset": {
-          "": ["z0", "zz"] // No options, with two key maps, ie: `map zz zoomReset`
-        },
-        "setZoom": {
-          "1.1": ["z1"], // `map z1 setZoom 1.1`
-          "1.2": ["z2"], // `map z2 setZoom 1.2`
-        }
-      }
-    */
+          Map of commands to option sets to keys to trigger that command option set.
+          Commands with no options will have the empty string options set.
+          Example:
+          {
+            "zoomReset": {
+              "": ["z0", "zz"] // No options, with two key maps, ie: `map zz zoomReset`
+            },
+            "setZoom": {
+              "1.1": ["z1"], // `map z1 setZoom 1.1`
+              "1.2": ["z2"], // `map z2 setZoom 1.2`
+            }
+          }
+        */
     const commandToOptionsToKeys = {};
     const formatOptionString = (options) => {
       return Object.entries(options)
@@ -455,7 +455,7 @@ const defaultKeyMappings = {
   "T": "Vomnibar.activateTabSelection",
   "b": "Vomnibar.activateBookmarks",
   "B": "Vomnibar.activateBookmarksInNewTab",
-  ":": "Vomnibar.activateCommand",
+  ":": "Vomnibar.activateCommandSelection",
   "ge": "Vomnibar.activateEditUrl",
   "gE": "Vomnibar.activateEditUrlInNewTab",
 

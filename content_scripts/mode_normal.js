@@ -23,8 +23,8 @@ class NormalMode extends KeyHandlerMode {
       }
     });
 
-    // Listen and handle "command" events coming from the background and
-    // originally sent from the omnibar page.
+    // Listen and handle "command" events coming from the background and originally sent from the
+    // omnibar page.
     Utils.addChromeRuntimeOnMessageListener(["runNormalModeCommand"], (request, _sender) => {
       this.commandHandler(request);
     });
@@ -32,8 +32,8 @@ class NormalMode extends KeyHandlerMode {
 
   commandHandler({ command: registryEntry, count }) {
     // Set the raw "count" for the omni bar, before doing any additional "count" processing.
-    // If the command to handle is Vomnibar.activateCommand, the omni bar will later propagate this
-    // "count" to the selected command.
+    // If the command to handle is Vomnibar.activateCommandSelection, the omni bar will later
+    // propagate this "count" to the selected command.
     registryEntry.options.omniCommandCount = count;
 
     if (registryEntry.options.count) {
@@ -370,7 +370,7 @@ const NormalModeCommands = {
   "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection.bind(Vomnibar),
   "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks.bind(Vomnibar),
   "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind(Vomnibar),
-  "Vomnibar.activateCommand": Vomnibar.activateCommand.bind(Vomnibar),
+  "Vomnibar.activateCommandSelection": Vomnibar.activateCommandSelection.bind(Vomnibar),
   "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind(Vomnibar),
   "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind(Vomnibar),
 

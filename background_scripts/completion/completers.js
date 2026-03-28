@@ -413,49 +413,52 @@ export class CommandCompleter {
       return option ? ` (${option})` : "";
     };
 
+    const matchingCommands = allCommands.filter((command) =>
+      ranking.matches(queryTerms, command.desc)
+    );
+
     let suggestions = [];
-    allCommands.filter((command) => ranking.matches(queryTerms, command.desc))
-      .map((command) => {
-        const variations = commandToOptionsToKeys[command.name] || {};
+    for (const command of matchingCommands) {
+      const variations = commandToOptionsToKeys[command.name] || {};
 
-        // Indicates if the default action of the command (no additional options) is bound to a key.
-        const isDefaultBound = Object.keys(variations).some((option) => option.length === 0);
+      // Indicates if the default action of the command (no additional options) is bound to a key.
+      const isDefaultBound = Object.keys(variations).some((option) => option.length === 0);
 
-        // If the default action is not bound, add the entry explicitly to the suggestions.
-        // This makes unbound commands accessible from the omni bar in 'command' mode.
-        if (!isDefaultBound) {
-          suggestions.push(
-            new Suggestion({
-              queryTerms,
-              description: "command",
-              title: command.desc,
-              url: command.name,
-              command: {
-                registryEntry: createUnboundRegistryEntry(command),
-                keys: [],
-              },
-              relevancy: 1,
-            }),
-          );
-        }
+      // If the default action is not bound, add the entry explicitly to the suggestions.
+      // This makes unbound commands accessible from the omni bar in 'command' mode.
+      if (!isDefaultBound) {
+        suggestions.push(
+          new Suggestion({
+            queryTerms,
+            description: "command",
+            title: command.desc,
+            url: command.name,
+            command: {
+              registryEntry: createUnboundRegistryEntry(command),
+              keys: [],
+            },
+            relevancy: 1,
+          }),
+        );
+      }
 
-        // Add all bound/mapped command variations to the suggestions.
-        for (const [options, keys] of Object.entries(variations)) {
-          suggestions.push(
-            new Suggestion({
-              queryTerms,
-              description: "command",
-              title: command.desc + optionsSuffix(options),
-              url: command.name + optionsSuffix(options),
-              command: {
-                registryEntry: Commands.keyToRegistryEntry[keys[0]],
-                keys: keys,
-              },
-              relevancy: 1,
-            }),
-          );
-        }
-      });
+      // Add all bound/mapped command variations to the suggestions.
+      for (const [options, keys] of Object.entries(variations)) {
+        suggestions.push(
+          new Suggestion({
+            queryTerms,
+            description: "command",
+            title: command.desc + optionsSuffix(options),
+            url: command.name + optionsSuffix(options),
+            command: {
+              registryEntry: Commands.keyToRegistryEntry[keys[0]],
+              keys: keys,
+            },
+            relevancy: 1,
+          }),
+        );
+      }
+    }
     return suggestions;
   }
 }
