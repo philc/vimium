@@ -1,7 +1,14 @@
 import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
-import { Suggestion } from "../../background_scripts/completion/completers.js";
+import {
+  CommandCompleter,
+  MultiCompleter,
+  Suggestion,
+} from "../../background_scripts/completion/completers.js";
 import * as vomnibarPage from "../../pages/vomnibar_page.js";
+import { allCommands } from "../../background_scripts/all_commands.js";
+import { Commands, RegistryEntry } from "../../background_scripts/commands.js";
+import { filterCompleter } from "./completion/completers_test.js";
 
 function newKeyEvent(properties) {
   return Object.assign(
@@ -90,5 +97,26 @@ context("vomnibar page", () => {
     ui.onInput();
     // The query should not be treated as a user search engine.
     assert.equal("constructor ", ui.input.value);
+  });
+
+  should("create command suggestions with correct HTML for key bindings", async () => {
+    const multiCompleter = new MultiCompleter([new CommandCompleter()]);
+
+    const suggestions = await filterCompleter(multiCompleter, ["go", "tab", "right"]);
+    stub(chrome.runtime, "sendMessage", async () => suggestions);
+
+    await ui.updateCompletions();
+
+    assert.equal(1, ui.completionList.childNodes.length);
+    assert.equal([
+      `<span class="key-block">
+      <span class="key">K</span>
+      <span class="comma">, </span>
+    </span>`,
+      `<span class="key-block">
+      <span class="key">gt</span>
+      <span class="comma">, </span>
+    </span>`,
+    ], Object.values(ui.completionList.querySelectorAll(".key-block")).map((x) => x.outerHTML));
   });
 });

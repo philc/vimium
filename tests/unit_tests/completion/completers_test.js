@@ -6,6 +6,7 @@ import "../../../background_scripts/completion/search_wrapper.js";
 import * as userSearchEngines from "../../../background_scripts/user_search_engines.js";
 import {
   BookmarkCompleter,
+  CommandCompleter,
   DomainCompleter,
   HistoryCache,
   HistoryCompleter,
@@ -17,11 +18,13 @@ import {
 import * as ranking from "../../../background_scripts/completion/ranking.js";
 import { RegexpCache } from "../../../background_scripts/completion/ranking.js";
 import "../../../lib/url_utils.js";
+import { Commands, RegistryEntry } from "../../../background_scripts/commands.js";
+import { allCommands } from "../../../background_scripts/all_commands.js";
 
 const hours = (n) => 1000 * 60 * 60 * n;
 
 // A convenience wrapper around completer.filter() so it can be called synchronously in tests.
-const filterCompleter = async (completer, queryTerms) => {
+export const filterCompleter = async (completer, queryTerms) => {
   return await completer.filter({
     queryTerms,
     query: queryTerms.join(" "),
@@ -348,6 +351,74 @@ context("multi completer", () => {
     // wraps a TabCompleter should not.
     assert.equal(1, (await filterCompleter(tabCompleter, [])).length);
     assert.equal([], await filterCompleter(multiCompleter, []));
+  });
+});
+
+context("command completer", () => {
+  const commandCompleter = new CommandCompleter();
+  const multiCompleter = new MultiCompleter([commandCompleter]);
+  const setZoom = allCommands.filter((command) => command.name == "setZoom")[0];
+
+  should("return all commands with default options if no mappings are specified", async () => {
+    stub(chrome.storage.session, "get", async () => ({
+      commandToOptionsToKeys: {},
+    }));
+    stub(Commands, "keyToRegistryEntry", {});
+
+    const suggestions = await filterCompleter(commandCompleter, []);
+
+    // Checks that all available commands are returned as suggestions.
+    assert.equal(allCommands.length, suggestions.length);
+
+    const commandHasNoOptions = (command) => {
+      return JSON.stringify(command.registryEntry.options) === "{}";
+    };
+
+    // Check that by default no options (e.g. value=1.1) are applied to each command.
+    assert.isTrue(
+      suggestions.every((suggestion) => commandHasNoOptions(suggestion.command)),
+    );
+  });
+
+  should("create suggestions for different variations of the same command", async () => {
+    stub(chrome.storage.session, "get", async () => ({
+      commandToOptionsToKeys: {
+        "setZoom": {
+          "value=1.1": ["z1"],
+          "value=1.2": ["z2"],
+        },
+      },
+    }));
+    stub(Commands, "keyToRegistryEntry", {
+      "z1": new RegistryEntry({
+        keySequence: ["z", "1"],
+        command: setZoom.name,
+        noRepeat: setZoom.noRepeat,
+        repeatLimit: setZoom.repeatLimit,
+        background: setZoom.background,
+        topFrame: setZoom.topFrame,
+        options: {
+          "value": 1.1,
+        },
+      }),
+      "z2": new RegistryEntry({
+        keySequence: ["z", "2"],
+        command: setZoom.name,
+        noRepeat: setZoom.noRepeat,
+        repeatLimit: setZoom.repeatLimit,
+        background: setZoom.background,
+        topFrame: setZoom.topFrame,
+        options: {
+          "value": 1.2,
+        },
+      }),
+    });
+
+    const suggestions = await filterCompleter(multiCompleter, ["set", "zoom"]);
+    assert.equal(
+      ["Set zoom", "Set zoom (value=1.1)", "Set zoom (value=1.2)", "Reset zoom"],
+      suggestions.map((s) => s.title),
+    );
   });
 });
 

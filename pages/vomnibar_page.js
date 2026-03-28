@@ -32,6 +32,7 @@ export async function activate(options) {
     newTab: false,
     selectFirst: false,
     keyword: null,
+    commandModePrefixCount: 1,
   };
 
   options = Object.assign(defaults, options);
@@ -44,6 +45,7 @@ export async function activate(options) {
   ui.setInitialSelectionValue(options.selectFirst ? 0 : -1);
   ui.setForceNewTab(options.newTab);
   ui.setQuery(options.query);
+  ui.setCommandModePrefixCount(options.commandModePrefixCount);
   ui.setActiveUserSearchEngine(userSearchEngines.keywordToEngine[options.keyword]);
   // Use await here for vomnibar_test.js, so that this page doesn't get unloaded while a test is
   // running.
@@ -80,6 +82,9 @@ class VomnibarUI {
   setCompleterName(name) {
     this.completerName = name;
     this.reset();
+  }
+  setCommandModePrefixCount(commandModePrefixCount) {
+    this.commandModePrefixCount = commandModePrefixCount;
   }
 
   // True if the user has entered the keyword of one of their custom search engines.
@@ -217,7 +222,10 @@ class VomnibarUI {
       await this.handleEnterKey(event);
     } else if (action === "ctrl-enter") {
       // Populate the vomnibar with the current selection's URL.
-      if (!this.isUserSearchEngineActive() && (this.selection >= 0)) {
+      if (
+        !this.isUserSearchEngineActive() && this.completerName != "commands" &&
+        (this.selection >= 0)
+      ) {
         if (this.previousInputValue == null) {
           this.previousInputValue = this.input.value;
         }
@@ -275,6 +283,8 @@ class VomnibarUI {
     if (waitingOnCompletions || this.selection == -1) {
       // <Enter> on an empty query is a no-op.
       if (query.length == 0) return;
+      // <Enter> with no selection on a completer other than "omni" is a no-op.
+      if (this.completerName != "omni") return;
       const firstCompletion = this.completions[0];
       const isPrimary = isPrimarySearchSuggestion(firstCompletion);
       if (isPrimary) {
@@ -300,6 +310,15 @@ class VomnibarUI {
     } else if (isPrimarySearchSuggestion(completion)) {
       query = UrlUtils.createSearchUrl(query, completion.searchUrl);
       this.hide(() => this.launchUrl(query, openInNewTab));
+    } else if (completion.command) {
+      this.hide(async () => {
+        await chrome.runtime.sendMessage({
+          handler: "runNormalModeCommand",
+          command: completion.command.registryEntry,
+          // Propagate "commandModePrefixCount" to the selected command.
+          count: this.commandModePrefixCount,
+        });
+      });
     } else {
       this.hide(() => this.openCompletion(completion, openInNewTab));
     }
@@ -341,7 +360,7 @@ class VomnibarUI {
   }
 
   renderCompletions(completions) {
-    this.completionList.innerHTML = completions.map((c) => `<li>${c.html}</li>`).join("");
+    this.completionList.innerHTML = completions.map((c) => `<li>${c.html}</li>`).join("\n");
     this.completionList.style.display = completions.length > 0 ? "block" : "";
   }
 
@@ -441,8 +460,6 @@ class VomnibarUI {
     document.addEventListener("click", () => this.hide());
   }
 }
-
-let vomnibarInstance;
 
 function init() {
   UIComponentMessenger.init();
