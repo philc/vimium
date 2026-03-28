@@ -410,8 +410,8 @@ export class CommandCompleter {
     );
 
     let suggestions = [];
-    for (const command of matchingCommands) {
-      const variations = commandToOptionsToKeys[command.name] || {};
+    for (const commandInfo of matchingCommands) {
+      const variations = commandToOptionsToKeys[commandInfo.name] || {};
 
       // Indicates if the default action of the command (no additional options) is bound to a key.
       const isDefaultBound = Object.keys(variations).some((option) => option.length === 0);
@@ -423,10 +423,10 @@ export class CommandCompleter {
           new Suggestion({
             queryTerms,
             description: "command",
-            title: command.desc,
+            title: commandInfo.desc,
             deDuplicate: false,
             command: {
-              registryEntry: createUnboundRegistryEntry(command),
+              registryEntry: createUnboundRegistryEntry(commandInfo),
               keys: [],
             },
             relevancy: 1,
@@ -440,7 +440,7 @@ export class CommandCompleter {
           new Suggestion({
             queryTerms,
             description: "command",
-            title: command.desc + (options ? ` (${options})` : ""),
+            title: commandInfo.desc + (options ? ` (${options})` : ""),
             deDuplicate: false,
             command: {
               registryEntry: Commands.keyToRegistryEntry[keys[0]],
