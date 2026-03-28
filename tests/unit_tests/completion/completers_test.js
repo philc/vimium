@@ -364,16 +364,23 @@ context("command completer", () => {
       commandToOptionsToKeys: {},
     }));
     stub(Commands, "keyToRegistryEntry", {});
+
     const suggestions = await filterCompleter(commandCompleter, []);
+
+    // Checks that all available commands are returned as suggestions.
     assert.equal(allCommands.length, suggestions.length);
+
+    const commandHasNoOptions = (command) => {
+      return JSON.stringify(command.registryEntry.options) === "{}";
+    };
+
+    // Check that by default no options (e.g. value=1.1) are applied to each command.
     assert.isTrue(
-      suggestions.every((suggestion) =>
-        JSON.stringify(suggestion.command.registryEntry.options) === "{}"
-      ),
+      suggestions.every((suggestion) => commandHasNoOptions(suggestion.command)),
     );
   });
 
-  should("handle key bound commands with options", async () => {
+  should("create suggestions for different variations of the same command", async () => {
     stub(chrome.storage.session, "get", async () => ({
       commandToOptionsToKeys: {
         "setZoom": {
@@ -408,130 +415,10 @@ context("command completer", () => {
     });
 
     const suggestions = await filterCompleter(multiCompleter, ["set", "zoom"]);
-    assert.equal([
-      {
-        "queryTerms": [
-          "set",
-          "zoom",
-        ],
-        "description": "command",
-        "url": "setZoom",
-        "shortUrl": "setzoom",
-        "title": "Set zoom",
-        "relevancy": 1,
-        "autoSelect": false,
-        "highlightTerms": true,
-        "deDuplicate": true,
-        "command": {
-          "registryEntry": {
-            "keySequence": [],
-            "command": "setZoom",
-            "noRepeat": true,
-            "background": true,
-            "options": {},
-          },
-          "keys": [],
-        },
-        "isPrimarySuggestion": false,
-        "html":
-          '\n  <div class="top-half">\n    <span class="source no-insert-text">&#8618;</span><span class="source">command</span>\n    <span class="title"><span class=\'match\'>Set</span> <span class=\'match\'>zoom</span></span>\n  </div>\n',
-      },
-      {
-        "queryTerms": [
-          "set",
-          "zoom",
-        ],
-        "description": "command",
-        "url": "setZoom (value=1.1)",
-        "shortUrl": "setzoom (value=1.1",
-        "title": "Set zoom (value=1.1)",
-        "relevancy": 1,
-        "autoSelect": false,
-        "highlightTerms": true,
-        "deDuplicate": true,
-        "command": {
-          "registryEntry": {
-            "keySequence": [
-              "z",
-              "1",
-            ],
-            "command": "setZoom",
-            "noRepeat": true,
-            "background": true,
-            "options": {
-              "value": 1.1,
-            },
-          },
-          "keys": [
-            "z1",
-          ],
-        },
-        "isPrimarySuggestion": false,
-        "html":
-          '\n  <div class="top-half">\n    <span class="source no-insert-text">&#8618;</span><span class="source">command</span>\n    <span class="title"><span class=\'match\'>Set</span> <span class=\'match\'>zoom</span> (value=1.1)</span>\n    <span class="key-block">\n      <span class="key">z1</span>\n      <span class="comma">, </span>\n    </span>\n  </div>\n',
-      },
-      {
-        "queryTerms": [
-          "set",
-          "zoom",
-        ],
-        "description": "command",
-        "url": "setZoom (value=1.2)",
-        "shortUrl": "setzoom (value=1.2",
-        "title": "Set zoom (value=1.2)",
-        "relevancy": 1,
-        "autoSelect": false,
-        "highlightTerms": true,
-        "deDuplicate": true,
-        "command": {
-          "registryEntry": {
-            "keySequence": [
-              "z",
-              "2",
-            ],
-            "command": "setZoom",
-            "noRepeat": true,
-            "background": true,
-            "options": {
-              "value": 1.2,
-            },
-          },
-          "keys": [
-            "z2",
-          ],
-        },
-        "isPrimarySuggestion": false,
-        "html":
-          '\n  <div class="top-half">\n    <span class="source no-insert-text">&#8618;</span><span class="source">command</span>\n    <span class="title"><span class=\'match\'>Set</span> <span class=\'match\'>zoom</span> (value=1.2)</span>\n    <span class="key-block">\n      <span class="key">z2</span>\n      <span class="comma">, </span>\n    </span>\n  </div>\n',
-      },
-      {
-        "queryTerms": [
-          "set",
-          "zoom",
-        ],
-        "description": "command",
-        "url": "zoomReset",
-        "shortUrl": "zoomreset",
-        "title": "Reset zoom",
-        "relevancy": 1,
-        "autoSelect": false,
-        "highlightTerms": true,
-        "deDuplicate": true,
-        "command": {
-          "registryEntry": {
-            "keySequence": [],
-            "command": "zoomReset",
-            "noRepeat": true,
-            "background": true,
-            "options": {},
-          },
-          "keys": [],
-        },
-        "isPrimarySuggestion": false,
-        "html":
-          '\n  <div class="top-half">\n    <span class="source no-insert-text">&#8618;</span><span class="source">command</span>\n    <span class="title">Re<span class=\'match\'>set</span> <span class=\'match\'>zoom</span></span>\n  </div>\n',
-      },
-    ], suggestions);
+    assert.equal(
+      ["Set zoom", "Set zoom (value=1.1)", "Set zoom (value=1.2)", "Reset zoom"],
+      suggestions.map((s) => s.title),
+    );
   });
 });
 

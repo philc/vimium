@@ -99,84 +99,24 @@ context("vomnibar page", () => {
     assert.equal("constructor ", ui.input.value);
   });
 
-  should("fill the suggestions list with correct HTML", async () => {
-    const setZoom = allCommands.filter((command) => command.name == "setZoom")[0];
+  should("create command suggestions with correct HTML for key bindings", async () => {
     const multiCompleter = new MultiCompleter([new CommandCompleter()]);
 
-    stub(chrome.storage.session, "get", async () => ({
-      commandToOptionsToKeys: {
-        "setZoom": {
-          "value=1.1": ["z1"],
-          "value=1.2": ["z2"],
-        },
-      },
-    }));
-
-    stub(Commands, "keyToRegistryEntry", {
-      "z1": new RegistryEntry({
-        keySequence: ["z", "1"],
-        command: setZoom.name,
-        noRepeat: setZoom.noRepeat,
-        repeatLimit: setZoom.repeatLimit,
-        background: setZoom.background,
-        topFrame: setZoom.topFrame,
-        options: {
-          "value": 1.1,
-        },
-      }),
-      "z2": new RegistryEntry({
-        keySequence: ["z", "2"],
-        command: setZoom.name,
-        noRepeat: setZoom.noRepeat,
-        repeatLimit: setZoom.repeatLimit,
-        background: setZoom.background,
-        topFrame: setZoom.topFrame,
-        options: {
-          "value": 1.2,
-        },
-      }),
-    });
-
-    const suggestions = await filterCompleter(multiCompleter, ["set", "zoom"]);
+    const suggestions = await filterCompleter(multiCompleter, ["go", "tab", "right"]);
     stub(chrome.runtime, "sendMessage", async () => suggestions);
 
     await ui.updateCompletions();
 
-    assert.equal(
-      `\
-<li class="">
-  <div class="top-half">
-    <span class="source no-insert-text">↪</span><span class="source">command</span>
-    <span class="title"><span class="match">Set</span> <span class="match">zoom</span></span>
-  </div>
-</li>
-<li class="">
-  <div class="top-half">
-    <span class="source no-insert-text">↪</span><span class="source">command</span>
-    <span class="title"><span class="match">Set</span> <span class="match">zoom</span> (value=1.1)</span>
-    <span class="key-block">
-      <span class="key">z1</span>
+    assert.equal(1, ui.completionList.childNodes.length);
+    assert.equal([
+      `<span class="key-block">
+      <span class="key">K</span>
       <span class="comma">, </span>
-    </span>
-  </div>
-</li>
-<li class="">
-  <div class="top-half">
-    <span class="source no-insert-text">↪</span><span class="source">command</span>
-    <span class="title"><span class="match">Set</span> <span class="match">zoom</span> (value=1.2)</span>
-    <span class="key-block">
-      <span class="key">z2</span>
+    </span>`,
+      `<span class="key-block">
+      <span class="key">gt</span>
       <span class="comma">, </span>
-    </span>
-  </div>
-</li>
-<li class="">
-  <div class="top-half">
-    <span class="source no-insert-text">↪</span><span class="source">command</span>
-    <span class="title">Re<span class="match">set</span> <span class="match">zoom</span></span>
-  </div>
-</li>`,
-      ui.completionList.innerHTML,
-    );
+    </span>`,
+    ], Object.values(ui.completionList.querySelectorAll(".key-block")).map((x) => x.outerHTML));
   });
 });

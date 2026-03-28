@@ -34,7 +34,7 @@ class NormalMode extends KeyHandlerMode {
     // Set the raw "count" for the omni bar, before doing any additional "count" processing.
     // If the command to handle is Vomnibar.activateCommandSelection, the omni bar will later
     // propagate this "count" to the selected command.
-    registryEntry.options.omniCommandCount = count;
+    registryEntry.options.commandModePrefixCount = count;
 
     if (registryEntry.options.count) {
       count = (count ?? 1) * registryEntry.options.count;
