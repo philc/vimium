@@ -283,6 +283,8 @@ class VomnibarUI {
     if (waitingOnCompletions || this.selection == -1) {
       // <Enter> on an empty query is a no-op.
       if (query.length == 0) return;
+      // <Enter> with no selection on a completer other than "omni" is a no-op.
+      if (this.completerName != "omni") return;
       const firstCompletion = this.completions[0];
       const isPrimary = isPrimarySearchSuggestion(firstCompletion);
       if (isPrimary) {
