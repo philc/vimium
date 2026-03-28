@@ -313,7 +313,7 @@ class VomnibarUI {
         await chrome.runtime.sendMessage({
           handler: "runNormalModeCommand",
           command: completion.command.registryEntry,
-          // Propagate 'omniCommandCount' to the selected command.
+          // Propagate "omniCommandCount" to the selected command.
           count: this.omniCommandCount,
         });
       });

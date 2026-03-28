@@ -49,11 +49,11 @@ export class Suggestion {
   tabId;
   // Whether this is a suggestion provided by a user's custom search engine.
   isCustomSearch;
-  // Suggestion in 'command' mode.
+  // Suggestion in "command" mode.
   // command = {
-  //   // 'RegistryEntry' to execute the command in 'NormalMode.commandHandler'.
+  //   "RegistryEntry" to execute the command in "NormalMode.commandHandler".
   //   registryEntry: RegistryEntry,
-  //   // Key mapping to show in the omni bar suggestions
+  //   Key mapping to show in the omni bar suggestions.
   //   keys: Array[string]
   // }
   command;
@@ -82,8 +82,7 @@ export class Suggestion {
   generateHtml() {
     if (this.html) return this.html;
     const relevancyHtml = showRelevancy
-      ? `
-    <span class='relevancy'>${this.computeRelevancy()}</span>`
+      ? `<span class='relevancy'>${this.computeRelevancy()}</span>`
       : "";
     const insertTextClass = this.insertText ? "" : "no-insert-text";
     const insertTextIndicator = "&#8618;"; // A right hooked arrow.
@@ -98,16 +97,15 @@ export class Suggestion {
       faviconHtml = `<img class="icon" src="${faviconUrl.toString()}" />`;
     }
     if (this.isCustomSearch) {
-      this.html = `
-  <div class="top-half">
-    <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
-    <span class="title">${
-        this.highlightQueryTerms(Utils.escapeHtml(this.title))
-      }</span>${relevancyHtml}
-  </div>
+      this.html = `\
+<div class="top-half">
+   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
+   <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
+   ${relevancyHtml}
+ </div>\
 `;
     } else if (this.command) {
-      // Key mappings containing key-modifiers are represented in the form of '<modifier-key>'
+      // Key mappings containing key modifiers are represented in the form of '<modifier-key>'
       // (e.g <c-e>) and are parsed as HTML tags when used in a raw string. Escape them properly.
       const escapeKeyForHtml = (key) => {
         return key.replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -120,9 +118,7 @@ export class Suggestion {
       this.html = `
   <div class="top-half">
     <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
-    <span class="title">${
-        this.highlightQueryTerms(`${this.title}`)
-      }</span>${keybindings}${relevancyHtml}
+    <span class="title">${this.highlightQueryTerms(this.title)}</span>${keybindings}${relevancyHtml}
   </div>
 `;
     } else {
@@ -134,8 +130,9 @@ export class Suggestion {
  <div class="bottom-half">
   <span class="source no-insert-text">${insertTextIndicator}</span>${faviconHtml}<span class="url">${
         this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
-      }</span>${relevancyHtml}
-</div>
+      }</span>
+  ${relevancyHtml}
+</div>\
 `;
     }
     return this.html;

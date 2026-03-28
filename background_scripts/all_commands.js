@@ -456,14 +456,14 @@ const allCommands = [
 
   {
     name: "previousTab",
-    desc: "Go one tab left (vertical: up)",
+    desc: "Go one tab left",
     group: "tabs",
     background: true,
   },
 
   {
     name: "nextTab",
-    desc: "Go one tab right (vertical: down)",
+    desc: "Go one tab right",
     group: "tabs",
     background: true,
   },
@@ -548,7 +548,7 @@ const allCommands = [
 
   {
     name: "closeTabsOnLeft",
-    desc: "Close tabs on the left (vertical: up)",
+    desc: "Close tabs on the left",
     group: "tabs",
     advanced: true,
     background: true,
@@ -556,7 +556,7 @@ const allCommands = [
 
   {
     name: "closeTabsOnRight",
-    desc: "Close tabs on the right (vertical: down)",
+    desc: "Close tabs on the right",
     group: "tabs",
     advanced: true,
     background: true,
@@ -573,7 +573,7 @@ const allCommands = [
 
   {
     name: "moveTabLeft",
-    desc: "Move tab to the left (vertical: up)",
+    desc: "Move tab to the left",
     group: "tabs",
     advanced: true,
     background: true,
@@ -581,7 +581,7 @@ const allCommands = [
 
   {
     name: "moveTabRight",
-    desc: "Move tab to the right (vertical: down)",
+    desc: "Move tab to the right",
     group: "tabs",
     advanced: true,
     background: true,

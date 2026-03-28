@@ -23,7 +23,7 @@ class NormalMode extends KeyHandlerMode {
       }
     });
 
-    // Listen and handle 'command' events coming from the background and
+    // Listen and handle "command" events coming from the background and
     // originally sent from the omnibar page.
     Utils.addChromeRuntimeOnMessageListener(["runNormalModeCommand"], (request, _sender) => {
       this.commandHandler(request);
@@ -31,9 +31,9 @@ class NormalMode extends KeyHandlerMode {
   }
 
   commandHandler({ command: registryEntry, count }) {
-    // Set the raw 'count' for the omni bar, before doing any additional 'count' processing.
+    // Set the raw "count" for the omni bar, before doing any additional "count" processing.
     // If the command to handle is Vomnibar.activateCommand, the omni bar will later propagate this
-    // 'count' to the selected command.
+    // "count" to the selected command.
     registryEntry.options.omniCommandCount = count;
 
     if (registryEntry.options.count) {

@@ -604,9 +604,9 @@ const sendRequestHandlers = {
   runBackgroundCommand(request, sender) {
     return BackgroundCommands[request.registryEntry.command](request, sender);
   },
-  // 'runNormalModeCommand' is used as a proxy in order to execute a command as if it was run in
+  // "runNormalModeCommand" is used as a proxy in order to execute a command as if it was run in
   // normal mode.
-  // The 'request' must contain a 'count' and a valid 'command: RegistryEntry' parameter.
+  // The "request" must contain a "count" and a valid "command: RegistryEntry" parameter.
   runNormalModeCommand(request, sender) {
     chrome.tabs.sendMessage(sender.tab.id, request);
   },
