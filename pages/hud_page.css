@@ -1,15 +1,21 @@
 #hud-container {
+  --hud-container-shadow-size: 10px;
+  --hud-container-border-size: 1px;
+  --hud-container-side-offset: calc(
+    var(--hud-container-shadow-size) + var(--hud-container-border-size)
+  );
   display: block;
   position: fixed;
-  width: calc(100% - 20px);
-  bottom: 8px;
-  left: 8px;
+  bottom: 0;
+  left: var(--hud-container-side-offset);
+  right: var(--hud-container-side-offset);
   background-color: var(--vimium-foreground-color);
   color: var(--vimium-foreground-text-color);
   text-align: left;
-  border-radius: 4px;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
-  border: 1px solid #aaa;
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0px 2px var(--hud-container-shadow-size) rgba(0, 0, 0, 0.8);
+  border: var(--hud-container-border-size) solid #aaa;
+  border-bottom: 0;
   z-index: 2147483647;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
@@ -23,14 +29,11 @@
 
 #hud {
   font-size: 14px;
-  height: 30px;
-  margin-bottom: 0;
   padding: 2px 4px;
   border-radius: 3px;
   width: 100%;
   outline: none;
   box-sizing: border-box;
-  line-height: 20px;
 }
 
 span#hud-find-input, span#hud-match-count {
