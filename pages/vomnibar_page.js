@@ -13,6 +13,7 @@ import "../lib/dom_utils.js";
 import "../lib/handler_stack.js";
 import * as UIComponentMessenger from "./ui_component_messenger.js";
 import * as userSearchEngines from "../background_scripts/user_search_engines.js";
+import { completerNames } from "../background_scripts/completion/all_completers.js";
 
 export let ui; // An instance of VomnibarUI.
 
@@ -98,6 +99,7 @@ class VomnibarUI {
   hide(onHiddenCallback = null) {
     this.onHiddenCallback = onHiddenCallback;
     this.input.blur();
+    this.label.textContent = "";
     this.reset();
     // Wait until this iframe's DOM has been rendered before hiding the iframe. This is to prevent
     // Chrome caching the previous visual state of the vomnibar iframe. See #4708.
@@ -178,6 +180,12 @@ class VomnibarUI {
       return "remove";
     } else if (KeyboardUtils.isBackspace(event)) {
       return "delete";
+    } else if (event.altKey && key == "m") {
+      return "cycle-completer-next";
+    } else if (event.altKey && key == "M") {
+      return "cycle-completer-prev";
+    } else if (event.altKey && key == "n") {
+      return "switch-new-tab";
     }
 
     return null;
@@ -243,6 +251,18 @@ class VomnibarUI {
     } else if ((action === "remove") && (this.selection >= 0)) {
       const completion = this.completions[this.selection];
       console.log(completion);
+    } else if (action == "cycle-completer-next") {
+      const size = completerNames.length;
+      this.completerName = completerNames[(completerNames.indexOf(this.completerName) + 1) % size];
+      this.update();
+    } else if (action == "cycle-completer-prev") {
+      const size = completerNames.length;
+      this.completerName =
+        completerNames[(completerNames.indexOf(this.completerName) + size - 1) % size];
+      this.update();
+    } else if (action == "switch-new-tab" && this.completerName != "tabs") {
+      this.forceNewTab = !this.forceNewTab;
+      this.update();
     }
 
     event.stopImmediatePropagation();
@@ -397,6 +417,10 @@ class VomnibarUI {
   }
 
   async update() {
+    this.label.textContent = this.completerName.toUpperCase();
+    if (this.forceNewTab) {
+      this.label.textContent += "\u00A0+";
+    }
     await this.updateCompletions();
     this.input.focus();
   }
@@ -424,6 +448,7 @@ class VomnibarUI {
   initDom() {
     this.box = document.getElementById("vomnibar");
 
+    this.label = document.getElementById("completer-name");
     this.input = this.box.querySelector("input");
     this.input.addEventListener("input", this.onInput);
     this.input.addEventListener("keydown", this.onKeyEvent);
