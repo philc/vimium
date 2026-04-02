@@ -598,6 +598,9 @@ const HintCoordinator = {
 };
 
 let globallyDisabled = false;
+chrome.storage.local.get("globallyDisabled", (items) => {
+  if (items.globallyDisabled != null) globallyDisabled = items.globallyDisabled;
+});
 
 function getIconSet() {
   if (bgUtils.isFirefox()) {
@@ -625,6 +628,7 @@ function getIconSet() {
 
 async function toggleGloballyDisabled() {
   globallyDisabled = !globallyDisabled;
+  chrome.storage.local.set({ globallyDisabled });
   const iconSet = getIconSet();
   const whichIcon = globallyDisabled ? "disabled" : "enabled";
   const tabs = await chrome.tabs.query({});
@@ -645,7 +649,10 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.handler === "getGloballyDisabled") {
-    sendResponse({ globallyDisabled });
+    chrome.storage.local.get("globallyDisabled", (items) => {
+      sendResponse({ globallyDisabled: items.globallyDisabled ?? false });
+    });
+    return true;
   } else if (request.handler === "toggleGloballyDisabled") {
     toggleGloballyDisabled().then(() => sendResponse());
     return true;
