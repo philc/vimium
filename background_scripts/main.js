@@ -623,20 +623,34 @@ function getIconSet() {
   };
 }
 
+async function toggleGloballyDisabled() {
+  globallyDisabled = !globallyDisabled;
+  const iconSet = getIconSet();
+  const whichIcon = globallyDisabled ? "disabled" : "enabled";
+  const tabs = await chrome.tabs.query({});
+  for (const tab of tabs) {
+    chrome.action.setIcon({ path: iconSet[whichIcon], tabId: tab.id }).catch(() => {});
+    chrome.tabs.sendMessage(tab.id, {
+      handler: "toggleGloballyDisabled",
+      disabled: globallyDisabled,
+    }).catch(() => {});
+  }
+}
+
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === "toggleGloballyDisabled") {
-    globallyDisabled = !globallyDisabled;
-    const iconSet = getIconSet();
-    const whichIcon = globallyDisabled ? "disabled" : "enabled";
-    const tabs = await chrome.tabs.query({});
-    for (const tab of tabs) {
-      chrome.action.setIcon({ path: iconSet[whichIcon], tabId: tab.id }).catch(() => {});
-      chrome.tabs.sendMessage(tab.id, {
-        handler: "toggleGloballyDisabled",
-        disabled: globallyDisabled,
-      }).catch(() => {});
-    }
+    await toggleGloballyDisabled();
   }
+});
+
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  if (request.handler === "getGloballyDisabled") {
+    sendResponse({ globallyDisabled });
+  } else if (request.handler === "toggleGloballyDisabled") {
+    toggleGloballyDisabled().then(() => sendResponse());
+    return true;
+  }
+  return false;
 });
 
 const sendRequestHandlers = {

@@ -26,15 +26,21 @@ h1 {
   padding: var(--padding);
 }
 
-#dialog-body > * {
+#globally-disabled-notice {
+  padding: var(--padding);
+  padding-right: 0;
+  flex-grow: 1;
+}
+
+#dialog-body > *, #globally-disabled-notice > * {
   margin: 10px 0;
 }
 
-#dialog-body > *:first-child {
+#dialog-body > *:first-child, #globally-disabled-notice > *:first-child {
   margin-top: 0;
 }
 
-#dialog-body > *:last-child {
+#dialog-body > *:last-child, #globally-disabled-notice > *:last-child {
   margin-bottom: 0;
 }
 
