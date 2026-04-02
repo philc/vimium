@@ -352,6 +352,10 @@ globalThis.lastFocusedInput = (function () {
 })();
 
 const messageHandlers = {
+  toggleGloballyDisabled(request) {
+    isEnabledForUrl = !request.disabled;
+    HUD.show(isEnabledForUrl ? "Vimium enabled" : "Vimium disabled", 2000);
+  },
   getFocusStatus(_request, _sender) {
     return {
       focused: windowIsFocused(),
@@ -401,7 +405,9 @@ async function handleMessage(request, sender) {
   // Some request are handled elsewhere in the code base; ignore them here.
   const shouldHandleMessage = request.handler !== "userIsInteractingWithThePage" &&
     (isEnabledForUrl ||
-      ["checkEnabledAfterURLChange", "runInTopFrame"].includes(request.handler));
+      ["checkEnabledAfterURLChange", "runInTopFrame", "toggleGloballyDisabled"].includes(
+        request.handler,
+      ));
   if (shouldHandleMessage) {
     const result = await messageHandlers[request.handler](request, sender);
     return result;

@@ -597,6 +597,48 @@ const HintCoordinator = {
   },
 };
 
+let globallyDisabled = false;
+
+function getIconSet() {
+  if (bgUtils.isFirefox()) {
+    return {
+      "enabled": "../icons/action_enabled.svg",
+      "partial": "../icons/action_partial.svg",
+      "disabled": "../icons/action_disabled.svg",
+    };
+  }
+  return {
+    "enabled": {
+      "16": "../icons/action_enabled_16.png",
+      "32": "../icons/action_enabled_32.png",
+    },
+    "partial": {
+      "16": "../icons/action_partial_16.png",
+      "32": "../icons/action_partial_32.png",
+    },
+    "disabled": {
+      "16": "../icons/action_disabled_16.png",
+      "32": "../icons/action_disabled_32.png",
+    },
+  };
+}
+
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === "toggleGloballyDisabled") {
+    globallyDisabled = !globallyDisabled;
+    const iconSet = getIconSet();
+    const whichIcon = globallyDisabled ? "disabled" : "enabled";
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      chrome.action.setIcon({ path: iconSet[whichIcon], tabId: tab.id }).catch(() => {});
+      chrome.tabs.sendMessage(tab.id, {
+        handler: "toggleGloballyDisabled",
+        disabled: globallyDisabled,
+      }).catch(() => {});
+    }
+  }
+});
+
 const sendRequestHandlers = {
   runBackgroundCommand(request, sender) {
     return BackgroundCommands[request.registryEntry.command](request, sender);
@@ -663,6 +705,11 @@ const sendRequestHandlers = {
     // specific frame that sent this request.
     const enabledState = exclusions.isEnabledForUrl(sender.tab.url);
 
+    if (globallyDisabled) {
+      enabledState.isEnabledForUrl = false;
+      enabledState.passKeys = "";
+    }
+
     const isTopFrame = sender.frameId == 0;
     if (isTopFrame) {
       let whichIcon;
@@ -674,30 +721,7 @@ const sendRequestHandlers = {
         whichIcon = "enabled";
       }
 
-      let iconSet = {
-        "enabled": {
-          "16": "../icons/action_enabled_16.png",
-          "32": "../icons/action_enabled_32.png",
-        },
-        "partial": {
-          "16": "../icons/action_partial_16.png",
-          "32": "../icons/action_partial_32.png",
-        },
-        "disabled": {
-          "16": "../icons/action_disabled_16.png",
-          "32": "../icons/action_disabled_32.png",
-        },
-      };
-
-      if (bgUtils.isFirefox()) {
-        // Only Firefox supports SVG icons.
-        iconSet = {
-          "enabled": "../icons/action_enabled.svg",
-          "partial": "../icons/action_partial.svg",
-          "disabled": "../icons/action_disabled.svg",
-        };
-      }
-
+      const iconSet = getIconSet();
       chrome.action.setIcon({ path: iconSet[whichIcon], tabId: sender.tab.id });
     }
 
