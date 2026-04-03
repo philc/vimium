@@ -598,7 +598,7 @@ const HintCoordinator = {
 };
 
 let globallyDisabled = false;
-chrome.storage.local.get("globallyDisabled", (items) => {
+const globallyDisabledLoaded = chrome.storage.local.get("globallyDisabled").then((items) => {
   if (items.globallyDisabled != null) globallyDisabled = items.globallyDisabled;
 });
 
@@ -724,6 +724,7 @@ const sendRequestHandlers = {
   async initializeFrame(request, sender) {
     // Check whether the extension is enabled for the top frame's URL, rather than the URL of the
     // specific frame that sent this request.
+    await globallyDisabledLoaded;
     const enabledState = exclusions.isEnabledForUrl(sender.tab.url);
 
     if (globallyDisabled) {

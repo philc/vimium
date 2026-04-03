@@ -353,8 +353,13 @@ globalThis.lastFocusedInput = (function () {
 
 const messageHandlers = {
   toggleGloballyDisabled(request) {
-    isEnabledForUrl = !request.disabled;
-    HUD.show(isEnabledForUrl ? "Vimium enabled" : "Vimium disabled", 2000);
+    if (request.disabled) {
+      isEnabledForUrl = false;
+      HUD.show("Vimium disabled", 2000);
+    } else {
+      checkIfEnabledForUrl();
+      HUD.show("Vimium enabled", 2000);
+    }
   },
   getFocusStatus(_request, _sender) {
     return {
