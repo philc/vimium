@@ -597,6 +597,69 @@ const HintCoordinator = {
   },
 };
 
+let globallyDisabled = false;
+const globallyDisabledLoaded = chrome.storage.local.get("globallyDisabled").then((items) => {
+  if (items.globallyDisabled != null) globallyDisabled = items.globallyDisabled;
+});
+
+function getIconSet() {
+  if (bgUtils.isFirefox()) {
+    return {
+      "enabled": "../icons/action_enabled.svg",
+      "partial": "../icons/action_partial.svg",
+      "disabled": "../icons/action_disabled.svg",
+    };
+  }
+  return {
+    "enabled": {
+      "16": "../icons/action_enabled_16.png",
+      "32": "../icons/action_enabled_32.png",
+    },
+    "partial": {
+      "16": "../icons/action_partial_16.png",
+      "32": "../icons/action_partial_32.png",
+    },
+    "disabled": {
+      "16": "../icons/action_disabled_16.png",
+      "32": "../icons/action_disabled_32.png",
+    },
+  };
+}
+
+async function toggleGloballyDisabled() {
+  globallyDisabled = !globallyDisabled;
+  chrome.storage.local.set({ globallyDisabled });
+  const iconSet = getIconSet();
+  const whichIcon = globallyDisabled ? "disabled" : "enabled";
+  const tabs = await chrome.tabs.query({});
+  for (const tab of tabs) {
+    chrome.action.setIcon({ path: iconSet[whichIcon], tabId: tab.id }).catch(() => {});
+    chrome.tabs.sendMessage(tab.id, {
+      handler: "toggleGloballyDisabled",
+      disabled: globallyDisabled,
+    }).catch(() => {});
+  }
+}
+
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === "toggleGloballyDisabled") {
+    await toggleGloballyDisabled();
+  }
+});
+
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  if (request.handler === "getGloballyDisabled") {
+    chrome.storage.local.get("globallyDisabled", (items) => {
+      sendResponse({ globallyDisabled: items.globallyDisabled ?? false });
+    });
+    return true;
+  } else if (request.handler === "toggleGloballyDisabled") {
+    toggleGloballyDisabled().then(() => sendResponse());
+    return true;
+  }
+  return false;
+});
+
 const sendRequestHandlers = {
   runBackgroundCommand(request, sender) {
     return BackgroundCommands[request.registryEntry.command](request, sender);
@@ -661,7 +724,13 @@ const sendRequestHandlers = {
   async initializeFrame(request, sender) {
     // Check whether the extension is enabled for the top frame's URL, rather than the URL of the
     // specific frame that sent this request.
+    await globallyDisabledLoaded;
     const enabledState = exclusions.isEnabledForUrl(sender.tab.url);
+
+    if (globallyDisabled) {
+      enabledState.isEnabledForUrl = false;
+      enabledState.passKeys = "";
+    }
 
     const isTopFrame = sender.frameId == 0;
     if (isTopFrame) {
@@ -674,30 +743,7 @@ const sendRequestHandlers = {
         whichIcon = "enabled";
       }
 
-      let iconSet = {
-        "enabled": {
-          "16": "../icons/action_enabled_16.png",
-          "32": "../icons/action_enabled_32.png",
-        },
-        "partial": {
-          "16": "../icons/action_partial_16.png",
-          "32": "../icons/action_partial_32.png",
-        },
-        "disabled": {
-          "16": "../icons/action_disabled_16.png",
-          "32": "../icons/action_disabled_32.png",
-        },
-      };
-
-      if (bgUtils.isFirefox()) {
-        // Only Firefox supports SVG icons.
-        iconSet = {
-          "enabled": "../icons/action_enabled.svg",
-          "partial": "../icons/action_partial.svg",
-          "disabled": "../icons/action_disabled.svg",
-        };
-      }
-
+      const iconSet = getIconSet();
       chrome.action.setIcon({ path: iconSet[whichIcon], tabId: sender.tab.id });
     }
 
@@ -926,6 +972,17 @@ Object.assign(globalThis, {
   BackgroundCommands,
   majorVersionHasIncreased,
   nextZoomLevel,
+  toggleGloballyDisabled,
+  sendRequestHandlers,
+});
+
+Object.defineProperty(globalThis, "globallyDisabled", {
+  get() {
+    return globallyDisabled;
+  },
+  set(v) {
+    globallyDisabled = v;
+  },
 });
 
 // The chrome.runtime.onStartup and onInstalled events are not fired when disabling and then

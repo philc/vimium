@@ -192,6 +192,18 @@ globalThis.chrome = {
     setBadgeBackgroundColor() {},
   },
 
+  commands: {
+    onCommand: {
+      addListener() {},
+    },
+  },
+
+  action: {
+    setIcon() {
+      return Promise.resolve();
+    },
+  },
+
   sessions: {
     MAX_SESSION_RESULTS: 25,
   },
