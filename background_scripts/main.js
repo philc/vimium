@@ -972,6 +972,17 @@ Object.assign(globalThis, {
   BackgroundCommands,
   majorVersionHasIncreased,
   nextZoomLevel,
+  toggleGloballyDisabled,
+  sendRequestHandlers,
+});
+
+Object.defineProperty(globalThis, "globallyDisabled", {
+  get() {
+    return globallyDisabled;
+  },
+  set(v) {
+    globallyDisabled = v;
+  },
 });
 
 // The chrome.runtime.onStartup and onInstalled events are not fired when disabling and then
