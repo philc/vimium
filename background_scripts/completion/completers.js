@@ -89,7 +89,9 @@ export class Suggestion {
     if (this.isCustomSearch) {
       this.html = `\
 <div class="top-half">
-   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
+   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${
+        Utils.escapeHtml(this.description)
+      }</span>
    <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
    ${relevancyHtml}
  </div>\
@@ -97,7 +99,9 @@ export class Suggestion {
     } else {
       this.html = `\
 <div class="top-half">
-   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
+   <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${
+        Utils.escapeHtml(this.description)
+      }</span>
    <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
  </div>
  <div class="bottom-half">

@@ -416,6 +416,17 @@ context("suggestions", () => {
     assert.isTrue(suggestion.generateHtml({}).indexOf("title &lt;span&gt;") >= 0);
   });
 
+  should("escape html in descriptions", () => {
+    const suggestion = new Suggestion({
+      queryTerms: ["queryterm"],
+      description: "tab <span>",
+      url: "url",
+      title: "title",
+      relevancyFunction: returns(1),
+    });
+    assert.isTrue(suggestion.generateHtml({}).indexOf("tab &lt;span&gt;") >= 0);
+  });
+
   should("highlight query words", () => {
     const suggestion = new Suggestion({
       queryTerms: ["ninj", "words"],
