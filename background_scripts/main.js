@@ -343,14 +343,15 @@ const BackgroundCommands = {
     });
   },
   toggleMuteTab,
-  // Tab group commands (Chrome only; no-op on Firefox).
   async collapseTabGroup({ tab }) {
-    if (bgUtils.isFirefox() || !chrome.tabGroups || tab.groupId == -1) return;
+    if (!chrome.tabGroups || tab.groupId == -1) return;
     const tabs = await chrome.tabs.query({ currentWindow: true });
     let nextTab = tabs.find((t) => t.index > tab.index && t.groupId != tab.groupId) ||
       tabs.findLast((t) => t.index < tab.index && t.groupId != tab.groupId);
-    if (!nextTab) nextTab = await chrome.tabs.create({}); // All tabs are in this group.
-    await chrome.tabs.update(nextTab.id, { active: true });
+    if (!nextTab && !bgUtils.isFirefox()) {
+      nextTab = await chrome.tabs.create({});
+    }
+    if (nextTab) await chrome.tabs.update(nextTab.id, { active: true });
     chrome.tabGroups.update(tab.groupId, { collapsed: true });
   },
   previousTabGroup({ tab }) {
@@ -485,7 +486,7 @@ async function removeTabsRelative(direction, { count, tab }) {
 
 // Jump to the next (direction=1) or previous (direction=-1) tab group.
 async function goToTabGroup(tab, direction) {
-  if (bgUtils.isFirefox() || !chrome.tabGroups) return;
+  if (!chrome.tabGroups) return;
   const tabs = await chrome.tabs.query({ currentWindow: true });
   const inDifferentGroup = (t) => t.groupId != -1 && t.groupId != tab.groupId;
   const target = direction > 0
@@ -502,8 +503,8 @@ async function goToTabGroup(tab, direction) {
 function selectTab(direction, { count, tab }) {
   chrome.tabs.query(visibleTabsQueryArgs, async function (tabs) {
     if (tabs.length > 1) {
-      // On Chrome, skip tabs in collapsed tab groups.
-      if (!bgUtils.isFirefox() && chrome.tabGroups) {
+      // Skip tabs in collapsed tab groups.
+      if (chrome.tabGroups) {
         const groups = await chrome.tabGroups.query({ windowId: tab.windowId, collapsed: true });
         const collapsedGroupIds = new Set(groups.map((g) => g.id));
         tabs = tabs.filter((t) => t.id === tab.id || !collapsedGroupIds.has(t.groupId));
