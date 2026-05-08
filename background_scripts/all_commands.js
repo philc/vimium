@@ -216,6 +216,13 @@ const allCommands = [
   },
 
   {
+    name: "LinkHints.activateModeToOpenInNewWindow",
+    desc: "Open a link in a new window",
+    group: "navigation",
+    advanced: true,
+  },
+
+  {
     name: "LinkHints.activateModeToOpenIncognito",
     desc: "Open a link in incognito window",
     group: "navigation",
