@@ -264,8 +264,8 @@ class VomnibarUI {
 
     // If the user types something and hits enter without selecting a completion from the list,
     // then:
-    //   - If they've activated a custom search engine in the Vomnibar, then launch that search
-    //     using the typed-in query.
+    //   - If they've activated a custom search engine in the Vomnibar, launch that search using the
+    //     typed-in query.
     //   - Otherwise, open the query as a URL or create a default search as appropriate.
     //
     //  When launching a query in a custom search engine, the user may have typed more text than
@@ -275,6 +275,16 @@ class VomnibarUI {
     if (waitingOnCompletions || this.selection == -1) {
       // <Enter> on an empty query is a no-op.
       if (query.length == 0) return;
+
+      // If the user typed a custom search engine keyword, use that directly. This handles the race
+      // condition where the user hits Enter before the async completions response arrives
+      // (waitingOnCompletions).
+      if (this.isUserSearchEngineActive()) {
+        query = UrlUtils.createSearchUrl(query, this.activeUserSearchEngine.url);
+        this.hide(() => this.launchUrl(query, openInNewTab));
+        return;
+      }
+
       const firstCompletion = this.completions[0];
       const isPrimary = isPrimarySearchSuggestion(firstCompletion);
       if (isPrimary) {
