@@ -111,9 +111,11 @@ export class Suggestion {
           <span class="comma">, </span>
         </span>`
       ).join("\n");
+
+      // Don't show the source label for command suggestions. It's unnecessary because commands are
+      // currently never shown alongside other suggestion types.
       this.html = `\
   <div class="top-half">
-    <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
     <span class="title">${this.highlightQueryTerms(this.title)}</span>${keybindings}${relevancyHtml}
   </div>
 `;
