@@ -341,7 +341,7 @@ function getStats() {
 /*
  * Stubs
  */
-const stubbedObjects = [];
+let stubbedObjects = [];
 
 function stub(object, propertyName, returnValue) {
   stubbedObjects.push({
@@ -367,6 +367,7 @@ function clearStubs() {
     const stubProperties = stubbedObjects[i];
     stubProperties.object[stubProperties.propertyName] = stubProperties.original;
   }
+  stubbedObjects = [];
 }
 
 export {
