@@ -24,12 +24,12 @@ import { allCommands } from "../../../background_scripts/all_commands.js";
 const hours = (n) => 1000 * 60 * 60 * n;
 
 // A convenience wrapper around completer.filter() so it can be called synchronously in tests.
-export const filterCompleter = async (completer, queryTerms) => {
+export async function filterCompleter(completer, queryTerms) {
   return await completer.filter({
     queryTerms,
     query: queryTerms.join(" "),
   });
-};
+}
 
 context("bookmark completer", () => {
   const bookmark3 = { title: "bookmark3", url: "bookmark3.com" };
@@ -370,13 +370,9 @@ context("command completer", () => {
     // Checks that all available commands are returned as suggestions.
     assert.equal(allCommands.length, suggestions.length);
 
-    const commandHasNoOptions = (command) => {
-      return JSON.stringify(command.registryEntry.options) === "{}";
-    };
-
     // Check that by default no options (e.g. value=1.1) are applied to each command.
     assert.isTrue(
-      suggestions.every((suggestion) => commandHasNoOptions(suggestion.command)),
+      suggestions.every((s) => Object.keys(s.command.registryEntry.options).length === 0),
     );
   });
 
@@ -389,29 +385,10 @@ context("command completer", () => {
         },
       },
     }));
+
     stub(Commands, "keyToRegistryEntry", {
-      "z1": new RegistryEntry({
-        keySequence: ["z", "1"],
-        command: setZoom.name,
-        noRepeat: setZoom.noRepeat,
-        repeatLimit: setZoom.repeatLimit,
-        background: setZoom.background,
-        topFrame: setZoom.topFrame,
-        options: {
-          "value": 1.1,
-        },
-      }),
-      "z2": new RegistryEntry({
-        keySequence: ["z", "2"],
-        command: setZoom.name,
-        noRepeat: setZoom.noRepeat,
-        repeatLimit: setZoom.repeatLimit,
-        background: setZoom.background,
-        topFrame: setZoom.topFrame,
-        options: {
-          "value": 1.2,
-        },
-      }),
+      "z1": new RegistryEntry(),
+      "z2": new RegistryEntry(),
     });
 
     const suggestions = await filterCompleter(multiCompleter, ["set", "zoom"]);

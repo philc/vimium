@@ -123,23 +123,13 @@ context("vomnibar page", () => {
   });
 
   should("create command suggestions with correct HTML for key bindings", async () => {
+    await Commands.loadKeyMappings("");
     const multiCompleter = new MultiCompleter([new CommandCompleter()]);
-
     const suggestions = await filterCompleter(multiCompleter, ["go", "tab", "right"]);
     stub(chrome.runtime, "sendMessage", async () => suggestions);
-
     await ui.updateCompletions();
-
     assert.equal(1, ui.completionList.childNodes.length);
-    assert.equal([
-      `<span class="key-block">
-      <span class="key">K</span>
-      <span class="comma">, </span>
-    </span>`,
-      `<span class="key-block">
-      <span class="key">gt</span>
-      <span class="comma">, </span>
-    </span>`,
-    ], Object.values(ui.completionList.querySelectorAll(".key-block")).map((x) => x.outerHTML));
+    const keys = Array.from(ui.completionList.querySelectorAll(".key")).map((x) => x.textContent);
+    assert.equal(["K", "gt"], keys);
   });
 });

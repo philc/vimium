@@ -32,7 +32,7 @@ export async function activate(options) {
     newTab: false,
     selectFirst: false,
     keyword: null,
-    commandModePrefixCount: 1,
+    prefixCount: 1,
   };
 
   options = Object.assign(defaults, options);
@@ -45,7 +45,7 @@ export async function activate(options) {
   ui.setInitialSelectionValue(options.selectFirst ? 0 : -1);
   ui.setForceNewTab(options.newTab);
   ui.setQuery(options.query);
-  ui.setCommandModePrefixCount(options.commandModePrefixCount);
+  ui.setPrefixCount(options.prefixCount);
   ui.setActiveUserSearchEngine(userSearchEngines.keywordToEngine[options.keyword]);
   // Use await here for vomnibar_test.js, so that this page doesn't get unloaded while a test is
   // running.
@@ -72,7 +72,6 @@ class VomnibarUI {
   setActiveUserSearchEngine(userSearchEngine) {
     this.activeUserSearchEngine = userSearchEngine;
   }
-
   setInitialSelectionValue(initialSelectionValue) {
     this.initialSelectionValue = initialSelectionValue;
   }
@@ -83,8 +82,8 @@ class VomnibarUI {
     this.completerName = name;
     this.reset();
   }
-  setCommandModePrefixCount(commandModePrefixCount) {
-    this.commandModePrefixCount = commandModePrefixCount;
+  setPrefixCount(prefixCount) {
+    this.prefixCount = prefixCount;
   }
 
   // True if the user has entered the keyword of one of their custom search engines.
@@ -326,8 +325,7 @@ class VomnibarUI {
         await chrome.runtime.sendMessage({
           handler: "runNormalModeCommand",
           command: completion.command.registryEntry,
-          // Propagate "commandModePrefixCount" to the selected command.
-          count: this.commandModePrefixCount,
+          count: this.prefixCount,
         });
       });
     } else {

@@ -49,13 +49,8 @@ export class Suggestion {
   tabId;
   // Whether this is a suggestion provided by a user's custom search engine.
   isCustomSearch;
-  // Suggestion in "command" mode.
-  // command = {
-  //   "RegistryEntry" to execute the command in "NormalMode.commandHandler".
-  //   registryEntry: RegistryEntry,
-  //   Key mapping to show in the omni bar suggestions.
-  //   keys: Array[string]
-  // }
+  // Set by CommandCompleter.
+  // { registryEntry: RegistryEntry, keys: Array[string] }
   command;
   // Whether this is meant to be the first suggestion from the user's custom search engine which
   // represents their query as typed, verbatim.
@@ -110,12 +105,13 @@ export class Suggestion {
       const escapeKeyForHtml = (key) => {
         return key.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       };
-      const keybindings = this.command.keys.map((key) => `
-    <span class="key-block">
-      <span class="key">${escapeKeyForHtml(key)}</span>
-      <span class="comma">, </span>
-    </span>`).join("\n");
-      this.html = `
+      const keybindings = this.command.keys.map((key) =>
+        `<span class="key-block">
+          <span class="key">${escapeKeyForHtml(key)}</span>
+          <span class="comma">, </span>
+        </span>`
+      ).join("\n");
+      this.html = `\
   <div class="top-half">
     <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
     <span class="title">${this.highlightQueryTerms(this.title)}</span>${keybindings}${relevancyHtml}
@@ -405,19 +401,17 @@ export class CommandCompleter {
       });
     };
 
-    const matchingCommands = allCommands.filter((command) =>
-      ranking.matches(queryTerms, command.desc)
-    );
+    const matchingCommands = allCommands.filter((c) => ranking.matches(queryTerms, c.desc));
 
-    let suggestions = [];
+    const suggestions = [];
     for (const commandInfo of matchingCommands) {
       const variations = commandToOptionsToKeys[commandInfo.name] || {};
 
-      // Indicates if the default action of the command (no additional options) is bound to a key.
+      // Whether the default action of the command (no additional options) is bound to a key.
       const isDefaultBound = Object.keys(variations).some((option) => option.length === 0);
 
       // If the default action is not bound, add the entry explicitly to the suggestions.
-      // This makes unbound commands accessible from the omni bar in 'command' mode.
+      // This makes unbound commands accessible from the Vomnibar.
       if (!isDefaultBound) {
         suggestions.push(
           new Suggestion({
