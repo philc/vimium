@@ -14,7 +14,8 @@ import "../lib/handler_stack.js";
 import * as UIComponentMessenger from "./ui_component_messenger.js";
 import * as userSearchEngines from "../background_scripts/user_search_engines.js";
 
-export let ui; // An instance of VomnibarUI.
+// An instance of VomnibarUI. Exported for use by tests.
+export let ui;
 
 // Used for tests.
 export function reset() {
@@ -78,10 +79,16 @@ class VomnibarUI {
   setForceNewTab(forceNewTab) {
     this.forceNewTab = forceNewTab;
   }
+
+  // name: one of [omni, bookmarks, commands, tabs].
   setCompleterName(name) {
     this.completerName = name;
+    const capitalize = (s) => s[0].toUpperCase() + s.slice(1);
+    const placeholder = (name == "omni") ? "" : capitalize(name);
+    this.input.setAttribute("placeholder", placeholder);
     this.reset();
   }
+
   setPrefixCount(prefixCount) {
     this.prefixCount = prefixCount;
   }
