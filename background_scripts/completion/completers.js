@@ -769,12 +769,16 @@ export class MultiCompleter {
     }
     suggestions.sort((a, b) => b.relevancy - a.relevancy);
 
+    const seenUrls = new Set();
     const dedupedSuggestions = [];
     for (const s of suggestions) {
       if (dedupedSuggestions.length === maxResults) break;
-      if (!s.deDuplicate || !dedupedSuggestions.includes(s.shortenUrl())) {
-        dedupedSuggestions.push(s);
+      if (s.deDuplicate) {
+        const url = s.shortenUrl();
+        if (seenUrls.has(url)) continue;
+        seenUrls.add(url);
       }
+      dedupedSuggestions.push(s);
     }
 
     // Give each completer the opportunity to tweak the suggestions.

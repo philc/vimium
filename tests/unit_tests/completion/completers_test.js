@@ -352,6 +352,21 @@ context("multi completer", () => {
     assert.equal(1, (await filterCompleter(tabCompleter, [])).length);
     assert.equal([], await filterCompleter(multiCompleter, []));
   });
+
+  should("deduplicate suggestions with the same URL", async () => {
+    const make = (url, relevancy) => new Suggestion({ url, relevancy, html: url });
+    const fakeCompleter = {
+      filter: () => [
+        make("http://example.com", 1),
+        make("http://example.com", 0.9), // duplicate
+        make("http://other.com", 0.8),
+      ],
+    };
+    const results = await filterCompleter(new MultiCompleter([fakeCompleter]), ["example"]);
+    assert.equal(2, results.length);
+    assert.equal("http://example.com", results[0].url);
+    assert.equal("http://other.com", results[1].url);
+  });
 });
 
 context("command completer", () => {
