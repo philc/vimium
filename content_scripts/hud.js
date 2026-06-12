@@ -177,14 +177,14 @@ const HUD = {
   // * events.
   // * the HUD shouldn't be active for this frame while any of the copy/paste commands are running.
   async copyToClipboard(text) {
-    await DomUtils.documentComplete();
+    await DomUtils.documentReady();
     await this.init();
     this.hudUI.postMessage({ name: "copyToClipboard", data: text });
   },
 
   async pasteFromClipboard(pasteListener) {
     this.pasteListener = pasteListener;
-    await DomUtils.documentComplete();
+    await DomUtils.documentReady();
     await this.init();
     this.tween.fade(0, 0);
     this.hudUI.postMessage({ name: "pasteFromClipboard" });
