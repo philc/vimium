@@ -366,6 +366,14 @@ const allCommands = [
   },
 
   {
+    name: "Vomnibar.activateTabGroupSelection",
+    desc: "Search through your tab groups",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
     name: "Vomnibar.activateEditUrl",
     desc: "Edit the current URL",
     group: "vomnibar",
