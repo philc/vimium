@@ -552,6 +552,22 @@ const allCommands = [
   },
 
   {
+    name: "selectNextTabForGroup",
+    desc: "Extend tab selection downward (for group creation)",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "selectPreviousTabForGroup",
+    desc: "Extend tab selection upward (for group creation)",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
     name: "removeTab",
     desc: "Close current tab",
     group: "tabs",

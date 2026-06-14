@@ -20,6 +20,30 @@ export function nextTabGroup({ tab }) {
   return goToTabGroup(tab, 1);
 }
 
+// Extend the highlighted tab selection to the next tab (ctrl+shift+j).
+export async function selectNextTabForGroup({ tab }) {
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const highlighted = tabs.filter((t) => t.highlighted).map((t) => t.index);
+  const nextIndex = Math.max(...highlighted) + 1;
+  if (nextIndex >= tabs.length) return;
+  await chrome.tabs.highlight({
+    windowId: tab.windowId,
+    tabs: [...new Set([tab.index, ...highlighted, nextIndex])],
+  });
+}
+
+// Extend the highlighted tab selection to the previous tab (ctrl+shift+k).
+export async function selectPreviousTabForGroup({ tab }) {
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const highlighted = tabs.filter((t) => t.highlighted).map((t) => t.index);
+  const prevIndex = Math.min(...highlighted) - 1;
+  if (prevIndex < 0) return;
+  await chrome.tabs.highlight({
+    windowId: tab.windowId,
+    tabs: [...new Set([tab.index, ...highlighted, prevIndex])],
+  });
+}
+
 export async function moveTab({ count, tab, registryEntry }) {
   const direction = registryEntry.command === "moveTabLeft" ? -1 : 1;
   // Pinned tabs and environments without tabGroups API use the original simple logic.

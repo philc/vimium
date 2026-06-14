@@ -335,6 +335,8 @@ const BackgroundCommands = {
   collapseTabGroup: tabGroups.collapseTabGroup,
   previousTabGroup: tabGroups.previousTabGroup,
   nextTabGroup: tabGroups.nextTabGroup,
+  selectNextTabForGroup: tabGroups.selectNextTabForGroup,
+  selectPreviousTabForGroup: tabGroups.selectPreviousTabForGroup,
   moveTabLeft: tabGroups.moveTab,
   moveTabRight: tabGroups.moveTab,
 
