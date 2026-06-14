@@ -22,7 +22,7 @@ import {
   SearchEngineCompleter,
   TabCompleter,
 } from "./completion/completers.js";
-import { TabGroupCompleter } from "./completion/group_completer.js";
+import { TabGroupCompleter, TabGroupAssignCompleter, TabGroupColorCompleter } from "./completion/group_completer.js";
 
 // NOTE(philc): This file has many superfluous return statements in its functions, as a result of
 // converting from coffeescript to es6. Many can be removed, but I didn't take the time to
@@ -52,6 +52,8 @@ const completionSources = {
   tabs: new TabCompleter(),
   searchEngines: new SearchEngineCompleter(),
   tabGroups: new TabGroupCompleter(),
+  tabGroupAssign: new TabGroupAssignCompleter(),
+  groupColors: new TabGroupColorCompleter(),
 };
 
 const completers = {
@@ -66,6 +68,8 @@ const completers = {
   commands: new MultiCompleter([completionSources.commands]),
   tabs: new MultiCompleter([completionSources.tabs]),
   tabGroups: new MultiCompleter([completionSources.tabGroups]),
+  tabGroupAssign: new MultiCompleter([completionSources.tabGroupAssign]),
+  groupColors: new MultiCompleter([completionSources.groupColors]),
 };
 
 // A query dictionary for `chrome.tabs.query` that will return only the visible tabs.
@@ -179,6 +183,9 @@ function getTabIndex(tab, tabs) {
 //
 async function selectSpecificTab(request) {
   const tab = await chrome.tabs.get(request.id);
+  if (tab.groupId !== -1 && chrome.tabGroups) {
+    await chrome.tabGroups.update(tab.groupId, { collapsed: false });
+  }
   // Focus the tab's window. TODO(philc): Why are we null-checking chrome.windows here?
   if (chrome.windows != null) {
     await chrome.windows.update(tab.windowId, { focused: true });
@@ -653,6 +660,23 @@ const sendRequestHandlers = {
 
   nextFrame: BackgroundCommands.nextFrame,
   selectSpecificTab,
+
+  async addTabsToGroup(request) {
+    const win = await chrome.windows.getLastFocused();
+    const tabs = await chrome.tabs.query({ windowId: win.id });
+    const tabIds = tabs.filter((t) => t.highlighted).map((t) => t.id);
+    if (tabIds.length === 0) return;
+    await chrome.tabs.group({ tabIds, groupId: request.groupId });
+  },
+
+  async createTabGroupWithColor(request) {
+    const win = await chrome.windows.getLastFocused();
+    const tabs = await chrome.tabs.query({ windowId: win.id });
+    const tabIds = tabs.filter((t) => t.highlighted).map((t) => t.id);
+    if (tabIds.length === 0) return;
+    const groupId = await chrome.tabs.group({ tabIds });
+    await chrome.tabGroups.update(groupId, { title: request.name, color: request.color });
+  },
   createMark: marks.create,
   gotoMark: marks.goto,
   // Send a message to all frames in the current tab. If request.frameId is provided, then send

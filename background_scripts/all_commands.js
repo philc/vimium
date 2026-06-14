@@ -374,6 +374,14 @@ const allCommands = [
   },
 
   {
+    name: "Vomnibar.activateGroupAssign",
+    desc: "Assign tab(s) to a group",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
     name: "Vomnibar.activateEditUrl",
     desc: "Edit the current URL",
     group: "vomnibar",

@@ -454,6 +454,7 @@ const defaultKeyMappings = {
   "O": "Vomnibar.activateInNewTab",
   "T": "Vomnibar.activateTabSelection",
   "ZG": "Vomnibar.activateTabGroupSelection",
+  "zg": "Vomnibar.activateGroupAssign",
   "b": "Vomnibar.activateBookmarks",
   "B": "Vomnibar.activateBookmarksInNewTab",
   ":": "Vomnibar.activateCommandSelection",

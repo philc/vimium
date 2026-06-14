@@ -47,6 +47,13 @@ const Vomnibar = {
     });
   },
 
+  activateGroupAssign(sourceFrameId) {
+    this.open(sourceFrameId, {
+      completer: "tabGroupAssign",
+      selectFirst: true,
+    });
+  },
+
   activateBookmarksInNewTab(sourceFrameId, registryEntry) {
     const options = Object.assign({}, registryEntry.options, {
       completer: "bookmarks",
