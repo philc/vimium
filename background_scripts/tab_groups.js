@@ -1,4 +1,5 @@
 import * as bgUtils from "./bg_utils.js";
+import { moveTabSelection } from "./tab_selection.js";
 
 export async function collapseTabGroup({ tab }) {
   if (!chrome.tabGroups || tab.groupId == -1) return;
@@ -20,76 +21,14 @@ export function nextTabGroup({ tab }) {
   return goToTabGroup(tab, 1);
 }
 
-// Extend or shrink the tab selection (zz). Vim visual-mode semantics: tab.index is the anchor.
-// - Right side extended? → extend further right.
-// - Left side extended? → shrink from the left.
-// - Nothing extended yet? → start extending right.
-export async function selectNextTabForGroup({ tab, count }) {
-  for (let i = 0; i < count; i++) {
-    await selectNextTabOnce(tab);
-  }
-}
-
-async function selectNextTabOnce(tab) {
-  const tabs = await chrome.tabs.query({ windowId: tab.windowId });
-  const highlighted = tabs.filter((t) => t.highlighted).map((t) => t.index);
-  const anchor = tab.index;
-
-  let next;
-  if (highlighted.some((i) => i > anchor)) {
-    const max = Math.max(...highlighted);
-    if (max + 1 >= tabs.length) return;
-    next = [...new Set([...highlighted, max + 1])];
-  } else if (highlighted.some((i) => i < anchor)) {
-    const min = Math.min(...highlighted);
-    next = highlighted.filter((i) => i !== min);
-  } else {
-    if (anchor + 1 >= tabs.length) return;
-    next = [anchor, anchor + 1];
-  }
-
-  await chrome.tabs.highlight({
-    windowId: tab.windowId,
-    tabs: [anchor, ...next.filter((i) => i !== anchor)],
-  });
-}
-
-// Extend or shrink the tab selection (ZZ). Vim visual-mode semantics: tab.index is the anchor.
-// - Left side extended? → extend further left.
-// - Right side extended? → shrink from the right.
-// - Nothing extended yet? → start extending left.
-export async function selectPreviousTabForGroup({ tab, count }) {
-  for (let i = 0; i < count; i++) {
-    await selectPreviousTabOnce(tab);
-  }
-}
-
-async function selectPreviousTabOnce(tab) {
-  const tabs = await chrome.tabs.query({ windowId: tab.windowId });
-  const highlighted = tabs.filter((t) => t.highlighted).map((t) => t.index);
-  const anchor = tab.index;
-
-  let next;
-  if (highlighted.some((i) => i < anchor)) {
-    const min = Math.min(...highlighted);
-    if (min - 1 < 0) return;
-    next = [...new Set([...highlighted, min - 1])];
-  } else if (highlighted.some((i) => i > anchor)) {
-    const max = Math.max(...highlighted);
-    next = highlighted.filter((i) => i !== max);
-  } else {
-    if (anchor - 1 < 0) return;
-    next = [anchor, anchor - 1];
-  }
-
-  await chrome.tabs.highlight({
-    windowId: tab.windowId,
-    tabs: [anchor, ...next.filter((i) => i !== anchor)],
-  });
-}
-
 export async function moveTab({ count, tab, registryEntry }) {
   const direction = registryEntry.command === "moveTabLeft" ? -1 : 1;
+
+  // Delegate to selection mover when multiple non-pinned tabs are highlighted.
+  const allTabs = await chrome.tabs.query({ windowId: tab.windowId });
+  const selectedCount = allTabs.filter((t) => t.highlighted && !t.pinned).length;
+  if (selectedCount > 1) return moveTabSelection({ count, tab, registryEntry });
+
   // Pinned tabs and environments without tabGroups API use the original simple logic.
   if (tab.pinned || !chrome.tabGroups) {
     const tabs = await chrome.tabs.query({ currentWindow: true });

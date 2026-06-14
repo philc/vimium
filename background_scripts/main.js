@@ -11,6 +11,7 @@ import "../background_scripts/completion/search_wrapper.js";
 import "../background_scripts/tab_operations.js";
 import * as marks from "../background_scripts/marks.js";
 import * as tabGroups from "./tab_groups.js";
+import * as tabSelection from "./tab_selection.js";
 
 import {
   BookmarkCompleter,
@@ -345,8 +346,8 @@ const BackgroundCommands = {
   collapseTabGroup: tabGroups.collapseTabGroup,
   previousTabGroup: tabGroups.previousTabGroup,
   nextTabGroup: tabGroups.nextTabGroup,
-  selectNextTabForGroup: tabGroups.selectNextTabForGroup,
-  selectPreviousTabForGroup: tabGroups.selectPreviousTabForGroup,
+  selectNextTabForGroup: tabSelection.selectNextTabForGroup,
+  selectPreviousTabForGroup: tabSelection.selectPreviousTabForGroup,
   moveTabLeft: tabGroups.moveTab,
   moveTabRight: tabGroups.moveTab,
 
