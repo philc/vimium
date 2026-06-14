@@ -182,20 +182,72 @@ async function selectSpecificTab(request) {
   await chrome.tabs.update(request.id, { active: true });
 }
 
-function moveTab({ count, tab, registryEntry }) {
-  if (registryEntry.command === "moveTabLeft") {
-    count = -count;
-  }
-  return chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
-    const pinnedCount = (tabs.filter((tab) => tab.pinned)).length;
+async function moveTab({ count, tab, registryEntry }) {
+  const direction = registryEntry.command === "moveTabLeft" ? -1 : 1;
+  // Pinned tabs and environments without tabGroups API use the original simple logic.
+  if (tab.pinned || !chrome.tabGroups) {
+    const tabs = await chrome.tabs.query(visibleTabsQueryArgs);
+    const pinnedCount = tabs.filter((t) => t.pinned).length;
     const minIndex = tab.pinned ? 0 : pinnedCount;
     const maxIndex = (tab.pinned ? pinnedCount : tabs.length) - 1;
-    // The tabs array index of the new position.
-    const moveIndex = Math.max(minIndex, Math.min(maxIndex, getTabIndex(tab, tabs) + count));
-    return chrome.tabs.move(tab.id, {
-      index: tabs[moveIndex].index,
-    });
-  });
+    const moveIndex = Math.max(minIndex, Math.min(maxIndex, getTabIndex(tab, tabs) + direction * count));
+    return chrome.tabs.move(tab.id, { index: tabs[moveIndex].index });
+  }
+  for (let i = 0; i < count; i++) {
+    await moveTabOneStep(tab, direction);
+    tab = await chrome.tabs.get(tab.id);
+  }
+}
+
+// Move a non-pinned tab one step in the given direction, respecting tab group boundaries.
+async function moveTabOneStep(tab, direction) {
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const nonPinned = tabs.filter((t) => !t.pinned).sort((a, b) => a.index - b.index);
+  const pos = nonPinned.findIndex((t) => t.id === tab.id);
+  if (pos === -1) return;
+
+  // Case 1: tab is inside a group — check if it's at the boundary.
+  if (tab.groupId !== -1) {
+    const groupTabs = nonPinned.filter((t) => t.groupId === tab.groupId);
+    const atEdge = direction > 0
+      ? tab.id === groupTabs.at(-1).id
+      : tab.id === groupTabs[0].id;
+    if (atEdge) {
+      // Exit the group without moving — ungroup keeps the tab at its current index.
+      await chrome.tabs.ungroup([tab.id]);
+    } else {
+      const neighbor = nonPinned[pos + direction];
+      if (neighbor) await chrome.tabs.move(tab.id, { index: neighbor.index });
+    }
+    return;
+  }
+
+  // Case 2: tab is not in any group.
+  const neighbor = nonPinned[pos + direction];
+  if (!neighbor) return; // at window edge
+
+  if (neighbor.groupId === -1) {
+    await chrome.tabs.move(tab.id, { index: neighbor.index });
+    return;
+  }
+
+  // Neighbor belongs to a group.
+  const group = await chrome.tabGroups.get(neighbor.groupId);
+  const groupTabs = nonPinned.filter((t) => t.groupId === neighbor.groupId);
+
+  if (group.collapsed) {
+    // Skip over the entire collapsed group: land on the far side of it.
+    const edgePos = nonPinned.findIndex((t) => t.id === (direction > 0 ? groupTabs.at(-1) : groupTabs[0]).id);
+    const afterGroup = nonPinned[edgePos + direction];
+    if (!afterGroup) return; // group is flush against the window edge
+    // afterGroup.index - direction places the tab immediately next to afterGroup
+    // on the group's side, accounting for the index shift caused by the move.
+    await chrome.tabs.move(tab.id, { index: afterGroup.index - direction });
+  } else {
+    // Enter the open group. Chrome keeps the tab at its current adjacent position
+    // and adds it to the group, so no explicit move is needed.
+    await chrome.tabs.group({ tabIds: [tab.id], groupId: neighbor.groupId });
+  }
 }
 
 function createRepeatCommand(command) {
