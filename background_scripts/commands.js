@@ -487,8 +487,8 @@ const defaultKeyMappings = {
   "za": "collapseTabGroup",
   "zN": "previousTabGroup",
   "zn": "nextTabGroup",
-  "<a-J>": "selectNextTabForGroup",
-  "<a-K>": "selectPreviousTabForGroup",
+  "zz": "selectNextTabForGroup",
+  "ZZ": "selectPreviousTabForGroup",
 
   // Marks
   "m": "Marks.activateCreateMode",

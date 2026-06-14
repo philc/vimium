@@ -20,27 +20,59 @@ export function nextTabGroup({ tab }) {
   return goToTabGroup(tab, 1);
 }
 
-// Extend the highlighted tab selection to the next tab (ctrl+shift+j).
+// Extend or shrink the tab selection (zz). Vim visual-mode semantics: tab.index is the anchor.
+// - Right side extended? → extend further right.
+// - Left side extended? → shrink from the left.
+// - Nothing extended yet? → start extending right.
 export async function selectNextTabForGroup({ tab }) {
-  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const tabs = await chrome.tabs.query({ windowId: tab.windowId });
   const highlighted = tabs.filter((t) => t.highlighted).map((t) => t.index);
-  const nextIndex = Math.max(...highlighted) + 1;
-  if (nextIndex >= tabs.length) return;
+  const anchor = tab.index;
+
+  let next;
+  if (highlighted.some((i) => i > anchor)) {
+    const max = Math.max(...highlighted);
+    if (max + 1 >= tabs.length) return;
+    next = [...new Set([...highlighted, max + 1])];
+  } else if (highlighted.some((i) => i < anchor)) {
+    const min = Math.min(...highlighted);
+    next = highlighted.filter((i) => i !== min);
+  } else {
+    if (anchor + 1 >= tabs.length) return;
+    next = [anchor, anchor + 1];
+  }
+
   await chrome.tabs.highlight({
     windowId: tab.windowId,
-    tabs: [...new Set([tab.index, ...highlighted, nextIndex])],
+    tabs: [anchor, ...next.filter((i) => i !== anchor)],
   });
 }
 
-// Extend the highlighted tab selection to the previous tab (ctrl+shift+k).
+// Extend or shrink the tab selection (ZZ). Vim visual-mode semantics: tab.index is the anchor.
+// - Left side extended? → extend further left.
+// - Right side extended? → shrink from the right.
+// - Nothing extended yet? → start extending left.
 export async function selectPreviousTabForGroup({ tab }) {
-  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const tabs = await chrome.tabs.query({ windowId: tab.windowId });
   const highlighted = tabs.filter((t) => t.highlighted).map((t) => t.index);
-  const prevIndex = Math.min(...highlighted) - 1;
-  if (prevIndex < 0) return;
+  const anchor = tab.index;
+
+  let next;
+  if (highlighted.some((i) => i < anchor)) {
+    const min = Math.min(...highlighted);
+    if (min - 1 < 0) return;
+    next = [...new Set([...highlighted, min - 1])];
+  } else if (highlighted.some((i) => i > anchor)) {
+    const max = Math.max(...highlighted);
+    next = highlighted.filter((i) => i !== max);
+  } else {
+    if (anchor - 1 < 0) return;
+    next = [anchor, anchor - 1];
+  }
+
   await chrome.tabs.highlight({
     windowId: tab.windowId,
-    tabs: [...new Set([tab.index, ...highlighted, prevIndex])],
+    tabs: [anchor, ...next.filter((i) => i !== anchor)],
   });
 }
 
