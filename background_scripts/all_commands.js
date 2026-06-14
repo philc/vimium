@@ -564,7 +564,6 @@ const allCommands = [
     desc: "Select next tab",
     group: "tabs",
     background: true,
-    noRepeat: true,
   },
 
   {
@@ -572,7 +571,6 @@ const allCommands = [
     desc: "Select previous tab",
     group: "tabs",
     background: true,
-    noRepeat: true,
   },
 
   {

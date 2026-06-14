@@ -24,7 +24,13 @@ export function nextTabGroup({ tab }) {
 // - Right side extended? → extend further right.
 // - Left side extended? → shrink from the left.
 // - Nothing extended yet? → start extending right.
-export async function selectNextTabForGroup({ tab }) {
+export async function selectNextTabForGroup({ tab, count }) {
+  for (let i = 0; i < count; i++) {
+    await selectNextTabOnce(tab);
+  }
+}
+
+async function selectNextTabOnce(tab) {
   const tabs = await chrome.tabs.query({ windowId: tab.windowId });
   const highlighted = tabs.filter((t) => t.highlighted).map((t) => t.index);
   const anchor = tab.index;
@@ -52,7 +58,13 @@ export async function selectNextTabForGroup({ tab }) {
 // - Left side extended? → extend further left.
 // - Right side extended? → shrink from the right.
 // - Nothing extended yet? → start extending left.
-export async function selectPreviousTabForGroup({ tab }) {
+export async function selectPreviousTabForGroup({ tab, count }) {
+  for (let i = 0; i < count; i++) {
+    await selectPreviousTabOnce(tab);
+  }
+}
+
+async function selectPreviousTabOnce(tab) {
   const tabs = await chrome.tabs.query({ windowId: tab.windowId });
   const highlighted = tabs.filter((t) => t.highlighted).map((t) => t.index);
   const anchor = tab.index;
