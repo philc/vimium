@@ -484,14 +484,19 @@ async function removeTabsRelative(direction, { count, tab }) {
   await chrome.tabs.remove(toRemove.map((t) => t.id));
 }
 
-// Jump to the next (direction=1) or previous (direction=-1) tab group.
+// Jump to the next (direction=1) or previous (direction=-1) tab group, wrapping circularly.
 async function goToTabGroup(tab, direction) {
   if (!chrome.tabGroups) return;
   const tabs = await chrome.tabs.query({ currentWindow: true });
   const inDifferentGroup = (t) => t.groupId != -1 && t.groupId != tab.groupId;
-  const target = direction > 0
+  let target = direction > 0
     ? tabs.find((t) => t.index > tab.index && inDifferentGroup(t))
     : tabs.findLast((t) => t.index < tab.index && inDifferentGroup(t));
+  if (!target) {
+    target = direction > 0
+      ? tabs.find((t) => inDifferentGroup(t))
+      : tabs.findLast((t) => inDifferentGroup(t));
+  }
   if (target) {
     await chrome.tabGroups.update(target.groupId, { collapsed: false });
     chrome.tabs.update(target.id, { active: true });
