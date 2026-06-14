@@ -553,7 +553,7 @@ const allCommands = [
 
   {
     name: "selectNextTabForGroup",
-    desc: "Extend tab selection downward (for group creation)",
+    desc: "Select next tab",
     group: "tabs",
     background: true,
     noRepeat: true,
@@ -561,7 +561,7 @@ const allCommands = [
 
   {
     name: "selectPreviousTabForGroup",
-    desc: "Extend tab selection upward (for group creation)",
+    desc: "Select previous tab",
     group: "tabs",
     background: true,
     noRepeat: true,
