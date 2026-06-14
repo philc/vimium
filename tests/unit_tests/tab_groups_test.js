@@ -63,36 +63,48 @@ context("selectNextTabForGroup (zz)", () => {
   should("extend right when only the anchor is selected", async () => {
     const tabs = makeTabs(5, [2]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectNextTabForGroup({ tab: tabs[2] });
+    await selectNextTabForGroup({ tab: tabs[2], count: 1 });
     assert.equal([2, 3], capturedHighlight);
   });
 
   should("extend further right when right side is already extended", async () => {
     const tabs = makeTabs(5, [2, 3]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectNextTabForGroup({ tab: tabs[2] });
+    await selectNextTabForGroup({ tab: tabs[2], count: 1 });
     assert.equal([2, 3, 4], capturedHighlight);
   });
 
   should("shrink from left when left side is extended", async () => {
     const tabs = makeTabs(5, [1, 2]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectNextTabForGroup({ tab: tabs[2] });
+    await selectNextTabForGroup({ tab: tabs[2], count: 1 });
     assert.equal([2], capturedHighlight);
   });
 
   should("do nothing when anchor is at the last tab", async () => {
     const tabs = makeTabs(3, [2]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectNextTabForGroup({ tab: tabs[2] });
+    await selectNextTabForGroup({ tab: tabs[2], count: 1 });
     assert.equal(null, capturedHighlight);
   });
 
   should("do nothing when right extension already reaches the last tab", async () => {
     const tabs = makeTabs(3, [1, 2]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectNextTabForGroup({ tab: tabs[1] });
+    await selectNextTabForGroup({ tab: tabs[1], count: 1 });
     assert.equal(null, capturedHighlight);
+  });
+
+  should("extend right 3 tabs with count: 3", async () => {
+    const tabs = makeTabs(6, [2]);
+    let callCount = 0;
+    stub(chrome.tabs, "query", () => {
+      const highlighted = [2, ...Array.from({ length: callCount }, (_, i) => 3 + i)];
+      callCount++;
+      return makeTabs(6, highlighted);
+    });
+    await selectNextTabForGroup({ tab: tabs[2], count: 3 });
+    assert.equal([2, 3, 4, 5], capturedHighlight);
   });
 });
 
@@ -109,35 +121,47 @@ context("selectPreviousTabForGroup (ZZ)", () => {
   should("extend left when only the anchor is selected", async () => {
     const tabs = makeTabs(5, [2]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectPreviousTabForGroup({ tab: tabs[2] });
+    await selectPreviousTabForGroup({ tab: tabs[2], count: 1 });
     assert.equal([2, 1], capturedHighlight);
   });
 
   should("extend further left when left side is already extended", async () => {
     const tabs = makeTabs(5, [1, 2]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectPreviousTabForGroup({ tab: tabs[2] });
+    await selectPreviousTabForGroup({ tab: tabs[2], count: 1 });
     assert.equal([2, 1, 0], capturedHighlight);
   });
 
   should("shrink from right when right side is extended", async () => {
     const tabs = makeTabs(5, [2, 3]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectPreviousTabForGroup({ tab: tabs[2] });
+    await selectPreviousTabForGroup({ tab: tabs[2], count: 1 });
     assert.equal([2], capturedHighlight);
   });
 
   should("do nothing when anchor is at the first tab", async () => {
     const tabs = makeTabs(3, [0]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectPreviousTabForGroup({ tab: tabs[0] });
+    await selectPreviousTabForGroup({ tab: tabs[0], count: 1 });
     assert.equal(null, capturedHighlight);
   });
 
   should("do nothing when left extension already reaches the first tab", async () => {
     const tabs = makeTabs(3, [0, 1]);
     stub(chrome.tabs, "query", () => tabs);
-    await selectPreviousTabForGroup({ tab: tabs[1] });
+    await selectPreviousTabForGroup({ tab: tabs[1], count: 1 });
     assert.equal(null, capturedHighlight);
+  });
+
+  should("extend left 3 tabs with count: 3", async () => {
+    const tabs = makeTabs(6, [3]);
+    let callCount = 0;
+    stub(chrome.tabs, "query", () => {
+      const highlighted = [3, ...Array.from({ length: callCount }, (_, i) => 2 - i)];
+      callCount++;
+      return makeTabs(6, highlighted);
+    });
+    await selectPreviousTabForGroup({ tab: tabs[3], count: 3 });
+    assert.equal([3, 1, 2, 0], capturedHighlight);
   });
 });
