@@ -151,9 +151,14 @@ async function moveTabOneStep(tab, direction) {
 
   if (group.collapsed) {
     // Skip over the entire collapsed group: land on the far side of it.
-    const edgePos = nonPinned.findIndex((t) => t.id === (direction > 0 ? groupTabs.at(-1) : groupTabs[0]).id);
+    const edgeTab = direction > 0 ? groupTabs.at(-1) : groupTabs[0];
+    const edgePos = nonPinned.findIndex((t) => t.id === edgeTab.id);
     const afterGroup = nonPinned[edgePos + direction];
-    if (!afterGroup) return; // group is flush against the window edge
+    if (!afterGroup) {
+      // Group is flush against the window edge — land just past it.
+      await chrome.tabs.move(tab.id, { index: edgeTab.index });
+      return;
+    }
     // afterGroup.index - direction places the tab immediately next to afterGroup
     // on the group's side, accounting for the index shift caused by the move.
     await chrome.tabs.move(tab.id, { index: afterGroup.index - direction });
