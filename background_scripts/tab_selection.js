@@ -66,9 +66,6 @@ async function selectPreviousTabOnce(tab) {
   });
 }
 
-// Move the entire highlighted tab block one slot in the given direction, count times.
-// Uses a swap strategy: instead of moving all selected tabs, move the single adjacent
-// non-selected tab to the opposite side of the block.
 export async function moveTabSelection({ count, tab, registryEntry }) {
   const direction = registryEntry.command === "moveTabLeft" ? -1 : 1;
   let selected = await getSelectedNonPinned(tab.windowId);
@@ -87,49 +84,73 @@ async function moveSelectionOneStep(selected, direction) {
   const allTabs = await chrome.tabs.query({ windowId: selected[0].windowId });
   const nonPinned = allTabs.filter((t) => !t.pinned).sort((a, b) => a.index - b.index);
 
+  const selGroupId = selected[0].groupId;
+  const selectionInGroup = selGroupId !== -1 && selected.every((t) => t.groupId === selGroupId);
+
   if (direction > 0) {
-    // Move right: find the tab just right of the block.
     const rightEdge = selected[selected.length - 1];
     const rightPos = nonPinned.findIndex((t) => t.id === rightEdge.id);
     const neighbor = nonPinned[rightPos + 1];
+
+    if (selectionInGroup) {
+      if (neighbor && neighbor.groupId === selGroupId) {
+        await chrome.tabs.move(neighbor.id, { index: selected[0].index });
+      } else if (neighbor) {
+        // Rightmost-first: each tab is the last remaining group member when ungrouped,
+        // so Chrome places it just after itself — no reposition needed.
+        for (let i = selected.length - 1; i >= 0; i--) await chrome.tabs.ungroup([selected[i].id]);
+      }
+      return;
+    }
+
     if (!neighbor) return;
 
-    const sameGroup = neighbor.groupId !== -1 && selected.some((t) => t.groupId === neighbor.groupId);
-    if (neighbor.groupId === -1 || sameGroup) {
-      // Ungrouped neighbor or intra-group movement: simple swap.
+    if (neighbor.groupId === -1) {
       await chrome.tabs.move(neighbor.id, { index: selected[0].index });
     } else if (chrome.tabGroups) {
       const group = await chrome.tabGroups.get(neighbor.groupId);
       const groupTabs = nonPinned.filter((t) => t.groupId === neighbor.groupId);
       if (group.collapsed) {
-        // Move the ENTIRE collapsed group to start at selected[0].index. Chrome slides it to
-        // the left of the selection block while keeping it collapsed and intact.
-        await chrome.tabs.move(groupTabs.map((t) => t.id), { index: selected[0].index });
+        // Individual moves rightmost-first: a batch move would drop the first tab between
+        // group members, causing Chrome to absorb it into the group and uncollapse it.
+        const groupLastIndex = groupTabs[groupTabs.length - 1].index;
+        for (let i = 0; i < selected.length; i++) {
+          await chrome.tabs.move(selected[selected.length - 1 - i].id, { index: groupLastIndex - i });
+        }
       } else {
-        // Enter the open group without ripping it apart.
         await chrome.tabs.group({ tabIds: selected.map((t) => t.id), groupId: neighbor.groupId });
       }
     }
   } else {
-    // Move left: find the tab just left of the block.
     const leftEdge = selected[0];
     const leftPos = nonPinned.findIndex((t) => t.id === leftEdge.id);
     const neighbor = nonPinned[leftPos - 1];
+
+    if (selectionInGroup) {
+      if (neighbor && neighbor.groupId === selGroupId) {
+        await chrome.tabs.move(neighbor.id, { index: selected[selected.length - 1].index });
+      } else if (neighbor) {
+        // Leftmost-first: each tab is the first remaining group member when ungrouped,
+        // so Chrome places it just before itself — no reposition needed.
+        for (const t of selected) await chrome.tabs.ungroup([t.id]);
+      }
+      return;
+    }
+
     if (!neighbor) return;
 
-    const sameGroup = neighbor.groupId !== -1 && selected.some((t) => t.groupId === neighbor.groupId);
-    if (neighbor.groupId === -1 || sameGroup) {
-      // Ungrouped neighbor or intra-group movement: simple swap.
+    if (neighbor.groupId === -1) {
       await chrome.tabs.move(neighbor.id, { index: selected[selected.length - 1].index });
     } else if (chrome.tabGroups) {
       const group = await chrome.tabGroups.get(neighbor.groupId);
       const groupTabs = nonPinned.filter((t) => t.groupId === neighbor.groupId);
       if (group.collapsed) {
-        // Move the ENTIRE collapsed group to start at selected[0].index. Chrome slides it to
-        // the right of the selection block while keeping it collapsed and intact.
-        await chrome.tabs.move(groupTabs.map((t) => t.id), { index: selected[0].index });
+        // Individual moves leftmost-first: same reason as the right case above.
+        const groupFirstIndex = groupTabs[0].index;
+        for (let i = 0; i < selected.length; i++) {
+          await chrome.tabs.move(selected[i].id, { index: groupFirstIndex + i });
+        }
       } else {
-        // Enter the open group without ripping it apart.
         await chrome.tabs.group({ tabIds: selected.map((t) => t.id), groupId: neighbor.groupId });
       }
     }

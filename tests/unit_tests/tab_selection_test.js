@@ -212,14 +212,15 @@ context("moveTabSelection (>> / << with multi-tab selection)", () => {
     ];
     stub(chrome.tabs, "query", () => tabs);
     stub(chrome, "tabGroups", { get: () => ({ collapsed: true }) });
+    const moves = [];
+    stub(chrome.tabs, "move", (id, args) => moves.push({ id, index: args.index }));
     await moveTabSelection({
       count: 1,
       tab: tabs[2],
       registryEntry: { command: "moveTabRight" },
     });
-    // The GROUP [ids 5,6] should be moved to selected[0].index=1, sliding it left of the block.
-    assert.equal([5, 6], movedId);
-    assert.equal(1, movedToIndex);
+    // Rightmost first: id4→groupLast(5)-0=5, id3→5-1=4, id2→5-2=3. Group never touched.
+    assert.equal([{ id: 4, index: 5 }, { id: 3, index: 4 }, { id: 2, index: 3 }], moves);
   });
 
   should("skip over a collapsed group to the left in one step", async () => {
@@ -235,14 +236,15 @@ context("moveTabSelection (>> / << with multi-tab selection)", () => {
     ];
     stub(chrome.tabs, "query", () => tabs);
     stub(chrome, "tabGroups", { get: () => ({ collapsed: true }) });
+    const moves = [];
+    stub(chrome.tabs, "move", (id, args) => moves.push({ id, index: args.index }));
     await moveTabSelection({
       count: 1,
       tab: tabs[4],
       registryEntry: { command: "moveTabLeft" },
     });
-    // The GROUP [ids 2,3] should be moved to selected[0].index=3, sliding it right of the block.
-    assert.equal([2, 3], movedId);
-    assert.equal(3, movedToIndex);
+    // Leftmost first: id4→groupFirst(1)+0=1, id5→1+1=2, id6→1+2=3. Group never touched.
+    assert.equal([{ id: 4, index: 1 }, { id: 5, index: 2 }, { id: 6, index: 3 }], moves);
   });
 
   should("join an open group when moving the block right into it", async () => {
