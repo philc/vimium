@@ -217,9 +217,9 @@ context("moveTabSelection (>> / << with multi-tab selection)", () => {
       tab: tabs[2],
       registryEntry: { command: "moveTabRight" },
     });
-    // Selection block [ids 2,3,4] should move to groupTabs[0].index=4, skipping the group.
-    assert.equal([2, 3, 4], movedId);
-    assert.equal(4, movedToIndex);
+    // The GROUP [ids 5,6] should be moved to selected[0].index=1, sliding it left of the block.
+    assert.equal([5, 6], movedId);
+    assert.equal(1, movedToIndex);
   });
 
   should("skip over a collapsed group to the left in one step", async () => {
@@ -240,9 +240,9 @@ context("moveTabSelection (>> / << with multi-tab selection)", () => {
       tab: tabs[4],
       registryEntry: { command: "moveTabLeft" },
     });
-    // Selection block [ids 4,5,6] should move to groupTabs[0].index=1, skipping the group.
-    assert.equal([4, 5, 6], movedId);
-    assert.equal(1, movedToIndex);
+    // The GROUP [ids 2,3] should be moved to selected[0].index=3, sliding it right of the block.
+    assert.equal([2, 3], movedId);
+    assert.equal(3, movedToIndex);
   });
 
   should("join an open group when moving the block right into it", async () => {

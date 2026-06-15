@@ -94,17 +94,17 @@ async function moveSelectionOneStep(selected, direction) {
     const neighbor = nonPinned[rightPos + 1];
     if (!neighbor) return;
 
-    if (neighbor.groupId === -1) {
-      // Simple swap: move the neighbor to the left of the block.
+    const sameGroup = neighbor.groupId !== -1 && selected.some((t) => t.groupId === neighbor.groupId);
+    if (neighbor.groupId === -1 || sameGroup) {
+      // Ungrouped neighbor or intra-group movement: simple swap.
       await chrome.tabs.move(neighbor.id, { index: selected[0].index });
     } else if (chrome.tabGroups) {
       const group = await chrome.tabGroups.get(neighbor.groupId);
       const groupTabs = nonPinned.filter((t) => t.groupId === neighbor.groupId);
       if (group.collapsed) {
-        // Skip the whole collapsed group: move the block past it to groupTabs[0].index.
-        // chrome.tabs.move removes selected tabs first (remaining tabs shift left), then
-        // inserts them starting at the given index — placing them after the group. ✓
-        await chrome.tabs.move(selected.map((t) => t.id), { index: groupTabs[0].index });
+        // Move the ENTIRE collapsed group to start at selected[0].index. Chrome slides it to
+        // the left of the selection block while keeping it collapsed and intact.
+        await chrome.tabs.move(groupTabs.map((t) => t.id), { index: selected[0].index });
       } else {
         // Enter the open group without ripping it apart.
         await chrome.tabs.group({ tabIds: selected.map((t) => t.id), groupId: neighbor.groupId });
@@ -117,15 +117,17 @@ async function moveSelectionOneStep(selected, direction) {
     const neighbor = nonPinned[leftPos - 1];
     if (!neighbor) return;
 
-    if (neighbor.groupId === -1) {
-      // Simple swap: move the neighbor to the right of the block.
+    const sameGroup = neighbor.groupId !== -1 && selected.some((t) => t.groupId === neighbor.groupId);
+    if (neighbor.groupId === -1 || sameGroup) {
+      // Ungrouped neighbor or intra-group movement: simple swap.
       await chrome.tabs.move(neighbor.id, { index: selected[selected.length - 1].index });
     } else if (chrome.tabGroups) {
       const group = await chrome.tabGroups.get(neighbor.groupId);
       const groupTabs = nonPinned.filter((t) => t.groupId === neighbor.groupId);
       if (group.collapsed) {
-        // Skip the whole collapsed group: move the block past it to groupTabs[0].index.
-        await chrome.tabs.move(selected.map((t) => t.id), { index: groupTabs[0].index });
+        // Move the ENTIRE collapsed group to start at selected[0].index. Chrome slides it to
+        // the right of the selection block while keeping it collapsed and intact.
+        await chrome.tabs.move(groupTabs.map((t) => t.id), { index: selected[0].index });
       } else {
         // Enter the open group without ripping it apart.
         await chrome.tabs.group({ tabIds: selected.map((t) => t.id), groupId: neighbor.groupId });
