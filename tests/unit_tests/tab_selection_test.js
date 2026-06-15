@@ -199,6 +199,104 @@ context("moveTabSelection (>> / << with multi-tab selection)", () => {
     assert.equal(null, movedId);
   });
 
+  should("skip over a collapsed group to the right in one step", async () => {
+    // Tabs: [0, 1(sel), 2(sel), 3(sel), 4(grp99), 5(grp99), 6]
+    const tabs = [
+      { id: 1, index: 0, windowId: 1, highlighted: false, pinned: false, groupId: -1 },
+      { id: 2, index: 1, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 3, index: 2, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 4, index: 3, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 5, index: 4, windowId: 1, highlighted: false, pinned: false, groupId: 99 },
+      { id: 6, index: 5, windowId: 1, highlighted: false, pinned: false, groupId: 99 },
+      { id: 7, index: 6, windowId: 1, highlighted: false, pinned: false, groupId: -1 },
+    ];
+    stub(chrome.tabs, "query", () => tabs);
+    stub(chrome, "tabGroups", { get: () => ({ collapsed: true }) });
+    await moveTabSelection({
+      count: 1,
+      tab: tabs[2],
+      registryEntry: { command: "moveTabRight" },
+    });
+    // Selection block [ids 2,3,4] should move to groupTabs[0].index=4, skipping the group.
+    assert.equal([2, 3, 4], movedId);
+    assert.equal(4, movedToIndex);
+  });
+
+  should("skip over a collapsed group to the left in one step", async () => {
+    // Tabs: [0, 1(grp99), 2(grp99), 3(sel), 4(sel), 5(sel), 6]
+    const tabs = [
+      { id: 1, index: 0, windowId: 1, highlighted: false, pinned: false, groupId: -1 },
+      { id: 2, index: 1, windowId: 1, highlighted: false, pinned: false, groupId: 99 },
+      { id: 3, index: 2, windowId: 1, highlighted: false, pinned: false, groupId: 99 },
+      { id: 4, index: 3, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 5, index: 4, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 6, index: 5, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 7, index: 6, windowId: 1, highlighted: false, pinned: false, groupId: -1 },
+    ];
+    stub(chrome.tabs, "query", () => tabs);
+    stub(chrome, "tabGroups", { get: () => ({ collapsed: true }) });
+    await moveTabSelection({
+      count: 1,
+      tab: tabs[4],
+      registryEntry: { command: "moveTabLeft" },
+    });
+    // Selection block [ids 4,5,6] should move to groupTabs[0].index=1, skipping the group.
+    assert.equal([4, 5, 6], movedId);
+    assert.equal(1, movedToIndex);
+  });
+
+  should("join an open group when moving the block right into it", async () => {
+    let joinedTabIds = null;
+    let joinedGroupId = null;
+    stub(chrome.tabs, "group", ({ tabIds, groupId }) => {
+      joinedTabIds = tabIds;
+      joinedGroupId = groupId;
+    });
+    // Tabs: [0(sel), 1(sel), 2(sel), 3(grp99), 4(grp99)]
+    const tabs = [
+      { id: 1, index: 0, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 2, index: 1, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 3, index: 2, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 4, index: 3, windowId: 1, highlighted: false, pinned: false, groupId: 99 },
+      { id: 5, index: 4, windowId: 1, highlighted: false, pinned: false, groupId: 99 },
+    ];
+    stub(chrome.tabs, "query", () => tabs);
+    stub(chrome, "tabGroups", { get: () => ({ collapsed: false }) });
+    await moveTabSelection({
+      count: 1,
+      tab: tabs[1],
+      registryEntry: { command: "moveTabRight" },
+    });
+    assert.equal([1, 2, 3], joinedTabIds);
+    assert.equal(99, joinedGroupId);
+  });
+
+  should("join an open group when moving the block left into it", async () => {
+    let joinedTabIds = null;
+    let joinedGroupId = null;
+    stub(chrome.tabs, "group", ({ tabIds, groupId }) => {
+      joinedTabIds = tabIds;
+      joinedGroupId = groupId;
+    });
+    // Tabs: [0(grp99), 1(grp99), 2(sel), 3(sel), 4(sel)]
+    const tabs = [
+      { id: 1, index: 0, windowId: 1, highlighted: false, pinned: false, groupId: 99 },
+      { id: 2, index: 1, windowId: 1, highlighted: false, pinned: false, groupId: 99 },
+      { id: 3, index: 2, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 4, index: 3, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+      { id: 5, index: 4, windowId: 1, highlighted: true, pinned: false, groupId: -1 },
+    ];
+    stub(chrome.tabs, "query", () => tabs);
+    stub(chrome, "tabGroups", { get: () => ({ collapsed: false }) });
+    await moveTabSelection({
+      count: 1,
+      tab: tabs[3],
+      registryEntry: { command: "moveTabLeft" },
+    });
+    assert.equal([3, 4, 5], joinedTabIds);
+    assert.equal(99, joinedGroupId);
+  });
+
   should("move block right N times with count: N", async () => {
     const moves = [];
     stub(chrome.tabs, "move", (id, args) => {

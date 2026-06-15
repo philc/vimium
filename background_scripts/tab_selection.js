@@ -86,19 +86,50 @@ async function getSelectedNonPinned(windowId) {
 async function moveSelectionOneStep(selected, direction) {
   const allTabs = await chrome.tabs.query({ windowId: selected[0].windowId });
   const nonPinned = allTabs.filter((t) => !t.pinned).sort((a, b) => a.index - b.index);
+
   if (direction > 0) {
-    // Move right: take the tab just right of the block and place it left of the block.
+    // Move right: find the tab just right of the block.
     const rightEdge = selected[selected.length - 1];
     const rightPos = nonPinned.findIndex((t) => t.id === rightEdge.id);
     const neighbor = nonPinned[rightPos + 1];
     if (!neighbor) return;
-    await chrome.tabs.move(neighbor.id, { index: selected[0].index });
+
+    if (neighbor.groupId === -1) {
+      // Simple swap: move the neighbor to the left of the block.
+      await chrome.tabs.move(neighbor.id, { index: selected[0].index });
+    } else if (chrome.tabGroups) {
+      const group = await chrome.tabGroups.get(neighbor.groupId);
+      const groupTabs = nonPinned.filter((t) => t.groupId === neighbor.groupId);
+      if (group.collapsed) {
+        // Skip the whole collapsed group: move the block past it to groupTabs[0].index.
+        // chrome.tabs.move removes selected tabs first (remaining tabs shift left), then
+        // inserts them starting at the given index — placing them after the group. ✓
+        await chrome.tabs.move(selected.map((t) => t.id), { index: groupTabs[0].index });
+      } else {
+        // Enter the open group without ripping it apart.
+        await chrome.tabs.group({ tabIds: selected.map((t) => t.id), groupId: neighbor.groupId });
+      }
+    }
   } else {
-    // Move left: take the tab just left of the block and place it right of the block.
+    // Move left: find the tab just left of the block.
     const leftEdge = selected[0];
     const leftPos = nonPinned.findIndex((t) => t.id === leftEdge.id);
     const neighbor = nonPinned[leftPos - 1];
     if (!neighbor) return;
-    await chrome.tabs.move(neighbor.id, { index: selected[selected.length - 1].index });
+
+    if (neighbor.groupId === -1) {
+      // Simple swap: move the neighbor to the right of the block.
+      await chrome.tabs.move(neighbor.id, { index: selected[selected.length - 1].index });
+    } else if (chrome.tabGroups) {
+      const group = await chrome.tabGroups.get(neighbor.groupId);
+      const groupTabs = nonPinned.filter((t) => t.groupId === neighbor.groupId);
+      if (group.collapsed) {
+        // Skip the whole collapsed group: move the block past it to groupTabs[0].index.
+        await chrome.tabs.move(selected.map((t) => t.id), { index: groupTabs[0].index });
+      } else {
+        // Enter the open group without ripping it apart.
+        await chrome.tabs.group({ tabIds: selected.map((t) => t.id), groupId: neighbor.groupId });
+      }
+    }
   }
 }
