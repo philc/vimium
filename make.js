@@ -91,7 +91,7 @@ async function parseManifestFile() {
   return JSON5.parse(await Deno.readTextFile("./manifest.json"));
 }
 
-async function checkForBuildIssues() {
+async function checkForCommonBuildIssues() {
   // Ensure the version number is properly formed.
   const chromeManifest = await parseManifestFile();
   const version = chromeManifest["version"];
@@ -110,9 +110,79 @@ async function checkForBuildIssues() {
   }
 }
 
+// Verify all files referenced in the manifest are present in dist.
+async function checkFilesFromManifestArePresent(manifest) {
+  const t = getPathsFromManifest(manifest);
+  const missing = [];
+
+  for (const file of getPathsFromManifest(manifest)) {
+    const exists = await fs.exists(path.join("dist/vimium", file));
+    if (!exists) {
+      missing.push(file);
+    }
+  }
+
+  if (missing.length > 0) {
+    const msg = "These files are referenced in manifest.json but missing from the build:\n" +
+      missing.map((f) => `  ${f}`).join("\n");
+    throw new Error(msg);
+  }
+}
+
+// Returns all file paths referenced in a parsed manifest object, excluding glob patterns.
+function getPathsFromManifest(manifest) {
+  let files = [];
+
+  files = files.concat(Object.values(manifest.icons));
+
+  if (manifest.background.service_worker) {
+    files.push(manifest.background.service_worker);
+  }
+
+  if (manifest.background.scripts) {
+    files = files.concat(manifest.background.scripts);
+  }
+
+  files.push(manifest.options_ui.page);
+  files.push(manifest.action.default_popup);
+
+  // The shape of the default_icon structure is different in Chrome vs. Firefox.
+  const icon = manifest.action.default_icon;
+  if (typeof icon === "string") {
+    files.push(icon);
+  } else {
+    files = files.concat(Object.values(icon));
+  }
+
+  for (const script of manifest.content_scripts) {
+    if (script.js) {
+      files = files.concat(script.js);
+    }
+    if (script.css) {
+      files = files.concat(script.css);
+    }
+  }
+
+  for (const obj of manifest.web_accessible_resources) {
+    for (const resource of (obj.resources)) {
+      // Skip files with glob patterns.
+      if (resource.includes("*")) {
+        continue;
+      }
+      files.push(resource);
+    }
+  }
+
+  if (files.some((f) => f == null)) {
+    throw new Error("manifest.json is missing a path that was expected by getPathsFromManifest");
+  }
+  // Remove duplicates.
+  return Array.from(new Set(files)).sort();
+}
+
 // Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/.
 async function buildStorePackage() {
-  await checkForBuildIssues();
+  await checkForCommonBuildIssues();
 
   const excludeList = [
     "*.md",
@@ -155,6 +225,8 @@ async function buildStorePackage() {
   ]);
   await shell("rsync", rsyncOptions);
 
+  await checkFilesFromManifestArePresent(chromeManifest);
+
   // Build the Firefox / Mozilla Addons store package.
   const firefoxManifest = createFirefoxManifest(chromeManifest);
   await writeDistManifest(firefoxManifest);
@@ -163,6 +235,8 @@ async function buildStorePackage() {
     "-c",
     `${zipCommand} ../firefox/vimium-firefox-${version}.zip . -x icons/*.png`,
   ]);
+
+  await checkFilesFromManifestArePresent(firefoxManifest);
 
   // Build the Chrome Store package.
   await writeDistManifest(chromeManifest);

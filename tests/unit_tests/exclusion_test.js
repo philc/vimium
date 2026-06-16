@@ -1,7 +1,4 @@
 import "./test_helper.js";
-
-Utils.getCurrentVersion = () => "1.44";
-
 import "../../lib/settings.js";
 import "../../background_scripts/bg_utils.js";
 import * as exclusions from "../../background_scripts/exclusions.js";

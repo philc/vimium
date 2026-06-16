@@ -14,7 +14,8 @@ import "../lib/handler_stack.js";
 import * as UIComponentMessenger from "./ui_component_messenger.js";
 import * as userSearchEngines from "../background_scripts/user_search_engines.js";
 
-export let ui; // An instance of VomnibarUI.
+// An instance of VomnibarUI. Exported for use by tests.
+export let ui;
 
 // Used for tests.
 export function reset() {
@@ -32,6 +33,7 @@ export async function activate(options) {
     newTab: false,
     selectFirst: false,
     keyword: null,
+    prefixCount: 1,
   };
 
   options = Object.assign(defaults, options);
@@ -44,6 +46,7 @@ export async function activate(options) {
   ui.setInitialSelectionValue(options.selectFirst ? 0 : -1);
   ui.setForceNewTab(options.newTab);
   ui.setQuery(options.query);
+  ui.setPrefixCount(options.prefixCount);
   ui.setActiveUserSearchEngine(userSearchEngines.keywordToEngine[options.keyword]);
   // Use await here for vomnibar_test.js, so that this page doesn't get unloaded while a test is
   // running.
@@ -70,16 +73,24 @@ class VomnibarUI {
   setActiveUserSearchEngine(userSearchEngine) {
     this.activeUserSearchEngine = userSearchEngine;
   }
-
   setInitialSelectionValue(initialSelectionValue) {
     this.initialSelectionValue = initialSelectionValue;
   }
   setForceNewTab(forceNewTab) {
     this.forceNewTab = forceNewTab;
   }
+
+  // name: one of [omni, bookmarks, commands, tabs].
   setCompleterName(name) {
     this.completerName = name;
+    const capitalize = (s) => s[0].toUpperCase() + s.slice(1);
+    const placeholder = (name == "omni") ? "" : capitalize(name);
+    this.input.setAttribute("placeholder", placeholder);
     this.reset();
+  }
+
+  setPrefixCount(prefixCount) {
+    this.prefixCount = prefixCount;
   }
 
   // True if the user has entered the keyword of one of their custom search engines.
@@ -217,7 +228,10 @@ class VomnibarUI {
       await this.handleEnterKey(event);
     } else if (action === "ctrl-enter") {
       // Populate the vomnibar with the current selection's URL.
-      if (!this.isUserSearchEngineActive() && (this.selection >= 0)) {
+      if (
+        !this.isUserSearchEngineActive() && this.completerName != "commands" &&
+        (this.selection >= 0)
+      ) {
         if (this.previousInputValue == null) {
           this.previousInputValue = this.input.value;
         }
@@ -264,8 +278,8 @@ class VomnibarUI {
 
     // If the user types something and hits enter without selecting a completion from the list,
     // then:
-    //   - If they've activated a custom search engine in the Vomnibar, then launch that search
-    //     using the typed-in query.
+    //   - If they've activated a custom search engine in the Vomnibar, launch that search using the
+    //     typed-in query.
     //   - Otherwise, open the query as a URL or create a default search as appropriate.
     //
     //  When launching a query in a custom search engine, the user may have typed more text than
@@ -275,6 +289,19 @@ class VomnibarUI {
     if (waitingOnCompletions || this.selection == -1) {
       // <Enter> on an empty query is a no-op.
       if (query.length == 0) return;
+
+      // If the user typed a custom search engine keyword, use that directly. This handles the race
+      // condition where the user hits Enter before the async completions response arrives
+      // (waitingOnCompletions).
+      if (this.isUserSearchEngineActive()) {
+        query = UrlUtils.createSearchUrl(query, this.activeUserSearchEngine.url);
+        this.hide(() => this.launchUrl(query, openInNewTab));
+        return;
+      }
+
+      // <Enter> with no selection on a completer other than "omni" is a no-op.
+      if (this.completerName != "omni") return;
+
       const firstCompletion = this.completions[0];
       const isPrimary = isPrimarySearchSuggestion(firstCompletion);
       if (isPrimary) {
@@ -300,6 +327,14 @@ class VomnibarUI {
     } else if (isPrimarySearchSuggestion(completion)) {
       query = UrlUtils.createSearchUrl(query, completion.searchUrl);
       this.hide(() => this.launchUrl(query, openInNewTab));
+    } else if (completion.command) {
+      this.hide(async () => {
+        await chrome.runtime.sendMessage({
+          handler: "runNormalModeCommand",
+          command: completion.command.registryEntry,
+          count: this.prefixCount,
+        });
+      });
     } else {
       this.hide(() => this.openCompletion(completion, openInNewTab));
     }
@@ -341,7 +376,7 @@ class VomnibarUI {
   }
 
   renderCompletions(completions) {
-    this.completionList.innerHTML = completions.map((c) => `<li>${c.html}</li>`).join("");
+    this.completionList.innerHTML = completions.map((c) => `<li>${c.html}</li>`).join("\n");
     this.completionList.style.display = completions.length > 0 ? "block" : "";
   }
 
@@ -441,8 +476,6 @@ class VomnibarUI {
     document.addEventListener("click", () => this.hide());
   }
 }
-
-let vomnibarInstance;
 
 function init() {
   UIComponentMessenger.init();

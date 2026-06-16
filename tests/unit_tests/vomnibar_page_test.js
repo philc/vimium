@@ -1,7 +1,15 @@
 import * as testHelper from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
-import { Suggestion } from "../../background_scripts/completion/completers.js";
+import {
+  CommandCompleter,
+  MultiCompleter,
+  Suggestion,
+} from "../../background_scripts/completion/completers.js";
 import * as vomnibarPage from "../../pages/vomnibar_page.js";
+import * as userSearchEngines from "../../background_scripts/user_search_engines.js";
+import { allCommands } from "../../background_scripts/all_commands.js";
+import { Commands, RegistryEntry } from "../../background_scripts/commands.js";
+import { filterCompleter } from "./completion/completers_test.js";
 
 function newKeyEvent(properties) {
   return Object.assign(
@@ -90,5 +98,38 @@ context("vomnibar page", () => {
     ui.onInput();
     // The query should not be treated as a user search engine.
     assert.equal("constructor ", ui.input.value);
+  });
+
+  should("use custom search engine when enter is pressed before completions arrive", async () => {
+    userSearchEngines.set("e: https://www.example.com/search?q=%s Example");
+
+    let capturedUrl = null;
+    stub(chrome.runtime, "sendMessage", async (message) => {
+      // Return a never-resolving promise for filterCompletions to simulate the race condition where
+      // the user hits Enter before the background page responds with completions.
+      if (message.handler === "filterCompletions") return new Promise(() => {});
+      if (message.handler === "openUrlInCurrentTab") capturedUrl = message.url;
+    });
+
+    ui.setQuery("e hello");
+    ui.onInput();
+    // completions is empty because the filterCompletions stub, above, is unresolved.
+    assert.equal(0, ui.completions.length);
+
+    await ui.onKeyEvent(newKeyEvent({ type: "keypress", key: "Enter" }));
+    ui.onHidden();
+
+    assert.equal("https://www.example.com/search?q=hello", capturedUrl);
+  });
+
+  should("create command suggestions with correct HTML for key bindings", async () => {
+    await Commands.loadKeyMappings("");
+    const multiCompleter = new MultiCompleter([new CommandCompleter()]);
+    const suggestions = await filterCompleter(multiCompleter, ["go", "tab", "right"]);
+    stub(chrome.runtime, "sendMessage", async () => suggestions);
+    await ui.updateCompletions();
+    assert.equal(1, ui.completionList.childNodes.length);
+    const keys = Array.from(ui.completionList.querySelectorAll(".key")).map((x) => x.textContent);
+    assert.equal(["K", "gt"], keys);
   });
 });

@@ -37,15 +37,17 @@ context("settings", () => {
       await Settings.clear();
     });
 
-    should("Handle about:newtab new tab URL", async () => {
-      await chrome.storage.sync.set({ newTabUrl: "about:newtab" });
+    should("Handle null newTabUrl", async () => {
+      // Users who never changed newTabUrl from its old default ("about:newtab") won't have it
+      // stored, because Settings.pruneOutDefaultValues removes keys equal to the default. The
+      // migration should still set browserNewTabPage as the destination.
       await Settings.load();
       const settings = Settings.getSettings();
       assert.equal(Settings.newTabDestinations.browserNewTabPage, settings.newTabDestination);
     });
 
     should("Remove deprecated option", async () => {
-      await chrome.storage.sync.set({ newTabUrl: "about:newtab" });
+      await chrome.storage.sync.set({ newTabUrl: "pages/blank.html" });
       await Settings.load();
       const settings = Settings.getSettings();
       assert.isFalse(Object.hasOwn(settings, "newTabUrl"));
@@ -64,6 +66,29 @@ context("settings", () => {
       const settings = Settings.getSettings();
       assert.equal(Settings.newTabDestinations.customUrl, settings.newTabDestination);
       assert.equal("https://example.com", settings.newTabCustomUrl);
+    });
+  });
+
+  context("v2.4.1 migration", () => {
+    setup(async () => {
+      await chrome.storage.sync.set({ settingsVersion: "2.4.0" });
+    });
+
+    teardown(async () => {
+      await Settings.clear();
+    });
+
+    should("Sets default/missing newTabDestination to browserNewTabPage", async () => {
+      await Settings.load();
+      const settings = Settings.getSettings();
+      assert.equal(Settings.newTabDestinations.browserNewTabPage, settings.newTabDestination);
+    });
+
+    should("Preserve customUrl destination", async () => {
+      await chrome.storage.sync.set({ newTabDestination: Settings.newTabDestinations.customUrl });
+      await Settings.load();
+      const settings = Settings.getSettings();
+      assert.equal(Settings.newTabDestinations.customUrl, settings.newTabDestination);
     });
   });
 });

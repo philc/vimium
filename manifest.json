@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Vimium",
-  "version": "2.4.0",
+  "version": "2.4.2",
   "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
   "icons": {
     "16": "icons/icon16.png",
@@ -110,7 +110,7 @@
         "content_scripts/vimium.css",
         "pages/hud_page.html",
         "pages/help_dialog_page.html",
-        "pages/doc_completion_engines.html",
+        "pages/doc_search_completion.html",
         "pages/command_listing.html",
         "resources/tlds.txt",
         // This allows one to script the reloading of Vimium.

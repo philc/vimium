@@ -1,6 +1,5 @@
-//
 // This file contains stubs for a number of browser and chrome APIs which are missing in Deno.
-//
+import JSON5 from "npm:json5";
 
 // There are 3 chrome.storage.* objects with identical APIs.
 // - areaName: one of "local", "sync", "session".
@@ -60,12 +59,25 @@ const createStorageAPI = (areaName) => {
 globalThis.chrome = {
   areRunningVimiumTests: true,
 
+  _manifest: null,
+
+  _loadManifest: async function () {
+    this._manifest = JSON5.parse(await Deno.readTextFile("./manifest.json"));
+  },
+
+  _getManifest: function () {
+    if (!this._manifest) {
+      throw new Error("manifest.json has not yet been read.");
+    }
+    return this._manifest;
+  },
+
   runtime: {
     getURL() {
       return "";
     },
     getManifest() {
-      return { version: "1.2.3" };
+      return chrome._getManifest();
     },
     onConnect: {
       addListener() {
@@ -217,3 +229,5 @@ globalThis.chrome = {
     getTree: () => [],
   },
 };
+
+await chrome._loadManifest();
