@@ -89,6 +89,53 @@ const KeyMappingsParser = {
       }
     };
 
+    const mapCharacter = (from, to) => {
+      const fromChar = this.parseKeySequence(from);
+      const toChar = this.parseKeySequence(to);
+      const isValid = fromChar.length == toChar.length && toChar.length === 1;
+      if (isValid) {
+        mapKeyRegistry[fromChar[0]] = toChar[0];
+      } else {
+        errors.push(
+          `mapkey/langmap only support mapping keys which are single characters`,
+        );
+      }
+    };
+
+    const parseLangmap = (langmap) => {
+      let escape = false;
+      let current = [];
+      let left = [];
+      for (const c of langmap) {
+        if (escape) {
+          current.push(c);
+          escape = false;
+          continue;
+        }
+        if (c === ";") {
+          left = current;
+          current = [];
+          continue;
+        }
+        current.push(c);
+      }
+      if (left.length > 0) {
+        if (left.length !== current.length) {
+          errors.push(`Incorrect usage for langmap in the line: ${line}`);
+          return;
+        }
+        for (let i = 0; i < left.length; i++) {
+          mapCharacter(left[i], current[i]);
+        }
+      } else if (current.length % 2 === 0) {
+        for (let i = 0; i < current.length - 1; i += 2) {
+          mapCharacter(current[i], current[i + 1]);
+        }
+      } else {
+        errors.push(`Incorrect usage for langmap in the line: ${line}`);
+      }
+    };
+
     for (const line of configLines) {
       const tokens = line.split(/\s+/);
       const action = tokens[0].toLowerCase();
@@ -173,17 +220,36 @@ const KeyMappingsParser = {
             errors.push(`Incorrect usage for mapKey in the line: ${line}`);
             continue;
           }
-          const fromChar = this.parseKeySequence(tokens[1]);
-          const toChar = this.parseKeySequence(tokens[2]);
-          // NOTE(philc): I'm not sure why we enforce that the fromChar and toChar have to be
-          // length one. It's been that way since this feature was introduced in 6596e30.
-          const isValid = fromChar.length == toChar.length && toChar.length === 1;
-          if (isValid) {
-            mapKeyRegistry[fromChar[0]] = toChar[0];
-          } else {
-            errors.push(
-              `mapkey only supports mapping keys which are single characters. Line: ${line}`,
-            );
+          mapCharacter(tokens[1], tokens[2]);
+          break;
+        }
+        case "langmap": {
+          if (tokens.length !== 2) {
+            errors.push(`Incorrect usage for langmap in the line: ${line}`);
+            continue;
+          }
+          const langmap = tokens[1];
+          let escape = false;
+          let current = [];
+          for (const c of langmap) {
+            if (escape) {
+              current.push(c);
+              escape = false;
+              continue;
+            }
+            if (c === ",") {
+              parseLangmap(current);
+              current = [];
+              continue;
+            }
+            if (c === "\\") {
+              escape = true;
+              continue;
+            }
+            current.push(c);
+          }
+          if (current.length > 0) {
+            parseLangmap(current);
           }
           break;
         }
