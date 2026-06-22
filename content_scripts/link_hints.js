@@ -380,7 +380,7 @@ class LinkHintsMode {
     // This count is used to rank equal-scoring hints when sorting, thereby making JavaScript's sort
     // stable.
     this.stableSortCount = 0;
-    this.hintMarkers = hintDescriptors.map((desc) => this.createMarkerFor(desc));
+    this.hintMarkers = hintDescriptors.map((desc) => this.createMarkerFor(desc, mode));
     this.markerMatcher = Settings.get("filterLinkHints") ? new FilterHints() : new AlphabetHints();
     this.markerMatcher.fillInMarkers(this.hintMarkers);
 
@@ -473,7 +473,7 @@ class LinkHintsMode {
   }
 
   // Creates a link marker for the given link.
-  createMarkerFor(desc) {
+  createMarkerFor(desc, mode) {
     const marker = new HintMarker();
     const isLocalMarker = desc.frameId === frameId;
     if (isLocalMarker) {
@@ -483,7 +483,7 @@ class LinkHintsMode {
       el.style.top = localHint.rect.top + "px";
       // Note that Vimium's CSS is user-customizable. We're adding the "vimiumHintMarker" class here
       // for users to customize. See further comments about this in vimium.css.
-      el.className = "vimium-reset internal-vimium-hint-marker vimiumHintMarker";
+      el.className = `vimium-reset internal-vimium-hint-marker vimiumHintMarker ${mode.name}`;
       Object.assign(marker, {
         element: el,
         localHint,
