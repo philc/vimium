@@ -300,6 +300,7 @@ textarea:focus {
 
 input[name="pattern"],
 input[name="passKeys"],
+input[name="blockedKeys"],
 .exclusion-header-text {
   width: 100%;
   font-family: Consolas, "Liberation Mono", Courier, monospace;

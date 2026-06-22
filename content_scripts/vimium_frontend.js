@@ -445,6 +445,7 @@ async function checkIfEnabledForUrl() {
 
   if (normalMode == null) installModes();
   normalMode.setPassKeys(response.passKeys);
+  normalMode.setBlockedKeys(response.blockedKeys);
   // Hide the HUD if we're not enabled.
   if (!isEnabledForUrl) HUD.hide(true, false);
 }

@@ -22,6 +22,7 @@
               <tr>
                 <td><span class="exclusion-header-text">Patterns</span></td>
                 <td><span class="exclusion-header-text">Keys to exclude</span></td>
+                <td><span class="exclusion-header-text">Keys to block</span></td>
               </tr>
             </table>
           </div>
@@ -32,6 +33,8 @@
           "Patterns" are URL regular expressions. <code>*</code> will match zero or more characters.
           <br>
           "Keys": Vimium will exclude these keys and pass them through to the page.
+          <br>
+          "Keys to block": Vimium will suppress these keys so the page never receives them.
         </div>
 
         <h2>Custom key mappings</h2>
@@ -272,6 +275,9 @@ b: http://b.com/?q=%s description
         </td>
         <td>
           <input type="text" name="passKeys" spellcheck="false" placeholder="All" />
+        </td>
+        <td>
+          <input type="text" name="blockedKeys" spellcheck="false" placeholder="None" />
         </td>
         <td>
           <input type="button" class="remove" value="&#x2716;" />
