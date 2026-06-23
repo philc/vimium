@@ -74,7 +74,7 @@ const HUD = {
 
   // duration - if omitted, the message will show until dismissed.
   async show(text, duration) {
-    await DomUtils.documentComplete();
+    await DomUtils.documentReady();
     clearTimeout(this._showForDurationTimerId);
     // @hudUI.activate will take charge of making it visible
     await this.init(false);
@@ -88,7 +88,7 @@ const HUD = {
 
   async showFindMode(findMode = null) {
     this.findMode = findMode;
-    await DomUtils.documentComplete();
+    await DomUtils.documentReady();
     await this.init();
     this.hudUI.show({ name: "showFindMode" });
     this.tween.fade(1.0, 150);
@@ -177,14 +177,14 @@ const HUD = {
   // * events.
   // * the HUD shouldn't be active for this frame while any of the copy/paste commands are running.
   async copyToClipboard(text) {
-    await DomUtils.documentComplete();
+    await DomUtils.documentReady();
     await this.init();
     this.hudUI.postMessage({ name: "copyToClipboard", data: text });
   },
 
   async pasteFromClipboard(pasteListener) {
     this.pasteListener = pasteListener;
-    await DomUtils.documentComplete();
+    await DomUtils.documentReady();
     await this.init();
     this.tween.fade(0, 0);
     this.hudUI.postMessage({ name: "pasteFromClipboard" });
