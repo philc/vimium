@@ -74,3 +74,27 @@ context("TabOperations openUrlInNewTab", () => {
     assert.equal(2, queryInfo.tabId);
   });
 });
+
+context("TabOperations openUrlInNewWindow", () => {
+  should("open a regular URL in a new window", async () => {
+    let windowConfig = null;
+    stub(chrome.windows, "create", (config) => {
+      windowConfig = config;
+    });
+    const expected = "http://example.com";
+    await to.openUrlInNewWindow({ url: expected });
+    assert.equal(expected, windowConfig.url);
+    assert.isTrue(windowConfig.focused);
+  });
+
+  should("omit about:newtab URL in window config", async () => {
+    let windowConfig = null;
+    stub(chrome.windows, "create", (config) => {
+      windowConfig = config;
+    });
+    await to.openUrlInNewWindow({ url: "about:newtab" });
+    // about:newtab matches chromeNewTabUrl, so the url should be omitted.
+    // Before the fix, this threw ReferenceError: tabConfig is not defined.
+    assert.isFalse("url" in windowConfig);
+  });
+});

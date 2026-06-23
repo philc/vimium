@@ -222,6 +222,17 @@ context("Validate commands and options data structures", () => {
     }
   });
 
+  should("have LinkHints.activateModeToOpenInNewWindow command", () => {
+    const commandsByName = Utils.keyBy(allCommands, "name");
+    const cmd = commandsByName["LinkHints.activateModeToOpenInNewWindow"];
+    if (cmd == null) assert.fail("Command not found in allCommands");
+    assert.equal("navigation", cmd.group);
+    // Verify it's also in NormalModeCommands.
+    if (globalThis.NormalModeCommands["LinkHints.activateModeToOpenInNewWindow"] == null) {
+      assert.fail("Command not found in NormalModeCommands");
+    }
+  });
+
   should("have valid commands for each default key mapping", () => {
     const commandsByName = Utils.keyBy(allCommands, "name");
     for (const [key, commandString] of Object.entries(defaultKeyMappings)) {
