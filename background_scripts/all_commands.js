@@ -643,6 +643,14 @@ const allCommands = [
     noRepeat: true,
     topFrame: true,
   },
+
+  {
+    name: "noop",
+    desc: "No-op (do nothing); useful to override/unmap native browser mappings",
+    group: "misc",
+    noRepeat: true,
+    topFrame: true,
+  },
 ];
 
 export { allCommands };
