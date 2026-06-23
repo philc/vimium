@@ -187,10 +187,8 @@ iframe.vimium-hud-frame {
   position: fixed;
   width: 20%;
   min-width: 350px;
-  height: 58px;
-  bottom: -14px;
-  right: 20px;
-  margin: 0 0 0 -40%;
+  bottom: 0;
+  right: 0;
   border: none;
   z-index: 2147483647;
   opacity: 0;
