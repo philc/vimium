@@ -58,6 +58,7 @@ export class Suggestion {
   // The generated HTML string for showing this suggestion in the Vomnibar.
   html;
   searchUrl;
+  groupData;
 
   constructor(options) {
     Object.seal(this);
@@ -741,10 +742,12 @@ export class MultiCompleter {
     const queryTerms = request.queryTerms;
 
     // The only UX where we support showing results when there are no query terms is via
-    // Vomnibar.activateTabSelection, where we show the list of open tabs by recency.
-    const isTabCompleter = this.completers.length == 1 &&
-      this.completers[0] instanceof TabCompleter;
-    if (queryTerms.length == 0 && !isTabCompleter) {
+    // Vomnibar.activateTabSelection, and completers that explicitly opt in via showResultsWithNoQuery.
+    const showsEmptyResults = this.completers.length == 1 && (
+      this.completers[0] instanceof TabCompleter ||
+      this.completers[0].showResultsWithNoQuery
+    );
+    if (queryTerms.length == 0 && !showsEmptyResults) {
       return [];
     }
 
