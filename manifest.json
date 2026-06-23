@@ -94,6 +94,11 @@
   //     "strict_min_version": "109.0"
   //   }
   // },
+  "commands": {
+    "toggleGloballyDisabled": {
+      "description": "Toggle Vimium on/off"
+    }
+  },
   "action": {
     "default_icon": {
       "16": "icons/action_disabled_16.png",
