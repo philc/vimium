@@ -50,7 +50,7 @@ class BaseEngine {
 export class Google extends BaseEngine {
   constructor() {
     super({
-      engineUrl: "http://suggestqueries.google.com/complete/search?client=chrome&q=%s",
+      engineUrl: "https://suggestqueries.google.com/complete/search?client=chrome&q=%s",
       regexps: ["^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/"],
       example: {
         searchUrl: "https://www.google.com/search?q=%s",
@@ -70,7 +70,7 @@ export class GoogleMaps extends BaseEngine {
   constructor() {
     super({
       engineUrl:
-        `http://suggestqueries.google.com/complete/search?client=chrome&ds=yt&q=${googleMapsPrefix}%s`,
+        `https://suggestqueries.google.com/complete/search?client=chrome&ds=yt&q=${googleMapsPrefix}%s`,
       regexps: ["^https?://[a-z]+\\.google\\.(com|ie|co\\.(uk|jp)|ca|com\\.au)/maps"],
       example: {
         searchUrl: "https://www.google.com/maps?q=%s",
@@ -94,7 +94,7 @@ search.\
 export class Youtube extends BaseEngine {
   constructor() {
     super({
-      engineUrl: "http://suggestqueries.google.com/complete/search?client=chrome&ds=yt&q=%s",
+      engineUrl: "https://suggestqueries.google.com/complete/search?client=chrome&ds=yt&q=%s",
       regexps: ["^https?://[a-z]+\\.youtube\\.com/results"],
       example: {
         searchUrl: "https://www.youtube.com/results?search_query=%s",
