@@ -344,6 +344,7 @@ const BackgroundCommands = {
   },
   toggleMuteTab,
   collapseTabGroup: tabGroups.collapseTabGroup,
+  collapseAllTabGroups: tabGroups.collapseAllTabGroups,
   previousTabGroup: tabGroups.previousTabGroup,
   nextTabGroup: tabGroups.nextTabGroup,
   selectNextTabForGroup: tabSelection.selectNextTabForGroup,

@@ -3,14 +3,47 @@ import { moveTabSelection } from "./tab_selection.js";
 
 export async function collapseTabGroup({ tab }) {
   if (!chrome.tabGroups || tab.groupId == -1) return;
-  const tabs = await chrome.tabs.query({ currentWindow: true });
-  let nextTab = tabs.find((t) => t.index > tab.index && t.groupId != tab.groupId) ||
-    tabs.findLast((t) => t.index < tab.index && t.groupId != tab.groupId);
+  const groupId = tab.groupId;
+
+  let nextTab = await bgUtils.getLastActiveTab({
+    windowId: tab.windowId,
+    excludeTabId: tab.id,
+    isValid: (t) => t.groupId !== groupId,
+  });
+  if (!nextTab) {
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    nextTab = tabs.find((t) => t.index > tab.index && t.groupId != groupId) ||
+      tabs.findLast((t) => t.index < tab.index && t.groupId != groupId);
+  }
   if (!nextTab && !bgUtils.isFirefox()) {
     nextTab = await chrome.tabs.create({});
   }
   if (nextTab) await chrome.tabs.update(nextTab.id, { active: true });
-  chrome.tabGroups.update(tab.groupId, { collapsed: true });
+  chrome.tabGroups.update(groupId, { collapsed: true });
+}
+
+// Collapse every expanded tab group in the window, then jump to the last active
+// ungrouped tab (or open a new one if none exists).
+export async function collapseAllTabGroups({ tab }) {
+  if (!chrome.tabGroups) return;
+
+  const groups = await chrome.tabGroups.query({ windowId: tab.windowId, collapsed: false });
+  await Promise.all(groups.map((g) => chrome.tabGroups.update(g.id, { collapsed: true })));
+
+  let nextTab = await bgUtils.getLastActiveTab({
+    windowId: tab.windowId,
+    excludeTabId: tab.id,
+    isValid: (t) => t.groupId === -1,
+  });
+  if (!nextTab) {
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    nextTab = tabs.find((t) => t.index > tab.index && t.groupId === -1) ||
+      tabs.findLast((t) => t.index < tab.index && t.groupId === -1);
+  }
+  if (!nextTab && !bgUtils.isFirefox()) {
+    nextTab = await chrome.tabs.create({});
+  }
+  if (nextTab) await chrome.tabs.update(nextTab.id, { active: true });
 }
 
 export function previousTabGroup({ tab }) {

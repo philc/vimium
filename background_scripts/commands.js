@@ -486,6 +486,7 @@ const defaultKeyMappings = {
   "zo": "zoomOut",
   "z0": "zoomReset",
   "za": "collapseTabGroup",
+  "zA": "collapseAllTabGroups",
   "zN": "previousTabGroup",
   "zn": "nextTabGroup",
   "zz": "selectNextTabForGroup",

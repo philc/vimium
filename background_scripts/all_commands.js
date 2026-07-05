@@ -544,6 +544,14 @@ const allCommands = [
   },
 
   {
+    name: "collapseAllTabGroups",
+    desc: "Collapse all tab groups and jump to last active ungrouped tab",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
     name: "previousTabGroup",
     desc: "Switch to previous tab group",
     group: "tabs",
