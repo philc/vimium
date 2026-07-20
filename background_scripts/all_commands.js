@@ -350,14 +350,6 @@ const allCommands = [
   },
 
   {
-    name: "Vomnibar.activateCommandSelection",
-    desc: "Execute a Vimium command",
-    group: "vomnibar",
-    topFrame: true,
-    noRepeat: true,
-  },
-
-  {
     name: "Vomnibar.activateTabSelection",
     desc: "Search through your open tabs",
     group: "vomnibar",
@@ -376,6 +368,14 @@ const allCommands = [
   {
     name: "Vomnibar.activateEditUrlInNewTab",
     desc: "Edit the current URL and open in a new tab",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "Vomnibar.activateCommandSelection",
+    desc: "Execute a Vimium command",
     group: "vomnibar",
     topFrame: true,
     noRepeat: true,
