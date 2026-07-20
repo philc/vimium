@@ -30,8 +30,34 @@ context("TabOperations openurlInCurrentTab", () => {
       details = _details;
     });
     const expected = "javascript:console.log('hello')";
-    await to.openUrlInCurrentTab({ url: expected });
+    await to.openUrlInCurrentTab({ url: expected }, { frameId: 0 });
     assert.equal(expected, details.args[0]);
+  });
+
+  should("allow opening a javascript URL requested from the vomnibar's iframe", async () => {
+    let details = null;
+    stub(chrome.scripting, "executeScript", (_details) => {
+      details = _details;
+    });
+    const expected = "javascript:console.log('hello')";
+    // The vomnibar's iframe is a distinct frame with its own (non-zero) frameId, so it's
+    // identified as trusted via its chrome-extension:// URL rather than via frameId.
+    const sender = { frameId: 7, url: "chrome-extension://abc/pages/vomnibar_page.html" };
+    await to.openUrlInCurrentTab({ url: expected }, sender);
+    assert.equal(expected, details.args[0]);
+  });
+
+  should("disallow opening a javascript URL requested from an untrusted subframe", async () => {
+    let called = false;
+    stub(console, "warn", () => {}); // Silence the warning during this test.
+    stub(chrome.scripting, "executeScript", () => {
+      called = true;
+    });
+    const url = "javascript:console.log('hello')";
+    // Simulates a cross-origin subframe (not the top frame, not one of Vimium's own pages).
+    const sender = { frameId: 5, url: "https://attacker.example.com/iframe.html" };
+    await to.openUrlInCurrentTab({ url }, sender);
+    assert.isFalse(called);
   });
 });
 

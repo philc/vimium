@@ -7,17 +7,38 @@ import "../lib/url_utils.js";
 
 // Opens request.url in the current tab. If the URL is keywords, search for them in the default
 // search engine. If the URL is a javascript: snippet, execute it in the current tab.
-export async function openUrlInCurrentTab(request) {
+export async function openUrlInCurrentTab(request, sender) {
   const urlStr = await UrlUtils.convertToUrl(request.url);
   if (urlStr == null) {
     // The requested destination is not a URL, so treat it like a search query.
     chrome.search.query({ text: request.url });
   } else if (UrlUtils.hasJavascriptProtocol(urlStr)) {
+    // javascript: URLs, i.e. "bookmarklets", are always run against the tab's top-level frame.
+
+    // Since we're using chrome.scripting.executeScript to execute the javascript, assert that the
+    // request is coming from either the page's top-level frame, or one of Vimium's iframes, like
+    // the Vomnibar. It should be impossible for the request to come from any other frame, but this
+    // check serves as a defensive guard to prevent a compromised Vimium content script in a
+    // subframe with a different origin from being able to run javascript on the main frame's
+    // origin.
+    const isTopFrame = sender.frameId === 0;
+    const isVimiumPage = sender.url?.startsWith("chrome-extension://");
+    if (!isTopFrame && !isVimiumPage) {
+      console.warn(
+        "openUrlInCurrentTab: error: a javascript: URL was requested from an untrusted frame",
+        { frameId: sender.frameId, url: sender.url },
+      );
+      return;
+    }
+
     // Note that when injecting JavaScript, it's subject to the site's CSP. Sites with strict CSPs
     // (like github.com, developer.mozilla.org) will raise an error when we try to run this code.
     // See https://github.com/philc/vimium/issues/4331.
     const scriptingArgs = {
-      target: { tabId: request.tabId },
+      target: {
+        tabId: request.tabId,
+        frameIds: [0], // Run the script against the top-level frame.
+      },
       func: (text) => {
         const prefix = "javascript:";
         text = text.slice(prefix.length).trim();
