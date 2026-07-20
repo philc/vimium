@@ -12,7 +12,7 @@ ul {
   top: 8px;
   left: 8px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-
+  color: var(--vimium-background-text-color);
   background: #f1f1f1;
   text-align: left;
   border-radius: 4px;
@@ -28,7 +28,6 @@ ul {
   margin-bottom: 0;
   padding: 4px;
   background-color: white;
-  color: black;
   border-radius: 3px;
   border: 1px solid #e8e8e8;
   box-shadow: #444 0px 0px 1px;
@@ -53,7 +52,6 @@ ul {
   line-height: 1.1em;
   padding: 7px 10px;
   font-size: 16px;
-  color: black;
   position: relative;
   display: list-item;
   margin: auto;
@@ -88,7 +86,6 @@ ul {
   right: 0;
   top: 0;
   padding: 5px;
-  color: black;
   font-family: monospace;
   width: 100px;
   overflow: hidden;
@@ -101,11 +98,9 @@ ul {
 
 #vomnibar li .match {
   font-weight: bold;
-  color: black;
 }
 
 #vomnibar li em, #vomnibar li .title {
-  color: black;
   margin-left: 4px;
 }
 #vomnibar li em {
