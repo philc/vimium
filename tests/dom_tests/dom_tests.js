@@ -1237,39 +1237,68 @@ context("PostFindMode", () => {
   });
 });
 
-context("WaitForEnter", () => {
-  let isSuccess, waitForEnter;
+context("LinkHintsMode confirmation", () => {
+  let exitIsSuccess;
 
   setup(() => {
     initializeModeState();
-    isSuccess = null;
-    waitForEnter = new WaitForEnter((value) => {
-      isSuccess = value;
+    document.getElementById("test-div").innerHTML = "<a>test</a><a>tress</a>";
+    stubSettings("filterLinkHints", true);
+    stub(globalThis, "windowIsFocused", () => true);
+    exitIsSuccess = "not called";
+    HintCoordinator.onExit = [(isSuccess) => exitIsSuccess = isSuccess];
+  });
+
+  teardown(() => {
+    if (HintCoordinator.linkHintsMode != null) {
+      HintCoordinator.exit({ isSuccess: false });
+    }
+    document.getElementById("test-div").innerHTML = "";
+  });
+
+  context("waitForEnterForFilteredHints", () => {
+    let mode;
+
+    setup(() => {
+      stubSettings("waitForEnterForFilteredHints", true);
+      mode = activateLinkHintsMode();
+      sendKeyboardEvent("t");
+      sendKeyboardEvent("e"); // Uniquely matches "test"; "tress" doesn't start with "te".
+    });
+
+    should("show the confirmation indicator, not the regular mode indicator", () => {
+      assert.equal("Hit <Enter> to proceed...", mode.hintMode.options.indicator);
+    });
+
+    should("confirm successfully on Enter", () => {
+      sendKeyboardEvent("Enter", "keydown");
+      assert.equal(true, exitIsSuccess);
+    });
+
+    should("cancel on Escape", () => {
+      sendKeyboardEvent("Escape", "keydown");
+      assert.equal(false, exitIsSuccess);
+    });
+
+    should("not exit on other keyboard events", () => {
+      sendKeyboardEvents("xyz");
+      assert.equal("not called", exitIsSuccess);
     });
   });
 
-  should("exit with success on Enter", () => {
-    assert.isTrue(waitForEnter.modeIsActive);
-    assert.isFalse(isSuccess != null);
-    sendKeyboardEvent("Enter", "keydown");
-    assert.isFalse(waitForEnter.modeIsActive);
-    assert.isTrue((isSuccess != null) && (isSuccess === true));
-  });
+  context("timeout variant (waitForEnterForFilteredHints off)", () => {
+    setup(() => {
+      stubSettings("waitForEnterForFilteredHints", false);
+      // Fire the confirmation delay immediately, rather than waiting on a real 200ms timer.
+      stub(Utils, "setTimeout", (_delay, fn) => fn());
+      activateLinkHintsMode();
+    });
 
-  should("exit without success on Escape", () => {
-    assert.isTrue(waitForEnter.modeIsActive);
-    assert.isFalse(isSuccess != null);
-    sendKeyboardEvent("Escape", "keydown");
-    assert.isFalse(waitForEnter.modeIsActive);
-    assert.isTrue((isSuccess != null) && (isSuccess === false));
-  });
-
-  should("not exit on other keyboard events", () => {
-    assert.isTrue(waitForEnter.modeIsActive);
-    assert.isFalse(isSuccess != null);
-    sendKeyboardEvents("abc");
-    assert.isTrue(waitForEnter.modeIsActive);
-    assert.isFalse(isSuccess != null);
+    should("confirm successfully once the user stops typing", () => {
+      sendKeyboardEvent("t");
+      sendKeyboardEvent("e"); // Uniquely matches "test"; the (stubbed, immediate) timer then fires.
+      assert.equal(true, exitIsSuccess);
+    });
   });
 });
 

@@ -371,6 +371,11 @@ class LinkHintsMode {
     this.hintMode = null;
     // A count of the number of Tab presses since the last non-Tab keyboard event.
     this.tabCount = 0;
+    // Whether we're waiting for the user to confirm a single match before activating it. One of:
+    //   null      - not confirming.
+    //   "enter"   - waiting for an explicit Enter (confirm) or Escape (cancel).
+    //   "timeout" - waiting for a pause in typing before confirming.
+    this.confirming = null;
 
     if (hintDescriptors.length === 0) {
       HUD.show("No links to select.", 2000);
@@ -394,9 +399,14 @@ class LinkHintsMode {
       exitOnEscape: true,
       exitOnClick: true,
       keydown: this.onKeyDownInMode.bind(this),
+      keypress: this.onKeyPressInMode.bind(this),
     });
 
     this.hintMode.onExit((event) => {
+      // If we were mid-confirmation (see beginConfirmation()), clear its pending timer.
+      clearTimeout(this.confirmTimerId);
+      this.confirming = null;
+
       const hintsWereCancelled = (event?.type === "click") ||
         ((event?.type === "keydown") &&
           (KeyboardUtils.isEscape(event) || KeyboardUtils.isBackspace(event)));
@@ -462,6 +472,9 @@ class LinkHintsMode {
   }
 
   setIndicator() {
+    // If we're waiting for enter confirmation, we're showing an HUD message; don't clobber it.
+    if (this.confirming === "enter") return;
+
     if (windowIsFocused()) {
       const typedCharacters = this.markerMatcher.linkTextKeystrokeQueue
         ? this.markerMatcher.linkTextKeystrokeQueue.join("")
@@ -499,6 +512,17 @@ class LinkHintsMode {
 
   // Handles all keyboard events.
   onKeyDownInMode(event) {
+    if (this.confirming) {
+      if ((this.confirming === "enter") && (event.key === "Enter")) {
+        this.finishConfirmation(true);
+      } else if (this.confirming === "timeout") {
+        this.resetConfirmTimer();
+      }
+      // Escape isn't handled here. hintMode's own exitOnEscape handler (pushed above this one on
+      // the stack, so it sees the event first) cancels it for us, the same as it does outside of
+      // confirmation.
+      return;
+    }
     if (event.repeat) return;
 
     // NOTE(smblott) The modifier behaviour here applies only to alphabet hints.
@@ -578,6 +602,12 @@ class LinkHintsMode {
     }
 
     return handlerStack.suppressEvent;
+  }
+
+  onKeyPressInMode() {
+    if (this.confirming === "timeout") {
+      this.resetConfirmTimer();
+    }
   }
 
   updateVisibleMarkers() {
@@ -753,14 +783,39 @@ class LinkHintsMode {
       HintCoordinator.onExit.push(removeFlashElements);
       if (windowIsFocused()) {
         const callback = (isSuccess) => HintCoordinator.sendMessage("exit", { isSuccess });
-        return Settings.get("waitForEnterForFilteredHints")
-          ? new WaitForEnter(callback)
-          : new TypingProtector(200, callback);
+        this.beginConfirmation(callback);
       }
     } else if (linkMatched.isLocalMarker()) {
       Utils.setTimeout(400, removeFlashElements);
       return HintCoordinator.sendMessage("exit", { isSuccess: true });
     }
+  }
+
+  // Called when exactly one hint matches, but the user might still be mid-way through typing a
+  // longer link text that would match a different hint. We take over key handling to decide whether
+  // to commit to this hint:
+  //   - waitForEnterForFilteredHints on: wait for an explicit Enter (confirm) or Escape (cancel).
+  //   - otherwise: wait for the user to stop typing for a short delay, then confirm.
+  // Escape will cancel this mode via hintMode's own exitOnEscape handling.
+  beginConfirmation(callback) {
+    this.confirmCallback = callback;
+    if (Settings.get("waitForEnterForFilteredHints")) {
+      this.confirming = "enter";
+      this.hintMode.setIndicator("Hit <Enter> to proceed...");
+    } else {
+      this.confirming = "timeout";
+      this.resetConfirmTimer();
+    }
+  }
+
+  resetConfirmTimer() {
+    clearTimeout(this.confirmTimerId);
+    this.confirmTimerId = Utils.setTimeout(200, () => this.finishConfirmation(true));
+  }
+
+  finishConfirmation(isSuccess) {
+    this.confirming = null;
+    this.confirmCallback(isSuccess);
   }
 
   // Shows the marker, highlighting matchingCharCount characters.
@@ -1492,51 +1547,6 @@ const LocalHints = {
   },
 };
 
-// Suppress all keyboard events until the user stops typing for sufficiently long.
-class TypingProtector extends Mode {
-  constructor(delay, callback) {
-    super();
-    this.init({
-      name: "hint/typing-protector",
-      suppressAllKeyboardEvents: true,
-      keydown: resetExitTimer,
-      keypress: resetExitTimer,
-    });
-
-    this.timer = Utils.setTimeout(delay, () => this.exit());
-
-    const resetExitTimer = () => {
-      clearTimeout(this.timer);
-      this.timer = Utils.setTimeout(delay, () => this.exit());
-    };
-
-    this.onExit(() => callback(true)); // true -> isSuccess.
-  }
-}
-
-class WaitForEnter extends Mode {
-  constructor(callback) {
-    super();
-    this.init({
-      name: "hint/wait-for-enter",
-      suppressAllKeyboardEvents: true,
-      indicator: "Hit <Enter> to proceed...",
-    });
-
-    this.push({
-      keydown: (event) => {
-        if (event.key === "Enter") {
-          this.exit();
-          return callback(true); // true -> isSuccess.
-        } else if (KeyboardUtils.isEscape(event)) {
-          this.exit();
-          return callback(false);
-        }
-      },
-    }); // false -> isSuccess.
-  }
-}
-
 class HoverMode extends Mode {
   constructor(link) {
     super();
@@ -1555,5 +1565,4 @@ Object.assign(globalThis, {
   LocalHints,
   AlphabetHints,
   FilterHints,
-  WaitForEnter,
 });
