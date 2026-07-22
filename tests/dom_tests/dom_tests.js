@@ -279,19 +279,19 @@ context("Test link hints for changing mode", () => {
   });
 
   should("change mode on shift", () => {
-    assert.equal("curr-tab", linkHints.mode.name);
+    assert.equal("open-in-current-tab", linkHints.mode.name);
     sendKeyboardEvent("Shift", "keydown");
-    assert.equal("bg-tab", linkHints.mode.name);
+    assert.equal("open-in-new-background-tab", linkHints.mode.name);
     sendKeyboardEvent("Shift", "keyup");
-    assert.equal("curr-tab", linkHints.mode.name);
+    assert.equal("open-in-current-tab", linkHints.mode.name);
   });
 
   should("change mode on ctrl", () => {
-    assert.equal("curr-tab", linkHints.mode.name);
+    assert.equal("open-in-current-tab", linkHints.mode.name);
     sendKeyboardEvent("Control", "keydown");
-    assert.equal("fg-tab", linkHints.mode.name);
+    assert.equal("open-in-new-foreground-tab", linkHints.mode.name);
     sendKeyboardEvent("Control", "keyup");
-    assert.equal("curr-tab", linkHints.mode.name);
+    assert.equal("open-in-current-tab", linkHints.mode.name);
   });
 });
 

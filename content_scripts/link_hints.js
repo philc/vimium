@@ -67,31 +67,31 @@ class HintDescriptor {
   }
 }
 
-// The "name" property below is a short-form name to appear in the link-hints mode's name. It's for
-// debug only.
-//
+// The "name" property below appears in the link-hints mode's name (e.g.
+// "link-hints/open-in-current-tab"), which appears in the HUD's data-message-name attribute. This
+// allows users to write CSS for each HUD message (hiding some of them).
 const isMac = KeyboardUtils.platform === "Mac";
 const OPEN_IN_CURRENT_TAB = {
-  name: "curr-tab",
+  name: "open-in-current-tab",
   indicator: "Open link in current tab",
 };
 const OPEN_IN_NEW_BG_TAB = {
-  name: "bg-tab",
+  name: "open-in-new-background-tab",
   indicator: "Open link in new tab",
   clickModifiers: { metaKey: isMac, ctrlKey: !isMac },
 };
 const OPEN_IN_NEW_FG_TAB = {
-  name: "fg-tab",
+  name: "open-in-new-foreground-tab",
   indicator: "Open link in new tab and switch to it",
   clickModifiers: { shiftKey: true, metaKey: isMac, ctrlKey: !isMac },
 };
 const OPEN_WITH_QUEUE = {
-  name: "queue",
+  name: "open-with-queue",
   indicator: "Open multiple links in new tabs",
   clickModifiers: { metaKey: isMac, ctrlKey: !isMac },
 };
 const COPY_LINK_URL = {
-  name: "link",
+  name: "copy-link-url",
   indicator: "Copy link URL to Clipboard",
   linkActivator(link) {
     if (link.href != null) {
@@ -106,14 +106,14 @@ const COPY_LINK_URL = {
   },
 };
 const OPEN_INCOGNITO = {
-  name: "incognito",
+  name: "open-incognito",
   indicator: "Open link in incognito window",
   linkActivator(link) {
     chrome.runtime.sendMessage({ handler: "openUrlInIncognito", url: link.href });
   },
 };
 const DOWNLOAD_LINK_URL = {
-  name: "download",
+  name: "download-link-url",
   indicator: "Download link URL",
   clickModifiers: { altKey: true, ctrlKey: false, metaKey: false },
 };
@@ -132,14 +132,14 @@ const COPY_LINK_TEXT = {
   },
 };
 const HOVER_LINK = {
-  name: "hover",
+  name: "hover-link",
   indicator: "Hover link",
   linkActivator(link) {
     new HoverMode(link);
   },
 };
 const FOCUS_LINK = {
-  name: "focus",
+  name: "focus-link",
   indicator: "Focus link",
   linkActivator(link) {
     link.focus();
@@ -391,7 +391,7 @@ class LinkHintsMode {
 
     this.hintMode = new Mode();
     this.hintMode.init({
-      name: `hint/${this.mode.name}`,
+      name: `link-hints/${this.mode.name}`,
       indicator: false,
       singleton: "link-hints-mode",
       suppressAllKeyboardEvents: true,

@@ -34,6 +34,15 @@ context("hud page", () => {
     UIComponentMessenger.unregister();
   });
 
+  should("sets a data-message-name attribute", () => {
+    const el = document.querySelector("#hud");
+    hudPage.handlers.show({
+      text: "example",
+      messageName: "example-name",
+    });
+    assert.equal("example-name", el.dataset.messageName);
+  });
+
   should("find mode hides when escape is pressed", async () => {
     let message;
     const stubPort = {

@@ -85,6 +85,14 @@ function ensureClipboardIsAvailable() {
   return true;
 }
 
+function setMessageName(el, messageName) {
+  if (messageName) {
+    el.dataset.messageName = messageName;
+  } else {
+    delete el.dataset.messageName;
+  }
+}
+
 // Exported for unit tests.
 export const handlers = {
   show(data) {
@@ -93,6 +101,7 @@ export const handlers = {
     el.classList.add("vimium-ui-component-visible");
     el.classList.remove("vimium-ui-component-hidden");
     el.classList.remove("hud-find");
+    setMessageName(el, data.messageName);
   },
 
   hidden() {
@@ -102,6 +111,7 @@ export const handlers = {
     el.textContent = "";
     el.classList.add("vimium-ui-component-hidden");
     el.classList.remove("vimium-ui-component-visible");
+    setMessageName(el, null);
   },
 
   showFindMode() {
