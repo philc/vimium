@@ -9,6 +9,7 @@
     "@std/http": "jsr:@std/http@^1.0.12",
     "@std/path": "jsr:@std/path@^1.0.8",
     "jsdom": "npm:jsdom@^26.0.0",
-    "json5": "npm:json5@^2.2.3"
+    "json5": "npm:json5@^2.2.3",
+    "puppeteer": "npm:puppeteer@^25.3.0"
   }
 }
