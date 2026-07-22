@@ -73,12 +73,14 @@ const HUD = {
   },
 
   // duration - if omitted, the message will show until dismissed.
-  async show(text, duration) {
+  // messageName - an optional identifier for this message, exposed as a data attribute so the HUD
+  // UI for each message can be targeted by a user's custom CSS. See #3112.
+  async show(text, duration, messageName) {
     await DomUtils.documentComplete();
     clearTimeout(this._showForDurationTimerId);
     // @hudUI.activate will take charge of making it visible
     await this.init(false);
-    this.hudUI.show({ name: "show", text });
+    this.hudUI.show({ name: "show", text, messageName });
     this.tween.fade(1.0, 150);
 
     if (duration != null) {

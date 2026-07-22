@@ -88,7 +88,7 @@ class Mode {
         // The active indicator can also be changed with @setIndicator().
         if (this.options.indicator != null) {
           if (this.options.indicator) {
-            HUD.show(this.options.indicator);
+            HUD.show(this.options.indicator, undefined, this.name);
           } else {
             HUD.hide(true, false);
           }
