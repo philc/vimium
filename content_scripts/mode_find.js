@@ -177,13 +177,18 @@ class FindMode extends Mode {
           case "R":
             this.query.isRegex = false;
             break;
+          case "I":
+            this.query.ignoreCase = false;
+            break;
         }
         return "";
       },
     );
 
-    // Implement smartcase.
-    this.query.ignoreCase = !Utils.hasUpperCase(this.query.parsedQuery);
+    if (this.query.ignoreCase !== false) { // if not already set to false(\I flag present)
+      // Implement smartcase.
+      this.query.ignoreCase = !Utils.hasUpperCase(this.query.parsedQuery);
+    }
 
     const regexPattern = this.query.isRegex
       ? this.query.parsedQuery
