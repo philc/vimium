@@ -22,6 +22,12 @@ ul {
   z-index: 2139999999;
 }
 
+#vomnibar #vomnibar-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 #vomnibar input {
   font-size: 20px;
   height: 34px;
@@ -34,6 +40,17 @@ ul {
   width: 100%;
   outline: none;
   box-sizing: border-box;
+}
+
+#vomnibar #new-tab-indicator {
+  position: absolute;
+  margin: 4px;
+  padding: 0 4px;
+  background-color: #f1f1f1;
+  color: #888;
+  border: 1px solid #e8e8e8;
+  border-radius: 3px;
+  right: 0;
 }
 
 #vomnibar-search-area {
@@ -148,6 +165,12 @@ ul {
     background-color: var(--vimium-foreground-color);
     color: var(--vimium-foreground-text-color);
     border: none;
+  }
+
+  #vomnibar #new-tab-indicator {
+    background-color: var(--vimium-background-color);
+    color: #aaa;
+    border: 1px solid var(--vimium-foreground-color);
   }
 
   /* Ensure selected text is visible in dark mode. */
