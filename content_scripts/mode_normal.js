@@ -174,6 +174,9 @@ const NormalModeCommands = {
     });
   },
 
+  noop() {
+  },
+
   copyCurrentUrl() {
     chrome.runtime.sendMessage({ handler: "getCurrentTabUrl" }, function (url) {
       HUD.copyToClipboard(url);
