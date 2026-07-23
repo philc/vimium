@@ -5,6 +5,7 @@ import { Commands, KeyMappingsParser } from "../background_scripts/commands.js";
 import * as userSearchEngines from "../background_scripts/user_search_engines.js";
 
 const options = {
+  autoActivateLinkHints: "boolean",
   filterLinkHints: "boolean",
   grabBackFocus: "boolean",
   hideHud: "boolean",
