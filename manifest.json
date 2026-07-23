@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Vimium",
+  "name": "Vimium Dev",
   "version": "2.4.2",
   "description": "The Hacker's Browser. Vimium provides keyboard shortcuts for navigation and control in the spirit of Vim.",
   "icons": {
@@ -20,11 +20,10 @@
     "browser_style": false,
     "open_in_tab": true
   },
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "host_permissions": ["<all_urls>"],
   "permissions": [
     "tabs",
+    "tabGroups",
     "bookmarks",
     "history",
     "storage",
@@ -41,9 +40,7 @@
   ],
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
+      "matches": ["<all_urls>"],
       "js": [
         "lib/types.js",
         "lib/utils.js",
@@ -67,21 +64,14 @@
         "content_scripts/mode_normal.js",
         "content_scripts/vimium_frontend.js"
       ],
-      "css": [
-        "content_scripts/vimium.css"
-      ],
+      "css": ["content_scripts/vimium.css"],
       "run_at": "document_start",
       "all_frames": true,
       "match_about_blank": true
     },
     {
-      "matches": [
-        "file:///",
-        "file:///*/"
-      ],
-      "css": [
-        "content_scripts/file_urls.css"
-      ],
+      "matches": ["file:///", "file:///*/"],
+      "css": ["content_scripts/file_urls.css"],
       "run_at": "document_start",
       "all_frames": true
     }
@@ -118,9 +108,7 @@
         // "pages/reload.html",
         "_favicon/*"
       ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "matches": ["<all_urls>"]
     }
   ]
 }

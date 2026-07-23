@@ -8,9 +8,10 @@ import { Commands } from "../background_scripts/commands.js";
 import * as exclusions from "../background_scripts/exclusions.js";
 import "../background_scripts/completion/search_engines.js";
 import "../background_scripts/completion/search_wrapper.js";
-import "../background_scripts/completion/completers.js";
 import "../background_scripts/tab_operations.js";
 import * as marks from "../background_scripts/marks.js";
+import * as tabGroups from "./tab_groups.js";
+import * as tabSelection from "./tab_selection.js";
 
 import {
   BookmarkCompleter,
@@ -21,6 +22,11 @@ import {
   SearchEngineCompleter,
   TabCompleter,
 } from "./completion/completers.js";
+import {
+  TabGroupCompleter,
+  TabGroupAssignCompleter,
+  TabGroupColorCompleter,
+} from "./completion/group_completer.js";
 
 // NOTE(philc): This file has many superfluous return statements in its functions, as a result of
 // converting from coffeescript to es6. Many can be removed, but I didn't take the time to
@@ -49,6 +55,9 @@ const completionSources = {
   domains: new DomainCompleter(),
   tabs: new TabCompleter(),
   searchEngines: new SearchEngineCompleter(),
+  tabGroups: new TabGroupCompleter(),
+  tabGroupAssign: new TabGroupAssignCompleter(),
+  groupColors: new TabGroupColorCompleter(),
 };
 
 const completers = {
@@ -62,6 +71,9 @@ const completers = {
   bookmarks: new MultiCompleter([completionSources.bookmarks]),
   commands: new MultiCompleter([completionSources.commands]),
   tabs: new MultiCompleter([completionSources.tabs]),
+  tabGroups: new MultiCompleter([completionSources.tabGroups]),
+  tabGroupAssign: new MultiCompleter([completionSources.tabGroupAssign]),
+  groupColors: new MultiCompleter([completionSources.groupColors]),
 };
 
 // A query dictionary for `chrome.tabs.query` that will return only the visible tabs.
@@ -175,6 +187,9 @@ function getTabIndex(tab, tabs) {
 //
 async function selectSpecificTab(request) {
   const tab = await chrome.tabs.get(request.id);
+  if (tab.groupId !== -1 && chrome.tabGroups) {
+    await chrome.tabGroups.update(tab.groupId, { collapsed: false });
+  }
   // Focus the tab's window. TODO(philc): Why are we null-checking chrome.windows here?
   if (chrome.windows != null) {
     await chrome.windows.update(tab.windowId, { focused: true });
@@ -182,21 +197,6 @@ async function selectSpecificTab(request) {
   await chrome.tabs.update(request.id, { active: true });
 }
 
-function moveTab({ count, tab, registryEntry }) {
-  if (registryEntry.command === "moveTabLeft") {
-    count = -count;
-  }
-  return chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
-    const pinnedCount = (tabs.filter((tab) => tab.pinned)).length;
-    const minIndex = tab.pinned ? 0 : pinnedCount;
-    const maxIndex = (tab.pinned ? pinnedCount : tabs.length) - 1;
-    // The tabs array index of the new position.
-    const moveIndex = Math.max(minIndex, Math.min(maxIndex, getTabIndex(tab, tabs) + count));
-    return chrome.tabs.move(tab.id, {
-      index: tabs[moveIndex].index,
-    });
-  });
-}
 
 function createRepeatCommand(command) {
   return async function (request) {
@@ -343,8 +343,14 @@ const BackgroundCommands = {
     });
   },
   toggleMuteTab,
-  moveTabLeft: moveTab,
-  moveTabRight: moveTab,
+  collapseTabGroup: tabGroups.collapseTabGroup,
+  collapseAllTabGroups: tabGroups.collapseAllTabGroups,
+  previousTabGroup: tabGroups.previousTabGroup,
+  nextTabGroup: tabGroups.nextTabGroup,
+  selectNextTabForGroup: tabSelection.selectNextTabForGroup,
+  selectPreviousTabForGroup: tabSelection.selectPreviousTabForGroup,
+  moveTabLeft: tabGroups.moveTab,
+  moveTabRight: tabGroups.moveTab,
 
   async setZoom({ tabId, registryEntry }) {
     const level = registryEntry.options?.["level"] ?? "1";
@@ -470,8 +476,16 @@ async function removeTabsRelative(direction, { count, tab }) {
 // Selects a tab before or after the currently selected tab.
 // - direction: "next", "previous", "first" or "last".
 function selectTab(direction, { count, tab }) {
-  chrome.tabs.query(visibleTabsQueryArgs, function (tabs) {
+  chrome.tabs.query(visibleTabsQueryArgs, async function (tabs) {
     if (tabs.length > 1) {
+      // Skip tabs in collapsed tab groups.
+      if (chrome.tabGroups) {
+        const groups = await chrome.tabGroups.query({ windowId: tab.windowId, collapsed: true });
+        const collapsedGroupIds = new Set(groups.map((g) => g.id));
+        tabs = tabs.filter((t) => t.id === tab.id || !collapsedGroupIds.has(t.groupId));
+        if (tabs.length <= 1) return;
+      }
+
       const toSelect = (() => {
         switch (direction) {
           case "next":
@@ -651,6 +665,23 @@ const sendRequestHandlers = {
 
   nextFrame: BackgroundCommands.nextFrame,
   selectSpecificTab,
+
+  async addTabsToGroup(request) {
+    const win = await chrome.windows.getLastFocused();
+    const tabs = await chrome.tabs.query({ windowId: win.id });
+    const tabIds = tabs.filter((t) => t.highlighted).map((t) => t.id);
+    if (tabIds.length === 0) return;
+    await chrome.tabs.group({ tabIds, groupId: request.groupId });
+  },
+
+  async createTabGroupWithColor(request) {
+    const win = await chrome.windows.getLastFocused();
+    const tabs = await chrome.tabs.query({ windowId: win.id });
+    const tabIds = tabs.filter((t) => t.highlighted).map((t) => t.id);
+    if (tabIds.length === 0) return;
+    const groupId = await chrome.tabs.group({ tabIds });
+    await chrome.tabGroups.update(groupId, { title: request.name, color: request.color });
+  },
   createMark: marks.create,
   gotoMark: marks.goto,
   // Send a message to all frames in the current tab. If request.frameId is provided, then send

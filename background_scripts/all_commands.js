@@ -358,6 +358,22 @@ const allCommands = [
   },
 
   {
+    name: "Vomnibar.activateTabGroupSelection",
+    desc: "Search through your tab groups",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "Vomnibar.activateGroupAssign",
+    desc: "Assign tab(s) to a group",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
     name: "Vomnibar.activateEditUrl",
     desc: "Edit the current URL",
     group: "vomnibar",
@@ -517,6 +533,52 @@ const allCommands = [
     group: "tabs",
     background: true,
     noRepeat: true,
+  },
+
+  {
+    name: "collapseTabGroup",
+    desc: "Collapse current tab's group",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "collapseAllTabGroups",
+    desc: "Collapse all tab groups and jump to last active ungrouped tab",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "previousTabGroup",
+    desc: "Switch to previous tab group",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "nextTabGroup",
+    desc: "Switch to next tab group",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "selectNextTabForGroup",
+    desc: "Select next tab",
+    group: "tabs",
+    background: true,
+  },
+
+  {
+    name: "selectPreviousTabForGroup",
+    desc: "Select previous tab",
+    group: "tabs",
+    background: true,
   },
 
   {
