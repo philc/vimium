@@ -134,6 +134,8 @@ Examples:
   showing a bookmark dialog is suppressed.
 - `map r reload hard` maps the r key to reloading the page, and also includes the "hard" option to
   hard-reload the page.
+- `mapkey ы s` maps one key to another.
+- `langmap фыва;asdf,aAbBzZ,cC,dD` maps multiple keys with `from_keys;to_keys` or `fT` pairs, separated by comma.
 - `unmap <c-d>` removes any mapping for ctrl+d and restores Chrome's default behavior.
 - `unmap r` removes any mapping for the r key.
 
