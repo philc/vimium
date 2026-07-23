@@ -36,13 +36,17 @@ context("options page", () => {
 
   should("show exclusion rule editor for exclusion rules", async () => {
     const rule = {
+      blockedKeys: "f",
       passKeys: "",
       pattern: "example.com",
     };
     await Settings.set("exclusionRules", [rule]);
     await optionsPage.init();
-    const el = document.querySelector("#exclusion-rules input[name=pattern]");
-    assert.equal("example.com", el.value);
+    assert.equal(
+      "example.com",
+      document.querySelector("#exclusion-rules input[name=pattern]").value,
+    );
+    assert.equal("f", document.querySelector("#exclusion-rules input[name=blockedKeys]").value);
   });
 
   context("backup", () => {
@@ -68,6 +72,7 @@ context("options page", () => {
 
     should("include exclusion rules", async () => {
       const rule = {
+        blockedKeys: "f",
         passKeys: "",
         pattern: "example.com",
       };

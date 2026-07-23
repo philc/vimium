@@ -11,7 +11,8 @@ const ExclusionRulesEditor = {
     });
   },
 
-  // - exclusionRules: the value obtained from settings, with the shape [{pattern, passKeys}].
+  // - exclusionRules: the value obtained from settings, with the shape
+  //   [{pattern, passKeys, blockedKeys}].
   setForm(exclusionRules = []) {
     const rulesTable = document.querySelector("#exclusion-rules");
     // Remove any previous rows.
@@ -20,14 +21,13 @@ const ExclusionRulesEditor = {
       el.remove();
     }
 
-    const rowTemplate = document.querySelector("#exclusion-rule-template").content;
     for (const rule of exclusionRules) {
-      this.addRow(rule.pattern, rule.passKeys);
+      this.addRow(rule.pattern, rule.passKeys, rule.blockedKeys);
     }
   },
 
-  // `pattern` and `passKeys` are optional.
-  addRow(pattern, passKeys) {
+  // `pattern`, `passKeys`, and `blockedKeys` are optional.
+  addRow(pattern, passKeys, blockedKeys) {
     const rulesTable = document.querySelector("#exclusion-rules");
     const rowTemplate = document.querySelector("#exclusion-rule-template").content;
     const rowEl = rowTemplate.cloneNode(true);
@@ -39,6 +39,10 @@ const ExclusionRulesEditor = {
     const keysEl = rowEl.querySelector("[name=passKeys]");
     keysEl.value = passKeys ?? "";
     keysEl.addEventListener("input", () => this.dispatchEvent("input"));
+
+    const blockedKeysEl = rowEl.querySelector("[name=blockedKeys]");
+    blockedKeysEl.value = blockedKeys ?? "";
+    blockedKeysEl.addEventListener("input", () => this.dispatchEvent("input"));
 
     rowEl.querySelector(".remove").addEventListener("click", (e) => {
       e.target.closest("tr").remove();
@@ -53,6 +57,7 @@ const ExclusionRulesEditor = {
     const rules = rows
       .map((el) => {
         return {
+          blockedKeys: el.querySelector("[name=blockedKeys]").value.trim(),
           // The ordering of these keys should match the order in defaultOptions in Settings.js.
           passKeys: el.querySelector("[name=passKeys]").value.trim(),
           pattern: el.querySelector("[name=pattern]").value.trim(),
