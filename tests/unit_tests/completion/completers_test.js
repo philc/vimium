@@ -367,6 +367,19 @@ context("multi completer", () => {
     assert.equal("http://example.com", results[0].url);
     assert.equal("http://other.com", results[1].url);
   });
+
+  should("distinguish escaped and prefilled custom search engines", async () => {
+    userSearchEngines.set("e: https://example.com/?q=%s");
+    const fallback = new Suggestion({ url: "fallback", relevancy: 1, queryTerms: ["e"] });
+    const search = new SearchEngineCompleter();
+    const completer = new MultiCompleter([{ filter: () => [fallback] }, search]);
+    const request = { query: "e ", queryTerms: ["e"], isUserSearchEngineEscaped: true };
+    assert.equal([fallback], await completer.filter(request));
+    request.query = "e hello";
+    request.queryTerms.push("hello");
+    request.isUserSearchEngineEscaped = false;
+    assert.isTrue((await completer.filter(request))[0].isCustomSearch);
+  });
 });
 
 context("command completer", () => {

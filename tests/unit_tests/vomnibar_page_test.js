@@ -122,6 +122,41 @@ context("vomnibar page", () => {
     assert.equal("https://www.example.com/search?q=hello", capturedUrl);
   });
 
+  should("preserve default completions after exiting a custom search engine", async () => {
+    userSearchEngines.set("e: https://www.example.com/search?q=%s Example");
+    let isUserSearchEngineEscaped;
+    let launchedSearchQuery;
+    stub(chrome.runtime, "sendMessage", async (message) => {
+      if (message.handler == "filterCompletions") {
+        isUserSearchEngineEscaped = message.isUserSearchEngineEscaped;
+        return new Promise(() => {});
+      }
+      if (message.handler == "launchSearchQuery") launchedSearchQuery = message.query;
+    });
+
+    ui.setQuery("e ");
+    ui.onInput();
+    assert.equal("", ui.input.value);
+    await ui.onKeyEvent(newKeyEvent({ key: "Backspace" }));
+    assert.equal("e ", ui.input.value);
+    assert.isTrue(isUserSearchEngineEscaped);
+    ui.input.value += "hello";
+    ui.onInput();
+    assert.equal("e hello", ui.input.value);
+    ui.setQuery("e");
+    ui.onInput();
+    ui.setQuery("e ");
+    ui.onInput();
+    assert.equal("", ui.input.value);
+    const engine = userSearchEngines.keywordToEngine.e;
+    ui.completions = [{ isCustomSearch: true, isPrimarySuggestion: true, searchUrl: engine.url }];
+    ui.selection = 0;
+    await ui.onKeyEvent(newKeyEvent({ key: "Backspace" }));
+    await ui.onKeyEvent(newKeyEvent({ type: "keypress", key: "Enter" }));
+    ui.onHidden();
+    assert.equal("e", launchedSearchQuery);
+  });
+
   should("create command suggestions with correct HTML for key bindings", async () => {
     await Commands.loadKeyMappings("");
     const multiCompleter = new MultiCompleter([new CommandCompleter()]);
