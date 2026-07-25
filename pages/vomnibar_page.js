@@ -59,6 +59,7 @@ class VomnibarUI {
     this.onInput = this.onInput.bind(this);
     this.update = this.update.bind(this);
     this.onHiddenCallback = null;
+    this.pendingGroupName = null;
     this.initDom();
     // The user's custom search engine, if they have prefixed their query with the keyword for one
     // of their search engines.
@@ -299,6 +300,23 @@ class VomnibarUI {
         return;
       }
 
+      // Smart Enter for tabGroupAssign: exact match assigns, anything else creates a new group.
+      if (this.completerName === "tabGroupAssign") {
+        const exactMatch = this.completions.find(
+          (c) => c.groupData?.action === "addToGroup" &&
+            c.title.split(" · ")[0].toLowerCase() === query.toLowerCase(),
+        );
+        if (exactMatch) {
+          this.hide(() => this.openCompletion(exactMatch, false));
+        } else {
+          this.pendingGroupName = query;
+          this.initialSelectionValue = 0;
+          this.setCompleterName("groupColors");
+          await this.update();
+        }
+        return;
+      }
+
       // <Enter> with no selection on a completer other than "omni" is a no-op.
       if (this.completerName != "omni") return;
 
@@ -335,6 +353,12 @@ class VomnibarUI {
           count: this.prefixCount,
         });
       });
+    } else if (completion.groupData?.action === "createGroup") {
+      // Stay open — switch to color picker in-place for step 2.
+      this.pendingGroupName = completion.groupData.name;
+      this.initialSelectionValue = 0;
+      this.setCompleterName("groupColors");
+      await this.update();
     } else {
       this.hide(() => this.openCompletion(completion, openInNewTab));
     }
@@ -437,7 +461,15 @@ class VomnibarUI {
   }
 
   openCompletion(completion, openInNewTab) {
-    if (completion.description == "tab") {
+    if (completion.groupData?.action === "addToGroup") {
+      chrome.runtime.sendMessage({ handler: "addTabsToGroup", groupId: completion.groupData.groupId });
+    } else if (completion.groupData?.action === "setColor") {
+      chrome.runtime.sendMessage({
+        handler: "createTabGroupWithColor",
+        name: this.pendingGroupName,
+        color: completion.groupData.color,
+      });
+    } else if (completion.tabId != null) {
       chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: completion.tabId });
     } else {
       this.launchUrl(completion.url, openInNewTab);

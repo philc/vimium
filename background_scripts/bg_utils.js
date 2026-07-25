@@ -17,3 +17,18 @@ export async function getFirefoxVersion() {
 // TODO(philc): tabRecency imports bg_utils. We should resovle the cycle for the sake of clarity.
 export const tabRecency = new TabRecency();
 tabRecency.init();
+
+// Returns the most-recently-active tab in `windowId` that satisfies `isValid`, or null.
+// Excludes `excludeTabId` (typically the currently active tab) even if it would otherwise
+// be the most recent.
+export async function getLastActiveTab({ windowId, excludeTabId, isValid }) {
+  await tabRecency.init();
+  const tabs = await chrome.tabs.query({ windowId });
+  const tabsById = new Map(tabs.map((t) => [t.id, t]));
+  for (const id of tabRecency.getTabsByRecency()) {
+    if (id === excludeTabId) continue;
+    const candidate = tabsById.get(id);
+    if (candidate && (!isValid || isValid(candidate))) return candidate;
+  }
+  return null;
+}

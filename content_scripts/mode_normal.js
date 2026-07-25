@@ -373,6 +373,8 @@ const NormalModeCommands = {
   "Vomnibar.activateCommandSelection": Vomnibar.activateCommandSelection.bind(Vomnibar),
   "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind(Vomnibar),
   "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind(Vomnibar),
+  "Vomnibar.activateTabGroupSelection": Vomnibar.activateTabGroupSelection.bind(Vomnibar),
+  "Vomnibar.activateGroupAssign": Vomnibar.activateGroupAssign.bind(Vomnibar),
 
   "Marks.activateCreateMode": Marks.activateCreateMode.bind(Marks),
   "Marks.activateGotoMode": Marks.activateGotoMode.bind(Marks),

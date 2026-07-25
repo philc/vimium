@@ -40,6 +40,20 @@ const Vomnibar = {
     this.open(sourceFrameId, options);
   },
 
+  activateTabGroupSelection(sourceFrameId) {
+    this.open(sourceFrameId, {
+      completer: "tabGroups",
+      selectFirst: true,
+    });
+  },
+
+  activateGroupAssign(sourceFrameId) {
+    this.open(sourceFrameId, {
+      completer: "tabGroupAssign",
+      selectFirst: true,
+    });
+  },
+
   activateBookmarksInNewTab(sourceFrameId, registryEntry) {
     const options = Object.assign({}, registryEntry.options, {
       completer: "bookmarks",
