@@ -20,6 +20,10 @@ class KeyHandlerMode extends Mode {
     this.passKeys = passKeys;
     this.reset();
   }
+  setBlockedKeys(blockedKeys) {
+    this.blockedKeys = blockedKeys;
+    this.reset();
+  }
 
   // Only for tests.
   setCommandHandler(commandHandler) {
@@ -71,6 +75,8 @@ class KeyHandlerMode extends Mode {
       // preview popups. If the user types escape, issue a mouseout event here. See #3073.
       HintCoordinator.mouseOutOfLastClickedElement();
       return this.continueBubbling;
+    } else if (this.isBlockedKey(keyChar)) {
+      return this.suppressEvent;
     } else if (this.isMappedKey(keyChar)) {
       this.handleKeyChar(keyChar);
       return this.suppressEvent;
@@ -90,6 +96,13 @@ class KeyHandlerMode extends Mode {
     // TODO(philc): tweak the generated js.
     return ((this.keyState.filter((mapping) => keyChar in mapping))[0] != null) &&
       !this.isPassKey(keyChar);
+  }
+
+  isBlockedKey(keyChar) {
+    return this.isInResetState() &&
+      keyChar &&
+      this.blockedKeys &&
+      this.blockedKeys.includes(keyChar);
   }
 
   // This tests whether keyChar is a digit (and accounts for pass keys).
