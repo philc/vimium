@@ -42,7 +42,9 @@ class NormalMode extends KeyHandlerMode {
 
     // closeTabsOnLeft and closeTabsOnRight interpret a null count as "close all tabs in
     // {direction}", so don't default the count to 1 for those commands. See #4296.
-    const allowNullCount = ["closeTabsOnLeft", "closeTabsOnRight"].includes(registryEntry.command);
+    const allowNullCount = ["closeTabsOnLeft", "closeTabsOnRight", "yankPageOrLines"].includes(
+      registryEntry.command,
+    );
     if (!allowNullCount && count == null) {
       count = 1;
     }
@@ -86,6 +88,41 @@ const enterNormalMode = function (count) {
   });
   return mode;
 };
+
+let lastMousePosition = null;
+
+if (typeof globalThis.window !== "undefined") {
+  globalThis.window.addEventListener(
+    "pointermove",
+    (e) => {
+      lastMousePosition = { x: e.clientX, y: e.clientY };
+    },
+    { passive: true, capture: true },
+  );
+  globalThis.window.addEventListener(
+    "mousemove",
+    (e) => {
+      lastMousePosition = { x: e.clientX, y: e.clientY };
+    },
+    { passive: true, capture: true },
+  );
+}
+
+function getCursorPosition() {
+  if (lastMousePosition) {
+    return lastMousePosition;
+  }
+  return {
+    x: (globalThis.innerWidth || 800) / 2,
+    y: (globalThis.innerHeight || 600) / 2,
+  };
+}
+
+function distanceToRect(x, y, rect) {
+  const dx = Math.max(rect.left - x, 0, x - rect.right);
+  const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+  return Math.hypot(dx, dy);
+}
 
 function findSelectedHelper(backwards) {
   const selection = globalThis.getSelection().toString();
@@ -185,6 +222,182 @@ const NormalModeCommands = {
       }
       HUD.show(`Yanked ${url}`, 2000);
     });
+  },
+
+  yankClosestLink() {
+    const cursorPos = getCursorPosition();
+    const links = Array.from(
+      document.querySelectorAll("a[href], area[href], [role='link']"),
+    );
+
+    let closestLink = null;
+    let minDistance = Infinity;
+
+    for (const link of links) {
+      const href = link.href || link.getAttribute("href");
+      if (!href || href.startsWith("javascript:")) continue;
+
+      const rect = link.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) continue;
+
+      const style = globalThis.getComputedStyle ? globalThis.getComputedStyle(link) : null;
+      if (
+        style &&
+        (style.display === "none" || style.visibility === "hidden" || style.opacity === "0")
+      ) {
+        continue;
+      }
+
+      const dist = distanceToRect(cursorPos.x, cursorPos.y, rect);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestLink = link;
+      }
+    }
+
+    if (closestLink) {
+      let url = closestLink.href || closestLink.getAttribute("href");
+      try {
+        url = new URL(url, document.baseURI).href;
+      } catch (_) {
+        // Use raw string.
+      }
+      HUD.copyToClipboard(url);
+      const maxLength = 40;
+      let displayUrl = url;
+      if (displayUrl.length > maxLength) {
+        displayUrl = displayUrl.slice(0, maxLength - 2) + "...";
+      }
+      HUD.show(`Yanked ${displayUrl}`, 2000);
+    } else {
+      HUD.show("No link found nearby", 2000);
+    }
+  },
+
+  yankClosestCode() {
+    const cursorPos = getCursorPosition();
+    const selectors = [
+      "pre",
+      "code-block",
+      "[class*='code-block']",
+      "[class*='codeblock']",
+      "[class*='code_block']",
+      "[class*='highlight-source']",
+      "div.highlight",
+      "div.snippet",
+      "code",
+    ];
+
+    const elements = Array.from(document.querySelectorAll(selectors.join(", ")));
+
+    const candidateBlocks = elements.filter((el) => {
+      const tag = el.tagName.toLowerCase();
+      if (tag === "code") {
+        if (
+          el.closest(
+            "pre, code-block, [class*='code-block'], [class*='codeblock'], [class*='code_block'], div.highlight",
+          )
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    let closestBlock = null;
+    let minDistance = Infinity;
+
+    for (const block of candidateBlocks) {
+      const rect = block.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) continue;
+
+      const style = globalThis.getComputedStyle ? globalThis.getComputedStyle(block) : null;
+      if (
+        style &&
+        (style.display === "none" || style.visibility === "hidden" || style.opacity === "0")
+      ) {
+        continue;
+      }
+
+      const dist = distanceToRect(cursorPos.x, cursorPos.y, rect);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestBlock = block;
+      }
+    }
+
+    if (closestBlock) {
+      const codeTarget = closestBlock.tagName.toLowerCase() === "code" ||
+          closestBlock.tagName.toLowerCase() === "pre"
+        ? closestBlock
+        : (closestBlock.querySelector("pre, code") || closestBlock);
+
+      const clone = codeTarget.cloneNode(true);
+      const toRemove = clone.querySelectorAll(
+        "button, [class*='copy'], [class*='header'], [class*='toolbar'], [class*='actions'], [aria-label*='Copy'], [title*='Copy']",
+      );
+      toRemove.forEach((btn) => btn.remove());
+
+      let codeText = clone.innerText || clone.textContent || "";
+      codeText = codeText.trimEnd();
+
+      HUD.copyToClipboard(codeText);
+      const lineCount = codeText ? codeText.split("\n").length : 0;
+      HUD.show(`Yanked code snippet (${lineCount} line${lineCount === 1 ? "" : "s"})`, 2000);
+    } else {
+      HUD.show("No code snippet found nearby", 2000);
+    }
+  },
+
+  yankPageOrLines(count) {
+    if (count == null) {
+      const pageText =
+        (document.body ? document.body.innerText : document.documentElement.innerText) || "";
+      const trimmed = pageText.trim();
+      HUD.copyToClipboard(trimmed);
+      const lineCount = trimmed ? trimmed.split("\n").length : 0;
+      HUD.show(`Yanked whole page (${lineCount} line${lineCount === 1 ? "" : "s"})`, 2000);
+    } else {
+      const cursorPos = getCursorPosition();
+      let textBelowCursor = "";
+
+      if (document.caretRangeFromPoint) {
+        const range = document.caretRangeFromPoint(cursorPos.x, cursorPos.y);
+        if (range && range.startContainer) {
+          const fullRange = document.createRange();
+          fullRange.setStart(range.startContainer, range.startOffset);
+          if (document.body) {
+            fullRange.setEndAfter(document.body);
+          } else {
+            fullRange.setEndAfter(document.documentElement);
+          }
+          textBelowCursor = fullRange.toString();
+        }
+      } else if (document.caretPositionFromPoint) {
+        const pos = document.caretPositionFromPoint(cursorPos.x, cursorPos.y);
+        if (pos && pos.offsetNode) {
+          const fullRange = document.createRange();
+          fullRange.setStart(pos.offsetNode, pos.offset);
+          if (document.body) {
+            fullRange.setEndAfter(document.body);
+          } else {
+            fullRange.setEndAfter(document.documentElement);
+          }
+          textBelowCursor = fullRange.toString();
+        }
+      }
+
+      if (!textBelowCursor) {
+        const el = document.elementFromPoint(cursorPos.x, cursorPos.y) || document.body;
+        textBelowCursor = (el ? (el.innerText || el.textContent) : "") ||
+          (document.body ? (document.body.innerText || document.body.textContent) : "");
+      }
+
+      const allLines = (textBelowCursor || "").split("\n");
+      const selectedLines = allLines.slice(0, count).join("\n");
+      HUD.copyToClipboard(selectedLines);
+      HUD.show(`Yanked ${count} line${count === 1 ? "" : "s"} below cursor`, 2000);
+    }
   },
 
   openCopiedUrlInNewTab(count, request) {

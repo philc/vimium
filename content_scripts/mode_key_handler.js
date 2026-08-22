@@ -26,8 +26,42 @@ class KeyHandlerMode extends Mode {
     this.commandHandler = commandHandler;
   }
 
+  clearKeyTimer() {
+    if (this.keyTimer != null) {
+      clearTimeout(this.keyTimer);
+      this.keyTimer = null;
+      this.pendingCommand = null;
+    }
+  }
+
+  executePendingCommand() {
+    if (this.pendingCommand != null) {
+      const { command, count } = this.pendingCommand;
+      this.clearKeyTimer();
+      this.reset();
+      this.commandHandler({ command, count });
+      if ((this.options.count != null) && (--this.options.count <= 0)) {
+        this.exit();
+      }
+    }
+  }
+
+  hasChildMappings(mapping) {
+    if (!mapping || typeof mapping !== "object") return false;
+    const metadataKeys = [
+      "command",
+      "options",
+      "noRepeat",
+      "repeatLimit",
+      "background",
+      "topFrame",
+    ];
+    return Object.keys(mapping).some((k) => !metadataKeys.includes(k));
+  }
+
   // Reset the key state, optionally retaining the count provided.
   reset(countPrefix) {
+    this.clearKeyTimer();
     if (countPrefix == null) countPrefix = 0;
     this.countPrefix = countPrefix;
     this.keyState = [this.keyMapping];
@@ -79,6 +113,9 @@ class KeyHandlerMode extends Mode {
       this.reset(this.keyState.length === 1 ? (this.countPrefix * 10) + digit : digit);
       return this.suppressEvent;
     } else {
+      if (this.pendingCommand != null) {
+        this.executePendingCommand();
+      }
       if (keyChar) this.reset();
       return this.continueBubbling;
     }
@@ -117,10 +154,13 @@ class KeyHandlerMode extends Mode {
   }
 
   isInResetState() {
-    return (this.countPrefix === 0) && (this.keyState.length === 1);
+    return (this.countPrefix === 0) && (this.keyState.length === 1) &&
+      (this.pendingCommand == null);
   }
 
   handleKeyChar(keyChar) {
+    this.clearKeyTimer();
+
     // A count prefix applies only so long a keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
     if (!(keyChar in this.keyState[0])) {
       this.countPrefix = 0;
@@ -136,10 +176,19 @@ class KeyHandlerMode extends Mode {
     if (this.keyState[0].command != null) {
       const command = this.keyState[0];
       const count = this.countPrefix > 0 ? this.countPrefix : null;
-      this.reset();
-      this.commandHandler({ command, count });
-      if ((this.options.count != null) && (--this.options.count <= 0)) {
-        this.exit();
+      if (this.hasChildMappings(this.keyState[0])) {
+        // This key has both a command and continuation keys (e.g. 'y').
+        // Store the pending command and wait for disambiguation timeout.
+        this.pendingCommand = { command, count };
+        this.keyTimer = setTimeout(() => {
+          this.executePendingCommand();
+        }, 500);
+      } else {
+        this.reset();
+        this.commandHandler({ command, count });
+        if ((this.options.count != null) && (--this.options.count <= 0)) {
+          this.exit();
+        }
       }
     }
     return this.suppressEvent;

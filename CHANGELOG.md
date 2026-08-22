@@ -1,3 +1,17 @@
+Unreleased (2026-08-22)
+
+- Added `yankClosestLink` (`yl`): Copies the URL of the link closest to the current mouse cursor
+  position.
+- Added `yankClosestCode` (`yc`): Copies the code snippet closest to the mouse cursor (tailored for
+  AI web apps like Gemini, Claude, and ChatGPT, as well as GitHub and documentation sites,
+  automatically stripping toolbar copy buttons).
+- Added `yankPageOrLines` (`y` / `Y` / `[count]y`): Copies the readable contents of the whole page
+  (via `y` or `Y`), or copies `[count]` lines of text starting below the mouse cursor (e.g. `5y`).
+- Enhanced `KeyHandlerMode` and `Commands.installKeyStateMapping` to support multi-key sequences
+  with overlapping prefix commands via a 500ms disambiguation timer.
+- _Note: These features and changes were generated at the user's request with AI assistance using
+  Google's Gemini 3.7 Flash model._
+
 2.4.1, 2.4.2 (2026-03-07)
 
 - Fix issue where existing users were mistakenly opted-in to

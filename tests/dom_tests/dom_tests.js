@@ -1342,3 +1342,83 @@ context("GrabBackFocus", () => {
     assert.isTrue(DomUtils.isEditable(document.activeElement));
   });
 });
+
+context("Yank commands", () => {
+  let copiedText = null;
+  let hudText = null;
+  let originalCopyToClipboard;
+  let originalShow;
+
+  setup(() => {
+    copiedText = null;
+    hudText = null;
+    originalCopyToClipboard = HUD.copyToClipboard;
+    originalShow = HUD.show;
+    HUD.copyToClipboard = (text) => {
+      copiedText = text;
+    };
+    HUD.show = (text) => {
+      hudText = text;
+    };
+  });
+
+  teardown(() => {
+    HUD.copyToClipboard = originalCopyToClipboard;
+    HUD.show = originalShow;
+    document.getElementById("test-div").innerHTML = "";
+  });
+
+  context("yankClosestLink", () => {
+    should("yank the closest link to the cursor", () => {
+      document.getElementById("test-div").innerHTML = `
+        <div style="position: absolute; left: 10px; top: 10px;">
+          <a id="link1" href="https://example.com/first">First Link</a>
+        </div>
+        <div style="position: absolute; left: 500px; top: 500px;">
+          <a id="link2" href="https://example.com/second">Second Link</a>
+        </div>
+      `;
+      globalThis.dispatchEvent(new MouseEvent("mousemove", { clientX: 20, clientY: 20 }));
+      NormalModeCommands.yankClosestLink();
+      assert.equal("https://example.com/first", copiedText);
+      assert.isTrue(hudText.includes("Yanked https://example.com/first"));
+    });
+  });
+
+  context("yankClosestCode", () => {
+    should("yank the closest code block and strip copy buttons", () => {
+      document.getElementById("test-div").innerHTML = `
+        <div class="code-block" style="position: absolute; left: 10px; top: 10px;">
+          <div class="header"><button class="copy-btn">Copy</button></div>
+          <pre><code>const a = 1;
+const b = 2;</code></pre>
+        </div>
+      `;
+      globalThis.dispatchEvent(new MouseEvent("mousemove", { clientX: 30, clientY: 30 }));
+      NormalModeCommands.yankClosestCode();
+      assert.equal("const a = 1;\nconst b = 2;", copiedText);
+      assert.isTrue(hudText.includes("Yanked code snippet (2 lines)"));
+    });
+  });
+
+  context("yankPageOrLines", () => {
+    should("yank whole page contents when count is null", () => {
+      document.getElementById("test-div").innerHTML = "<p>Line 1</p><p>Line 2</p><p>Line 3</p>";
+      NormalModeCommands.yankPageOrLines(null);
+      assert.isTrue(copiedText.includes("Line 1"));
+      assert.isTrue(copiedText.includes("Line 2"));
+      assert.isTrue(copiedText.includes("Line 3"));
+      assert.isTrue(hudText.includes("Yanked whole page"));
+    });
+
+    should("yank specified number of lines when count is provided", () => {
+      document.getElementById("test-div").innerHTML =
+        "<p id='text'>First line\nSecond line\nThird line\nFourth line</p>";
+      globalThis.dispatchEvent(new MouseEvent("mousemove", { clientX: 0, clientY: 0 }));
+      NormalModeCommands.yankPageOrLines(2);
+      const lines = copiedText.split("\n");
+      assert.isTrue(lines.length <= 2);
+      assert.isTrue(hudText.includes("Yanked 2 lines below cursor"));
+    });
+  });
+});

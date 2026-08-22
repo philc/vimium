@@ -24,6 +24,7 @@
     "npm:jsdom@26": "26.0.0",
     "npm:json5@*": "2.2.3",
     "npm:json5@^2.2.3": "2.2.3",
+    "npm:puppeteer@*": "25.3.0",
     "npm:puppeteer@^25.3.0": "25.3.0"
   },
   "jsr": {

@@ -114,6 +114,27 @@ const allCommands = [
   },
 
   {
+    name: "yankClosestLink",
+    desc: "Copy URL of the link closest to the cursor",
+    group: "navigation",
+    noRepeat: true,
+  },
+
+  {
+    name: "yankClosestCode",
+    desc: "Copy code snippet closest to the cursor",
+    group: "navigation",
+    noRepeat: true,
+  },
+
+  {
+    name: "yankPageOrLines",
+    desc: "Copy whole page contents, or [count] lines below cursor",
+    group: "navigation",
+    noRepeat: false,
+  },
+
+  {
     name: "openCopiedUrlInCurrentTab",
     desc: "Open the clipboard's URL in the current tab",
     group: "navigation",
