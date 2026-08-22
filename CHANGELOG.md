@@ -9,7 +9,6 @@ Unreleased (2026-08-22)
   (via `y` or `Y`), or copies `[count]` lines of text starting below the mouse cursor (e.g. `5y`).
 - Enhanced `KeyHandlerMode` and `Commands.installKeyStateMapping` to support multi-key sequences
   with overlapping prefix commands via a 500ms disambiguation timer.
-- Added architectural documentation and developer onboarding guide in `GETTING_STARTED.md`.
 - _Note: These features and changes were generated at the user's request with AI assistance using
   Google's Gemini 3.7 Flash model._
 
