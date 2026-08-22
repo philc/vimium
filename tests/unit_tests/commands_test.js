@@ -232,4 +232,16 @@ context("Validate commands and options data structures", () => {
       }
     }
   });
+
+  should("support prefix keys that are also individual commands", async () => {
+    await Commands.loadKeyMappings(
+      "map y yankPageOrLines\nmap yl yankClosestLink\nmap yc yankClosestCode",
+    );
+    const mapping = (await chrome.storage.session.get("normalModeKeyStateMapping"))
+      .normalModeKeyStateMapping;
+    assert.equal("yankPageOrLines", mapping["y"].command);
+    assert.equal("yankClosestLink", mapping["y"]["l"].command);
+    assert.equal("yankClosestCode", mapping["y"]["c"].command);
+    assert.equal("copyCurrentUrl", mapping["y"]["y"].command);
+  });
 });

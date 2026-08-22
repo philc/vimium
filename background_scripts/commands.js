@@ -337,20 +337,14 @@ const Commands = {
       let currentMapping = keyStateMapping;
       for (let index = 0; index < registryEntry.keySequence.length; index++) {
         const key = registryEntry.keySequence[index];
-        if (currentMapping[key] != null ? currentMapping[key].command : undefined) {
-          // Do not overwrite existing command bindings, they take priority. NOTE(smblott) This is
-          // the legacy behaviour.
-          break;
-        } else if (index < (registryEntry.keySequence.length - 1)) {
+        if (index < (registryEntry.keySequence.length - 1)) {
           currentMapping = currentMapping[key] != null
             ? currentMapping[key]
             : (currentMapping[key] = {});
         } else {
-          currentMapping[key] = Object.assign({}, registryEntry);
-          // We don't need these properties in the content scripts.
-          for (const prop of ["keySequence"]) {
-            delete currentMapping[key][prop];
-          }
+          const entryCopy = Object.assign({}, registryEntry);
+          delete entryCopy.keySequence;
+          currentMapping[key] = Object.assign(currentMapping[key] || {}, entryCopy);
         }
       }
     }
@@ -420,6 +414,10 @@ const defaultKeyMappings = {
   "r": "reload",
   "R": "reload hard",
   "yy": "copyCurrentUrl",
+  "yl": "yankClosestLink",
+  "yc": "yankClosestCode",
+  "y": "yankPageOrLines",
+  "Y": "yankPageOrLines",
   "p": "openCopiedUrlInCurrentTab",
   "P": "openCopiedUrlInNewTab",
   "gi": "focusInput",
