@@ -1,0 +1,52 @@
+/*
+ * macOS Ventura – Key Mappings Theme
+ * Styles for showing key bindings. Shared by help_dialog_page.html and command_listing.html.
+ */
+
+.key-bindings {
+  max-width: 110px;
+  font-size: var(--mac-font-size-body);
+  text-align: right;
+  margin-right: var(--mac-space-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+/* A "key block" includes a key and a comma separator. */
+.key-block {
+  margin-bottom: var(--mac-space-1);
+}
+
+.key {
+  background-color: var(--mac-bg-secondary);
+  color: var(--mac-text-primary);
+  margin-left: 2px;
+  padding: 2px 6px;
+  border-radius: var(--mac-radius-xs);
+  border: 1px solid var(--mac-border-medium);
+  border-bottom-color: var(--mac-border-medium);
+  box-shadow: 0 1px 0 var(--mac-border-light);
+  font-family: monospace;
+  font-size: var(--mac-font-size-small);
+  transition: background-color 0.15s ease;
+}
+
+.comma {
+  margin-right: 3px;
+}
+
+/* Hide the trailing comma after the last key binding. */
+.key-block:last-of-type .comma {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .key {
+    background-color: var(--mac-bg-tertiary);
+    border: 1px solid var(--mac-border-light);
+    box-shadow: none;
+    color: var(--mac-text-primary);
+  }
+}

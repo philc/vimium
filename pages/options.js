@@ -2,6 +2,7 @@ import "./all_content_scripts.js";
 import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
 import { Commands, KeyMappingsParser } from "../background_scripts/commands.js";
 import * as userSearchEngines from "../background_scripts/user_search_engines.js";
+import { createThemePicker } from "../lib/theme_picker.js";
 
 const options = {
   filterLinkHints: "boolean",
@@ -22,6 +23,7 @@ const options = {
   searchEngines: "string",
   settingsVersion: "string", // This is a hidden field.
   smoothScroll: "boolean",
+  theme: "select",
   userDefinedLinkHintCss: "string",
   waitForEnterForFilteredHints: "boolean",
 };
@@ -50,6 +52,8 @@ export async function init() {
   }
 
   saveButton.addEventListener("click", () => saveOptions());
+
+  initThemePicker(onUpdated);
 
   getOptionEl("filterLinkHints").addEventListener(
     "click",
@@ -102,6 +106,27 @@ export function getOptionEl(optionName) {
   return document.querySelector(`*[name="${optionName}"]`);
 }
 
+// Fills in the theme picker with Vimium's available themes. The picker writes its value into the
+// hidden "theme" input, which is how the rest of the form reads and writes this setting.
+let themePicker = null;
+function initThemePicker(onUpdated) {
+  const hiddenInput = getOptionEl("theme");
+  themePicker = createThemePicker(
+    document.querySelector("#theme-picker"),
+    {
+      options: Themes.availableThemes.map((theme) => ({
+        value: theme,
+        label: Themes.displayNames[theme] ?? theme,
+      })),
+      value: hiddenInput.value,
+      onChange: (value) => {
+        hiddenInput.value = value;
+        onUpdated();
+      },
+    },
+  );
+}
+
 // Invoked when the user clicks the "reset" button next to an option's text field.
 function resetInputValue(event) {
   const parentDiv = event.target.parentNode.parentNode;
@@ -138,6 +163,8 @@ function setFormFromSettings(settings) {
   }
 
   ExclusionRulesEditor.setForm(settings["exclusionRules"]);
+
+  themePicker?.setValue(settings["theme"]);
 
   document.querySelector("#upload-backup").value = "";
   maintainLinkHintsView();

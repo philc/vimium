@@ -1,5 +1,6 @@
 import "../lib/utils.js";
 import "../lib/settings.js";
+import "../lib/themes.js";
 import "../lib/url_utils.js";
 import "../background_scripts/tab_recency.js";
 import * as bgUtils from "../background_scripts/bg_utils.js";
@@ -91,13 +92,24 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(onURLChange); // history.
 chrome.webNavigation.onReferenceFragmentUpdated.addListener(onURLChange); // Hash changed.
 
 if (!globalThis.isUnitTests) {
-  // Cache "content_scripts/vimium.css" in chrome.storage.session for UI components.
+  // Cache the active theme's "content_scripts/vimium.css" in chrome.storage.session for UI
+  // components, which inject it into their shadow DOM.
   (function () {
-    const url = chrome.runtime.getURL("content_scripts/vimium.css");
-    fetch(url).then(async (response) => {
+    const cacheVimiumCss = async () => {
+      const { theme } = await chrome.storage.sync.get("theme");
+      // The theme setting may not exist yet, or may be invalid; fall back to the default theme.
+      const themeName = Themes.isValidTheme(theme) ? theme : Themes.defaultTheme;
+      const url = chrome.runtime.getURL(
+        Themes.getThemePath(themeName, "content_scripts/vimium.css"),
+      );
+      const response = await fetch(url);
       if (response.ok) {
         chrome.storage.session.set({ vimiumCSSInChromeStorage: await response.text() });
       }
+    };
+    cacheVimiumCss();
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area == "sync" && changes.theme != null) cacheVimiumCss();
     });
   })();
 }

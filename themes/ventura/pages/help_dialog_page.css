@@ -1,0 +1,174 @@
+/* macOS Ventura – Help Dialog Theme */
+
+body {
+  font-family: var(--mac-font-family);
+}
+
+#container {
+  background-color: var(--mac-bg-tertiary);
+  border: 1px solid var(--mac-border-light);
+  border-radius: var(--mac-radius-window);
+  box-shadow: var(--mac-shadow-md);
+  width: 840px;
+  max-width: calc(100% - 100px);
+  max-height: calc(100% - 100px);
+  margin: 50px auto;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+#dialog {
+  min-width: 600px;
+  padding: var(--mac-space-3) var(--mac-space-4);
+  color: var(--mac-text-primary);
+}
+
+a {
+  text-decoration: underline;
+  color: var(--mac-accent);
+  cursor: pointer;
+}
+
+header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+a#close {
+  font-family: "courier new", monospace;
+  font-weight: bold;
+  color: var(--mac-text-tertiary);
+  text-decoration: none;
+  font-size: 24px;
+  position: relative;
+  top: 3px;
+  padding-left: 5px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+a#close:hover {
+  color: var(--mac-text-primary);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+h1 {
+  font-size: var(--mac-font-size-title-1);
+  white-space: nowrap;
+  flex-grow: 1;
+  font-weight: var(--mac-font-weight-medium);
+  margin: 4px 0;
+}
+
+h1 .vim {
+  color: var(--mac-accent);
+}
+
+header a {
+  font-size: var(--mac-font-size-body);
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+header a.close {
+  padding-right: 0;
+}
+
+#commands-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.column {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  row-gap: 3px;
+}
+
+h2 {
+  margin-top: 3px;
+  margin-bottom: 4px;
+  font-size: var(--mac-font-size-title-2);
+  font-weight: var(--mac-font-weight-semibold);
+}
+
+div[data-group] {
+  display: contents;
+}
+
+.row {
+  display: contents;
+}
+
+.help-description {
+  font-size: var(--mac-font-size-body);
+  color: var(--mac-text-secondary);
+}
+
+div.divider {
+  height: 1px;
+  width: 100%;
+  margin: var(--mac-space-3) auto;
+  background-color: var(--mac-border-medium);
+}
+
+/* Advanced commands are hidden by default until "show advanced" is clicked. */
+.row.advanced {
+  display: none;
+}
+
+#dialog.show-advanced .row.advanced {
+  display: contents;
+}
+
+footer {
+  font-size: var(--mac-font-size-small);
+  display: flex;
+  justify-content: space-between;
+}
+
+.version-info {
+  text-align: right;
+}
+
+#toggle-advanced {
+  text-align: right;
+  font-size: var(--mac-font-size-small);
+}
+
+/* Dark Mode CSS for Help Dialog */
+@media (prefers-color-scheme: dark) {
+  #container {
+    border-color: var(--mac-border-light);
+    background-color: var(--mac-bg-tertiary);
+  }
+
+  #dialog {
+    background-color: var(--mac-bg-primary);
+    color: var(--mac-text-primary);
+  }
+
+  a {
+    color: var(--mac-accent);
+  }
+
+  h1,
+  h2 {
+    color: var(--mac-text-primary);
+  }
+
+  h1 .vim {
+    color: var(--mac-accent);
+  }
+
+  div.divider {
+    background-color: var(--mac-border-light);
+  }
+
+  .help-description {
+    color: var(--mac-text-secondary);
+  }
+}

@@ -5,6 +5,8 @@
     <link rel="stylesheet" type="text/css" href="options.css">
     <link rel="stylesheet" type="text/css" href="action.css">
     <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css">
+    <script src="../lib/themes.js"></script>
+    <script src="../lib/themes_page_loader.js"></script>
     <script src="action.js" type="module"></script>
   </head>
 
@@ -47,6 +49,12 @@
     </div>
 
     <div id="dialog-body">
+      <div id="theme-container">
+        <label>Theme</label>
+        <div id="theme-select" class="theme-picker" tabindex="0" role="listbox"
+          aria-label="Theme"></div>
+      </div>
+
       <div>
         <span id="how-many-enabled">All</span> Vimium keys are enabled on this page.
       </div>

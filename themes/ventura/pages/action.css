@@ -1,0 +1,70 @@
+/* macOS Ventura – Action Popup Theme */
+
+:root {
+  --padding: var(--mac-space-4);
+}
+
+body {
+  /* This will be the size of the toolbar action popup. */
+  width: 600px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  background: var(--mac-bg-primary);
+  font-family: var(--mac-font-family);
+  color: var(--mac-text-primary);
+}
+
+h1 {
+  font-size: var(--mac-font-size-title-2);
+  font-weight: var(--mac-font-weight-medium);
+}
+
+#dialog-body {
+  padding: var(--padding);
+  padding-right: 0;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+#not-enabled-error,
+#firefox-missing-permissions-error {
+  padding: var(--padding);
+}
+
+#dialog-body>* {
+  margin: var(--mac-space-3) 0;
+}
+
+#dialog-body>*:first-child {
+  margin-top: 0;
+}
+
+#dialog-body>*:last-child {
+  margin-bottom: 0;
+}
+
+#how-many-enabled {
+  font-weight: var(--mac-font-weight-semibold);
+}
+
+#exclusion-scroll-box {
+  max-height: 140px;
+}
+
+footer {
+  background-color: var(--mac-bg-elevated);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid var(--mac-border-light);
+  padding: var(--padding);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  position: inherit;
+}
+
+footer .options-message {
+  flex-grow: 1;
+}

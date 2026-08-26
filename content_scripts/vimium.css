@@ -21,6 +21,13 @@
   --vimium-foreground-color: white;
   --vimium-foreground-text-color: black;
   --vimium-link-color: blue;
+
+  /* These are consumed by the user-customizable userDefinedLinkHintCss setting, and can be
+   * overridden by themes. These are the values which Vimium's UI has always displayed. */
+  --vimium-hint-background: linear-gradient(to bottom, #fff785 0%, #ffc542 100%);
+  --vimium-hint-border-color: #e3be23;
+  --vimium-hint-text-color: black;
+  --vimium-hint-matching-character-color: #d4ac3a;
 }
 
 .vimium-reset,
@@ -112,15 +119,15 @@ div.internal-vimium-hint-marker {
   overflow: hidden;
   font-size: 11px;
   padding: 1px 3px 0px 3px;
-  background: linear-gradient(to bottom, #fff785 0%, #ffc542 100%);
-  border: solid 1px #c38a22;
+  background: var(--vimium-hint-background);
+  border: solid 1px var(--vimium-hint-border-color);
   border-radius: 3px;
   box-shadow: 0px 3px 7px 0px rgba(0, 0, 0, 0.3);
   z-index: 2147483647;
 }
 
 div.internal-vimium-hint-marker span {
-  color: #302505;
+  color: var(--vimium-hint-text-color);
   font-family: Helvetica, Arial, sans-serif;
   font-weight: bold;
   font-size: 11px;
@@ -128,7 +135,7 @@ div.internal-vimium-hint-marker span {
 }
 
 div.internal-vimium-hint-marker > .matchingCharacter {
-  color: #d4ac3a;
+  color: var(--vimium-hint-matching-character-color);
 }
 
 div > .vimiumActiveHintMarker span {

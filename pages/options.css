@@ -222,7 +222,8 @@ textarea:read-only {
 }
 
 input[type="text"],
-textarea {
+textarea,
+select {
   border: 1px solid #bfbfbf;
   border-radius: 2px;
   color: #444;
@@ -233,10 +234,81 @@ textarea {
 
 button:focus,
 input[type="text"]:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   -webkit-transition: border-color 200ms;
   border-color: #4d90fe;
   outline: none;
+}
+
+/* The theme picker in Vimium's action popup. It's a custom-drawn dropdown, because the popup of a
+ * native <select> cannot be styled with CSS. */
+#theme-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-picker {
+  position: relative;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  border: 1px solid #bfbfbf;
+  border-radius: 2px;
+  color: #444;
+  background-color: white;
+  font: inherit;
+  padding: 3px 6px;
+}
+
+.theme-picker:focus {
+  border-color: #4d90fe;
+  outline: none;
+}
+
+#theme-container .theme-picker {
+  flex-grow: 1;
+  margin-right: 8px;
+}
+
+.theme-picker-value::after {
+  content: "";
+  display: inline-block;
+  margin-left: 6px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  vertical-align: middle;
+}
+
+.theme-picker-options {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 2px 0;
+  list-style: none;
+  background-color: white;
+  border: 1px solid #bfbfbf;
+  border-radius: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.theme-picker-options li {
+  padding: 4px 10px;
+}
+
+.theme-picker-options li:hover,
+.theme-picker-options li.highlighted {
+  background-color: #eee;
+}
+
+.theme-picker-options li.selected {
+  background-color: #4d90fe;
+  color: white;
 }
 
 /*
@@ -436,5 +508,38 @@ input#upload-backup {
     color: #75747a;
     border-color: #75747a;
     background-color: #222127;
+  }
+
+  /* This matches the dark mode styling of inputs, which is defined in vimium.css. */
+  body.vimium-body select {
+    background-color: var(--vimium-foreground-color);
+    border-color: var(--vimium-foreground-color);
+    color: var(--vimium-foreground-text-color);
+  }
+
+  body.vimium-body .theme-picker {
+    background-color: var(--vimium-foreground-color);
+    border-color: var(--vimium-foreground-color);
+    color: var(--vimium-foreground-text-color);
+  }
+
+  body.vimium-body .theme-picker:focus {
+    border-color: var(--vimium-link-color);
+  }
+
+  body.vimium-body .theme-picker-options {
+    background-color: var(--vimium-foreground-color);
+    border-color: var(--vimium-foreground-color);
+    color: var(--vimium-foreground-text-color);
+  }
+
+  body.vimium-body .theme-picker-options li:hover,
+  body.vimium-body .theme-picker-options li.highlighted {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  body.vimium-body .theme-picker-options li.selected {
+    background-color: var(--vimium-link-color);
+    color: var(--vimium-foreground-color);
   }
 }

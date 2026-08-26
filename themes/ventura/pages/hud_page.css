@@ -1,0 +1,75 @@
+/* macOS Ventura – HUD Theme */
+
+#hud-container {
+  display: block;
+  position: fixed;
+  width: calc(100% - 20px);
+  bottom: 8px;
+  left: 8px;
+  background-color: var(--mac-bg-tertiary);
+  color: var(--mac-text-primary);
+  text-align: left;
+  border-radius: var(--mac-radius-lg);
+  box-shadow: var(--mac-shadow-md);
+  border: 1px solid var(--mac-border-light);
+  z-index: 2147483647;
+  font-family: var(--mac-font-family);
+}
+
+#search-area {
+  display: block;
+  padding: var(--mac-space-1);
+  color: var(--mac-text-primary);
+  border-radius: var(--mac-radius-lg) var(--mac-radius-lg) 0 0;
+}
+
+#hud {
+  font-size: var(--mac-font-size-body);
+  height: 30px;
+  margin-bottom: 0;
+  padding: 2px var(--mac-space-2);
+  border-radius: var(--mac-radius-md);
+  width: 100%;
+  outline: none;
+  box-sizing: border-box;
+  line-height: 20px;
+}
+
+span#hud-find-input,
+span#hud-match-count {
+  display: inline;
+  outline: none;
+  white-space: nowrap;
+  overflow-y: hidden;
+}
+
+span#hud-find-input:before {
+  content: "/";
+}
+
+span#hud-match-count {
+  color: var(--mac-text-tertiary);
+  font-size: var(--mac-font-size-small);
+}
+
+span#hud-find-input br {
+  display: none;
+}
+
+span#hud-find-input * {
+  display: inline;
+  white-space: nowrap;
+}
+
+@media (prefers-color-scheme: light) {
+  #hud-body {
+    background-color: var(--mac-bg-primary);
+  }
+
+  /* This creates a border around the area where you type, which is nice effect on the light color
+   * scheme. It's hard to make this effect visible in dark mode, so we don't use it. */
+  #hud.hud-find {
+    background-color: white;
+    border: 1px solid var(--mac-border-medium);
+  }
+}

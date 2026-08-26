@@ -1,0 +1,175 @@
+/* macOS Ventura – Vomnibar Theme */
+
+ul {
+  list-style: none;
+  display: none;
+  margin: 0;
+  padding: 0;
+}
+
+#vomnibar {
+  display: block;
+  position: fixed;
+  width: calc(100% - 20px);
+  /* adjusted to keep border radius and box-shadow visible*/
+  top: 8px;
+  left: 8px;
+  font-family: var(--mac-font-family);
+
+  background: var(--mac-bg-tertiary);
+  text-align: left;
+  border-radius: var(--mac-radius-lg);
+  box-shadow: var(--mac-shadow-md);
+  border: 1px solid var(--mac-border-light);
+  /* One less than hint markers and the help dialog (see ../content_scripts/vimium.css). */
+  z-index: 2139999999;
+}
+
+#vomnibar input {
+  font-family: var(--mac-font-family);
+  font-size: 18px;
+  height: 36px;
+  margin-bottom: 0;
+  padding: 4px var(--mac-space-3);
+  background-color: var(--mac-bg-primary);
+  color: var(--mac-text-primary);
+  border-radius: var(--mac-radius-md);
+  border: 1px solid var(--mac-border-medium);
+  width: 100%;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#vomnibar input:focus {
+  border-color: var(--mac-accent);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
+}
+
+#vomnibar-search-area {
+  display: block;
+  padding: var(--mac-space-3);
+  border-radius: var(--mac-radius-lg) var(--mac-radius-lg) 0 0;
+  border-bottom: 1px solid var(--mac-border-light);
+}
+
+#vomnibar ul {
+  border-radius: 0 0 var(--mac-radius-lg) var(--mac-radius-lg);
+}
+
+#vomnibar li {
+  border-bottom: 1px solid var(--mac-border-light);
+  line-height: 1.2em;
+  padding: var(--mac-space-2) var(--mac-space-3);
+  font-size: var(--mac-font-size-body);
+  color: var(--mac-text-primary);
+  position: relative;
+  display: list-item;
+  margin: auto;
+  transition: background-color 0.15s ease;
+}
+
+#vomnibar li:last-of-type {
+  border-bottom: none;
+}
+
+#vomnibar li .top-half,
+#vomnibar li .bottom-half {
+  display: block;
+  overflow: hidden;
+}
+
+#vomnibar li .bottom-half {
+  font-size: var(--mac-font-size-small);
+  margin-top: 3px;
+  padding: 2px 0;
+  color: var(--mac-text-secondary);
+}
+
+#vomnibar li .icon {
+  padding: 0 13px 0 6px;
+  vertical-align: bottom;
+}
+
+#vomnibar li .source {
+  color: var(--mac-text-tertiary);
+  margin-right: 4px;
+}
+
+#vomnibar li .relevancy {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 5px;
+  color: var(--mac-text-primary);
+  font-family: monospace;
+  width: 100px;
+  overflow: hidden;
+}
+
+#vomnibar li .url {
+  white-space: nowrap;
+  color: var(--mac-accent);
+}
+
+#vomnibar li .match {
+  font-weight: var(--mac-font-weight-semibold);
+  color: var(--mac-text-primary);
+}
+
+#vomnibar li em,
+#vomnibar li .title {
+  color: var(--mac-text-primary);
+  margin-left: 4px;
+}
+
+#vomnibar li em {
+  font-style: italic;
+}
+
+#vomnibar li em .match,
+#vomnibar li .title .match {
+  color: var(--mac-text-primary);
+}
+
+#vomnibar li.selected {
+  background-color: var(--mac-accent);
+  color: #fff;
+  border-radius: var(--mac-radius-sm);
+}
+
+#vomnibar li.selected .url {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+#vomnibar li.selected .source {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+#vomnibar li.selected .match,
+#vomnibar li.selected em,
+#vomnibar li.selected .title {
+  color: #fff;
+}
+
+#vomnibar input::selection {
+  background-color: rgba(0, 122, 255, 0.2);
+}
+
+.no-insert-text {
+  visibility: hidden;
+}
+
+/* Dark Vomnibar – Ventura dark mode overrides via prefers-color-scheme are already handled
+   by the CSS variables redefined in vimium.css @media (prefers-color-scheme: dark). No
+   additional dark overrides needed here since everything references --mac-* variables. */
+
+@media (prefers-color-scheme: dark) {
+  #vomnibar input:focus {
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.35);
+  }
+
+  #vomnibar li.selected {
+    background-color: var(--mac-accent);
+  }
+}

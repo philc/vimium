@@ -1,6 +1,8 @@
 import "../lib/utils.js";
 import "../lib/dom_utils.js";
 import "../lib/settings.js";
+import "../lib/themes.js";
+import { createThemePicker } from "../lib/theme_picker.js";
 
 import * as bgUtils from "../background_scripts/bg_utils.js";
 import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
@@ -47,6 +49,8 @@ const ActionPage = {
 
     document.querySelector("#optionsLink").href = chrome.runtime.getURL("pages/options.html");
 
+    this.initThemeSelect();
+
     const saveButton = document.querySelector("#save");
     saveButton.addEventListener("click", () => this.onSave());
 
@@ -92,6 +96,25 @@ const ActionPage = {
       // If there's no content script running in the activeTab, we'll get a connection error.
       return false;
     }
+  },
+
+  initThemeSelect() {
+    createThemePicker(
+      document.querySelector("#theme-select"),
+      {
+        options: Themes.availableThemes.map((theme) => ({
+          value: theme,
+          label: Themes.displayNames[theme] ?? theme,
+        })),
+        value: Settings.get("theme"),
+        onChange: async (theme) => {
+          await Settings.set(
+            "theme",
+            Themes.isValidTheme(theme) ? theme : Themes.defaultTheme,
+          );
+        },
+      },
+    );
   },
 
   showValidationErrors() {

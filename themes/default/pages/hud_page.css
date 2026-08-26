@@ -1,0 +1,72 @@
+#hud-container {
+  display: block;
+  position: fixed;
+  width: calc(100% - 20px);
+  bottom: 8px;
+  left: 8px;
+  background-color: var(--vimium-foreground-color);
+  color: var(--vimium-foreground-text-color);
+  text-align: left;
+  border-radius: 4px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
+  border: 1px solid #aaa;
+  z-index: 2147483647;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+#search-area {
+  display: block;
+  padding: 3px;
+  color: var(--vimium-foreground-text-color);
+  border-radius: 4px 4px 0 0;
+}
+
+#hud {
+  font-size: 14px;
+  height: 30px;
+  margin-bottom: 0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  width: 100%;
+  outline: none;
+  box-sizing: border-box;
+  line-height: 20px;
+}
+
+span#hud-find-input, span#hud-match-count {
+  display: inline;
+  outline: none;
+  white-space: nowrap;
+  overflow-y: hidden;
+}
+
+span#hud-find-input:before {
+  content: "/";
+}
+
+span#hud-match-count {
+  color: #aaa;
+  font-size: 12px;
+}
+
+span#hud-find-input br {
+  display: none;
+}
+
+span#hud-find-input * {
+  display: inline;
+  white-space: nowrap;
+}
+
+@media (prefers-color-scheme: light) {
+  #hud-body {
+    background-color: #f1f1f1;
+  }
+
+  /* This creates a border around the area where you type, which is nice effect on the light color
+   * scheme. It's hard to make this effect visible in dark mode, so we don't use it. */
+  #hud.hud-find {
+    background-color: white;
+    border: 1px solid #ccc;
+  }
+}

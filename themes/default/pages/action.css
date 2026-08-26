@@ -1,0 +1,60 @@
+:root {
+  --padding: 15px;
+}
+
+body {
+  /* This will be the size of the toolbar action popup. */
+  width: 600px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  font-size: 18px;
+}
+
+#dialog-body {
+  padding: var(--padding);
+  padding-right: 0;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+#not-enabled-error, #firefox-missing-permissions-error {
+  padding: var(--padding);
+}
+
+#dialog-body > * {
+  margin: 10px 0;
+}
+
+#dialog-body > *:first-child {
+  margin-top: 0;
+}
+
+#dialog-body > *:last-child {
+  margin-bottom: 0;
+}
+
+#how-many-enabled {
+  font-weight: bold;
+}
+
+#exclusion-scroll-box {
+  max-height: 140px;
+}
+
+footer {
+  background-color: var(--vimium-foreground-color);
+  padding: var(--padding);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  position: inherit;
+}
+
+footer .options-message {
+  flex-grow: 1;
+}

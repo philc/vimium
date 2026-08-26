@@ -245,6 +245,43 @@ const onFocus = forTrusted(function (event) {
   }
 });
 
+// Injects the active theme's stylesheet into this frame. The theme's styles are appended after the
+// manifest-declared "content_scripts/vimium.css", so they take precedence in the cascade. The
+// default theme requires no overlay, because it is identical to Vimium's built-in styles.
+let injectedTheme = null;
+function applyTheme() {
+  if (globalThis.document == null) return;
+  let theme;
+  try {
+    theme = Settings.get("theme");
+  } catch {
+    return; // Settings have not yet been loaded.
+  }
+  if (!Themes.isValidTheme(theme)) theme = Themes.defaultTheme;
+  if (theme === injectedTheme) return;
+  injectedTheme = theme;
+
+  for (const el of document.querySelectorAll("link[data-vimium-theme]")) {
+    el.remove();
+  }
+  if (theme === Themes.defaultTheme) return;
+
+  const parent = document.head || document.documentElement;
+  if (parent == null) {
+    // The document hasn't been created yet; try again once it has.
+    injectedTheme = null;
+    DomUtils.documentReady().then(applyTheme);
+    return;
+  }
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = chrome.runtime.getURL(Themes.getThemePath(theme, "content_scripts/vimium.css"));
+  link.setAttribute("data-vimium-theme", theme);
+  parent.appendChild(link);
+}
+
+Settings.addEventListener("change", () => applyTheme());
+
 // We install these listeners directly (that is, we don't use installListener) because we still need
 // to receive events when Vimium is not enabled.
 globalThis.addEventListener("focus", onFocus, true);
@@ -297,9 +334,18 @@ const flashFrame = (() => {
       // Create a shadow DOM wrapping the frame so the page's styles don't interfere with ours.
       const shadowDOM = highlightedFrameElement.attachShadow({ mode: "open" });
 
-      // Inject stylesheet.
+      // Inject stylesheet. Use the active theme's stylesheet when one is set.
       const styleEl = DomUtils.createElement("style");
-      const vimiumCssUrl = chrome.runtime.getURL("content_scripts/vimium.css");
+      let theme;
+      try {
+        theme = Settings.get("theme");
+      } catch {
+        theme = Themes.defaultTheme;
+      }
+      if (!Themes.isValidTheme(theme)) theme = Themes.defaultTheme;
+      const vimiumCssUrl = chrome.runtime.getURL(
+        Themes.getThemePath(theme, "content_scripts/vimium.css"),
+      );
       styleEl.textContent = `@import url("${vimiumCssUrl}");`;
       shadowDOM.appendChild(styleEl);
 
@@ -442,6 +488,8 @@ async function checkIfEnabledForUrl() {
   Utils._browserInfoLoaded = true;
   // This is the first time we learn what this frame's ID is.
   globalThis.frameId = response.frameId;
+
+  applyTheme();
 
   if (normalMode == null) installModes();
   normalMode.setPassKeys(response.passKeys);

@@ -10,6 +10,7 @@ import "../lib/dom_utils.js";
 import "../lib/rect.js";
 import "../lib/handler_stack.js";
 import "../lib/settings.js";
+import "../lib/themes.js";
 import "../lib/find_mode_history.js";
 
 import "../content_scripts/mode.js";

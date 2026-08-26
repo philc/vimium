@@ -6,6 +6,8 @@
     <meta name="color-scheme" content="light dark">
     <link rel="stylesheet" type="text/css" href="options.css">
     <link rel="stylesheet" type="text/css" href="../content_scripts/vimium.css" />
+    <script src="../lib/themes.js"></script>
+    <script src="../lib/themes_page_loader.js"></script>
     <script src="options.js" type="module"></script>
   </head>
 
@@ -15,6 +17,17 @@
       <input type="hidden" name="settingsVersion" />
 
       <div id="settings-grid-container">
+        <h2>Theme</h2>
+        <div>
+          <input type="hidden" name="theme" />
+          <div id="theme-picker" class="theme-picker" tabindex="0" role="listbox"
+            aria-label="Theme"></div>
+        </div>
+        <div class="example">
+          The visual style used by Vimium's UI elements, such as link hints, the Vomnibar and the
+          help dialog.
+        </div>
+
         <h2>Excluded URLs and keys</h2>
         <div>
           <div id="exclusion-scroll-box">

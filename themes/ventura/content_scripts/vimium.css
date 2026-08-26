@@ -1,0 +1,372 @@
+/*
+ * Many CSS class names in this file use the verbose "vimium-" as the class name. This is so we
+ * don't use the same CSS class names that the page is using, so the page's CSS doesn't mess with
+ * the style of our Vimium dialogs.
+ *
+ * We use the maximum z-index value for all Vimium elements to guarantee that they always appear on
+ * top. Chrome supports z-index values up to 2,147,483,647 (= 2^31 - 1). We utilize the maximum
+ * z-index value allowable to ensure Vimium elements have precedence over all other page elements.
+ */
+
+/*
+ * This vimium-reset class can be added to any of our UI elements to give it a clean slate. This is
+ * useful in case the page has declared a broad rule like "a { padding: 50px; }" which will mess up
+ * our UI. These declarations contain more specifiers than necessary to increase their specificity
+ * (precedence).
+ */
+
+/* ==============================
+   macOS Ventura Theme – Root Variables (Light)
+   ============================== */
+
+:root {
+  /* Typography – macOS Ventura system font stack */
+  --mac-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "SF Pro Display", system-ui, sans-serif;
+
+  --mac-font-size-large-title: 26px;
+  --mac-font-size-title-1: 22px;
+  --mac-font-size-title-2: 17px;
+  --mac-font-size-body: 13px;
+  --mac-font-size-small: 11px;
+
+  --mac-font-weight-regular: 400;
+  --mac-font-weight-medium: 500;
+  --mac-font-weight-semibold: 600;
+  --mac-font-weight-bold: 600;
+
+  /* Background hierarchy */
+  --mac-bg-primary: #F6F6F7;
+  --mac-bg-secondary: #ECECEC;
+  --mac-bg-tertiary: #E2E2E2;
+  --mac-bg-elevated: rgba(255, 255, 255, 0.75);
+
+  /* Text */
+  --mac-text-primary: #000000;
+  --mac-text-secondary: rgba(60, 60, 67, 0.6);
+  --mac-text-tertiary: rgba(60, 60, 67, 0.4);
+  --mac-text-disabled: rgba(0, 0, 0, 0.35);
+
+  /* Accent */
+  --mac-accent: #007AFF;
+
+  /* Borders */
+  --mac-border-light: rgba(0, 0, 0, 0.08);
+  --mac-border-medium: rgba(0, 0, 0, 0.12);
+
+  /* Radius */
+  --mac-radius-xs: 4px;
+  --mac-radius-sm: 6px;
+  --mac-radius-md: 8px;
+  --mac-radius-lg: 12px;
+  --mac-radius-window: 14px;
+
+  /* Spacing */
+  --mac-space-1: 4px;
+  --mac-space-2: 8px;
+  --mac-space-3: 12px;
+  --mac-space-4: 16px;
+  --mac-space-5: 20px;
+  --mac-space-6: 24px;
+
+  /* Shadow */
+  --mac-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --mac-shadow-md: 0 6px 20px rgba(0, 0, 0, 0.12);
+
+  /* Metrics */
+  --mac-titlebar-height: 38px;
+  --mac-toolbar-height: 44px;
+  --mac-sidebar-width: 240px;
+
+  /* Legacy Vimium aliases (mapped to Ventura tokens) */
+  --vimium-background-color: var(--mac-bg-primary);
+  --vimium-background-text-color: var(--mac-text-primary);
+  --vimium-foreground-color: var(--mac-bg-secondary);
+  --vimium-foreground-text-color: var(--mac-text-primary);
+  --vimium-link-color: var(--mac-accent);
+
+  /* Link hint aliases (mapped to Ventura tokens; these follow dark mode automatically). */
+  --vimium-hint-background: var(--mac-bg-tertiary);
+  --vimium-hint-border-color: var(--mac-border-medium);
+  --vimium-hint-text-color: var(--mac-text-primary);
+  --vimium-hint-matching-character-color: var(--mac-accent);
+}
+
+/* ==============================
+   macOS Ventura Theme – Dark Mode
+   ============================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mac-bg-primary: #1E1E1E;
+    --mac-bg-secondary: #2C2C2E;
+    --mac-bg-tertiary: #3A3A3C;
+    --mac-bg-elevated: rgba(30, 30, 30, 0.75);
+
+    --mac-text-primary: #FFFFFF;
+    --mac-text-secondary: rgba(235, 235, 245, 0.6);
+    --mac-text-tertiary: rgba(235, 235, 245, 0.4);
+    --mac-text-disabled: rgba(255, 255, 255, 0.35);
+
+    --mac-border-light: rgba(255, 255, 255, 0.08);
+    --mac-border-medium: rgba(255, 255, 255, 0.12);
+
+    --mac-accent: #0A84FF;
+  }
+
+  /* DarkReader is a popular dark mode browser extension. It can apply an invert filter to the whole
+   * page to make the page dark, when used in Filter and Filter+ modes. We want to reverse/invert
+   * that filter again for Vimium's UI elements, because Vimium is already dark mode aware. */
+  iframe.vimium-reverse-dark-reader-filter {
+    -webkit-filter: invert(100%) hue-rotate(180deg) !important;
+    filter: invert(100%) hue-rotate(180deg) !important;
+  }
+
+  /* Dark mode CSS for options page and exclusions */
+
+  body.vimium-body {
+    background-color: var(--mac-bg-primary);
+    color: var(--mac-text-primary);
+  }
+
+  body.vimium-body a,
+  body.vimium-body a:visited {
+    color: var(--mac-accent);
+  }
+
+  body.vimium-body textarea,
+  body.vimium-body input {
+    background-color: var(--mac-bg-tertiary);
+    border-color: var(--mac-border-medium);
+    color: var(--mac-text-primary);
+  }
+
+  body.vimium-body div.example {
+    color: var(--mac-text-secondary);
+  }
+}
+
+/* ==============================
+   Vimium Reset (cleaned up)
+   ============================== */
+
+.vimium-reset,
+div.vimium-reset,
+span.vimium-reset,
+table.vimium-reset,
+a.vimium-reset,
+a:visited.vimium-reset,
+a:link.vimium-reset,
+a:hover.vimium-reset,
+td.vimium-reset,
+tr.vimium-reset {
+  background: none;
+  border: none;
+  bottom: auto;
+  box-shadow: none;
+  color: var(--mac-text-primary);
+  cursor: auto;
+  display: inline;
+  float: none;
+  font-family: var(--mac-font-family);
+  font-size: inherit;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: normal;
+  height: auto;
+  left: auto;
+  letter-spacing: 0;
+  line-height: 100%;
+  margin: 0;
+  max-height: none;
+  max-width: none;
+  min-height: 0;
+  min-width: 0;
+  opacity: 1;
+  padding: 0;
+  position: static;
+  right: auto;
+  text-align: left;
+  text-decoration: none;
+  text-indent: 0;
+  text-shadow: none;
+  text-transform: none;
+  top: auto;
+  vertical-align: baseline;
+  white-space: normal;
+  width: auto;
+  z-index: 2147483647;
+}
+
+thead.vimium-reset,
+tbody.vimium-reset {
+  display: table-header-group;
+}
+
+tbody.vimium-reset {
+  display: table-row-group;
+}
+
+/*
+ * Linkhints CSS – macOS Ventura style
+ */
+
+/* Prior to 2025, we used camel case for all CSS selectors. We're preserving some camel case class
+ * names here in link hints for backwards compatibility, because they're user-customizable via the
+ * userDefinedLinkHintCss setting.
+ *
+ * Our default example value for userDefinedLinkHintCss refers to the "vimiumHintMarker" and
+ * "matchingCharacter" classes. We'll assume these are user-facing and should not be changed:
+ *   - vimiumHintMarker
+ *   - matchingCharacter
+ *   - vimiumActiveHintMarker
+ *
+ * Note that link hint elements have both internal-vimium-hint-marker and vimiumHintMarker classes.
+ * Presumably the "internal-" classes were meant to contain non-user-facing styles, and
+ * vimiumHintMarker was meant to be an empty vessel for users to attach their own styles to.
+ */
+
+div#vimium-hint-marker-container {
+  pointer-events: none;
+}
+
+div.internal-vimium-hint-marker {
+  position: absolute;
+  display: block;
+  top: -1px;
+  left: -1px;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: var(--mac-font-size-small);
+  padding: 1px 4px 1px 4px;
+  background: var(--mac-bg-tertiary);
+  border: 1px solid var(--mac-border-medium);
+  border-radius: var(--mac-radius-sm);
+  box-shadow: var(--mac-shadow-md);
+  z-index: 2147483647;
+}
+
+div.internal-vimium-hint-marker span {
+  color: var(--mac-text-primary);
+  font-family: var(--mac-font-family);
+  font-weight: var(--mac-font-weight-semibold);
+  font-size: var(--mac-font-size-small);
+  text-shadow: none;
+}
+
+div.internal-vimium-hint-marker>.matchingCharacter {
+  color: var(--mac-accent);
+}
+
+div>.vimiumActiveHintMarker span {
+  color: var(--mac-accent) !important;
+}
+
+/* Input hints CSS */
+
+div.internal-vimium-input-hint {
+  position: absolute;
+  display: block;
+  background-color: rgba(0, 122, 255, 0.15);
+  border: 1px solid var(--mac-accent);
+  border-radius: var(--mac-radius-xs);
+  pointer-events: none;
+}
+
+div.internal-vimium-selected-input-hint {
+  background-color: rgba(255, 59, 48, 0.2);
+  border: 1px solid #FF3B30 !important;
+}
+
+div.internal-vimium-selected-input-hint span {
+  color: white !important;
+}
+
+div.vimium-highlighted-frame {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  padding: 0px;
+  margin: 0px;
+  border: 5px solid var(--mac-accent);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+iframe.vimium-help-dialog-frame {
+  background-color: rgba(0, 0, 0, 0.45);
+  padding: 0px;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  display: block;
+  position: fixed;
+  border: none;
+  z-index: 2147483647;
+}
+
+iframe.vimium-hud-frame {
+  background-color: transparent;
+  padding: 0px;
+  overflow: hidden;
+  display: block;
+  position: fixed;
+  width: 20%;
+  min-width: 350px;
+  height: 58px;
+  bottom: -14px;
+  right: 20px;
+  margin: 0 0 0 -40%;
+  border: none;
+  z-index: 2147483647;
+  opacity: 0;
+}
+
+body.vimium-find-mode ::selection {
+  background: var(--mac-accent);
+  color: white;
+}
+
+iframe.vomnibar-frame {
+  background-color: transparent;
+  padding: 0px;
+  overflow: hidden;
+
+  display: block;
+  position: fixed;
+  width: calc(80% + 20px);
+  /* same adjustment as in pages/vomnibar_page.js */
+  min-width: 400px;
+  height: calc(100% - 70px);
+  top: 70px;
+  left: 50%;
+  margin: 0 0 0 -40%;
+  border: none;
+  font-family: var(--mac-font-family);
+  z-index: 2147483647;
+}
+
+div.vimium-flash {
+  box-shadow: 0px 0px 4px 2px var(--mac-accent);
+  padding: 1px;
+  background-color: transparent;
+  position: absolute;
+  z-index: 2147483647;
+}
+
+/* UIComponent CSS */
+iframe.vimium-ui-component-hidden {
+  display: none;
+}
+
+iframe.vimium-ui-component-visible {
+  display: block;
+  color-scheme: light dark;
+}
+
+iframe.vimium-non-clickable {
+  pointer-events: none;
+}

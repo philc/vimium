@@ -52,6 +52,7 @@
         "lib/rect.js",
         "lib/handler_stack.js",
         "lib/settings.js",
+        "lib/themes.js",
         "lib/find_mode_history.js",
         "content_scripts/mode.js",
         "content_scripts/ui_component.js",
@@ -108,6 +109,7 @@
       "resources": [
         "pages/vomnibar_page.html",
         "content_scripts/vimium.css",
+        "themes/*",
         "pages/hud_page.html",
         "pages/help_dialog_page.html",
         "pages/doc_search_completion.html",

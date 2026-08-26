@@ -1,0 +1,315 @@
+/* =========================================================
+   macOS Ventura CSS Theme
+   Author: Ventura-inspired design system
+   ========================================================= */
+
+/* ==============================
+   ROOT VARIABLES (LIGHT MODE)
+   ============================== */
+
+:root {
+    /* Typography */
+    --mac-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "SF Pro Display", system-ui, sans-serif;
+
+    --mac-font-size-large-title: 26px;
+    --mac-font-size-title-1: 22px;
+    --mac-font-size-title-2: 17px;
+    --mac-font-size-body: 13px;
+    --mac-font-size-small: 11px;
+
+    --mac-font-weight-regular: 400;
+    --mac-font-weight-medium: 500;
+    --mac-font-weight-semibold: 600;
+    --mac-font-weight-bold: 600;
+
+    /* Background hierarchy */
+    --mac-bg-primary: #F6F6F7;
+    --mac-bg-secondary: #ECECEC;
+    --mac-bg-tertiary: #E2E2E2;
+    --mac-bg-elevated: rgba(255, 255, 255, 0.75);
+
+    /* Text */
+    --mac-text-primary: #000000;
+    --mac-text-secondary: rgba(60, 60, 67, 0.6);
+    --mac-text-tertiary: rgba(60, 60, 67, 0.4);
+    --mac-text-disabled: rgba(0, 0, 0, 0.35);
+
+    /* Accent */
+    --mac-accent: #007AFF;
+
+    /* Borders */
+    --mac-border-light: rgba(0, 0, 0, 0.08);
+    --mac-border-medium: rgba(0, 0, 0, 0.12);
+
+    /* Radius */
+    --mac-radius-xs: 4px;
+    --mac-radius-sm: 6px;
+    --mac-radius-md: 8px;
+    --mac-radius-lg: 12px;
+    --mac-radius-window: 14px;
+
+    /* Spacing */
+    --mac-space-1: 4px;
+    --mac-space-2: 8px;
+    --mac-space-3: 12px;
+    --mac-space-4: 16px;
+    --mac-space-5: 20px;
+    --mac-space-6: 24px;
+
+    /* Shadow */
+    --mac-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --mac-shadow-md: 0 6px 20px rgba(0, 0, 0, 0.12);
+
+    /* Metrics */
+    --mac-titlebar-height: 38px;
+    --mac-toolbar-height: 44px;
+    --mac-sidebar-width: 240px;
+}
+
+/* ==============================
+   DARK MODE
+   ============================== */
+
+[data-theme="dark"] {
+    --mac-bg-primary: #1E1E1E;
+    --mac-bg-secondary: #2C2C2E;
+    --mac-bg-tertiary: #3A3A3C;
+    --mac-bg-elevated: rgba(30, 30, 30, 0.75);
+
+    --mac-text-primary: #FFFFFF;
+    --mac-text-secondary: rgba(235, 235, 245, 0.6);
+    --mac-text-tertiary: rgba(235, 235, 245, 0.4);
+    --mac-text-disabled: rgba(255, 255, 255, 0.35);
+
+    --mac-border-light: rgba(255, 255, 255, 0.08);
+    --mac-border-medium: rgba(255, 255, 255, 0.12);
+}
+
+/* ==============================
+   BASE
+   ============================== */
+
+body {
+    font-family: var(--mac-font-family);
+    font-size: var(--mac-font-size-body);
+    background: var(--mac-bg-primary);
+    color: var(--mac-text-primary);
+    margin: 0;
+}
+
+/* ==============================
+   WINDOW
+   ============================== */
+
+.window {
+    background: var(--mac-bg-elevated);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: var(--mac-radius-window);
+    box-shadow: var(--mac-shadow-md);
+    border: 1px solid var(--mac-border-light);
+    overflow: hidden;
+}
+
+/* ==============================
+   TITLEBAR
+   ============================== */
+
+.titlebar {
+    height: var(--mac-titlebar-height);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--mac-space-4);
+    border-bottom: 1px solid var(--mac-border-light);
+}
+
+/* Traffic Lights */
+.traffic-lights {
+    display: flex;
+    gap: 8px;
+}
+
+.traffic-lights span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.traffic-close {
+    background: #FF5F57;
+}
+
+.traffic-minimize {
+    background: #FEBC2E;
+}
+
+.traffic-maximize {
+    background: #28C840;
+}
+
+/* ==============================
+   SIDEBAR
+   ============================== */
+
+.sidebar {
+    width: var(--mac-sidebar-width);
+    background: var(--mac-bg-secondary);
+    padding: var(--mac-space-3);
+    border-right: 1px solid var(--mac-border-light);
+}
+
+.sidebar-item {
+    padding: 6px 10px;
+    border-radius: var(--mac-radius-md);
+    color: var(--mac-text-secondary);
+    cursor: pointer;
+}
+
+.sidebar-item.active {
+    background: var(--mac-accent);
+    color: #fff;
+}
+
+/* ==============================
+   TOOLBAR
+   ============================== */
+
+.toolbar {
+    height: var(--mac-toolbar-height);
+    display: flex;
+    align-items: center;
+    gap: var(--mac-space-2);
+    padding: 0 var(--mac-space-4);
+    border-bottom: 1px solid var(--mac-border-light);
+}
+
+/* ==============================
+   BUTTONS
+   ============================== */
+
+button {
+    height: 28px;
+    padding: 0 12px;
+    border-radius: var(--mac-radius-md);
+    border: 1px solid var(--mac-border-light);
+    background: var(--mac-bg-tertiary);
+    font-size: var(--mac-font-size-body);
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--mac-bg-secondary);
+}
+
+button.primary {
+    background: var(--mac-accent);
+    color: #fff;
+    border: none;
+}
+
+button.primary:hover {
+    filter: brightness(1.05);
+}
+
+/* ==============================
+   INPUTS
+   ============================== */
+
+input,
+textarea,
+select {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: var(--mac-radius-md);
+    border: 1px solid var(--mac-border-medium);
+    background: var(--mac-bg-primary);
+    color: var(--mac-text-primary);
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--mac-accent);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
+}
+
+/* ==============================
+   CARDS
+   ============================== */
+
+.card {
+    background: var(--mac-bg-elevated);
+    border-radius: var(--mac-radius-lg);
+    padding: var(--mac-space-4);
+    box-shadow: var(--mac-shadow-sm);
+    border: 1px solid var(--mac-border-light);
+}
+
+/* ==============================
+   TABLE
+   ============================== */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--mac-border-light);
+}
+
+tr:hover {
+    background: var(--mac-bg-secondary);
+}
+
+/* ==============================
+   TOGGLE SWITCH
+   ============================== */
+
+.toggle {
+    width: 36px;
+    height: 20px;
+    background: var(--mac-bg-tertiary);
+    border-radius: 999px;
+    position: relative;
+    cursor: pointer;
+}
+
+.toggle::after {
+    content: "";
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: 0.2s;
+}
+
+.toggle.active {
+    background: var(--mac-accent);
+}
+
+.toggle.active::after {
+    left: 18px;
+}
+
+/* ==============================
+   SCROLLBAR
+   ============================== */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+}
