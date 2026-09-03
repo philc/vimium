@@ -494,7 +494,13 @@ const getAllTextNodes = () => {
       textNodes.push(node);
     } else if (
       node.nodeType === Node.ELEMENT_NODE &&
-      (node.checkVisibility() || node.style.display === "contents")
+      // checkVisibility() returns false for `display: contents` elements because they generate no
+      // box, but their children can still be visible, so we must recurse into them. We check the
+      // computed style rather than node.style.display (the inline style attribute) so that
+      // `display: contents` applied via a CSS class is also detected (e.g. Tailwind's `.contents`,
+      // used by ChatGPT). This is a follow-up to e304d0a2.
+      (node.checkVisibility() ||
+        globalThis.getComputedStyle(node).display === "contents")
     ) {
       const children = node.childNodes;
       for (const child of children) {
