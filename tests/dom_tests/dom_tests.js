@@ -913,6 +913,16 @@ context("Insert mode", () => {
   });
 });
 
+context("Pass next key mode", () => {
+  setup(() => initializeModeState());
+
+  should("exit after passing a single keydown", () => {
+    const passNextKeyMode = new PassNextKeyMode();
+    sendKeyboardEvent("f", "keydown");
+    assert.isFalse(passNextKeyMode.modeIsActive);
+  });
+});
+
 context("Triggering insert mode", () => {
   setup(() => {
     initializeModeState();
