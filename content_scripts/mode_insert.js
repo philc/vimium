@@ -121,11 +121,6 @@ class PassNextKeyMode extends Mode {
       keydown: () => {
         seenKeyDown = true;
         keyDownCount += 1;
-        // A fullscreen transition can swallow keyup, leaving this mode active.
-        // Exit the common one-key case before passing the key to the page.
-        if (count === 1) {
-          this.exit();
-        }
         return this.passEventToPage;
       },
 
