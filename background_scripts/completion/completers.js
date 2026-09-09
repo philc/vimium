@@ -58,6 +58,7 @@ export class Suggestion {
   // The generated HTML string for showing this suggestion in the Vomnibar.
   html;
   searchUrl;
+  keycode;
 
   constructor(options) {
     Object.seal(this);
@@ -74,7 +75,7 @@ export class Suggestion {
     return this.relevancy;
   }
 
-  generateHtml() {
+  generateHtml(req, indicator) {
     if (this.html) return this.html;
     const relevancyHtml = showRelevancy
       ? `<span class='relevancy'>${this.computeRelevancy()}</span>`
@@ -84,6 +85,13 @@ export class Suggestion {
     if (this.insertText && this.isCustomSearch) {
       this.title = this.insertText;
     }
+
+    let indicatorText = "";
+    if (indicator != null) {
+      this.keycode = indicator;
+      indicatorText = `[${indicator}]`;
+    }
+
     let faviconHtml = "";
     if (this.description === "tab" && !bgUtils.isFirefox()) {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
@@ -115,12 +123,19 @@ export class Suggestion {
       // Don't show the source label for command suggestions. It's unnecessary because commands are
       // currently never shown alongside other suggestion types.
       this.html = `\
+<span class="indicator">
+${indicatorText}
+</span>
   <div class="top-half">
     <span class="title">${this.highlightQueryTerms(this.title)}</span>${keybindings}${relevancyHtml}
   </div>
 `;
     } else {
       this.html = `\
+<span class="indicator">
+${indicatorText}
+</span>
+<div>
 <div class="top-half">
    <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
    <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
@@ -130,6 +145,7 @@ export class Suggestion {
         this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
       }</span>
   ${relevancyHtml}
+</div>
 </div>\
 `;
     }
@@ -791,8 +807,14 @@ export class MultiCompleter {
     }
 
     // Generate HTML for the remaining suggestions and return them.
-    for (const s of dedupedSuggestions) {
-      s.generateHtml(request);
+    for (const [i, s] of dedupedSuggestions.entries()) {
+      let indicator = i + 1;
+      if (indicator == 10) {
+        indicator = 0;
+      } else if (indicator > 10) {
+        indicator = null;
+      }
+      s.generateHtml(request, indicator);
     }
 
     return dedupedSuggestions;

@@ -189,6 +189,14 @@ class VomnibarUI {
       return "remove";
     } else if (KeyboardUtils.isBackspace(event)) {
       return "delete";
+    } else if (event.ctrlKey) {
+      // Maybe a quick jump?
+      for (const [index, suggestion] of this.completions.entries()) {
+        if (event.key == suggestion.keycode) {
+          this.selection = index;
+          return "enter";
+        }
+      }
     }
 
     return null;
