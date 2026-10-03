@@ -24,6 +24,7 @@ const options = {
   smoothScroll: "boolean",
   userDefinedLinkHintCss: "string",
   waitForEnterForFilteredHints: "boolean",
+  vomnibarJumpPrefix: "string",
 };
 
 export async function init() {
@@ -40,7 +41,7 @@ export async function init() {
     saveButton.textContent = "Save changes";
   };
 
-  for (const el of document.querySelectorAll("input, textarea")) {
+  for (const el of document.querySelectorAll("input, textarea, select")) {
     // We want to immediately enable the save button when a setting is changed, so we want to use
     // the HTML element's "input" event here rather than the "change" event.
     el.addEventListener("input", () => onUpdated());

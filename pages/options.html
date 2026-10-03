@@ -202,6 +202,23 @@ b: http://b.com/?q=%s description
           keyboards.
         </div>
 
+        <h2>Vomnibar quick-jump</h2>
+        <label class="boolean-label">
+          <span style="margin-right: 1em">Modifier key:</span>
+          <select name="vomnibarJumpPrefix" type="select">
+            <option value="">Disabled</option>
+            <option value="ctrlKey">Ctrl</option>
+            <option value="altKey">Alt</option>
+            <option value="metaKey">Windows/Command</option>
+            <option value="shiftKey">Shift</option>
+          </select>
+        </label>
+        <div class="example">
+          Quick-jump allows you to select suggested items in Vomnibar using your keyboard.
+          Suggestions are tagged with numbers 0-9 and can be selected by pressing
+          <bold>Modifier + [Number]</bold>
+        </div>
+
         <h2>Previous patterns</h2>
         <div>
           <input name="previousPatterns" type="text" />

@@ -809,10 +809,10 @@ export class MultiCompleter {
     // Generate HTML for the remaining suggestions and return them.
     for (const [i, s] of dedupedSuggestions.entries()) {
       let indicator = i + 1;
-      if (indicator == 10) {
-        indicator = 0;
-      } else if (indicator > 10) {
+      if (Settings.get("vomnibarJumpPrefix") == "" || indicator > 10) {
         indicator = null;
+      } else if (indicator == 10) {
+        indicator = 0;
       }
       s.generateHtml(request, indicator);
     }
