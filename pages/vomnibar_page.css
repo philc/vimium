@@ -52,8 +52,8 @@ ul {
   line-height: 1.1em;
   padding: 7px 10px;
   font-size: 16px;
-  position: relative;
-  display: list-item;
+  display: flex;
+  align-items: center;
   margin: auto;
 }
 

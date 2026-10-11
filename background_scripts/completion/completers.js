@@ -58,6 +58,9 @@ export class Suggestion {
   // The generated HTML string for showing this suggestion in the Vomnibar.
   html;
   searchUrl;
+  // Key (`event.key`) that triggers selecting this suggestion in the vomnibar.
+  // If null, then no key is assigned to this suggestion.
+  jumpKey;
 
   constructor(options) {
     Object.seal(this);
@@ -74,7 +77,7 @@ export class Suggestion {
     return this.relevancy;
   }
 
-  generateHtml() {
+  generateHtml(jumpKey) {
     if (this.html) return this.html;
     const relevancyHtml = showRelevancy
       ? `<span class='relevancy'>${this.computeRelevancy()}</span>`
@@ -84,6 +87,13 @@ export class Suggestion {
     if (this.insertText && this.isCustomSearch) {
       this.title = this.insertText;
     }
+
+    let jumpKeyText = "";
+    if (jumpKey != null) {
+      this.jumpKey = jumpKey;
+      jumpKeyText = `[${jumpKey}]`;
+    }
+
     let faviconHtml = "";
     if (this.description === "tab" && !bgUtils.isFirefox()) {
       const faviconUrl = new URL(chrome.runtime.getURL("/_favicon/"));
@@ -94,6 +104,7 @@ export class Suggestion {
     if (this.isCustomSearch) {
       this.html = `\
 <div class="top-half">
+   <span class="jump-key-indicator">${jumpKeyText}</span>
    <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
    <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
    ${relevancyHtml}
@@ -115,12 +126,19 @@ export class Suggestion {
       // Don't show the source label for command suggestions. It's unnecessary because commands are
       // currently never shown alongside other suggestion types.
       this.html = `\
+<span class="jump-key-indicator">
+${jumpKeyText}
+</span>
   <div class="top-half">
     <span class="title">${this.highlightQueryTerms(this.title)}</span>${keybindings}${relevancyHtml}
   </div>
 `;
     } else {
       this.html = `\
+<span class="jump-key-indicator">
+${jumpKeyText}
+</span>
+<div>
 <div class="top-half">
    <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
    <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
@@ -130,6 +148,7 @@ export class Suggestion {
         this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
       }</span>
   ${relevancyHtml}
+</div>
 </div>\
 `;
     }
@@ -791,8 +810,15 @@ export class MultiCompleter {
     }
 
     // Generate HTML for the remaining suggestions and return them.
-    for (const s of dedupedSuggestions) {
-      s.generateHtml(request);
+    const isVomnibarJumpDisabled = Settings.get("vomnibarJumpPrefix") == "DISABLED";
+    for (const [i, s] of dedupedSuggestions.entries()) {
+      let jumpKey = i + 1;
+      if (isVomnibarJumpDisabled || jumpKey > 10) {
+        jumpKey = null;
+      } else if (jumpKey == 10) {
+        jumpKey = 0;
+      }
+      s.generateHtml(jumpKey);
     }
 
     return dedupedSuggestions;
