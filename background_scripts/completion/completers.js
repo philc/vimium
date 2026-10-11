@@ -58,7 +58,9 @@ export class Suggestion {
   // The generated HTML string for showing this suggestion in the Vomnibar.
   html;
   searchUrl;
-  keycode;
+  // Key (`event.key`) that triggers selecting this suggestion in the vomnibar.
+  // If null, then no key is assigned to this suggestion.
+  jumpKey;
 
   constructor(options) {
     Object.seal(this);
@@ -75,7 +77,7 @@ export class Suggestion {
     return this.relevancy;
   }
 
-  generateHtml(req, indicator) {
+  generateHtml(jumpKey) {
     if (this.html) return this.html;
     const relevancyHtml = showRelevancy
       ? `<span class='relevancy'>${this.computeRelevancy()}</span>`
@@ -86,10 +88,10 @@ export class Suggestion {
       this.title = this.insertText;
     }
 
-    let indicatorText = "";
-    if (indicator != null) {
-      this.keycode = indicator;
-      indicatorText = `[${indicator}]`;
+    let jumpKeyText = "";
+    if (jumpKey != null) {
+      this.jumpKey = jumpKey;
+      jumpKeyText = `[${jumpKey}]`;
     }
 
     let faviconHtml = "";
@@ -102,6 +104,7 @@ export class Suggestion {
     if (this.isCustomSearch) {
       this.html = `\
 <div class="top-half">
+   <span class="jump-key-indicator">${jumpKeyText}</span>
    <span class="source ${insertTextClass}">${insertTextIndicator}</span><span class="source">${this.description}</span>
    <span class="title">${this.highlightQueryTerms(Utils.escapeHtml(this.title))}</span>
    ${relevancyHtml}
@@ -123,8 +126,8 @@ export class Suggestion {
       // Don't show the source label for command suggestions. It's unnecessary because commands are
       // currently never shown alongside other suggestion types.
       this.html = `\
-<span class="indicator">
-${indicatorText}
+<span class="jump-key-indicator">
+${jumpKeyText}
 </span>
   <div class="top-half">
     <span class="title">${this.highlightQueryTerms(this.title)}</span>${keybindings}${relevancyHtml}
@@ -132,8 +135,8 @@ ${indicatorText}
 `;
     } else {
       this.html = `\
-<span class="indicator">
-${indicatorText}
+<span class="jump-key-indicator">
+${jumpKeyText}
 </span>
 <div>
 <div class="top-half">
@@ -807,14 +810,15 @@ export class MultiCompleter {
     }
 
     // Generate HTML for the remaining suggestions and return them.
+    const isVomnibarJumpDisabled = Settings.get("vomnibarJumpPrefix") == "DISABLED";
     for (const [i, s] of dedupedSuggestions.entries()) {
-      let indicator = i + 1;
-      if (Settings.get("vomnibarJumpPrefix") == "" || indicator > 10) {
-        indicator = null;
-      } else if (indicator == 10) {
-        indicator = 0;
+      let jumpKey = i + 1;
+      if (isVomnibarJumpDisabled || jumpKey > 10) {
+        jumpKey = null;
+      } else if (jumpKey == 10) {
+        jumpKey = 0;
       }
-      s.generateHtml(request, indicator);
+      s.generateHtml(jumpKey);
     }
 
     return dedupedSuggestions;
