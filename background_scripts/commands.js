@@ -475,6 +475,7 @@ const defaultKeyMappings = {
   "yt": "duplicateTab",
   "x": "removeTab",
   "X": "restoreTab",
+  "D": "showTabGrid",
   "<a-p>": "togglePinTab",
   "<a-m>": "toggleMuteTab",
   "zi": "zoomIn",

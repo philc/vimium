@@ -624,6 +624,14 @@ const allCommands = [
     noRepeat: true,
   },
 
+  {
+    name: "showTabGrid",
+    desc: "Show open tabs in a grid",
+    group: "tabs",
+    topFrame: true,
+    noRepeat: true,
+  },
+
   //
   // Misc
   //

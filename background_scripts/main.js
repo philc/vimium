@@ -28,6 +28,7 @@ import {
 // conversion.
 
 import * as TabOperations from "./tab_operations.js";
+import { getTabGridData, removeTabById } from "./tab_grid.js";
 
 // Allow Vimium's content scripts to access chrome.storage.session. Otherwise,
 // chrome.storage.session will be null in content scripts.
@@ -651,6 +652,8 @@ const sendRequestHandlers = {
 
   nextFrame: BackgroundCommands.nextFrame,
   selectSpecificTab,
+  getTabGridData,
+  removeTabById,
   createMark: marks.create,
   gotoMark: marks.goto,
   // Send a message to all frames in the current tab. If request.frameId is provided, then send

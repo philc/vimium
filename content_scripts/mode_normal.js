@@ -253,6 +253,9 @@ const NormalModeCommands = {
   mainFrame() {
     return focusThisFrame({ highlight: true, forceFocusThisFrame: true });
   },
+  showTabGrid() {
+    TabGrid.toggle();
+  },
   showHelp(sourceFrameId) {
     return HelpDialog.toggle({ sourceFrameId });
   },

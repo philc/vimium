@@ -16,6 +16,7 @@ import "../content_scripts/mode.js";
 import "../content_scripts/ui_component.js";
 import "../content_scripts/link_hints.js";
 import "../content_scripts/vomnibar.js";
+import "../content_scripts/tab_grid.js";
 import "../content_scripts/scroller.js";
 import "../content_scripts/marks.js";
 import "../content_scripts/mode_insert.js";

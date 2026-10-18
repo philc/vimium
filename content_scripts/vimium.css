@@ -282,3 +282,242 @@ iframe.vimium-non-clickable {
     color: #8a9096;
   }
 }
+
+/*
+ * Tab grid (the "showTabGrid" command). All selectors are scoped under the overlay's ID so
+ * they win over the host page's styles.
+ */
+
+#vimium-tab-grid-overlay {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2147483647;
+  font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-size: 14px;
+  line-height: 1.3;
+  color: black;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(10, 10, 10, 0.6);
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-dialog {
+  position: relative;
+  box-sizing: border-box;
+  max-width: 760px;
+  max-height: 84vh;
+  overflow-y: auto;
+  margin: 8vh auto 0 auto;
+  padding: 0;
+  background: #f1f1f1;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.8);
+  text-align: left;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #c6c9ce;
+  color: #333;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-close {
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  color: #555;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  margin: 0;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-close:hover {
+  background: #ddd;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-grid {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  margin: 0;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-card {
+  font: inherit;
+  box-sizing: border-box;
+  display: block;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-card.vimium-tab-grid-selected {
+  outline: 2px solid #4183c4;
+  outline-offset: -2px;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-card.vimium-tab-grid-active {
+  border-color: #999;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-thumb {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 110px;
+  margin: 0;
+  padding: 0;
+  background: #e4e4e4;
+  overflow: hidden;
+}
+
+#vimium-tab-grid-overlay img.vimium-tab-grid-screenshot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+#vimium-tab-grid-overlay img.vimium-tab-grid-favicon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-placeholder {
+  font-size: 40px;
+  font-weight: bold;
+  color: #777;
+}
+
+#vimium-tab-grid-overlay div.internal-vimium-hint-marker.vimium-tab-grid-hint {
+  top: 6px;
+  left: 6px;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-close-tab {
+  font: inherit;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border: none;
+  border-radius: 3px;
+  margin: 0;
+  cursor: pointer;
+  line-height: 1;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-close-tab:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-meta {
+  margin: 0;
+  padding: 8px 10px;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-title {
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#vimium-tab-grid-overlay .vimium-tab-grid-url {
+  margin: 2px 0 0 0;
+  padding: 0;
+  font-size: 11px;
+  color: #777;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-color-scheme: dark) {
+  #vimium-tab-grid-overlay .vimium-tab-grid-dialog {
+    background: var(--vimium-background-color);
+    border-color: var(--vimium-foreground-color);
+  }
+
+  #vimium-tab-grid-overlay .vimium-tab-grid-header {
+    border-bottom-color: var(--vimium-foreground-color);
+    color: var(--vimium-background-text-color);
+  }
+
+  #vimium-tab-grid-overlay .vimium-tab-grid-close {
+    color: #9aa0a6;
+  }
+
+  #vimium-tab-grid-overlay .vimium-tab-grid-close:hover {
+    background: var(--vimium-foreground-color);
+  }
+
+  #vimium-tab-grid-overlay .vimium-tab-grid-card {
+    background: var(--vimium-foreground-color);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  #vimium-tab-grid-overlay .vimium-tab-grid-card.vimium-tab-grid-selected {
+    outline-color: #8ab4f8;
+  }
+
+  #vimium-tab-grid-overlay .vimium-tab-grid-thumb {
+    background: #0f0f10;
+  }
+
+  #vimium-tab-grid-overlay .vimium-tab-grid-placeholder {
+    color: #9aa0a6;
+  }
+
+  #vimium-tab-grid-overlay .vimium-tab-grid-title {
+    color: var(--vimium-foreground-text-color);
+  }
+
+  #vimium-tab-grid-overlay .vimium-tab-grid-url {
+    color: #9aa0a6;
+  }
+}
