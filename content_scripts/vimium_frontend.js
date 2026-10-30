@@ -487,9 +487,27 @@ const HelpDialog = {
   },
 };
 
+// Browsers load their PDF viewer into a child frame which extensions can't script, and that frame
+// takes the keyboard focus. Keep the focus in the top document, so that Vimium still receives keys.
+function keepFocusOutOfPdfViewer() {
+  if (window.top !== window || document.contentType !== "application/pdf") return;
+  const reclaimFocus = () => {
+    if (!isEnabledForUrl) return;
+    // Chrome nests the viewer in a closed shadow root. Edge places it directly in the body.
+    const root = chrome.dom?.openOrClosedShadowRoot(document.body) ?? document;
+    if (root.activeElement?.getAttribute("type") !== "application/pdf") return;
+    window.focus();
+    document.body.tabIndex = -1;
+    document.body.focus();
+  };
+  window.addEventListener("blur", () => setTimeout(reclaimFocus, 0));
+  window.addEventListener("load", () => setTimeout(reclaimFocus, 500));
+}
+
 const testEnv = globalThis.window == null;
 if (!testEnv) {
   initWindowIsFocused();
+  keepFocusOutOfPdfViewer();
   initializePreDomReady();
   DomUtils.documentReady().then(initializeOnDomReady);
 }
