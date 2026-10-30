@@ -91,4 +91,54 @@ context("settings", () => {
       assert.equal(Settings.newTabDestinations.customUrl, settings.newTabDestination);
     });
   });
+
+  context("v2.4.3 migration", () => {
+    const destinations = Settings.newTabDestinations;
+
+    const loadDestination = async () => {
+      await Settings.load();
+      return Settings.get("newTabDestination");
+    };
+
+    teardown(async () => {
+      await Settings.clear();
+    });
+
+    should("Use the browser's new tab page on a new install", async () => {
+      assert.equal(destinations.browserNewTabPage, await loadDestination());
+    });
+
+    should("Preserve the Vimium new tab page for 2.4.1 and 2.4.2 users", async () => {
+      for (const settingsVersion of ["2.4.1", "2.4.2"]) {
+        await chrome.storage.sync.set({ settingsVersion });
+        assert.equal(destinations.vimiumNewTabPage, await loadDestination());
+      }
+    });
+
+    should("Preserve explicit destinations for 2.4.2 users", async () => {
+      for (const dest of [destinations.browserNewTabPage, destinations.customUrl]) {
+        await chrome.storage.sync.set({ settingsVersion: "2.4.2", newTabDestination: dest });
+        assert.equal(dest, await loadDestination());
+      }
+    });
+
+    should("Not run on settings from 2.4.3 onward", async () => {
+      await chrome.storage.sync.set({ settingsVersion: "2.4.3" });
+      assert.equal(destinations.browserNewTabPage, await loadDestination());
+    });
+
+    should("Keep the Vimium new tab page across saves after migrating", async () => {
+      await chrome.storage.sync.set({ settingsVersion: "2.4.2" });
+      await Settings.load();
+      await Settings.setSettings(Settings.getSettings());
+      assert.equal(destinations.vimiumNewTabPage, await loadDestination());
+    });
+
+    should("Let a migrated user switch to the browser's new tab page", async () => {
+      await chrome.storage.sync.set({ settingsVersion: "2.4.2" });
+      await Settings.load();
+      await Settings.set("newTabDestination", destinations.browserNewTabPage);
+      assert.equal(destinations.browserNewTabPage, await loadDestination());
+    });
+  });
 });
