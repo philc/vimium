@@ -1355,21 +1355,57 @@ const LocalHints = {
   getElementFromPoint(x, y, root, stack) {
     if (root == null) root = document;
     if (stack == null) stack = [];
-    const element = root.elementsFromPoint
-      ? root.elementsFromPoint(x, y)[0]
-      : root.elementFromPoint(x, y);
+    const elements = root.elementsFromPoint
+      ? root.elementsFromPoint(x, y)
+      : [root.elementFromPoint(x, y)];
 
-    if (stack.includes(element)) return element;
+    // Skip invisible overlays, so that they don't hide every link underneath them.
+    let skippedOverlay = false;
+    for (const element of elements) {
+      if (element && LocalHints.isInvisibleOverlay(element)) {
+        skippedOverlay = true;
+        continue;
+      }
 
-    stack.push(element);
+      if (stack.includes(element)) {
+        // If we skipped an overlay inside this shadow host, the host is only listed because of
+        // that overlay; keep looking underneath it.
+        if (skippedOverlay && element.shadowRoot === root) continue;
+        return element;
+      }
 
-    if (element && element.shadowRoot) {
-      // A shadow root can contain just a text node; see #4620. In that case, return the shadow root
-      // itself.
-      return LocalHints.getElementFromPoint(x, y, element.shadowRoot, stack) || element;
+      stack.push(element);
+
+      if (element && element.shadowRoot) {
+        // A shadow root can contain just a text node; see #4620. In that case, return the shadow
+        // root itself.
+        return LocalHints.getElementFromPoint(x, y, element.shadowRoot, stack) || element;
+      }
+
+      return element;
     }
+    return null;
+  },
 
-    return element;
+  // True for an empty, fully transparent element which covers the whole viewport. Some extensions
+  // and pages add these to catch the first mouse event (e.g. the IT Glue extension), but they don't
+  // block anything the user can see, so they shouldn't hide the links underneath them.
+  isInvisibleOverlay(element) {
+    if (element === document.documentElement || element === document.body) return false;
+    if (element.shadowRoot || element.childElementCount > 0) return false;
+    if (element.textContent.trim().length > 0) return false;
+    const rect = element.getBoundingClientRect();
+    if (rect.width < globalThis.innerWidth * 0.9 || rect.height < globalThis.innerHeight * 0.9) {
+      return false;
+    }
+    const style = getComputedStyle(element);
+    const isTransparent = (color) =>
+      color === "transparent" || /^rgba\(.*,\s*0(\.0+)?\)$/.test(color);
+    return isTransparent(style.backgroundColor) &&
+      style.backgroundImage === "none" &&
+      style.boxShadow === "none" &&
+      (style.backdropFilter == null || style.backdropFilter === "none") &&
+      (style.borderStyle === "none" || isTransparent(style.borderColor));
   },
 
   // Returns an array of LocalHints representing all clickable elements that are not hidden and are

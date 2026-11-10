@@ -120,6 +120,50 @@ context("False positives in link-hint", () => {
   });
 });
 
+context("Link hints under an invisible overlay", () => {
+  let overlayHost = null;
+  const overlayStyle = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; " +
+    "z-index: 9999;";
+
+  setup(() => {
+    document.getElementById("test-div").innerHTML = "<a href='#'>link</a>";
+    stub(globalThis, "windowIsFocused", () => true);
+  });
+
+  teardown(() => {
+    document.getElementById("test-div").innerHTML = "";
+    overlayHost?.remove();
+    overlayHost = null;
+  });
+
+  should("show hints under an empty, transparent overlay", () => {
+    overlayHost = document.createElement("div");
+    overlayHost.style.cssText = overlayStyle;
+    document.body.appendChild(overlayHost);
+    assert.equal(1, LocalHints.getLocalHints().length);
+  });
+
+  should("show hints under a transparent overlay inside a shadow root", () => {
+    // This mirrors the IT Glue extension's autofill overlay.
+    overlayHost = document.createElement("div");
+    const shadowRoot = overlayHost.attachShadow({ mode: "open" });
+    const wrapper = document.createElement("div");
+    const overlay = document.createElement("div");
+    overlay.style.cssText = overlayStyle;
+    wrapper.appendChild(overlay);
+    shadowRoot.appendChild(wrapper);
+    document.body.appendChild(overlayHost);
+    assert.equal(1, LocalHints.getLocalHints().length);
+  });
+
+  should("not show hints under a visible overlay", () => {
+    overlayHost = document.createElement("div");
+    overlayHost.style.cssText = overlayStyle + "background-color: rgba(0, 0, 0, 0.5);";
+    document.body.appendChild(overlayHost);
+    assert.equal(0, LocalHints.getLocalHints().length);
+  });
+});
+
 context("jsaction matching", () => {
   let element;
 
