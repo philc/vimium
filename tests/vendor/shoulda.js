@@ -183,6 +183,12 @@ const Tests = {
     // context must themselves be top level contexts.
     this.testsRun = 0;
     this.testsFailed = 0;
+    // Running zero tests is almost always a mistake, e.g. a test file failed to be imported, so
+    // treat it as a failure rather than a pass.
+    if (this.topLevelContexts.length == 0) {
+      console.log("Fail: no tests have been defined.");
+      return false;
+    }
     for (const context of this.topLevelContexts) {
       await this.runContext(context, [], testNameFilter);
     }
@@ -255,9 +261,12 @@ const Tests = {
       }
     }
 
+    // Teardown methods receive info about the test and its failures so they can optionally do
+    // debug logging when the test has failed.
+    const testInfo = { name: fullTestName, errors };
     for (const context of contexts.filter((c) => c.teardownMethod)) {
       try {
-        await context.teardownMethod.call(testScope, testScope);
+        await context.teardownMethod.call(testScope, testScope, testInfo);
       } catch (error) {
         errors.push(error);
         break;
