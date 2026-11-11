@@ -98,7 +98,7 @@ const KeyMappingsParser = {
       switch (action) {
         case "map": {
           if (tokens.length < 3) {
-            errors.push(`"map requires at least 2 arguments on line ${line}`);
+            errors.push(`"map" requires at least 2 arguments in the line: ${line}`);
             continue;
           }
           const [_, key, command] = tokens;
