@@ -184,7 +184,8 @@ input[name="newTabCustomUrl"] {
   width: 100%;
 }
 
-input[name="scrollStepSize"] {
+input[name="scrollStepSize"],
+input[name="vomnibarMaxResults"] {
   width: 80px;
   margin-right: 3px;
   padding-left: 3px;

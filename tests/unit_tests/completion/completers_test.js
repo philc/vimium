@@ -23,11 +23,11 @@ import { allCommands } from "../../../background_scripts/all_commands.js";
 const hours = (n) => 1000 * 60 * 60 * n;
 
 // A convenience wrapper around completer.filter() so it can be called synchronously in tests.
-export async function filterCompleter(completer, queryTerms) {
-  return await completer.filter({
+export async function filterCompleter(completer, queryTerms, options = {}) {
+  return await completer.filter(Object.assign({
     queryTerms,
     query: queryTerms.join(" "),
-  });
+  }, options));
 }
 
 context("bookmark completer", () => {
@@ -365,6 +365,45 @@ context("multi completer", () => {
     assert.equal(2, results.length);
     assert.equal("http://example.com", results[0].url);
     assert.equal("http://other.com", results[1].url);
+  });
+
+  should("return 10 suggestions by default", async () => {
+    const fakeCompleter = {
+      filter: () =>
+        Array.from(
+          { length: 51 },
+          (_, i) =>
+            new Suggestion({
+              url: `http://example.com/${i}`,
+              relevancy: 51 - i,
+              html: `http://example.com/${i}`,
+            }),
+        ),
+    };
+    const results = await filterCompleter(new MultiCompleter([fakeCompleter]), ["example"]);
+    assert.equal(10, results.length);
+    assert.equal("http://example.com/0", results[0].url);
+    assert.equal("http://example.com/9", results[9].url);
+  });
+
+  should("respect the requested maximum number of suggestions", async () => {
+    const fakeCompleter = {
+      filter: () =>
+        Array.from(
+          { length: 51 },
+          (_, i) =>
+            new Suggestion({
+              url: `http://example.com/${i}`,
+              relevancy: 51 - i,
+              html: `http://example.com/${i}`,
+            }),
+        ),
+    };
+    const results = await filterCompleter(new MultiCompleter([fakeCompleter]), ["example"], {
+      maxResults: 50,
+    });
+    assert.equal(50, results.length);
+    assert.equal("http://example.com/49", results[49].url);
   });
 });
 

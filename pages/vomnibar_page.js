@@ -359,6 +359,7 @@ class VomnibarUI {
       completerName: this.completerName,
       queryTerms,
       query,
+      maxResults: Settings.get("vomnibarMaxResults"),
       seenTabToOpenCompletionList: this.seenTabToOpenCompletionList,
     });
 
