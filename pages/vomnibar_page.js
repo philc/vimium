@@ -48,6 +48,12 @@ export async function activate(options) {
   ui.setQuery(options.query);
   ui.setPrefixCount(options.prefixCount);
   ui.setActiveUserSearchEngine(userSearchEngines.keywordToEngine[options.keyword]);
+  if (options.typedText) {
+    ui.input.value += options.typedText;
+    // onInput calls update().
+    await ui.onInput();
+    return;
+  }
   // Use await here for vomnibar_test.js, so that this page doesn't get unloaded while a test is
   // running.
   await ui.update();
@@ -423,7 +429,7 @@ class VomnibarUI {
       this.previousInputValue = null;
       this.selection = -1;
     }
-    this.update();
+    return this.update();
   }
 
   // Returns the UserSearchEngine for the given query. Returns null if the query does not begin with

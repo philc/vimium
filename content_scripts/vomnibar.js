@@ -80,13 +80,41 @@ const Vomnibar = {
   //     selectFirst: Optional. Whether to select the first entry.
   //     newTab: Optional. Whether to open the result in a new tab.
   //     keyword: A keyword which will scope the search to a UserSearchEngine.
-  open(sourceFrameId, vomnibarShowOptions) {
+  async open(sourceFrameId, vomnibarShowOptions) {
     this.init();
     // The Vomnibar cannot coexist with the help dialog (it causes focus issues).
     HelpDialog.abort();
     Utils.assertType(VomnibarShowOptions, vomnibarShowOptions);
+
+    // Until the Vomnibar's iframe has loaded and taken the focus, keys go to the page. On the
+    // Vomnibar's first use in a page, that takes long enough that a quick typist's first few keys
+    // are lost, or run as Vimium commands. E.g. typing "w hello" would search for "ello" with the
+    // default search engine, rather than for "hello" with the "w" search engine. So we capture
+    // the text typed while the Vomnibar is loading, and pass it on.
+    let typedText = "";
+    let wasCancelled = false;
+    const keyBuffer = new Mode();
+    keyBuffer.init({
+      name: "vomnibar/buffer-keys-while-loading",
+      keydown: (event) => {
+        if (KeyboardUtils.isEscape(event)) {
+          wasCancelled = true;
+        } else if (event.key.length == 1 && !event.ctrlKey && !event.metaKey) {
+          typedText += event.key;
+        }
+        return handlerStack.suppressEvent;
+      },
+      keypress: () => handlerStack.suppressEvent,
+      keyup: () => handlerStack.suppressEvent,
+    });
+    await this.vomnibarUI.iframePort;
+    keyBuffer.exit();
+    if (wasCancelled) {
+      return;
+    }
+
     this.vomnibarUI.show(
-      Object.assign(vomnibarShowOptions, { name: "activate" }),
+      Object.assign(vomnibarShowOptions, { name: "activate", typedText }),
       { sourceFrameId, focus: true },
     );
   },

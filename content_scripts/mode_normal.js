@@ -61,7 +61,12 @@ class NormalMode extends KeyHandlerMode {
       }
     }
 
-    if (registryEntry.topFrame) {
+    if (registryEntry.topFrame && DomUtils.isTopFrame()) {
+      // We're already in the top frame, so run the command here rather than via the background
+      // page. The round trip takes long enough that keys typed straight after a Vomnibar command
+      // would reach normal mode before the Vomnibar starts buffering them.
+      NormalModeCommands[registryEntry.command](frameId, registryEntry);
+    } else if (registryEntry.topFrame) {
       // We never return to a UI-component frame (e.g. the help dialog), it might have lost the
       // focus.
       const sourceFrameId = globalThis.isVimiumUIComponent ? 0 : frameId;
