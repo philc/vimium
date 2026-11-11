@@ -1,0 +1,45 @@
+#!/bin/sh
+# Runs the project's check command (formatting and lint checks) before pushing, so that code which
+# doesn't follow the style rules never reaches the remote. Enable it with the project's
+# install-hooks command. Bypass it with `git push --no-verify`.
+#
+# The checks run against the working copy, so the working copy must match the commits being pushed:
+# it must have no uncommitted changes, and the pushed branch must be the one that's checked out.
+
+# The project's check and fix commands, e.g. `./make.js check` or `deno task check`.
+check_command="./make.js check"
+fix_command="./make.js fix"
+
+zero_sha="0000000000000000000000000000000000000000"
+head_sha=$(git rev-parse HEAD)
+pushes_code=false
+
+# Each line of stdin describes a ref being pushed: <local-ref> <local-sha> <remote-ref> <remote-sha>
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # Deleting a remote branch pushes no code.
+  if [ "$local_sha" = "$zero_sha" ]; then
+    continue
+  fi
+  if [ "$local_sha" != "$head_sha" ]; then
+    echo "pre-push: $local_ref isn't checked out, so it can't be checked. Check it out and push" >&2
+    echo "again, or bypass this check with git push --no-verify." >&2
+    exit 1
+  fi
+  pushes_code=true
+done
+
+if [ "$pushes_code" = false ]; then
+  exit 0
+fi
+
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "pre-push: there are uncommitted changes, so the working copy doesn't match the commits" >&2
+  echo "being pushed. Commit or stash them and push again, or bypass this check with" >&2
+  echo "git push --no-verify." >&2
+  exit 1
+fi
+
+if ! $check_command; then
+  echo "pre-push: checks failed. Run \`$fix_command\`, commit the result, and push again." >&2
+  exit 1
+fi

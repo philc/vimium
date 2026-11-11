@@ -516,4 +516,9 @@ drake.task("write-firefox-manifest", [], async () => {
   await Deno.writeTextFile("./manifest.json", JSON.stringify(firefoxManifest, null, 2));
 });
 
+drake.desc("Enable the git hooks in .githooks, e.g. the pre-push hook which runs `check`");
+drake.task("install-hooks", [], async () => {
+  await shell("git", ["config", "core.hooksPath", ".githooks"]);
+});
+
 drake.run();

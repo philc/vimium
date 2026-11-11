@@ -132,12 +132,23 @@ When writing a test, use the lowest layer that can reproduce the behavior; the e
 the slowest and should stay a small suite. Every bug fix should come with a test which fails before
 the fix and passes after it.
 
+### Formatting and linting
+
+Install [dprint](https://dprint.dev/install/), which formats the code.
+
+     # Checks the formatting
+     ./make.js check
+
+     # Fix issues which are automatically resolvable.
+     ./make.js fix
+
+* Enable the git hooks in a new clone: `./make.js install-hooks`. The pre-push hook runs `./make.js
+  check` before every push, and refuses to push if it fails.
+
 ### Coding Style
 
-* Run `deno fmt` at the root of the Vimium project to format your code.
 * We generally follow the recommendations from the
   [Airbnb Javascript style guide](https://github.com/airbnb/javascript).
-* We wrap lines at 100 characters.
 * When writing comments, uppercase the first letter of your sentence, and put a period at the end.
 * We're currently using JavaScript language features from ES2018 or earlier. If we desire to use
   something introduced in a later version of JavaScript, we need to remember to update the minimum

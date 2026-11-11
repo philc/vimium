@@ -14,7 +14,8 @@
   },
   "excludes": [
     "**/*.html",
-    "icons/*.svg"
+    "icons/*.svg",
+    "tests/vendor/"
   ],
   "plugins": [
     "npm:@dprint/typescript@0.99.2",
