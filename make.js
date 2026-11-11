@@ -483,9 +483,15 @@ task("run-test-script", [], async () => {
   }
 });
 
-desc("Check code formatting and lint issues");
+desc("Format and lint everything, applying automatic fixes");
+task("fix", [], async () => {
+  await shell("dprint", ["fmt"]);
+  await shell("deno", ["lint", "--fix"]);
+});
+
+desc("Check code formatting and lint issues, without changing any files");
 task("check", [], async () => {
-  await shell("deno", ["fmt", "--check"]);
+  await shell("dprint", ["check"]);
   await shell("deno", ["lint"]);
 });
 

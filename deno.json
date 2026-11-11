@@ -1,8 +1,4 @@
 {
-  "fmt": {
-    "exclude": ["icons/*.svg", "**/*.html"],
-    "lineWidth": 100
-  },
   "imports": {
     "@b-fuze/deno-dom": "jsr:@b-fuze/deno-dom@^0.1.49",
     "@std/fs": "jsr:@std/fs@^1.0.8",
