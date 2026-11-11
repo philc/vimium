@@ -15,7 +15,7 @@ import * as bgUtils from "./../bg_utils.js";
 import * as completionSearch from "./search_wrapper.js";
 import * as userSearchEngines from "../user_search_engines.js";
 import * as ranking from "./ranking.js";
-import { allCommands } from "../all_commands.js";
+import { list as allCommands } from "../all_commands.js";
 import { Commands, RegistryEntry } from "../commands.js";
 import { RegexpCache } from "./ranking.js";
 
@@ -286,7 +286,7 @@ const ignoredTopLevelBookmarks = {
 };
 
 // this.bookmarks are loaded asynchronously when refresh() is called.
-export class BookmarkCompleter {
+export class Bookmark {
   async filter({ queryTerms }) {
     if (!this.bookmarks) {
       await this.refresh();
@@ -382,7 +382,7 @@ export class BookmarkCompleter {
   }
 }
 
-export class CommandCompleter {
+export class Command {
   async filter({ queryTerms }) {
     // Get the key mapping for a command.
     // Each entry contains the user-specified options and an array of possible mappings.
@@ -455,7 +455,7 @@ export class CommandCompleter {
   }
 }
 
-export class HistoryCompleter {
+export class History {
   // - seenTabToOpenCompletionList: true if the user has typed only <Tab>, and nothing else.
   //   We interpret this to mean that they want to see all of their history in the Vomnibar, sorted
   //   by recency.
@@ -507,7 +507,7 @@ export class HistoryCompleter {
 // The domain completer is designed to match a single-word query which looks like it is a domain.
 // This supports the user experience where they quickly type a partial domain, hit tab -> enter, and
 // expect to arrive there.
-export class DomainCompleter {
+export class Domain {
   // A map of domain -> { entry: <historyEntry>, referenceCount: <count> }
   // - `entry` is the most recently accessed page in the History within this domain.
   // - `referenceCount` is a count of the number of History entries within this domain.
@@ -601,7 +601,7 @@ export class DomainCompleter {
 
 // Searches through all open tabs, matching on title and URL.
 // If the query is empty, then return a list of open tabs, sorted by recency.
-export class TabCompleter {
+export class Tab {
   async filter({ queryTerms }) {
     await bgUtils.tabRecency.init();
     // We search all tabs, not just those in the current window.
@@ -642,7 +642,7 @@ export class TabCompleter {
   }
 }
 
-export class SearchEngineCompleter {
+export class SearchEngine {
   cancel() {
     completionSearch.cancel();
   }
@@ -730,13 +730,13 @@ export class SearchEngineCompleter {
   }
 }
 
-SearchEngineCompleter.debug = false;
+SearchEngine.debug = false;
 
 // A completer which calls filter() on many completers, aggregates the results, ranks them, and
 // returns the top 10. All queries from the vomnibar come through a multi completer.
 const maxResults = 10;
 
-export class MultiCompleter {
+export class Multi {
   constructor(completers) {
     this.completers = completers;
   }
@@ -756,14 +756,14 @@ export class MultiCompleter {
   }
 
   async filter(request) {
-    const searchEngineCompleter = this.completers.find((c) => c instanceof SearchEngineCompleter);
+    const searchEngineCompleter = this.completers.find((c) => c instanceof SearchEngine);
     const query = request.query;
     const queryTerms = request.queryTerms;
 
     // The only UX where we support showing results when there are no query terms is via
     // Vomnibar.activateTabSelection, where we show the list of open tabs by recency.
     const isTabCompleter = this.completers.length == 1 &&
-      this.completers[0] instanceof TabCompleter;
+      this.completers[0] instanceof Tab;
     if (queryTerms.length == 0 && !isTabCompleter) {
       return [];
     }

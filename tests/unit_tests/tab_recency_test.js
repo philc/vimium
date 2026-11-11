@@ -1,5 +1,5 @@
 import "./test_helper.js";
-import { TabRecency } from "../../background_scripts/tab_recency.js";
+import { Tracker as TabRecency } from "../../background_scripts/tab_recency.js";
 
 context("TabRecency", () => {
   let tabRecency;

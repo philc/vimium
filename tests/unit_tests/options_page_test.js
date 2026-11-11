@@ -14,19 +14,19 @@ context("options page", () => {
 
   should("populate the form fields with the settings", () => {
     const settings = Settings.getSettings();
-    const field = optionsPage.getOptionEl("keyMappings");
+    const field = optionsPage.getEl("keyMappings");
     assert.isTrue(Settings.defaultOptions.keyMappings.length > 0);
     assert.equal(Settings.defaultOptions.keyMappings, settings.keyMappings);
     assert.equal(settings.keyMappings, field.value);
   });
 
   should("show validation errors for invalid fields on save", async () => {
-    const el = optionsPage.getOptionEl("keyMappings");
+    const el = optionsPage.getEl("keyMappings");
     assert.isFalse(el.classList.contains("validation-error"));
     assert.equal(0, document.querySelectorAll(".validation-message").length);
 
     el.value = "invalid-mapping-statement";
-    await optionsPage.saveOptions();
+    await optionsPage.save();
     assert.isTrue(el.classList.contains("validation-error"));
 
     const messageEls = document.querySelectorAll(".validation-message");
@@ -53,15 +53,15 @@ context("options page", () => {
     });
 
     should("include settings which have changed from the default", () => {
-      optionsPage.getOptionEl("keyMappings").value = "map a scrollUp";
+      optionsPage.getEl("keyMappings").value = "map a scrollUp";
       const settings = JSON.parse(optionsPage.prepareBackupSettings());
       assert.equal(["keyMappings", "settingsVersion"], Object.keys(settings));
       assert.equal("map a scrollUp", settings.keyMappings);
     });
 
     should("export settings with sorted keys", () => {
-      optionsPage.getOptionEl("linkHintCharacters").value = "abcd";
-      optionsPage.getOptionEl("keyMappings").value = "map a scrollUp";
+      optionsPage.getEl("linkHintCharacters").value = "abcd";
+      optionsPage.getEl("keyMappings").value = "map a scrollUp";
       const settings = JSON.parse(optionsPage.prepareBackupSettings());
       assert.equal(["keyMappings", "linkHintCharacters", "settingsVersion"], Object.keys(settings));
     });

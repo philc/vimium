@@ -1,5 +1,5 @@
 import "./all_content_scripts.js";
-import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
+import { Editor as ExclusionRulesEditor } from "./exclusion_rules_editor.js";
 import { Commands, KeyMappingsParser } from "../background_scripts/commands.js";
 import * as userSearchEngines from "../background_scripts/user_search_engines.js";
 
@@ -49,9 +49,9 @@ export async function init() {
     });
   }
 
-  saveButton.addEventListener("click", () => saveOptions());
+  saveButton.addEventListener("click", () => save());
 
-  getOptionEl("filterLinkHints").addEventListener(
+  getEl("filterLinkHints").addEventListener(
     "click",
     () => maintainLinkHintsView(),
   );
@@ -87,7 +87,7 @@ export async function init() {
     const isCtrlEnter = event.ctrlKey && event.keyCode === 13;
     const isCmdEnter = event.metaKey && event.keyCode === 13;
     if (isCtrlEnter || isCmdEnter) {
-      saveOptions();
+      save();
     }
   });
 
@@ -98,7 +98,7 @@ export async function init() {
   setFormFromSettings(settings);
 }
 
-export function getOptionEl(optionName) {
+export function getEl(optionName) {
   return document.querySelector(`*[name="${optionName}"]`);
 }
 
@@ -115,7 +115,7 @@ function resetInputValue(event) {
 
 function setFormFromSettings(settings) {
   for (const [optionName, optionType] of Object.entries(options)) {
-    const el = getOptionEl(optionName);
+    const el = getEl(optionName);
     const value = settings[optionName];
     switch (optionType) {
       case "boolean":
@@ -147,7 +147,7 @@ function setFormFromSettings(settings) {
 function getSettingsFromForm() {
   const settings = {};
   for (const [optionName, optionType] of Object.entries(options)) {
-    const el = getOptionEl(optionName);
+    const el = getEl(optionName);
     let value;
     switch (optionType) {
       case "boolean":
@@ -183,21 +183,21 @@ function getValidationErrors() {
   let text, parsed;
 
   // keyMappings field.
-  text = getOptionEl("keyMappings").value.trim();
+  text = getEl("keyMappings").value.trim();
   parsed = KeyMappingsParser.parse(text);
   if (parsed.validationErrors.length > 0) {
     results["keyMappings"] = parsed.validationErrors.join("\n");
   }
 
   // searchEngines field.
-  text = getOptionEl("searchEngines").value.trim();
+  text = getEl("searchEngines").value.trim();
   parsed = userSearchEngines.parseConfig(text);
   if (parsed.validationErrors.length > 0) {
     results["searchEngines"] = parsed.validationErrors.join("\n");
   }
 
   // linkHintCharacters field.
-  text = getOptionEl("linkHintCharacters").value.trim();
+  text = getEl("linkHintCharacters").value.trim();
   if (text != removeDuplicateChars(text)) {
     results["linkHintCharacters"] = "This cannot contain duplicate characters.";
   } else if (text.length <= 1) {
@@ -205,7 +205,7 @@ function getValidationErrors() {
   }
 
   // linkHintNumbers field.
-  text = getOptionEl("linkHintNumbers").value.trim();
+  text = getEl("linkHintNumbers").value.trim();
   if (text != removeDuplicateChars(text)) {
     results["linkHintNumbers"] = "This cannot contain duplicate characters.";
   } else if (text.length <= 1) {
@@ -238,7 +238,7 @@ function showValidationErrors() {
 
   const errors = getValidationErrors();
   for (const [optionName, message] of Object.entries(errors)) {
-    const el = getOptionEl(optionName);
+    const el = getEl(optionName);
     addValidationMessage(el, message);
   }
   // Some options can be hidden in the UI. If they have validation errors, force them to be shown.
@@ -264,7 +264,7 @@ function removeDuplicateChars(str) {
   return result;
 }
 
-export async function saveOptions() {
+export async function save() {
   const hasErrors = showValidationErrors();
   if (hasErrors) {
     // TODO(philc): If no fields with validation errors are in view, scroll one of them into view
@@ -300,7 +300,7 @@ function maintainNewTabUrlView() {
 // "filterLinkHints".
 function maintainLinkHintsView() {
   const errors = getValidationErrors();
-  const isFilteredLinkhints = getOptionEl("filterLinkHints").checked;
+  const isFilteredLinkhints = getEl("filterLinkHints").checked;
   showElement(
     document.querySelector("#link-hint-characters-container"),
     !isFilteredLinkhints || errors["linkHintCharacters"],

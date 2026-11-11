@@ -13,13 +13,13 @@ import "../background_scripts/tab_operations.js";
 import * as marks from "../background_scripts/marks.js";
 
 import {
-  BookmarkCompleter,
-  CommandCompleter,
-  DomainCompleter,
-  HistoryCompleter,
-  MultiCompleter,
-  SearchEngineCompleter,
-  TabCompleter,
+  Bookmark as BookmarkCompleter,
+  Command as CommandCompleter,
+  Domain as DomainCompleter,
+  History as HistoryCompleter,
+  Multi as MultiCompleter,
+  SearchEngine as SearchEngineCompleter,
+  Tab as TabCompleter,
 } from "./completion/completers.js";
 
 // NOTE(philc): This file has many superfluous return statements in its functions, as a result of

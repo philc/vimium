@@ -6,19 +6,19 @@ import "../../../background_scripts/completion/search_engines.js";
 import "../../../background_scripts/completion/search_wrapper.js";
 import * as userSearchEngines from "../../../background_scripts/user_search_engines.js";
 import {
-  BookmarkCompleter,
-  CommandCompleter,
-  DomainCompleter,
+  Bookmark as BookmarkCompleter,
+  Command as CommandCompleter,
+  Domain as DomainCompleter,
+  History as HistoryCompleter,
   HistoryCache,
-  HistoryCompleter,
-  MultiCompleter,
-  SearchEngineCompleter,
+  Multi as MultiCompleter,
+  SearchEngine as SearchEngineCompleter,
   Suggestion,
-  TabCompleter,
+  Tab as TabCompleter,
 } from "../../../background_scripts/completion/completers.js";
 import "../../../lib/url_utils.js";
 import { Commands, RegistryEntry } from "../../../background_scripts/commands.js";
-import { allCommands } from "../../../background_scripts/all_commands.js";
+import { list as allCommands } from "../../../background_scripts/all_commands.js";
 
 const hours = (n) => 1000 * 60 * 60 * n;
 

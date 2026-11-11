@@ -1,5 +1,5 @@
 // The table-editor used for exclusion rules.
-const ExclusionRulesEditor = {
+const Editor = {
   // When the Add rule button is clicked, use this as the pattern for the new rule. This is used by
   // the action.html toolbar popup.
   defaultPatternForNewRules: null,
@@ -63,6 +63,6 @@ const ExclusionRulesEditor = {
   },
 };
 
-Object.assign(ExclusionRulesEditor, EventDispatcher);
+Object.assign(Editor, EventDispatcher);
 
-export { ExclusionRulesEditor };
+export { Editor };

@@ -1,4 +1,4 @@
-import { allCommands } from "./all_commands.js";
+import { list as allCommands } from "./all_commands.js";
 
 // A specification for a command that's currently bound to a key sequence, as defined by the default
 // key bindings, or as it appears in the user's keymapping settings.

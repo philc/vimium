@@ -9,7 +9,7 @@
 //
 // In theory, the browser's tab.lastAccessed timestamp field should allow us to sort tabs by
 // recency, but in practice it does not work across several edge cases. See the comments on #4368.
-class TabRecency {
+class Tracker {
   constructor() {
     this.counter = 1;
     this.tabIdToCounter = {};
@@ -148,4 +148,4 @@ class TabRecency {
   }
 }
 
-export { TabRecency };
+export { Tracker };

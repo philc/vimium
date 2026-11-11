@@ -3,7 +3,7 @@ import "../lib/dom_utils.js";
 import "../lib/settings.js";
 
 import * as bgUtils from "../background_scripts/bg_utils.js";
-import { ExclusionRulesEditor } from "./exclusion_rules_editor.js";
+import { Editor as ExclusionRulesEditor } from "./exclusion_rules_editor.js";
 
 const ActionPage = {
   async init() {

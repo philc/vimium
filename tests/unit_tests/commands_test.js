@@ -1,7 +1,7 @@
 import "./test_helper.js";
 import "../../lib/settings.js";
 import "../../lib/keyboard_utils.js";
-import { allCommands } from "../../background_scripts/all_commands.js";
+import { list as allCommands } from "../../background_scripts/all_commands.js";
 import {
   Commands,
   defaultKeyMappings,

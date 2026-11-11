@@ -11,7 +11,7 @@
 //   confirmation.
 // - topFrame: whether this command must be run only in the top frame of a page.
 //
-const allCommands = [
+const list = [
   //
   // Navigation
   //
@@ -646,4 +646,4 @@ const allCommands = [
   },
 ];
 
-export { allCommands };
+export { list };

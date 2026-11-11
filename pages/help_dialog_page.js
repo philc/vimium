@@ -1,6 +1,6 @@
 import "./all_content_scripts.js";
 import * as UIComponentMessenger from "./ui_component_messenger.js";
-import { allCommands } from "../background_scripts/all_commands.js";
+import { list as allCommands } from "../background_scripts/all_commands.js";
 
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
 function compareKeys(a, b) {
@@ -31,7 +31,7 @@ function isAdvancedCommand(command, options) {
     (command.name == "reload" && options.includes("hard"));
 }
 
-const HelpDialogPage = {
+const Page = {
   dialogElement: null,
 
   // This setting is pulled out of local storage. It's false by default.
@@ -62,7 +62,7 @@ const HelpDialogPage = {
 
     document.querySelector("#toggle-advanced a").addEventListener(
       "click",
-      HelpDialogPage.toggleAdvancedCommands.bind(HelpDialogPage),
+      Page.toggleAdvancedCommands.bind(Page),
       false,
     );
 
@@ -158,8 +158,8 @@ const HelpDialogPage = {
     const container = document.querySelector("#container");
     const scrollHeightBefore = container.scrollHeight;
     event.preventDefault();
-    const showAdvanced = HelpDialogPage.getShowAdvancedCommands();
-    HelpDialogPage.showAdvancedCommands(!showAdvanced);
+    const showAdvanced = Page.getShowAdvancedCommands();
+    Page.showAdvancedCommands(!showAdvanced);
     Settings.set("helpDialog_showAdvancedCommands", !showAdvanced);
     // Try to keep the "show advanced commands" button in the same scroll position.
     const scrollHeightDelta = container.scrollHeight - scrollHeightBefore;
@@ -172,9 +172,9 @@ const HelpDialogPage = {
     const caption = visible ? "Hide advanced commands" : "Show advanced commands";
     document.querySelector("#toggle-advanced a").textContent = caption;
     if (visible) {
-      HelpDialogPage.dialogElement.classList.add("show-advanced");
+      Page.dialogElement.classList.add("show-advanced");
     } else {
-      HelpDialogPage.dialogElement.classList.remove("show-advanced");
+      Page.dialogElement.classList.remove("show-advanced");
     }
   },
 };
@@ -186,11 +186,11 @@ function init() {
     await Utils.populateBrowserInfo();
     switch (event.data.name) {
       case "hide":
-        HelpDialogPage.hide();
+        Page.hide();
         break;
       case "show":
-        HelpDialogPage.init();
-        await HelpDialogPage.show(event.data);
+        Page.init();
+        await Page.show(event.data);
         // If we abandoned (see below) in a mode with a HUD indicator, then we have to reinstate it.
         Mode.setIndicator();
         break;
@@ -204,7 +204,7 @@ function init() {
   });
 }
 
-globalThis.HelpDialogPage = HelpDialogPage;
+globalThis.HelpDialogPage = Page;
 globalThis.isVimiumHelpDialogPage = true;
 
 const testEnv = globalThis.window == null;
@@ -216,4 +216,4 @@ if (!testEnv) {
   init();
 }
 
-export { HelpDialogPage };
+export { Page };

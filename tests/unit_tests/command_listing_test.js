@@ -3,7 +3,7 @@ import { withPromise } from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../lib/utils.js";
 import "../../lib/settings.js";
-import { allCommands } from "../../background_scripts/all_commands.js";
+import { list as allCommands } from "../../background_scripts/all_commands.js";
 import * as commandListing from "../../pages/command_listing.js";
 
 context("command listing", () => {

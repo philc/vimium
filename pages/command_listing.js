@@ -1,5 +1,5 @@
 import "./all_content_scripts.js";
-import { allCommands } from "../background_scripts/all_commands.js";
+import { list as allCommands } from "../background_scripts/all_commands.js";
 
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
 function compareKeys(a, b) {

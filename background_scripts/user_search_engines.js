@@ -2,7 +2,7 @@ import "../lib/url_utils.js";
 import * as commands from "./commands.js";
 
 // A struct representing a search engine entry in the "searchEngine" setting.
-export class UserSearchEngine {
+export class Engine {
   keyword;
   url;
   description;
@@ -42,7 +42,7 @@ export function parseConfig(configText) {
       errors.push(`This search engine doesn't have a valid URL: ${line}`);
       continue;
     }
-    results[keyword] = new UserSearchEngine({ keyword, url, description });
+    results[keyword] = new Engine({ keyword, url, description });
   }
   return {
     keywordToEngine: results,

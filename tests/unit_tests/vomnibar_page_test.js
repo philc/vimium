@@ -2,8 +2,8 @@ import * as testHelper from "./test_helper.js";
 import { withPromise } from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import {
-  CommandCompleter,
-  MultiCompleter,
+  Command as CommandCompleter,
+  Multi as MultiCompleter,
   Suggestion,
 } from "../../background_scripts/completion/completers.js";
 import * as vomnibarPage from "../../pages/vomnibar_page.js";
