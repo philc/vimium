@@ -45,6 +45,11 @@ ul {
 
 #vomnibar ul {
   border-radius: 0 0 4px 4px;
+  /* Keep the suggestion list inside the Vomnibar iframe, so wheel events scroll this list instead
+   * of falling through to the page underneath. */
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 #vomnibar li {

@@ -20,6 +20,13 @@ context("options page", () => {
     assert.equal(settings.keyMappings, field.value);
   });
 
+  should("save the Vomnibar maximum results setting", async () => {
+    const field = optionsPage.getOptionEl("vomnibarMaxResults");
+    field.value = "50";
+    await optionsPage.saveOptions();
+    assert.equal(50, Settings.get("vomnibarMaxResults"));
+  });
+
   should("show validation errors for invalid fields on save", async () => {
     const el = optionsPage.getOptionEl("keyMappings");
     assert.isFalse(el.classList.contains("validation-error"));

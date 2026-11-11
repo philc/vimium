@@ -155,6 +155,7 @@ class VomnibarUI {
     for (const [i, el] of Object.entries(this.completionList.children)) {
       el.className = i == this.selection ? "selected" : "";
     }
+    this.completionList.children[this.selection]?.scrollIntoView?.({ block: "nearest" });
   }
 
   // Returns the user's action ("up", "down", "tab", etc, or null) based on their keypress. We
@@ -359,6 +360,7 @@ class VomnibarUI {
       completerName: this.completerName,
       queryTerms,
       query,
+      maxResults: Settings.get("vomnibarMaxResults"),
       seenTabToOpenCompletionList: this.seenTabToOpenCompletionList,
     });
 

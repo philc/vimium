@@ -23,6 +23,7 @@ const options = {
   settingsVersion: "string", // This is a hidden field.
   smoothScroll: "boolean",
   userDefinedLinkHintCss: "string",
+  vomnibarMaxResults: "number",
   waitForEnterForFilteredHints: "boolean",
 };
 
@@ -210,6 +211,12 @@ function getValidationErrors() {
     results["linkHintNumbers"] = "This cannot contain duplicate characters.";
   } else if (text.length <= 1) {
     results["linkHintNumbers"] = "This must be at least two characters long.";
+  }
+
+  // vomnibarMaxResults field.
+  const vomnibarMaxResults = getOptionEl("vomnibarMaxResults").valueAsNumber;
+  if (!Number.isInteger(vomnibarMaxResults) || vomnibarMaxResults < 1) {
+    results["vomnibarMaxResults"] = "This must be a positive whole number.";
   }
 
   return results;
