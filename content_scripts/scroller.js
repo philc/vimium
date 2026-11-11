@@ -180,6 +180,15 @@ const checkVisibility = function (element) {
   }
 };
 
+// The range of scroll positions of element in direction. Horizontal positions are negative in
+// right-to-left layouts.
+const getScrollRange = function (element, direction) {
+  const { max, viewSize } = scrollProperties[direction];
+  const extent = Math.max(0, element[max] - element[viewSize]);
+  const isRtl = direction === "x" && globalThis.getComputedStyle(element).direction === "rtl";
+  return isRtl ? [-extent, 0] : [0, extent];
+};
+
 // How scrolling is handled by CoreScroller.
 //   - For jump scrolling, the entire scroll happens immediately.
 //   - For smooth scrolling with distinct key presses, a separate animator is initiated for each key
@@ -188,6 +197,11 @@ const checkVisibility = function (element) {
 //   - For smooth scrolling with keyboard repeat (continuous scrolling), the most recently-activated
 //     animator continues scrolling at least until its keyup event is received. We never initiate a
 //     new animator on keyboard repeat.
+//   - With the experimental nativeSmoothScroll setting, the browser animates smooth scrolls instead
+//     (`behavior: "smooth"`). A scroll which arrives while another is still in flight, including
+//     keyboard repeat, extends that scroll's destination. Firefox retargets its animation, so
+//     holding a key glides continuously. Chrome and other Chromium-based browsers restart their
+//     animation from rest on every new destination, which stutters on keyboard repeat.
 
 // CoreScroller contains the core function (scroll) and logic for relative scrolls. All scrolls are
 // ultimately translated to relative scrolls. CoreScroller is not exported.
@@ -196,6 +210,14 @@ const CoreScroller = {
     this.time = 0;
     this.lastEvent = this.keyDownKey = null;
     this.installCancelEventListener();
+    // The element, direction and destination of the most recent native smooth scroll.
+    this.target = null;
+    globalThis.addEventListener("scrollend", (event) => {
+      const element = event.target === document ? document.scrollingElement : event.target;
+      if (element !== this.target?.element) return;
+      this.target = null;
+      if (activatedElement) checkVisibility(element);
+    }, true);
   },
 
   // This installs listeners for events which should cancel smooth scrolling.
@@ -235,7 +257,26 @@ const CoreScroller = {
 
   // Return true if CoreScroller would not initiate a new scroll right now.
   wouldNotInitiateScroll() {
-    return this.lastEvent && this.lastEvent.repeat && Settings.get("smoothScroll");
+    return this.lastEvent && this.lastEvent.repeat && Settings.get("smoothScroll") &&
+      !Settings.get("nativeSmoothScroll");
+  },
+
+  // Return the element being natively smooth scrolled in direction, if that scroll is in flight.
+  getElementInFlight(direction) {
+    const target = this.target;
+    if (target?.direction !== direction || !target.element.isConnected) return null;
+    const position = target.element[scrollProperties[direction].axisName];
+    return Math.abs(position - target.position) >= 1 ? target.element : null;
+  },
+
+  scrollNatively(element, direction, amount) {
+    const from = element === this.getElementInFlight(direction)
+      ? this.target.position
+      : element[scrollProperties[direction].axisName];
+    const [min, max] = getScrollRange(element, direction);
+    const position = Math.max(min, Math.min(max, from + amount));
+    this.target = { element, direction, position };
+    element.scrollTo({ [direction === "x" ? "left" : "top"]: position, behavior: "smooth" });
   },
 
   // Calibration fudge factors for continuous scrolling. The calibration value starts at 1.0. We
@@ -263,6 +304,11 @@ const CoreScroller = {
       // Jump scrolling.
       performScroll(element, direction, amount);
       checkVisibility(element);
+      return;
+    }
+
+    if (Settings.get("nativeSmoothScroll")) {
+      this.scrollNatively(element, direction, amount);
       return;
     }
 
@@ -400,7 +446,10 @@ const Scroller = {
     // Avoid the expensive scroll calculation if it will not be used. This reduces costs during
     // smooth, continuous scrolls, and is just an optimization.
     if (!CoreScroller.wouldNotInitiateScroll()) {
-      const element = findScrollableElement(activatedElement, direction, amount, factor);
+      // Finding the scrollable element probes it with instant scrolls, which would cancel a native
+      // smooth scroll that is in flight, so keep extending that one.
+      const element = CoreScroller.getElementInFlight(direction) ||
+        findScrollableElement(activatedElement, direction, amount, factor);
       const elementAmount = factor * getDimension(element, direction, amount);
       return CoreScroller.scroll(element, direction, elementAmount, continuous);
     }

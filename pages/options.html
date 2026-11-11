@@ -135,6 +135,15 @@ b: http://b.com/?q=%s description
 
         <h2></h2>
         <label class="boolean-label">
+          <input name="nativeSmoothScroll" type="checkbox" />
+          Let the browser animate smooth scrolling (experimental)</label>
+        <div class="example">
+          Uses the browser's own smooth scrolling. Works well in Firefox. In Chrome and other
+          Chromium-based browsers, holding down a scroll key stutters.
+        </div>
+
+        <h2></h2>
+        <label class="boolean-label">
           <input name="filterLinkHints" type="checkbox" />
           Use the link's name and characters for link-hint filtering
         </label>
