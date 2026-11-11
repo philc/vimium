@@ -12,8 +12,11 @@
     "textWrap": "always",
     "list.unorderedMarker": "asterisks"
   },
+  "markup": {
+    "scriptIndent": true,
+    "styleIndent": true
+  },
   "excludes": [
-    "**/*.html",
     "icons/*.svg",
     "tests/vendor/"
   ],
