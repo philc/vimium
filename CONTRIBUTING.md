@@ -48,33 +48,33 @@ features. We recommend those live in forked repos rather than the mainline Vimiu
 
 PRs we'll likely merge:
 
-- Reflect all of the Vimium design principles.
-- Are useful for lots of Vimium users.
-- Have simple implementations (straightforward code, few lines of code).
+* Reflect all of the Vimium design principles.
+* Are useful for lots of Vimium users.
+* Have simple implementations (straightforward code, few lines of code).
 
 PRs we likely won't:
 
-- Violate one or more of our design principles.
-- Are niche.
-- Have complex implementations -- more code than they're worth.
+* Violate one or more of our design principles.
+* Are niche.
+* Have complex implementations -- more code than they're worth.
 
 Tips for preparing a PR:
 
-- If you want to check with us first before implementing something big, open an issue proposing the
+* If you want to check with us first before implementing something big, open an issue proposing the
   idea. You'll get feedback from the maintainers as to whether it's something we'll likely merge.
-- Try to keep PRs around 50 LOC or less. Bigger PRs create inertia for review.
+* Try to keep PRs around 50 LOC or less. Bigger PRs create inertia for review.
 
 Here's the rationale behind this policy:
 
-- Vimium is a volunteer effort. To make it possible to keep the project up-to-date as the web and
+* Vimium is a volunteer effort. To make it possible to keep the project up-to-date as the web and
   browsers evolve, the codebase has to remain small and maintainable.
-- If the maintainers don't use a feature, and most other users don't, then the feature will likely
+* If the maintainers don't use a feature, and most other users don't, then the feature will likely
   get neglected.
-- Every feature, particularly neglected ones, increase the complexity of the codebase and makes it
+* Every feature, particularly neglected ones, increase the complexity of the codebase and makes it
   more difficult and less pleasant to work on.
-- Adding a new feature is only part of the work. Once it's added, a feature must be maintained
+* Adding a new feature is only part of the work. Once it's added, a feature must be maintained
   forever.
-- Vimium is a project which suffers from the
+* Vimium is a project which suffers from the
   [stadium model of open source](https://github.com/philc/book-notes/blob/master/engineering/working%20in%20public%20-%20nadia%20eghbal.md#the-structure-of-an-open-source-project-chap-2):
   there are many users but unfortunately few maintainers. As a result, there is bandwidth to
   maintain only a limited number of features in the main repo.
@@ -116,14 +116,14 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
 
 There are three kinds of tests:
 
-- **Unit tests** (`tests/unit_tests/`) run in Deno, with the browser's extension APIs stubbed out,
+* **Unit tests** (`tests/unit_tests/`) run in Deno, with the browser's extension APIs stubbed out,
   and DOM APIs stubbed via the jsdom library. They're fast, easy to write, and are the right place
   for logic that doesn't need real implementations from a browser. E.g. URL parsing, settings,
   completers. Prefer these, if possible.
-- **DOM tests** (`tests/dom_tests/`) run Vimium's content scripts in a single page in headless
+* **DOM tests** (`tests/dom_tests/`) run Vimium's content scripts in a single page in headless
   Chrome, without the rest of the extension. They suit content-script behavior within one page.
   These are harder to work with and less direct than unit tests.
-- **End-to-end tests** (`tests/e2e_tests/`) load the real extension into headless Chrome, and send
+* **End-to-end tests** (`tests/e2e_tests/`) load the real extension into headless Chrome, and send
   real key presses to test pages. Use them when the test needs the whole extension: the background
   page and content scripts working together, multiple frames, multiple tabs, settings, or pages with
   unusual security policies. See `tests/e2e_tests/harness.js`.
@@ -134,11 +134,11 @@ the fix and passes after it.
 
 ### Coding Style
 
-- Run `deno fmt` at the root of the Vimium project to format your code.
-- We generally follow the recommendations from the
+* Run `deno fmt` at the root of the Vimium project to format your code.
+* We generally follow the recommendations from the
   [Airbnb Javascript style guide](https://github.com/airbnb/javascript).
-- We wrap lines at 100 characters.
-- When writing comments, uppercase the first letter of your sentence, and put a period at the end.
-- We're currently using JavaScript language features from ES2018 or earlier. If we desire to use
+* We wrap lines at 100 characters.
+* When writing comments, uppercase the first letter of your sentence, and put a period at the end.
+* We're currently using JavaScript language features from ES2018 or earlier. If we desire to use
   something introduced in a later version of JavaScript, we need to remember to update the minimum
   Chrome and Firefox versions required.

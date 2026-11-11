@@ -375,11 +375,11 @@ const BackgroundCommands = {
       // It is possible that this sendMessage call fails, if a frame gets unloaded while the request
       // is in flight.
       let isError = false;
-      const status = await (chrome.tabs.sendMessage(tabId, { handler: "getFocusStatus" }, {
-        frameId: frameId,
-      }).catch((_) => {
-        isError = true;
-      }));
+      const status =
+        await (chrome.tabs.sendMessage(tabId, { handler: "getFocusStatus" }, { frameId: frameId })
+          .catch((_) => {
+            isError = true;
+          }));
       return { frameId, status, isError };
     });
 
@@ -397,9 +397,11 @@ const BackgroundCommands = {
     count = count ?? 1;
     const nextIndex = (index + count) % frameIds.length;
     if (index == nextIndex) return;
-    await chrome.tabs.sendMessage(tabId, { handler: "focusFrame", highlight: true }, {
-      frameId: frameIds[nextIndex],
-    });
+    await chrome.tabs.sendMessage(
+      tabId,
+      { handler: "focusFrame", highlight: true },
+      { frameId: frameIds[nextIndex] },
+    );
   },
 
   async closeTabsOnLeft(request) {

@@ -7,11 +7,11 @@ spirit of the Vim editor.
 
 **Installation instructions:**
 
-- Chrome:
+* Chrome:
   [Chrome web store](https://chromewebstore.google.com/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb)
-- Edge:
+* Edge:
   [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/vimium/djmieaghokpkpjfbpelnlkfgfjapaopa)
-- Firefox: [Firefox Add-ons](https://addons.mozilla.org/en-GB/firefox/addon/vimium-ff/)
+* Firefox: [Firefox Add-ons](https://addons.mozilla.org/en-GB/firefox/addon/vimium-ff/)
 
 To install from source, see [here](CONTRIBUTING.md#installing-from-source).
 
@@ -122,20 +122,20 @@ page.
 
 Enter one of the following key mapping statements per line:
 
-- `map key command`: Maps a key to a Vimium command. Overrides Chrome's default behavior for that
+* `map key command`: Maps a key to a Vimium command. Overrides Chrome's default behavior for that
   key, if any.
-- `unmap key`: Unmaps a key and restores Chrome's default behavior (if any).
-- `unmapAll`: Unmaps all bindings. This is useful if you want to completely wipe Vimium's defaults
+* `unmap key`: Unmaps a key and restores Chrome's default behavior (if any).
+* `unmapAll`: Unmaps all bindings. This is useful if you want to completely wipe Vimium's defaults
   and start from scratch with your own setup.
 
 Examples:
 
-- `map <c-d> scrollPageDown` maps ctrl+d to scrolling the page down. Chrome's default behavior of
+* `map <c-d> scrollPageDown` maps ctrl+d to scrolling the page down. Chrome's default behavior of
   showing a bookmark dialog is suppressed.
-- `map r reload hard` maps the r key to reloading the page, and also includes the "hard" option to
+* `map r reload hard` maps the r key to reloading the page, and also includes the "hard" option to
   hard-reload the page.
-- `unmap <c-d>` removes any mapping for ctrl+d and restores Chrome's default behavior.
-- `unmap r` removes any mapping for the r key.
+* `unmap <c-d>` removes any mapping for ctrl+d and restores Chrome's default behavior.
+* `unmap r` removes any mapping for the r key.
 
 See the [docs](https://vimium.github.io/commands/) for every Vimium command and its options.
 
@@ -143,12 +143,12 @@ You can add comments to key mappings by starting a line with `"` or `#`.
 
 The following special keys are available for mapping:
 
-- `<c-*>`, `<a-*>`, `<s-*>`, `<m-*>` for ctrl, alt, shift, and meta (command on Mac) respectively
+* `<c-*>`, `<a-*>`, `<s-*>`, `<m-*>` for ctrl, alt, shift, and meta (command on Mac) respectively
   with any key. Replace `*` with the key of choice.
-- `<left>`, `<right>`, `<up>`, `<down>` for the arrow keys.
-- `<f1>` through `<f12>` for the function keys.
-- `<space>` for the space key.
-- `<tab>`, `<enter>`, `<delete>`, `<backspace>`, `<insert>`, `<home>` and `<end>` for the
+* `<left>`, `<right>`, `<up>`, `<down>` for the arrow keys.
+* `<f1>` through `<f12>` for the function keys.
+* `<space>` for the space key.
+* `<tab>`, `<enter>`, `<delete>`, `<backspace>`, `<insert>`, `<home>` and `<end>` for the
   corresponding non-printable keys.
 
 Shifts are automatically detected so, for example, `<c-&>` corresponds to ctrl+shift+7 on an English
@@ -156,18 +156,18 @@ keyboard.
 
 ## How to allow Vimium to work on new tab pages
 
-- Vimium will work on new tab pages which are opened with Vimium's `createTab` command (mapped to
+* Vimium will work on new tab pages which are opened with Vimium's `createTab` command (mapped to
   `t` by default).
-- To have Vimium work on <em>all</em> new tab pages opened by the browser (e.g. via `cmd-t` or
+* To have Vimium work on <em>all</em> new tab pages opened by the browser (e.g. via `cmd-t` or
   `ctrl-t` shortcuts), a companion
   [Vimium New Tab Page extension](https://github.com/philc/vimium-new-tab/) is required.
-- Once that is installed, all new tabs will open a blank Vimium new tab page.
+* Once that is installed, all new tabs will open a blank Vimium new tab page.
 
 ## More documentation
 
-- [FAQ](https://github.com/philc/vimium/wiki/FAQ)
-- [Command listing](https://vimium.github.io/commands/)
-- [Vimium's GitHub wiki](https://github.com/philc/vimium/wiki): documentation for the more advanced
+* [FAQ](https://github.com/philc/vimium/wiki/FAQ)
+* [Command listing](https://vimium.github.io/commands/)
+* [Vimium's GitHub wiki](https://github.com/philc/vimium/wiki): documentation for the more advanced
   features.
 
 ## Contributing

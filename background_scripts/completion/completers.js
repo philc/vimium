@@ -105,12 +105,10 @@ export class Suggestion {
       const escapeKeyForHtml = (key) => {
         return key.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       };
-      const keybindings = this.command.keys.map((key) =>
-        `<span class="key-block">
+      const keybindings = this.command.keys.map((key) => `<span class="key-block">
           <span class="key">${escapeKeyForHtml(key)}</span>
           <span class="comma">, </span>
-        </span>`
-      ).join("\n");
+        </span>`).join("\n");
 
       // Don't show the source label for command suggestions. It's unnecessary because commands are
       // currently never shown alongside other suggestion types.
@@ -127,8 +125,8 @@ export class Suggestion {
  </div>
  <div class="bottom-half">
   <span class="source no-insert-text">${insertTextIndicator}</span>${faviconHtml}<span class="url">${
-        this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
-      }</span>
+    this.highlightQueryTerms(Utils.escapeHtml(this.shortenUrl()))
+  }</span>
   ${relevancyHtml}
 </div>\
 `;
