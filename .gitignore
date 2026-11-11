@@ -1,1 +1,3 @@
 dist
+# Screenshots of failed e2e tests.
+tests/e2e_tests/failures/

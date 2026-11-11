@@ -526,7 +526,8 @@ const allCommands = [
     background: true,
     // Don't close (in one command invocation) more than the number of tabs that can be re-opened by
     // the browser.
-    repeatLimit: chrome.sessions?.MAX_SESSION_RESULTS || 25,
+    // `chrome` is undefined when the e2e test harness imports this file, outside of the extension.
+    repeatLimit: globalThis.chrome?.sessions?.MAX_SESSION_RESULTS || 25,
   },
 
   {

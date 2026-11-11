@@ -3,7 +3,7 @@
 // This is a set of tasks for building and testing Vimium in development.
 import * as fs from "@std/fs";
 import * as path from "@std/path";
-import { abort, desc, run, task } from "drake";
+import { abort, desc, env, run, task } from "drake";
 import puppeteer from "puppeteer";
 // We use a vendored version of shoulda, rather than jsr:@philc/shoulda, because shoulda.js is used
 // in dom_tests.js which is loaded by Puppeteer, which doesn't have access to Deno's module system.
@@ -431,6 +431,57 @@ task("test-dom", [], testDom);
 
 desc("Run unit and DOM tests");
 task("test", ["test-unit", "test-dom"]);
+
+// The e2e harness is imported lazily, so that tasks which don't need it don't pay for its imports.
+async function runE2ETests(testNameFilter) {
+  const e2e = await import("./tests/e2e_tests/harness.js");
+  const dir = path.join(projectPath, "tests/e2e_tests");
+  const files = Array.from(Deno.readDirSync(dir)).map((f) => f.name).sort();
+  for (const f of files) {
+    if (f.endsWith("_test.js")) {
+      await import(path.join(dir, f));
+    }
+  }
+  try {
+    return await shoulda.run(testNameFilter);
+  } finally {
+    await e2e.closeHarness();
+  }
+}
+
+desc("Run end-to-end tests in headless Chrome.");
+task("test-e2e", [], async () => {
+  const success = await runE2ETests(env("filter"));
+  if (!success) {
+    abort("test-e2e failed");
+  }
+});
+
+// Runs a script against the real extension using the e2e harness. This is mainly for agents
+// reproducing bug reports, without first having to add a test to this repo. The script, given as
+// `file=<path>`, must export a `run` function, which receives a fresh tab:
+//
+//   export async function run(tab, harness) {
+//     await tab.load(`<a href="/fixtures/link_destination.html">link</a>`);
+//     await tab.keys("f");
+//     return await tab.hintMarkers();
+//   }
+//
+// Whatever `run` returns is printed as JSON.
+desc("Run a script with the e2e harness and print its return value. Usage: file=<path>");
+task("run-test-script", [], async () => {
+  const file = env("file");
+  if (!file) abort("Usage: ./make.js run-test-script file=<path to script>");
+  const script = await import(path.toFileUrl(path.resolve(Deno.cwd(), file)).href);
+  const e2e = await import("./tests/e2e_tests/harness.js");
+  try {
+    const harness = await e2e.getHarness();
+    const result = await script.run(await harness.newTab(), harness);
+    console.log(JSON.stringify(result, null, 2));
+  } finally {
+    await e2e.closeHarness();
+  }
+});
 
 desc("Check code formatting and lint issues");
 task("check", [], async () => {
