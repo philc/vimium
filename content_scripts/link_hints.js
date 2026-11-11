@@ -1271,11 +1271,14 @@ const LocalHints = {
       for (const jsactionRule of jsactionRules) {
         const ruleSplit = jsactionRule.trim().split(":");
         if ((ruleSplit.length >= 1) && (ruleSplit.length <= 2)) {
-          const [eventType, namespace, actionName] = ruleSplit.length === 1
-            ? ["click", ...ruleSplit[0].trim().split("."), "_"]
-            : [ruleSplit[0], ...ruleSplit[1].trim().split("."), "_"];
+          // A rule without an event type is for click events.
+          const [eventType, handler] = ruleSplit.length === 1 ? ["click", ruleSplit[0]] : ruleSplit;
+          // Handlers used to have the form "namespace.actionName". Google's sites now use a
+          // single opaque name, like "click:h5M12e" on Google Drive's file rows. See #2919.
+          const [namespace, actionName] = handler.trim().split(".");
+          const isInactive = ["none", "_"].includes(namespace) || (actionName === "_");
           if (!isClickable) {
-            isClickable = (eventType === "click") && (namespace !== "none") && (actionName !== "_");
+            isClickable = (eventType === "click") && !isInactive;
           }
         }
       }

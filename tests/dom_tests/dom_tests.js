@@ -133,7 +133,7 @@ context("jsaction matching", () => {
   teardown(() => document.getElementById("test-div").innerHTML = "");
 
   should("select jsaction elements", () => {
-    for (const text of ["click:namespace.actionName", "namespace.actionName"]) {
+    for (const text of ["click:namespace.actionName", "namespace.actionName", "click:h5M12e"]) {
       element.setAttribute("jsaction", text);
       const mode = activateLinkHintsMode();
       mode.deactivateMode();
@@ -147,6 +147,8 @@ context("jsaction matching", () => {
     const attributes = [
       "mousedown:namespace.actionName",
       "click:namespace._",
+      "mousedown:h5M12e",
+      "click:none",
       "none",
       "namespace:_",
     ];
