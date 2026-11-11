@@ -1,6 +1,7 @@
 // Example key mapping (@keyMapping):
 //   i:
-//     command: "enterInsertMode", ... # This is a registryEntry object (as too are the other commands).
+//     # This is a registryEntry object (as too are the other commands).
+//     command: "enterInsertMode", ...
 //   g:
 //     g:
 //       command: "scrollToTop", ...
@@ -125,12 +126,12 @@ class KeyHandlerMode extends Mode {
   }
 
   handleKeyChar(keyChar) {
-    // A count prefix applies only so long a keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
+    // A count prefix applies only while keyChar is mapped in @keyState[0]; e.g. 7gj should be 1j.
     if (!(keyChar in this.keyState[0])) {
       this.countPrefix = 0;
     }
 
-    // Advance the key state. The new key state is the current mappings of keyChar, plus @keyMapping.
+    // Advance the key state. The new state is the current mappings of keyChar, plus @keyMapping.
     const state = this.keyState.filter((mapping) => keyChar in mapping).map((mapping) =>
       mapping[keyChar]
     );

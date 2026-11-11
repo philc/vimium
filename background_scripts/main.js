@@ -104,7 +104,7 @@ function toggleMuteTab(request, sender) {
   const registryEntry = request.registryEntry;
 
   if ((registryEntry.options.all != null) || (registryEntry.options.other != null)) {
-    // If there are any audible, unmuted tabs, then we mute them; otherwise we unmute any muted tabs.
+    // If any tabs are audible and unmuted, mute them; otherwise unmute any muted tabs.
     chrome.tabs.query({ audible: true }, function (tabs) {
       let tab;
       if (registryEntry.options.other != null) {
@@ -768,9 +768,9 @@ Utils.addChromeRuntimeOnMessageListener(
       // request // Often useful for debugging.
     );
     // NOTE(philc): We expect all messages to come from a content script in a tab. I've observed in
-    // Firefox when the extension is first installed, domReady and initializeFrame messages come from
-    // content scripts in about:blank URLs, which have a null sender.tab. I don't know what this
-    // corresponds to. Since we expect a valid sender.tab, ignore those messages.
+    // Firefox when the extension is first installed, domReady and initializeFrame messages come
+    // from content scripts in about:blank URLs, which have a null sender.tab. I don't know what
+    // this corresponds to. Since we expect a valid sender.tab, ignore those messages.
     if (sender.tab == null) {
       return;
     }

@@ -130,7 +130,7 @@ const ActionPage = {
 
   async onSave() {
     let rules = await Settings.get("exclusionRules");
-    // Remove any rules which match the current URL, and replace them with the contents of this dialog.
+    // Remove any rules which match the current URL, and replace them with this dialog's contents.
     rules = rules.filter((r) => !this.tabUrl.match(this.getPatternRegExp(r.pattern)));
     rules = rules.concat(exclusionRulesEditor.Editor.getRules());
     Settings.set("exclusionRules", rules);

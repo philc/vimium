@@ -519,8 +519,9 @@ context("suggestions", () => {
 //   assert.isTrue highScore > lowScore
 
 // should "score higher for multiple matches (in a title)", ->
-//   lowScore  = ranking.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (XBCr4)")
-//   highScore = ranking.wordRelevancy(["bbc"], "http://stackoverflow.com/same", "BBC Radio 4 (BBCr4)")
+//   url = "http://stackoverflow.com/same"
+//   lowScore  = ranking.wordRelevancy(["bbc"], url, "BBC Radio 4 (XBCr4)")
+//   highScore = ranking.wordRelevancy(["bbc"], url, "BBC Radio 4 (BBCr4)")
 //   assert.isTrue highScore > lowScore
 
 context("Suggestion.pushMatchingRanges", () => {

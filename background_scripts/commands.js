@@ -366,8 +366,8 @@ const Commands = {
     }
     await chrome.storage.session.set({
       normalModeKeyStateMapping: keyStateMapping,
-      // Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape` (which it
-      // is by default).
+      // Inform `KeyboardUtils.isEscape()` whether `<c-[>` should be interpreted as `Escape`
+      // (which it is by default).
       useVimLikeEscape: !("<c-[>" in keyStateMapping),
     });
   },

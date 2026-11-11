@@ -32,8 +32,10 @@ const matchWeights = {
 };
 
 // The current value of 2.0/3.0 has the effect of:
-//   - favoring the contribution of recency when matches are not on word boundaries ( because 2.0/3.0 > (1)/3     )
-//   - favoring the contribution of word relevance when matches are on whole words  ( because 2.0/3.0 < (1+1+1)/3 )
+//   - favoring the contribution of recency when matches are not on word boundaries (because
+//     2.0/3.0 > (1)/3)
+//   - favoring the contribution of word relevance when matches are on whole words (because
+//     2.0/3.0 < (1+1+1)/3)
 
 // Calculate a score for matching term against string.
 // The score is in the range [0, matchWeights.maximumScore], see above.
@@ -122,7 +124,7 @@ export function recencyScore(lastAccessedTime) {
   return recencyScore *= matchWeights.recencyCalibrator;
 }
 
-// Takes the difference of two numbers and returns a number between [0, 1] (the percentage difference).
+// Takes the difference of two numbers and returns a number in [0, 1] (the percentage difference).
 function normalizeDifference(a, b) {
   const max = Math.max(a, b);
   return (max - Math.abs(a - b)) / max;

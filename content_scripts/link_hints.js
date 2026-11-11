@@ -1472,7 +1472,7 @@ const LocalHints = {
       }
     }
 
-    // Traverse the DOM from descendants to ancestors, so later elements show above earlier elements.
+    // Traverse the DOM from descendants to ancestors, so later elements show above earlier ones.
     localHints = localHints.reverse();
 
     // Filter out suspected false positives. A false positive is taken to be an element marked as a

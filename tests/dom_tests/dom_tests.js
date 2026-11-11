@@ -204,8 +204,8 @@ const sendKeyboardEvents = (keys) => {
   }
 };
 
-// TODO(philc): For some reason, this test corrupts the state linkhints state for other tests, in particular,
-// the alphabet hints tests. I haven't yet dug into why.
+// TODO(philc): For some reason, this test corrupts the state linkhints state for other tests, in
+// particular, the alphabet hints tests. I haven't yet dug into why.
 // const inputs = [];
 // context("Test link hints for focusing input elements correctly", () => {
 //   let linkHintsMode;
@@ -219,11 +219,13 @@ const sendKeyboardEvents = (keys) => {
 //     stubSettings("filterLinkHints", false);
 //     stubSettings("linkHintCharacters", "ab");
 
-//     // Every HTML5 input type except for hidden. We should be able to activate all of them with link hints.
-//     // NOTE(philc): I'm not sure why, but "image" doesn't get a link hint in Puppeteer, so I've omitted it.
-//     const inputTypes = ["button", "checkbox", "color", "date", "datetime", "datetime-local", "email", "file",
-//       "month", "number", "password", "radio", "range", "reset", "search", "submit", "tel", "text",
-//       "time", "url", "week"];
+//     // Every HTML5 input type except for hidden. We should be able to activate all of them with
+//     // link hints.
+//     // NOTE(philc): I'm not sure why, but "image" doesn't get a link hint in Puppeteer, so I've
+//     // omitted it.
+//     const inputTypes = ["button", "checkbox", "color", "date", "datetime", "datetime-local",
+//       "email", "file", "month", "number", "password", "radio", "range", "reset", "search",
+//       "submit", "tel", "text", "time", "url", "week"];
 
 //     for (let type of inputTypes) {
 //       input = document.createElement("input");

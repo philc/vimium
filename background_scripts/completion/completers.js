@@ -33,8 +33,8 @@ export class Suggestion {
   relevancy;
   relevancyFunction;
   relevancyData;
-  // When true, then this suggestion is automatically pre-selected in the vomnibar. This only affects
-  // the suggestion in slot 0 in the vomnibar.
+  // When true, then this suggestion is automatically pre-selected in the vomnibar. This only
+  // affects the suggestion in slot 0 in the vomnibar.
   autoSelect = false;
   // When true, we highlight matched terms in the title and URL. Otherwise we don't.
   highlightTerms = true;
@@ -249,7 +249,8 @@ export class Suggestion {
   }
 }
 
-// Patterns to strip from URLs; of the form [ [ filter, replacements ], [ filter, replacements ], ... ]
+// Patterns to strip from URLs; of the form
+// [ [ filter, replacements ], [ filter, replacements ], ... ]
 //   - filter is a regexp string; a URL must match this regexp first.
 //   - replacements (itself a list) is a list of regexp objects, each of which is removed from URLs
 //     matching the filter.
