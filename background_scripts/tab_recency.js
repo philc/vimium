@@ -41,7 +41,9 @@ class TabRecency {
     });
 
     chrome.windows.onFocusChanged.addListener(async (windowId) => {
-      if (windowId == chrome.windows.WINDOW_ID_NONE) return;
+      if (windowId == chrome.windows.WINDOW_ID_NONE) {
+        return;
+      }
       const tabs = await chrome.tabs.query({ windowId, active: true });
       if (tabs[0]) {
         this.queueAction("register", tabs[0].id);
@@ -62,11 +64,15 @@ class TabRecency {
     const tabsPromise = chrome.tabs.query({});
     const storagePromise = chrome.storage.session.get("tabRecency");
     const [tabs, storage] = await Promise.all([tabsPromise, storagePromise]);
-    if (storage.tabRecency == null) return;
+    if (storage.tabRecency == null) {
+      return;
+    }
 
     let maxCounter = 0;
     for (const counter of Object.values(storage.tabRecency)) {
-      if (maxCounter < counter) maxCounter = counter;
+      if (maxCounter < counter) {
+        maxCounter = counter;
+      }
     }
     if (this.counter < maxCounter) {
       this.counter = maxCounter;
@@ -120,16 +126,22 @@ class TabRecency {
 
   // Recently-visited tabs get a higher score (except the current tab, which gets a low score).
   recencyScore(tabId) {
-    if (!this.loaded) throw new Error("TabRecency hasn't yet been loaded.");
+    if (!this.loaded) {
+      throw new Error("TabRecency hasn't yet been loaded.");
+    }
     const tabCounter = this.tabIdToCounter[tabId];
     const isCurrentTab = tabCounter == this.counter;
-    if (isCurrentTab) return 0;
+    if (isCurrentTab) {
+      return 0;
+    }
     return (tabCounter ?? 1) / this.counter; // tabCounter may be null.
   }
 
   // Returns a list of tab Ids sorted by recency, most recent tab first.
   getTabsByRecency() {
-    if (!this.loaded) throw new Error("TabRecency hasn't yet been loaded.");
+    if (!this.loaded) {
+      throw new Error("TabRecency hasn't yet been loaded.");
+    }
     const ids = Object.keys(this.tabIdToCounter);
     ids.sort((a, b) => this.tabIdToCounter[b] - this.tabIdToCounter[a]);
     return ids.map((id) => parseInt(id));

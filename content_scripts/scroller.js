@@ -112,9 +112,15 @@ const doesScroll = function (element, direction, amount, factor) {
 };
 
 const isScrollableElement = function (element, direction, amount, factor) {
-  if (direction == null) direction = "y";
-  if (amount == null) amount = 1;
-  if (factor == null) factor = 1;
+  if (direction == null) {
+    direction = "y";
+  }
+  if (amount == null) {
+    amount = 1;
+  }
+  if (factor == null) {
+    factor = 1;
+  }
   return doesScroll(element, direction, amount, factor) && shouldScroll(element, direction);
 };
 
@@ -202,7 +208,9 @@ const CoreScroller = {
       keydown: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
           this.keyDownKey = event.code;
-          if (!event.repeat) this.time += 1;
+          if (!event.repeat) {
+            this.time += 1;
+          }
           this.lastEvent = event;
         });
       },
@@ -216,7 +224,9 @@ const CoreScroller = {
       },
       blur: (event) => {
         return handlerStack.alwaysContinueBubbling(() => {
-          if (event.target === window) this.time += 1;
+          if (event.target === window) {
+            this.time += 1;
+          }
         });
       },
     });
@@ -241,7 +251,9 @@ const CoreScroller = {
 
   // Scroll element by a relative amount (a number) in some direction.
   scroll(element, direction, amount, continuous) {
-    if (continuous == null) continuous = true;
+    if (continuous == null) {
+      continuous = true;
+    }
     if (!amount) {
       return;
     }

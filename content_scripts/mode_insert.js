@@ -21,8 +21,12 @@ class InsertMode extends Mode {
     });
 
     chrome.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName != "local") return;
-      if (changes.passNextKeyKeys == null) return;
+      if (areaName != "local") {
+        return;
+      }
+      if (changes.passNextKeyKeys == null) {
+        return;
+      }
       this.passNextKeyKeys = changes.passNextKeyKeys.newValue;
     });
 

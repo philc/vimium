@@ -39,7 +39,9 @@ function getRule(url, rules) {
   );
   // An absolute exclusion rule (one with no passKeys) takes priority.
   for (const rule of matchingRules) {
-    if (!rule.passKeys) return rule;
+    if (!rule.passKeys) {
+      return rule;
+    }
   }
   // Strip whitespace from all matching passKeys strings, and join them together.
   const passKeys = matchingRules.map((r) => r.passKeys.split(/\s+/).join("")).join("");

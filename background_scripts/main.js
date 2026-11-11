@@ -330,7 +330,9 @@ const BackgroundCommands = {
     await forCountTabs(count, tab, (tab) => {
       // In Firefox, Ctrl-W will not close a pinned tab, but on Chrome, it will. We try to be
       // consistent with each browser's UX for pinned tabs.
-      if (tab.pinned && bgUtils.isFirefox()) return;
+      if (tab.pinned && bgUtils.isFirefox()) {
+        return;
+      }
       chrome.tabs.remove(tab.id);
     });
   },
@@ -388,7 +390,9 @@ const BackgroundCommands = {
     const focusedFrameId = frameResponses.find(({ status }) => status.focused)?.frameId;
     // It's theoretically possible that focusedFrameId is null if the user switched tabs or away
     // from the browser while the request is in flight.
-    if (focusedFrameId == null) return;
+    if (focusedFrameId == null) {
+      return;
+    }
 
     // Prune any frames which gave an error response (i.e. they disappeared).
     frameIds = frameResponses.filter((r) => r.status.focusable).map((r) => r.frameId);
@@ -396,7 +400,9 @@ const BackgroundCommands = {
     const index = frameIds.indexOf(focusedFrameId);
     count = count ?? 1;
     const nextIndex = (index + count) % frameIds.length;
-    if (index == nextIndex) return;
+    if (index == nextIndex) {
+      return;
+    }
     await chrome.tabs.sendMessage(
       tabId,
       { handler: "focusFrame", highlight: true },
@@ -446,7 +452,9 @@ async function removeTabsRelative(direction, { count, tab }) {
   // count is null if the user didn't type a count prefix before issuing this command and didn't
   // specify a count=n option in their keymapping settings. Interpret this as closing all tabs on
   // either side.
-  if (count == null) count = 99999;
+  if (count == null) {
+    count = 99999;
+  }
   const activeTab = tab;
   const tabs = await chrome.tabs.query(visibleTabsQueryArgs);
   const activeIndex = getTabIndex(activeTab, tabs);
@@ -644,10 +652,14 @@ const sendRequestHandlers = {
 
   domReady(_, sender) {
     const isTopFrame = sender.frameId == 0;
-    if (!isTopFrame) return;
+    if (!isTopFrame) {
+      return;
+    }
     const tabId = sender.tab.id;
     // The only feature that uses tabLoadedHandlers is marks.
-    if (tabLoadedHandlers[tabId]) tabLoadedHandlers[tabId]();
+    if (tabLoadedHandlers[tabId]) {
+      tabLoadedHandlers[tabId]();
+    }
     delete tabLoadedHandlers[tabId];
   },
 
@@ -767,7 +779,9 @@ Utils.addChromeRuntimeOnMessageListener(
     // Firefox when the extension is first installed, domReady and initializeFrame messages come from
     // content scripts in about:blank URLs, which have a null sender.tab. I don't know what this
     // corresponds to. Since we expect a valid sender.tab, ignore those messages.
-    if (sender.tab == null) return;
+    if (sender.tab == null) {
+      return;
+    }
     await Settings.onLoaded();
     request = Object.assign({ count: 1 }, request, {
       tab: sender.tab,
@@ -791,7 +805,9 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
       return chrome.windows != null
         ? chrome.windows.getAll(null, function (windows) {
           for (const window of windows) {
-            if (window.incognito) return;
+            if (window.incognito) {
+              return;
+            }
           }
           // There are no remaining incognito-mode tabs, and findModeRawQueryListIncognito is set.
           return chrome.storage.session.remove("findModeRawQueryListIncognito");
@@ -812,7 +828,9 @@ globalThis.runTests = () => open(chrome.runtime.getURL("tests/dom_tests/dom_test
 // - previousVersion: this will be null for new installs.
 function majorVersionHasIncreased(previousVersion) {
   const currentVersion = Utils.getCurrentVersion();
-  if (previousVersion == null) return false;
+  if (previousVersion == null) {
+    return false;
+  }
   const currentMajorVersion = currentVersion.split(".").slice(0, 2).join(".");
   const previousMajorVersion = previousVersion.split(".").slice(0, 2).join(".");
   return Utils.compareVersions(currentMajorVersion, previousMajorVersion) == 1;
@@ -847,7 +865,9 @@ async function showUpgradeMessageIfNecessary(onInstalledDetails) {
   );
   if (!chrome.runtime.lastError) {
     chrome.notifications.onClicked.addListener(async function (id) {
-      if (id != notificationId) return;
+      if (id != notificationId) {
+        return;
+      }
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const tab = tabs[0];
       TabOperations.openUrlInNewTab({
@@ -919,7 +939,9 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     // for commentary.
     !bgUtils.isFirefox() &&
     (["chrome_update", "shared_module_update"].includes(details.reason));
-  if (shouldInjectContentScripts) injectContentScriptsAndCSSIntoExistingTabs();
+  if (shouldInjectContentScripts) {
+    injectContentScriptsAndCSSIntoExistingTabs();
+  }
 
   await showUpgradeMessageIfNecessary(details);
 });

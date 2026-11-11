@@ -255,7 +255,9 @@ async function initializeOnDomReady() {
   await chrome.runtime.sendMessage({ handler: "domReady" });
 
   const isVimiumNewTabPage = document.location.href == Settings.vimiumNewTabPageUrl;
-  if (!isVimiumNewTabPage) return;
+  if (!isVimiumNewTabPage) {
+    return;
+  }
 
   // Show the Vomnibar.
   await Settings.onLoaded();
@@ -276,7 +278,9 @@ const onUnload = Utils.makeIdempotent(() => {
 
 function setScrollPosition({ scrollX, scrollY }) {
   DomUtils.documentReady().then(() => {
-    if (!DomUtils.isTopFrame()) return;
+    if (!DomUtils.isTopFrame()) {
+      return;
+    }
     Utils.nextTick(function () {
       globalThis.focus();
       document.body.focus();
@@ -320,7 +324,9 @@ function focusThisFrame(request) {
   // It should never be the case that we get a forceFocusThisFrame request on a window that isn't
   // focusable, because the background script checks that the window is focusable before sending the
   // focusFrame message.
-  if (!request.forceFocusThisFrame && !isWindowFocusable()) return;
+  if (!request.forceFocusThisFrame && !isWindowFocusable()) {
+    return;
+  }
 
   Utils.nextTick(function () {
     globalThis.focus();
@@ -443,10 +449,14 @@ async function checkIfEnabledForUrl() {
   // This is the first time we learn what this frame's ID is.
   globalThis.frameId = response.frameId;
 
-  if (normalMode == null) installModes();
+  if (normalMode == null) {
+    installModes();
+  }
   normalMode.setPassKeys(response.passKeys);
   // Hide the HUD if we're not enabled.
-  if (!isEnabledForUrl) HUD.hide(true, false);
+  if (!isEnabledForUrl) {
+    HUD.hide(true, false);
+  }
 }
 
 // If this content script is running in the help dialog's iframe, then use the HelpDialogPage's
@@ -455,12 +465,16 @@ const HelpDialog = {
   helpUI: null,
 
   isShowing() {
-    if (globalThis.isVimiumHelpDialogPage) return true;
+    if (globalThis.isVimiumHelpDialogPage) {
+      return true;
+    }
     return this.helpUI && this.helpUI.showing;
   },
 
   abort() {
-    if (globalThis.isVimiumHelpDialogPage) throw new Error("This should be impossible.");
+    if (globalThis.isVimiumHelpDialogPage) {
+      throw new Error("This should be impossible.");
+    }
     if (this.isShowing()) {
       return this.helpUI.hide(false);
     }
@@ -469,7 +483,9 @@ const HelpDialog = {
   async toggle(request) {
     // If we're in the help dialog page already and the user has typed a key to show the help
     // dialog, then we should hide it.
-    if (globalThis.isVimiumHelpDialogPage) return HelpDialogPage.hide();
+    if (globalThis.isVimiumHelpDialogPage) {
+      return HelpDialogPage.hide();
+    }
 
     if (this.helpUI == null) {
       await DomUtils.documentComplete();

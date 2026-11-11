@@ -161,7 +161,9 @@ class Movement {
   }
 
   collapseSelectionToAnchor() {
-    if (this.selection.toString().length == 0) return;
+    if (this.selection.toString().length == 0) {
+      return;
+    }
     if (this.getDirection() === backward) {
       this.selection.collapseToEnd();
     } else {
@@ -170,7 +172,9 @@ class Movement {
   }
 
   collapseSelectionToFocus() {
-    if (this.selection.toString().length == 0) return;
+    if (this.selection.toString().length == 0) {
+      return;
+    }
     if (this.getDirection() === forward) {
       this.selection.collapseToEnd();
     } else {
@@ -205,13 +209,19 @@ class Movement {
   selectLine(count) {
     // Even under caret mode, we still need an extended selection here.
     this.alterMethod = "extend";
-    if (this.getDirection() === forward) this.reverseSelection();
+    if (this.getDirection() === forward) {
+      this.reverseSelection();
+    }
     this.runMovement(backward, lineboundary);
     this.reverseSelection();
-    for (let i = 1, end = count; i < end; i++) this.runMovement(forward, line);
+    for (let i = 1, end = count; i < end; i++) {
+      this.runMovement(forward, line);
+    }
     this.runMovement(forward, lineboundary);
     // Include the next character if that character is a newline.
-    if (this.getNextForwardCharacter() === "\n") return this.runMovement(forward, character);
+    if (this.getNextForwardCharacter() === "\n") {
+      return this.runMovement(forward, character);
+    }
   }
 
   // Scroll the focus into view.
@@ -221,7 +231,9 @@ class Movement {
         this.selection,
         this.getDirection() === backward,
       );
-      if (elementWithFocus) return Scroller.scrollIntoView(elementWithFocus);
+      if (elementWithFocus) {
+        return Scroller.scrollIntoView(elementWithFocus);
+      }
     }
   }
 }
@@ -364,7 +376,9 @@ class VisualMode extends KeyHandlerMode {
   }
 
   commandHandler({ command: { command }, count }) {
-    if (count == null) count = 1;
+    if (count == null) {
+      count = 1;
+    }
     switch (typeof command) {
       case "string":
         for (let i = 0, end = count; i < end; i++) {
@@ -504,7 +518,9 @@ class VisualLineMode extends VisualMode {
   }
 
   commandHandler({ command: { command }, count }) {
-    if (count == null) count = 1;
+    if (count == null) {
+      count = 1;
+    }
     switch (typeof command) {
       case "string":
         for (let i = 0, end = count; i < end; i++) {

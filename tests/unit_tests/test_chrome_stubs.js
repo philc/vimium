@@ -61,7 +61,9 @@ const createStorageAPI = (areaName) => {
   };
 
   // The "session" storage has one API that the others don't.
-  if (areaName == "session") storage.setAccessLevel = () => {};
+  if (areaName == "session") {
+    storage.setAccessLevel = () => {};
+  }
   return storage;
 };
 
@@ -216,7 +218,9 @@ globalThis.chrome = {
         chrome.runtime.lastError = undefined;
         const key_value = {};
         key_value[key] = { newValue: value };
-        if (this.func) return this.func(key_value, area);
+        if (this.func) {
+          return this.func(key_value, area);
+        }
       },
 
       callEmpty(key) {

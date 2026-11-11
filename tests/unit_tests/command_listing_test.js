@@ -47,7 +47,9 @@ context("command listing", () => {
   should("show key mappings for mapped commands", async () => {
     const getKeys = (commandName) => {
       const el = globalThis.document.querySelector(`.command#${commandName}`);
-      if (!el) throw new Error(`${commandName} el not found.`);
+      if (!el) {
+        throw new Error(`${commandName} el not found.`);
+      }
       const keys = Array.from(el.querySelectorAll(".key")).map((el) => el.textContent);
       return keys;
     };

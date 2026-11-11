@@ -6,7 +6,9 @@ let ownerPagePort = null;
 let handleMessage = null;
 
 export async function registerPortWithOwnerPage(event) {
-  if (event.source !== globalThis.parent) return;
+  if (event.source !== globalThis.parent) {
+    return;
+  }
   // The Vimium content script that's running on the parent page has access to this vimiumSecret
   // fetched from session storage, so if it matches, then we know that event.ports came from the
   // Vimium extension.
@@ -46,7 +48,9 @@ export function registerHandler(messageHandlerFn) {
 }
 
 export function postMessage(data) {
-  if (!ownerPagePort) return;
+  if (!ownerPagePort) {
+    return;
+  }
   ownerPagePort.postMessage(data);
 }
 
@@ -55,13 +59,17 @@ export function postMessage(data) {
 // when we've seen both.
 let hasDispatchedReadyEvent = false;
 function dispatchReadyEventWhenReady() {
-  if (hasDispatchedReadyEvent) return;
+  if (hasDispatchedReadyEvent) {
+    return;
+  }
 
   if (document.readyState === "loading") {
     globalThis.addEventListener("DOMContentLoaded", () => dispatchReadyEventWhenReady());
     return;
   }
-  if (!ownerPagePort) return;
+  if (!ownerPagePort) {
+    return;
+  }
 
   if (globalThis.frameId != null) {
     postMessage({ name: "setIframeFrameId", iframeFrameId: globalThis.frameId });

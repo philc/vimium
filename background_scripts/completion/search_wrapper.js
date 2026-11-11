@@ -95,18 +95,28 @@ export async function complete(searchUrl, queryTerms) {
   const query = queryTerms.join(" ").toLowerCase();
 
   // We don't complete queries which are too short: the results are usually useless.
-  if (query.length < 4) return [];
+  if (query.length < 4) {
+    return [];
+  }
 
   // We don't complete regular URLs or Javascript URLs.
-  if (queryTerms.length == 1 && await UrlUtils.isUrl(query)) return [];
-  if (UrlUtils.hasJavascriptProtocol(query)) return [];
+  if (queryTerms.length == 1 && await UrlUtils.isUrl(query)) {
+    return [];
+  }
+  if (UrlUtils.hasJavascriptProtocol(query)) {
+    return [];
+  }
 
   const engine = lookupEngine(searchUrl);
-  if (!engine) return [];
+  if (!engine) {
+    return [];
+  }
 
   const completionCacheKey = JSON.stringify([searchUrl, queryTerms]);
   if (completionCache.has(completionCacheKey)) {
-    if (debug) console.log("hit", completionCacheKey);
+    if (debug) {
+      console.log("hit", completionCacheKey);
+    }
     return completionCache.get(completionCacheKey);
   }
 
@@ -125,12 +135,16 @@ export async function complete(searchUrl, queryTerms) {
   await createTimeoutPromise(DELAY);
 
   // If the user has issued a new query while we were waiting, then this query is old; abort it.
-  if (lastRequestId != requestId) return [];
+  if (lastRequestId != requestId) {
+    return [];
+  }
 
   const engineWrapper = new EnginePrefixWrapper(searchUrl, engine);
   const url = engineWrapper.getUrl(queryTerms);
 
-  if (debug) console.log("GET", url);
+  if (debug) {
+    console.log("GET", url);
+  }
   const responseText = await get(url);
 
   // Parsing the response may fail if we receive an unexpectedly-formatted response. In all cases,
@@ -147,7 +161,9 @@ export async function complete(searchUrl, queryTerms) {
         // Filter out the query itself. It's not adding anything.
         .filter((s) => s !== query);
     } catch (error) {
-      if (debug) console.log("error:", error);
+      if (debug) {
+        console.log("error:", error);
+      }
       isError = true;
     }
   }

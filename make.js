@@ -471,7 +471,9 @@ task("test-e2e", [], async () => {
 desc("Run a script with the e2e harness and print its return value. Usage: file=<path>");
 task("run-test-script", [], async () => {
   const file = env("file");
-  if (!file) abort("Usage: ./make.js run-test-script file=<path to script>");
+  if (!file) {
+    abort("Usage: ./make.js run-test-script file=<path to script>");
+  }
   const script = await import(path.toFileUrl(path.resolve(Deno.cwd(), file)).href);
   const e2e = await import("./tests/e2e_tests/harness.js");
   try {

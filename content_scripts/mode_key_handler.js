@@ -28,7 +28,9 @@ class KeyHandlerMode extends Mode {
 
   // Reset the key state, optionally retaining the count provided.
   reset(countPrefix) {
-    if (countPrefix == null) countPrefix = 0;
+    if (countPrefix == null) {
+      countPrefix = 0;
+    }
     this.countPrefix = countPrefix;
     this.keyState = [this.keyMapping];
   }
@@ -79,7 +81,9 @@ class KeyHandlerMode extends Mode {
       this.reset(this.keyState.length === 1 ? (this.countPrefix * 10) + digit : digit);
       return this.suppressEvent;
     } else {
-      if (keyChar) this.reset();
+      if (keyChar) {
+        this.reset();
+      }
       return this.continueBubbling;
     }
   }

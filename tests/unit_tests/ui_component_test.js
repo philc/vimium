@@ -5,7 +5,9 @@ import "../../lib/settings.js";
 import "../../content_scripts/ui_component.js";
 
 function stubPostMessage(iframeEl, fn) {
-  if (!iframeEl || !fn) throw new Error("iframeEl and fn are required.");
+  if (!iframeEl || !fn) {
+    throw new Error("iframeEl and fn are required.");
+  }
   Object.defineProperty(iframeEl, "contentWindow", {
     value: { postMessage: fn },
     writable: false,

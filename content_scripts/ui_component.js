@@ -27,7 +27,9 @@ class UIComponent {
   // - className: the CSS class to add to the iframe.
   // - messageHandler: optional; a function to handle messages from the iframe's page.
   async load(iframeUrl, className, messageHandler) {
-    if (this.iframeFrameElement) throw new Error("init should only be called once.");
+    if (this.iframeFrameElement) {
+      throw new Error("init should only be called once.");
+    }
     this.messageHandler = messageHandler;
     const isDomTests = iframeUrl.includes("?dom_tests=true");
     this.iframeElement = DomUtils.createElement("iframe");
@@ -180,10 +182,14 @@ class UIComponent {
   }
 
   async hide(shouldRefocusOriginalFrame) {
-    if (shouldRefocusOriginalFrame == null) shouldRefocusOriginalFrame = true;
+    if (shouldRefocusOriginalFrame == null) {
+      shouldRefocusOriginalFrame = true;
+    }
 
     await this.iframePort;
-    if (!this.showing) return;
+    if (!this.showing) {
+      return;
+    }
     this.showing = false;
     this.setIframeVisible(false);
     if (this.focusOptions.focus) {

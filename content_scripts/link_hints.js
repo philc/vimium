@@ -51,7 +51,9 @@ class LocalHint {
   possibleFalsePositive;
   constructor(o) {
     Object.seal(this);
-    if (o) Object.assign(this, o);
+    if (o) {
+      Object.assign(this, o);
+    }
   }
 }
 
@@ -63,7 +65,9 @@ class HintDescriptor {
   linkText; // The link's text. This is non-null only for FilterHints.
   constructor(o) {
     Object.seal(this);
-    if (o) Object.assign(this, o);
+    if (o) {
+      Object.assign(this, o);
+    }
   }
 }
 
@@ -96,9 +100,13 @@ const COPY_LINK_URL = {
   linkActivator(link) {
     if (link.href != null) {
       let url = link.href;
-      if (url.slice(0, 7) === "mailto:") url = url.slice(7);
+      if (url.slice(0, 7) === "mailto:") {
+        url = url.slice(7);
+      }
       HUD.copyToClipboard(url);
-      if (28 < url.length) url = url.slice(0, 26) + "....";
+      if (28 < url.length) {
+        url = url.slice(0, 26) + "....";
+      }
       HUD.show(`Yanked ${url}`, 2000);
     } else {
       HUD.show("No link to yank.", 2000);
@@ -124,7 +132,9 @@ const COPY_LINK_TEXT = {
     let text = link.textContent;
     if (text.length > 0) {
       HUD.copyToClipboard(text);
-      if (28 < text.length) text = text.slice(0, 26) + "....";
+      if (28 < text.length) {
+        text = text.slice(0, 26) + "....";
+      }
       HUD.show(`Yanked ${text}`, 2000);
     } else {
       HUD.show("No text to yank.", 2000);
@@ -172,14 +182,18 @@ const HintCoordinator = {
   // Some messages will not be handled in the case where the help dialog is shown, and is then
   // hidden, but is still receiving link hints messages via broadcastLinkHintsMessage.
   willHandleMessage(messageType) {
-    if (this.linkHintsMode) return true;
+    if (this.linkHintsMode) {
+      return true;
+    }
     return ["prepareToActivateMode", "activateMode", "getHintDescriptors", "exit"].includes(
       messageType,
     );
   },
 
   sendMessage(messageType, request) {
-    if (request == null) request = {};
+    if (request == null) {
+      request = {};
+    }
     request = Object.assign(request, { messageType, handler: "broadcastLinkHintsMessage" });
     chrome.runtime.sendMessage(request);
   },
@@ -220,7 +234,9 @@ const HintCoordinator = {
   // information necessary for each frame to determine whether and when a hint from *any* frame is
   // selected.
   getHintDescriptors({ modeIndex, requestedByHelpDialog }, _sender) {
-    if (!DomUtils.isReady() || DomUtils.windowIsTooSmall()) return [];
+    if (!DomUtils.isReady() || DomUtils.windowIsTooSmall()) {
+      return [];
+    }
 
     const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
     // If link hints is launched within the help dialog, then we only offer hints from that frame.
@@ -299,7 +315,9 @@ const HintCoordinator = {
   },
 
   mouseOutOfLastClickedElement() {
-    if (this.lastClickedElementRef == null) return;
+    if (this.lastClickedElementRef == null) {
+      return;
+    }
     const el = this.lastClickedElementRef.deref();
     if (el) {
       DomUtils.simulateMouseEvent("mouseout", el, null);
@@ -310,8 +328,12 @@ const HintCoordinator = {
 
 const LinkHints = {
   activateMode(count, { mode, registryEntry }) {
-    if (count == null) count = 1;
-    if (mode == null) mode = OPEN_IN_CURRENT_TAB;
+    if (count == null) {
+      count = 1;
+    }
+    if (mode == null) {
+      mode = OPEN_IN_CURRENT_TAB;
+    }
 
     switch (registryEntry?.options.action) {
       case "copy-text":
@@ -359,10 +381,14 @@ const LinkHints = {
 class LinkHintsMode {
   // @mode: One of the enums listed at the top of this file.
   constructor(hintDescriptors, mode) {
-    if (mode == null) mode = OPEN_IN_CURRENT_TAB;
+    if (mode == null) {
+      mode = OPEN_IN_CURRENT_TAB;
+    }
     this.mode = mode;
     // We need documentElement to be ready in order to append links.
-    if (!document.documentElement) return;
+    if (!document.documentElement) {
+      return;
+    }
 
     this.containerEl = null;
     // Function that does the appropriate action on the selected link.
@@ -473,7 +499,9 @@ class LinkHintsMode {
 
   setIndicator() {
     // If we're waiting for enter confirmation, we're showing an HUD message; don't clobber it.
-    if (this.confirming === "enter") return;
+    if (this.confirming === "enter") {
+      return;
+    }
 
     if (windowIsFocused()) {
       const typedCharacters = this.markerMatcher.linkTextKeystrokeQueue
@@ -523,7 +551,9 @@ class LinkHintsMode {
       // confirmation.
       return;
     }
-    if (event.repeat) return;
+    if (event.repeat) {
+      return;
+    }
 
     // NOTE(smblott) The modifier behaviour here applies only to alphabet hints.
     if (
@@ -820,7 +850,9 @@ class LinkHintsMode {
 
   // Shows the marker, highlighting matchingCharCount characters.
   showMarker(linkMarker, matchingCharCount) {
-    if (!linkMarker.isLocalMarker()) return;
+    if (!linkMarker.isLocalMarker()) {
+      return;
+    }
 
     linkMarker.element.style.display = "";
     for (let j = 0, end = linkMarker.element.childNodes.length; j < end; j++) {
@@ -840,7 +872,9 @@ class LinkHintsMode {
 
   deactivateMode() {
     this.removeHintMarkers();
-    if (this.hintMode != null) this.hintMode.exit();
+    if (this.hintMode != null) {
+      this.hintMode.exit();
+    }
   }
 
   removeHintMarkers() {
@@ -1034,8 +1068,11 @@ class FilterHints {
         linkMarker.score = scoreFunction(linkMarker);
         return (this.linkTextKeystrokeQueue.length === 0) || (linkMarker.score > 0);
       }).sort(function (a, b) {
-        if (b.score === a.score) return b.stableSortCount - a.stableSortCount;
-        else return b.score - a.score;
+        if (b.score === a.score) {
+          return b.stableSortCount - a.stableSortCount;
+        } else {
+          return b.score - a.score;
+        }
       });
 
     if (
@@ -1049,7 +1086,9 @@ class FilterHints {
       let linkHintNumber = 1;
       return matchingHintMarkers.map((m) => {
         m.hintString = this.generateHintString(linkHintNumber++);
-        if (m.isLocalMarker()) this.renderMarker(m);
+        if (m.isLocalMarker()) {
+          this.renderMarker(m);
+        }
         return m;
       });
     }
@@ -1060,7 +1099,9 @@ class FilterHints {
   scoreLinkHint(linkSearchString) {
     const searchWords = linkSearchString.trim().toLowerCase().split(this.splitRegexp);
     return (linkMarker) => {
-      if (!(searchWords.length > 0)) return 0;
+      if (!(searchWords.length > 0)) {
+        return 0;
+      }
 
       // We only keep non-empty link words. Empty link words cannot be matched, and leading empty
       // link words disrupt the scoring of matches at the start of the text.
@@ -1078,11 +1119,17 @@ class FilterHints {
           if (position < 0) {
             return 0; // No match.
           } else if ((position === 0) && (searchWord.length === linkWord.length)) {
-            if (idx === 0) return 8;
-            else return 4; // Whole-word match.
+            if (idx === 0) {
+              return 8;
+            } else {
+              return 4;
+            } // Whole-word match.
           } else if (position === 0) {
-            if (idx === 0) return 6;
-            else return 2; // Match at the start of a word.
+            if (idx === 0) {
+              return 6;
+            } else {
+              return 2;
+            } // Match at the start of a word.
           } else {
             return 1;
           }
@@ -1176,7 +1223,9 @@ const LocalHints = {
           }
           return function (element) {
             for (const attribute of ngAttributes) {
-              if (element.hasAttribute(attribute)) return true;
+              if (element.hasAttribute(attribute)) {
+                return true;
+              }
             }
             return false;
           };
@@ -1184,7 +1233,9 @@ const LocalHints = {
       })();
     }
 
-    if (!isClickable) isClickable = this.checkForAngularJs(element);
+    if (!isClickable) {
+      isClickable = this.checkForAngularJs(element);
+    }
 
     if (element.hasAttribute("onclick")) {
       isClickable = true;
@@ -1353,13 +1404,19 @@ const LocalHints = {
   // If the returned element is a shadow root, descend into that shadow root recursively until we
   // hit an actual element.
   getElementFromPoint(x, y, root, stack) {
-    if (root == null) root = document;
-    if (stack == null) stack = [];
+    if (root == null) {
+      root = document;
+    }
+    if (stack == null) {
+      stack = [];
+    }
     const element = root.elementsFromPoint
       ? root.elementsFromPoint(x, y)[0]
       : root.elementFromPoint(x, y);
 
-    if (stack.includes(element)) return element;
+    if (stack.includes(element)) {
+      return element;
+    }
 
     stack.push(element);
 
@@ -1381,11 +1438,15 @@ const LocalHints = {
   //   commands like "LinkHints.activateModeToCopyLinkUrl".
   getLocalHints(requireHref) {
     // We need documentElement to be ready in order to find links.
-    if (!document.documentElement) return [];
+    if (!document.documentElement) {
+      return [];
+    }
 
     // Find all elements, recursing into shadow DOM if present.
     const getAllElements = (root, elements) => {
-      if (elements == null) elements = [];
+      if (elements == null) {
+        elements = [];
+      }
       for (const element of Array.from(root.querySelectorAll("*"))) {
         elements.push(element);
         if (element.shadowRoot) {
@@ -1422,7 +1483,9 @@ const LocalHints = {
     // This determines how many descendants we're willing to consider.
     const descendantsToCheck = [1, 2, 3];
     localHints = localHints.filter((hint, position) => {
-      if (!hint.possibleFalsePositive) return true;
+      if (!hint.possibleFalsePositive) {
+        return true;
+      }
       // Determine if the clickable element is indeed a false positive.
       const lookbackWindow = 6;
       let index = Math.max(0, position - lookbackWindow);
@@ -1447,7 +1510,9 @@ const LocalHints = {
     // completely covered.
 
     const nonOverlappingHints = localHints.filter((hint) => {
-      if (hint.secondClassCitizen) return false;
+      if (hint.secondClassCitizen) {
+        return false;
+      }
       const rect = hint.rect;
 
       // Check middle of element first, as this is perhaps most likely to return true.
@@ -1458,7 +1523,9 @@ const LocalHints = {
       const hasIntersection = elementFromMiddlePoint &&
         (hint.element.contains(elementFromMiddlePoint) ||
           elementFromMiddlePoint.contains(hint.element));
-      if (hasIntersection) return true;
+      if (hasIntersection) {
+        return true;
+      }
 
       // Handle image maps
       if (hint.element.localName == "area" && elementFromMiddlePoint == hint.image) {
@@ -1477,7 +1544,9 @@ const LocalHints = {
           const elementFromPoint = LocalHints.getElementFromPoint(horizontalCoord, verticalCoord);
           const hasIntersection = elementFromPoint &&
             (hint.element.contains(elementFromPoint) || elementFromPoint.contains(hint.element));
-          if (hasIntersection) return true;
+          if (hasIntersection) {
+            return true;
+          }
         }
       }
     });

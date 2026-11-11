@@ -79,7 +79,9 @@ const ActionPage = {
     ExclusionRulesEditor.setForm(rules);
     this.syncEnabledKeysCaption();
 
-    if (rules.length > 0) this.showExclusionRulesEditor();
+    if (rules.length > 0) {
+      this.showExclusionRulesEditor();
+    }
   },
 
   async isVimiumInstalledInTab(tabId) {

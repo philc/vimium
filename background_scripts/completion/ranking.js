@@ -12,7 +12,9 @@ export function matches(queryTerms, ...things) {
         matchedTerm = thing.match(regexp);
       }
     }
-    if (!matchedTerm) return false;
+    if (!matchedTerm) {
+      return false;
+    }
   }
   return true;
 }
@@ -149,14 +151,24 @@ export const RegexpCache = {
   //     a word)
   // TODO: `prefix` and `suffix` might be useful in richer word-relevancy scoring.
   get(string, prefix, suffix) {
-    if (prefix == null) prefix = "";
-    if (suffix == null) suffix = "";
-    if (!this.initialized) this.init();
+    if (prefix == null) {
+      prefix = "";
+    }
+    if (suffix == null) {
+      suffix = "";
+    }
+    if (!this.initialized) {
+      this.init();
+    }
     let regexpString = Utils.escapeRegexSpecialCharacters(string);
     // Avoid cost of constructing new strings if prefix/suffix are empty (which is expected to be a
     // common case).
-    if (prefix) regexpString = prefix + regexpString;
-    if (suffix) regexpString = regexpString + suffix;
+    if (prefix) {
+      regexpString = prefix + regexpString;
+    }
+    if (suffix) {
+      regexpString = regexpString + suffix;
+    }
     // Smartcase: Regexp is case insensitive, unless `string` contains a capital letter (testing
     // `string`, not `regexpString`).
     return this.cache[regexpString] ||

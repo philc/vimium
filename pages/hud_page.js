@@ -39,7 +39,9 @@ export function onKeyEvent(event) {
 
   const inputEl = document.querySelector("#hud-find-input");
   // Don't do anything if we're not in find mode.
-  if (inputEl == null) return;
+  if (inputEl == null) {
+    return;
+  }
 
   if (
     (KeyboardUtils.isBackspace(event) && (inputEl.textContent.length === 0)) ||
@@ -172,7 +174,9 @@ export const handlers = {
   updateMatchesCount({ matchCount, showMatchText }) {
     const countEl = document.querySelector("#hud-match-count");
     // Don't do anything if we're not in find mode.
-    if (countEl == null) return;
+    if (countEl == null) {
+      return;
+    }
 
     if (Utils.isFirefox()) {
       document.querySelector("#hud-find-input").focus();
@@ -184,7 +188,9 @@ export const handlers = {
   },
 
   copyToClipboard(message) {
-    if (!ensureClipboardIsAvailable()) return;
+    if (!ensureClipboardIsAvailable()) {
+      return;
+    }
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
@@ -195,14 +201,18 @@ export const handlers = {
       const value = message.data.replace(/\xa0/g, " ");
       await navigator.clipboard.writeText(value);
 
-      if (focusedElement != null) focusedElement.focus();
+      if (focusedElement != null) {
+        focusedElement.focus();
+      }
       globalThis.parent.focus();
       UIComponentMessenger.postMessage({ name: "unfocusIfFocused" });
     });
   },
 
   pasteFromClipboard() {
-    if (!ensureClipboardIsAvailable()) return;
+    if (!ensureClipboardIsAvailable()) {
+      return;
+    }
     Utils.setTimeout(TIME_TO_WAIT_FOR_IPC_MESSAGES, async function () {
       const focusedElement = document.activeElement;
       // In Chrome, if we do not focus the current window before invoking navigator.clipboard APIs,
@@ -213,7 +223,9 @@ export const handlers = {
       // Replace nbsp; characters with space. See #2217.
       value = value.replace(/\xa0/g, " ");
 
-      if (focusedElement != null) focusedElement.focus();
+      if (focusedElement != null) {
+        focusedElement.focus();
+      }
       globalThis.parent.focus();
       UIComponentMessenger.postMessage({ name: "pasteResponse", data: value });
     });

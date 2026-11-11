@@ -21,7 +21,9 @@ export class RegistryEntry {
 
   constructor(o) {
     Object.seal(this);
-    if (o) Object.assign(this, o);
+    if (o) {
+      Object.assign(this, o);
+    }
   }
 }
 
@@ -72,7 +74,9 @@ const KeyMappingsParser = {
 
     const validModifiers = ["a", "c", "m", "s"];
     const validateParsedKey = function (key) {
-      if (!key?.match(modifiedKey)) return;
+      if (!key?.match(modifiedKey)) {
+        return;
+      }
       // Check that the modifier is valid and not capitalized.
       const mod = key.split("-")[0].slice(1);
       if (!validModifiers.includes(mod)) {
@@ -123,11 +127,15 @@ const KeyMappingsParser = {
           }
           let hasUnknownOption = false;
           for (const option of Object.keys(options)) {
-            if (allowedOptions.includes(option)) continue;
+            if (allowedOptions.includes(option)) {
+              continue;
+            }
             if (allowedOptions.includes("(any url)")) {
               // Since this command allows for any URL as an argument, we perform some basic
               // validation to ensure the provided option string is indeed a URL.
-              if (validateUrl(option)) continue;
+              if (validateUrl(option)) {
+                continue;
+              }
               hasUnknownOption = true;
               errors.push(
                 `Command ${command} does not support option ${option}. ` +
@@ -140,7 +148,9 @@ const KeyMappingsParser = {
               break;
             }
           }
-          if (hasUnknownOption) break;
+          if (hasUnknownOption) {
+            break;
+          }
           keyToRegistryEntry[key] = new RegistryEntry({
             keySequence,
             command,

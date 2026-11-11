@@ -18,7 +18,9 @@ function compareKeys(a, b) {
 const ellipsis = "...";
 // Truncates `s` and appends an ellipsis if `s` is longer than maxLength.
 function ellipsize(s, maxLength) {
-  if (s.length <= maxLength) return s;
+  if (s.length <= maxLength) {
+    return s;
+  }
   return s.substring(0, Math.max(0, maxLength - ellipsis.length)) + ellipsis;
 }
 

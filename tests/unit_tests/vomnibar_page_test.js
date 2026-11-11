@@ -126,8 +126,12 @@ context("vomnibar page", () => {
       withPromise((message) => {
         // Return a never-resolving promise for filterCompletions to simulate the race condition where
         // the user hits Enter before the background page responds with completions.
-        if (message.handler === "filterCompletions") return new Promise(() => {});
-        if (message.handler === "openUrlInCurrentTab") capturedUrl = message.url;
+        if (message.handler === "filterCompletions") {
+          return new Promise(() => {});
+        }
+        if (message.handler === "openUrlInCurrentTab") {
+          capturedUrl = message.url;
+        }
       }),
     );
 

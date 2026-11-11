@@ -118,7 +118,9 @@ async function pickTab(tabs) {
   const windowId = window?.id;
   // Prefer tabs in the current window, if there are any.
   const tabsInWindow = tabs.filter((tab) => tab.windowId === windowId);
-  if (tabsInWindow.length > 0) tabs = tabsInWindow;
+  if (tabsInWindow.length > 0) {
+    tabs = tabsInWindow;
+  }
   // If more than one tab remains and the current tab is still a candidate, then don't pick the
   // current tab (because jumping to it does nothing).
   if (tabs.length > 1) {

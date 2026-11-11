@@ -181,8 +181,12 @@ context("link hints for image maps", () => {
 });
 
 const sendKeyboardEvent = (key, type, extra) => {
-  if (type == null) type = "keydown";
-  if (extra == null) extra = {};
+  if (type == null) {
+    type = "keydown";
+  }
+  if (extra == null) {
+    extra = {};
+  }
   handlerStack.bubbleEvent(
     type,
     Object.assign(extra, {

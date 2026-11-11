@@ -164,8 +164,12 @@ class VomnibarUI {
     const key = KeyboardUtils.getKeyChar(event);
     // Handle <Enter> on "keypress", and other events on "keydown". This avoids interence with CJK
     // translation (see #2915 and #2934).
-    if ((event.type === "keypress") && (key !== "enter")) return null;
-    if ((event.type === "keydown") && (key === "enter")) return null;
+    if ((event.type === "keypress") && (key !== "enter")) {
+      return null;
+    }
+    if ((event.type === "keydown") && (key === "enter")) {
+      return null;
+    }
     if (KeyboardUtils.isEscape(event)) {
       return "dismiss";
     } else if (
@@ -288,7 +292,9 @@ class VomnibarUI {
     //  the search URL from the actual contents of the input (query).
     if (waitingOnCompletions || this.selection == -1) {
       // <Enter> on an empty query is a no-op.
-      if (query.length == 0) return;
+      if (query.length == 0) {
+        return;
+      }
 
       // If the user typed a custom search engine keyword, use that directly. This handles the race
       // condition where the user hits Enter before the async completions response arrives
@@ -300,7 +306,9 @@ class VomnibarUI {
       }
 
       // <Enter> with no selection on a completer other than "omni" is a no-op.
-      if (this.completerName != "omni") return;
+      if (this.completerName != "omni") {
+        return;
+      }
 
       const firstCompletion = this.completions[0];
       const isPrimary = isPrimarySearchSuggestion(firstCompletion);
@@ -363,7 +371,9 @@ class VomnibarUI {
     });
 
     // Ensure that no new filter requests have gone out while waiting for this result.
-    if (this.lastRequestId != requestId) return;
+    if (this.lastRequestId != requestId) {
+      return;
+    }
 
     this.completions = results;
     this.selection = this.completions[0]?.autoSelect ? 0 : this.initialSelectionValue;
@@ -423,7 +433,9 @@ class VomnibarUI {
     const parts = this.input.value.trimStart().split(/\s+/);
     // For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
     const keyword = parts[0];
-    if (parts.length <= 1) return null;
+    if (parts.length <= 1) {
+      return null;
+    }
     // Don't match queries for built-in properties like "constructor". See #4396.
     if (Object.hasOwn(userSearchEngines.keywordToEngine, keyword)) {
       return userSearchEngines.keywordToEngine[keyword];

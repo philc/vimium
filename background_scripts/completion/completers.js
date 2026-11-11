@@ -75,7 +75,9 @@ export class Suggestion {
   }
 
   generateHtml() {
-    if (this.html) return this.html;
+    if (this.html) {
+      return this.html;
+    }
     const relevancyHtml = showRelevancy
       ? `<span class='relevancy'>${this.computeRelevancy()}</span>`
       : "";
@@ -180,7 +182,9 @@ export class Suggestion {
 
   // Wraps each occurence of the query terms in the given string in a <span>.
   highlightQueryTerms(string) {
-    if (!this.highlightTerms) return string;
+    if (!this.highlightTerms) {
+      return string;
+    }
     let ranges = [];
     const escapedTerms = this.queryTerms.map((term) => Utils.escapeHtml(term));
     for (const term of escapedTerms) {
@@ -284,7 +288,9 @@ const ignoredTopLevelBookmarks = {
 // this.bookmarks are loaded asynchronously when refresh() is called.
 export class BookmarkCompleter {
   async filter({ queryTerms }) {
-    if (!this.bookmarks) await this.refresh();
+    if (!this.bookmarks) {
+      await this.refresh();
+    }
 
     // If the folder separator character is the first character in any query term, then use the
     // bookmark's full path as its title. Otherwise, just use the its regular title.
@@ -484,7 +490,9 @@ export class HistoryCompleter {
     const historyEntry = suggestion.relevancyData;
     const recencyScore = ranking.recencyScore(historyEntry.lastVisitTime);
     // If there are no query terms, then relevancy is based on recency alone.
-    if (suggestion.queryTerms.length === 0) return recencyScore;
+    if (suggestion.queryTerms.length === 0) {
+      return recencyScore;
+    }
     const wordRelevancy = ranking.wordRelevancy(
       suggestion.queryTerms,
       suggestion.url,
@@ -508,8 +516,12 @@ export class DomainCompleter {
 
   async filter({ queryTerms, query }) {
     const isMultiWordQuery = /\S\s/.test(query);
-    if ((queryTerms.length === 0) || isMultiWordQuery) return [];
-    if (!this.domains) await this.populateDomains();
+    if ((queryTerms.length === 0) || isMultiWordQuery) {
+      return [];
+    }
+    if (!this.domains) {
+      await this.populateDomains();
+    }
 
     const firstTerm = queryTerms[0];
     const domains = Object.keys(this.domains || []).filter((d) => d.includes(firstTerm));
@@ -568,7 +580,9 @@ export class DomainCompleter {
       for (const url of toRemove.urls) {
         const domain = this.parseDomainAndScheme(url);
         const entry = this.domains[domain];
-        if (entry == null) continue;
+        if (entry == null) {
+          continue;
+        }
         entry.referenceCount--;
         if (entry.referenceCount <= 0) {
           delete this.domains[domain];
@@ -639,7 +653,9 @@ export class SearchEngineCompleter {
     const parts = query.trimStart().split(/\s+/);
     // For a keyword "w", we match "w search terms" and "w ", but not "w" on its own.
     const keyword = parts[0];
-    if (parts.length <= 1) return null;
+    if (parts.length <= 1) {
+      return null;
+    }
     // Don't match queries for built-in properties like "constructor". See #4396.
     if (Object.hasOwn(userSearchEngines.keywordToEngine, keyword)) {
       return userSearchEngines.keywordToEngine[keyword];
@@ -658,7 +674,9 @@ export class SearchEngineCompleter {
     const queryTermsWithoutKeyword = queryTerms.slice(1);
 
     const userSearchEngine = userSearchEngines.keywordToEngine[keyword];
-    if (!userSearchEngine) return [];
+    if (!userSearchEngine) {
+      return [];
+    }
 
     const searchUrl = userSearchEngine.url;
 
@@ -685,7 +703,9 @@ export class SearchEngineCompleter {
       return s;
     });
 
-    if (suggestions[0]) suggestions[0].relevancy = 1.0;
+    if (suggestions[0]) {
+      suggestions[0].relevancy = 1.0;
+    }
 
     // This is a suggestion which contains the user's query. It's the "search for exactly what I
     // just typed" option. It should always appear first in the list.
@@ -723,7 +743,9 @@ export class MultiCompleter {
 
   refresh() {
     for (const c of this.completers) {
-      if (c.refresh) c.refresh();
+      if (c.refresh) {
+        c.refresh();
+      }
     }
   }
 
@@ -772,10 +794,14 @@ export class MultiCompleter {
     const seenUrls = new Set();
     const dedupedSuggestions = [];
     for (const s of suggestions) {
-      if (dedupedSuggestions.length === maxResults) break;
+      if (dedupedSuggestions.length === maxResults) {
+        break;
+      }
       if (s.deDuplicate) {
         const url = s.shortenUrl();
-        if (seenUrls.has(url)) continue;
+        if (seenUrls.has(url)) {
+          continue;
+        }
         seenUrls.add(url);
       }
       dedupedSuggestions.push(s);
@@ -811,7 +837,9 @@ export const HistoryCache = {
   },
 
   async onLoaded() {
-    if (this.history) return;
+    if (this.history) {
+      return;
+    }
     await this.fetchHistory();
   },
 
@@ -830,7 +858,9 @@ export const HistoryCache = {
 
     // On Firefox, some history entries do not have titles.
     for (const entry of history) {
-      if (entry.title == null) entry.title = "";
+      if (entry.title == null) {
+        entry.title = "";
+      }
     }
     history.sort(this.compareHistoryByUrl);
     this.history = history;
@@ -840,8 +870,12 @@ export const HistoryCache = {
   },
 
   compareHistoryByUrl(a, b) {
-    if (a.url === b.url) return 0;
-    if (a.url > b.url) return 1;
+    if (a.url === b.url) {
+      return 0;
+    }
+    if (a.url > b.url) {
+      return 1;
+    }
     return -1;
   },
 
@@ -849,7 +883,9 @@ export const HistoryCache = {
   // has the correct "lastVisitTime". That's crucial for ranking Vomnibar suggestions.
   onVisited(newPage) {
     // On Firefox, some history entries do not have titles.
-    if (newPage.title == null) newPage.title = "";
+    if (newPage.title == null) {
+      newPage.title = "";
+    }
     const i = HistoryCache.binarySearch(newPage, this.history, this.compareHistoryByUrl);
     const pageWasFound = this.history[i]?.url == newPage.url;
     if (pageWasFound) {

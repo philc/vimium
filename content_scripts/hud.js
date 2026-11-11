@@ -224,7 +224,9 @@ class Tween {
     this.intervalId = -1;
     this.styleElement = null;
     this.cssSelector = cssSelector;
-    if (insertionPoint == null) insertionPoint = document.documentElement;
+    if (insertionPoint == null) {
+      insertionPoint = document.documentElement;
+    }
     this.styleElement = DomUtils.createElement("style");
 
     if (!this.styleElement.style) {

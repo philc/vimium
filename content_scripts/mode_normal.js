@@ -56,7 +56,9 @@ class NormalMode extends KeyHandlerMode {
         `You have asked Vimium to perform ${count} repetitions of the ` +
           `command "${registryEntry.command}". Are you sure you want to continue?`,
       );
-      if (!result) return;
+      if (!result) {
+        return;
+      }
     }
 
     if (registryEntry.topFrame) {
@@ -89,7 +91,9 @@ const enterNormalMode = function (count) {
 
 function findSelectedHelper(backwards) {
   const selection = globalThis.getSelection().toString();
-  if (!selection) return;
+  if (!selection) {
+    return;
+  }
   FindMode.updateQuery(selection);
   FindMode.saveQuery();
   FindMode.findNext(backwards);
@@ -270,14 +274,18 @@ const NormalModeCommands = {
     const previousPatterns = Settings.get("previousPatterns") || "";
     const previousStrings = previousPatterns.split(",").filter((s) => s.trim().length);
     const target = findElementWithRelValue("prev") || findLink(previousStrings);
-    if (target) followLink(target);
+    if (target) {
+      followLink(target);
+    }
   },
 
   goNext() {
     const nextPatterns = Settings.get("nextPatterns") || "";
     const nextStrings = nextPatterns.split(",").filter((s) => s.trim().length);
     const target = findElementWithRelValue("next") || findLink(nextStrings);
-    if (target) followLink(target);
+    if (target) {
+      followLink(target);
+    }
   },
 
   focusInput(count) {
@@ -437,7 +445,9 @@ function findLink(linkStrings) {
     const computedStyle = globalThis.getComputedStyle(link, null);
     const isHidden = computedStyle.getPropertyValue("visibility") != "visible" ||
       computedStyle.getPropertyValue("display") == "none";
-    if (isHidden) continue;
+    if (isHidden) {
+      continue;
+    }
 
     let linkMatches = false;
     for (const linkString of linkStrings) {
@@ -452,12 +462,16 @@ function findLink(linkStrings) {
       }
     }
 
-    if (!linkMatches) continue;
+    if (!linkMatches) {
+      continue;
+    }
 
     candidateLinks.push(link);
   }
 
-  if (candidateLinks.length == 0) return;
+  if (candidateLinks.length == 0) {
+    return;
+  }
 
   for (const link of candidateLinks) {
     link.wordCount = link.innerText.trim().split(/\s+/).length;

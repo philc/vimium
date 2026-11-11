@@ -8,7 +8,9 @@ export class UserSearchEngine {
   description;
   constructor(o) {
     Object.seal(this);
-    if (o) Object.assign(this, o);
+    if (o) {
+      Object.assign(this, o);
+    }
   }
 }
 
