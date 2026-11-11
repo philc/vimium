@@ -1,4 +1,4 @@
-import { list as allCommands } from "./all_commands.js";
+import * as allCommands from "./all_commands.js";
 
 // A specification for a command that's currently bound to a key sequence, as defined by the default
 // key bindings, or as it appears in the user's keymapping settings.
@@ -70,7 +70,7 @@ const KeyMappingsParser = {
     let mapKeyRegistry = {};
     let errors = [];
     const configLines = parseLines(configText);
-    const commandsByName = Utils.keyBy(allCommands, "name");
+    const commandsByName = Utils.keyBy(allCommands.list, "name");
 
     const validModifiers = ["a", "c", "m", "s"];
     const validateParsedKey = function (key) {

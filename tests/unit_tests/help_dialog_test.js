@@ -1,9 +1,8 @@
 import * as testHelper from "./test_helper.js";
-import { withPromise } from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../background_scripts/completion/completers.js";
-import { list as allCommands } from "../../background_scripts/all_commands.js";
-import { Page as HelpDialogPage } from "../../pages/help_dialog_page.js";
+import * as allCommands from "../../background_scripts/all_commands.js";
+import * as helpDialogPage from "../../pages/help_dialog_page.js";
 
 context("help dialog", () => {
   setup(async () => {
@@ -20,7 +19,7 @@ context("help dialog", () => {
         return { commandToOptionsToKeys: data };
       }
     };
-    stub(chrome.storage.session, "get", withPromise(sessionGet));
+    stub(chrome.storage.session, "get", testHelper.withPromise(sessionGet));
   });
 
   should("getRowsForDialog includes one row per command-options pair", () => {
@@ -30,7 +29,7 @@ context("help dialog", () => {
         "hard": ["b", "c"],
       },
     };
-    const result = HelpDialogPage.getRowsForDialog(config);
+    const result = helpDialogPage.Page.getRowsForDialog(config);
     const rows = result["navigation"]
       .filter((row) => row[0].name == "reload");
     assert.equal(2, rows.length);
@@ -41,11 +40,11 @@ context("help dialog", () => {
   should("have a section in the help dialog for every group", async () => {
     // This test is to prevent code editing errors, where a command is added but doesn't have a
     // corresponding group in the help dialog.
-    HelpDialogPage.init();
-    await HelpDialogPage.show();
-    const groups = Array.from(new Set(allCommands.map((c) => c.group))).sort();
+    helpDialogPage.Page.init();
+    await helpDialogPage.Page.show();
+    const groups = Array.from(new Set(allCommands.list.map((c) => c.group))).sort();
     const groupsInDialog = Array.from(
-      HelpDialogPage.dialogElement.querySelectorAll("div[data-group]"),
+      helpDialogPage.Page.dialogElement.querySelectorAll("div[data-group]"),
     )
       .map((e) => e.dataset.group)
       .sort();

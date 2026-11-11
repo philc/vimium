@@ -1,6 +1,6 @@
 import "./all_content_scripts.js";
-import { Editor as ExclusionRulesEditor } from "./exclusion_rules_editor.js";
-import { Commands, KeyMappingsParser } from "../background_scripts/commands.js";
+import * as exclusionRulesEditor from "./exclusion_rules_editor.js";
+import * as commands from "../background_scripts/commands.js";
 import * as userSearchEngines from "../background_scripts/user_search_engines.js";
 
 const options = {
@@ -91,8 +91,8 @@ export async function init() {
     }
   });
 
-  ExclusionRulesEditor.init();
-  ExclusionRulesEditor.addEventListener("input", onUpdated);
+  exclusionRulesEditor.Editor.init();
+  exclusionRulesEditor.Editor.addEventListener("input", onUpdated);
 
   const settings = Settings.getSettings();
   setFormFromSettings(settings);
@@ -137,7 +137,7 @@ function setFormFromSettings(settings) {
     }
   }
 
-  ExclusionRulesEditor.setForm(settings["exclusionRules"]);
+  exclusionRulesEditor.Editor.setForm(settings["exclusionRules"]);
 
   document.querySelector("#upload-backup").value = "";
   maintainLinkHintsView();
@@ -174,7 +174,7 @@ function getSettingsFromForm() {
   if (settings["linkHintCharacters"] != null) {
     settings["linkHintCharacters"] = settings["linkHintCharacters"].toLowerCase();
   }
-  settings["exclusionRules"] = ExclusionRulesEditor.getRules();
+  settings["exclusionRules"] = exclusionRulesEditor.Editor.getRules();
   return settings;
 }
 
@@ -184,7 +184,7 @@ function getValidationErrors() {
 
   // keyMappings field.
   text = getEl("keyMappings").value.trim();
-  parsed = KeyMappingsParser.parse(text);
+  parsed = commands.KeyMappingsParser.parse(text);
   if (parsed.validationErrors.length > 0) {
     results["keyMappings"] = parsed.validationErrors.join("\n");
   }
@@ -367,7 +367,7 @@ if (!testEnv) {
   document.addEventListener("DOMContentLoaded", async () => {
     await Settings.onLoaded();
     DomUtils.injectUserCss();
-    await Commands.init();
+    await commands.Commands.init();
     await init();
   });
 }

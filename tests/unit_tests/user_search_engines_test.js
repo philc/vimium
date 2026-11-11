@@ -1,7 +1,6 @@
 import "./test_helper.js";
 
 import * as userSearchEngines from "../../background_scripts/user_search_engines.js";
-import { Engine as UserSearchEngine } from "../../background_scripts/user_search_engines.js";
 
 context("UserSearchEngines", () => {
   should("parse out search engine text", () => {
@@ -16,12 +15,12 @@ context("UserSearchEngines", () => {
 
     assert.equal(
       {
-        g: new UserSearchEngine({
+        g: new userSearchEngines.Engine({
           keyword: "g",
           url: "http://google.com/%s",
           description: "Google Search",
         }),
-        w: new UserSearchEngine({
+        w: new userSearchEngines.Engine({
           keyword: "w",
           url: "http://wikipedia.org/%s",
           description: "search (w)",

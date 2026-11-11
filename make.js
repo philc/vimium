@@ -3,13 +3,13 @@
 // This is a set of tasks for building and testing Vimium in development.
 import * as fs from "@std/fs";
 import * as path from "@std/path";
-import { abort, desc, env, run, task } from "drake";
+import * as drake from "drake";
 import puppeteer from "puppeteer";
 // We use a vendored version of shoulda, rather than jsr:@philc/shoulda, because shoulda.js is used
 // in dom_tests.js which is loaded by Puppeteer, which doesn't have access to Deno's module system.
 import * as shoulda from "./tests/vendor/shoulda.js";
 import JSON5 from "json5";
-import { DOMParser } from "@b-fuze/deno-dom";
+import * as denoDom from "@b-fuze/deno-dom";
 import * as fileServer from "@std/http/file-server";
 
 const projectPath = new URL(".", import.meta.url).pathname;
@@ -322,12 +322,12 @@ async function runPuppeteerTest(page, url) {
   return success;
 }
 
-desc("Download and parse list of top-level domains (TLDs)");
-task("fetch-tlds", [], async () => {
+drake.desc("Download and parse list of top-level domains (TLDs)");
+drake.task("fetch-tlds", [], async () => {
   const suffixListUrl = "https://www.iana.org/domains/root/db";
   const response = await fetch(suffixListUrl);
   const text = await response.text();
-  const doc = new DOMParser().parseFromString(text, "text/html");
+  const doc = new denoDom.DOMParser().parseFromString(text, "text/html");
   const els = doc.querySelectorAll("span.domain.tld");
   // Each span contains a TLD, e.g. ".com". Trim off the leading period.
   const domains = Array.from(els).map((el) => el.textContent.slice(1));
@@ -335,11 +335,11 @@ task("fetch-tlds", [], async () => {
   await Deno.writeTextFile("./resources/tlds.txt", str);
 });
 
-desc("Run unit tests");
-task("test-unit", [], async () => {
+drake.desc("Run unit tests");
+drake.task("test-unit", [], async () => {
   const success = await runUnitTests();
   if (!success) {
-    abort("test-unit failed");
+    drake.abort("test-unit failed");
   }
 });
 
@@ -422,15 +422,15 @@ async function testDom() {
   await browser.close();
   await httpServer.shutdown();
   if (served404 || !success) {
-    abort("test-dom failed.");
+    drake.abort("test-dom failed.");
   }
 }
 
-desc("Run DOM tests");
-task("test-dom", [], testDom);
+drake.desc("Run DOM tests");
+drake.task("test-dom", [], testDom);
 
-desc("Run unit and DOM tests");
-task("test", ["test-unit", "test-dom"]);
+drake.desc("Run unit and DOM tests");
+drake.task("test", ["test-unit", "test-dom"]);
 
 // The e2e harness is imported lazily, so that tasks which don't need it don't pay for its imports.
 async function runE2ETests(testNameFilter) {
@@ -449,11 +449,11 @@ async function runE2ETests(testNameFilter) {
   }
 }
 
-desc("Run end-to-end tests in headless Chrome.");
-task("test-e2e", [], async () => {
-  const success = await runE2ETests(env("filter"));
+drake.desc("Run end-to-end tests in headless Chrome.");
+drake.task("test-e2e", [], async () => {
+  const success = await runE2ETests(drake.env("filter"));
   if (!success) {
-    abort("test-e2e failed");
+    drake.abort("test-e2e failed");
   }
 });
 
@@ -468,11 +468,11 @@ task("test-e2e", [], async () => {
 //   }
 //
 // Whatever `run` returns is printed as JSON.
-desc("Run a script with the e2e harness and print its return value. Usage: file=<path>");
-task("run-test-script", [], async () => {
-  const file = env("file");
+drake.desc("Run a script with the e2e harness and print its return value. Usage: file=<path>");
+drake.task("run-test-script", [], async () => {
+  const file = drake.env("file");
   if (!file) {
-    abort("Usage: ./make.js run-test-script file=<path to script>");
+    drake.abort("Usage: ./make.js run-test-script file=<path to script>");
   }
   const script = await import(path.toFileUrl(path.resolve(Deno.cwd(), file)).href);
   const e2e = await import("./tests/e2e_tests/harness.js");
@@ -485,33 +485,35 @@ task("run-test-script", [], async () => {
   }
 });
 
-desc("Format and lint everything, applying automatic fixes");
-task("fix", [], async () => {
+drake.desc("Format and lint everything, applying automatic fixes");
+drake.task("fix", [], async () => {
   await shell("dprint", ["fmt"]);
   await shell("deno", ["lint", "--fix"]);
 });
 
-desc("Check code formatting and lint issues, without changing any files");
-task("check", [], async () => {
+drake.desc("Check code formatting and lint issues, without changing any files");
+drake.task("check", [], async () => {
   await shell("dprint", ["check"]);
   await shell("deno", ["lint"]);
 });
 
-desc("Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/");
-task("package", ["write-command-listing"], async () => {
+drake.desc(
+  "Builds a zip file for submission to the Chrome and Firefox stores. The output is in dist/",
+);
+drake.task("package", ["write-command-listing"], async () => {
   await buildStorePackage();
 });
 
-desc("Build a static version of command_listing.html, to be hosted on vimium.gihub.io");
-task("write-command-listing", [], async () => {
+drake.desc("Build a static version of command_listing.html, to be hosted on vimium.gihub.io");
+drake.task("write-command-listing", [], async () => {
   // Run this script in a separate shell so it doesn't pollute our JS environment.
   await shell("./build_scripts/write_command_listing_page.js", []);
 });
 
-desc("Replaces manifest.json with a Firefox-compatible version, for development");
-task("write-firefox-manifest", [], async () => {
+drake.desc("Replaces manifest.json with a Firefox-compatible version, for development");
+drake.task("write-firefox-manifest", [], async () => {
   const firefoxManifest = createFirefoxManifest(await parseManifestFile());
   await Deno.writeTextFile("./manifest.json", JSON.stringify(firefoxManifest, null, 2));
 });
 
-run();
+drake.run();

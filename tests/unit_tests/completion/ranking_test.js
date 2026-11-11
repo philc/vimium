@@ -1,6 +1,5 @@
 import "../test_helper.js";
 import * as ranking from "../../../background_scripts/completion/ranking.js";
-import { RegexpCache } from "../../../background_scripts/completion/ranking.js";
 import "../../../lib/url_utils.js";
 
 context("wordRelevancy", () => {
@@ -120,34 +119,36 @@ context("matches", () => {
 
 context("RegexpCache", () => {
   should("RegexpCache is in fact caching (positive case)", () => {
-    assert.isTrue(RegexpCache.get("this") === RegexpCache.get("this"));
+    assert.isTrue(ranking.RegexpCache.get("this") === ranking.RegexpCache.get("this"));
   });
 
   should("RegexpCache is in fact caching (negative case)", () => {
-    assert.isTrue(RegexpCache.get("this") !== RegexpCache.get("that"));
+    assert.isTrue(ranking.RegexpCache.get("this") !== ranking.RegexpCache.get("that"));
   });
 
   should("RegexpCache prefix/suffix wrapping is working (positive case)", () => {
-    assert.isTrue(RegexpCache.get("this", "(", ")") === RegexpCache.get("this", "(", ")"));
+    assert.isTrue(
+      ranking.RegexpCache.get("this", "(", ")") === ranking.RegexpCache.get("this", "(", ")"),
+    );
   });
 
   should("RegexpCache prefix/suffix wrapping is working (negative case)", () => {
-    assert.isTrue(RegexpCache.get("this", "(", ")") !== RegexpCache.get("this"));
+    assert.isTrue(ranking.RegexpCache.get("this", "(", ")") !== ranking.RegexpCache.get("this"));
   });
 
   should("search for a string", () => {
-    assert.isTrue("hound dog".search(RegexpCache.get("dog")) === 6);
+    assert.isTrue("hound dog".search(ranking.RegexpCache.get("dog")) === 6);
   });
 
   should("search for a string which isn't there", () => {
-    assert.isTrue("hound dog".search(RegexpCache.get("cat")) === -1);
+    assert.isTrue("hound dog".search(ranking.RegexpCache.get("cat")) === -1);
   });
 
   should("search for a string with a prefix/suffix (positive case)", () => {
-    assert.isTrue("hound dog".search(RegexpCache.get("dog", "\\b", "\\b")) === 6);
+    assert.isTrue("hound dog".search(ranking.RegexpCache.get("dog", "\\b", "\\b")) === 6);
   });
 
   should("search for a string with a prefix/suffix (negative case)", () => {
-    assert.isTrue("hound dog".search(RegexpCache.get("do", "\\b", "\\b")) === -1);
+    assert.isTrue("hound dog".search(ranking.RegexpCache.get("do", "\\b", "\\b")) === -1);
   });
 });

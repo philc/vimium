@@ -4,7 +4,7 @@ import "../lib/url_utils.js";
 import "../background_scripts/tab_recency.js";
 import * as bgUtils from "../background_scripts/bg_utils.js";
 import "../background_scripts/all_commands.js";
-import { Commands } from "../background_scripts/commands.js";
+import * as commands from "../background_scripts/commands.js";
 import * as exclusions from "../background_scripts/exclusions.js";
 import "../background_scripts/completion/search_engines.js";
 import "../background_scripts/completion/search_wrapper.js";
@@ -12,15 +12,7 @@ import "../background_scripts/completion/completers.js";
 import "../background_scripts/tab_operations.js";
 import * as marks from "../background_scripts/marks.js";
 
-import {
-  Bookmark as BookmarkCompleter,
-  Command as CommandCompleter,
-  Domain as DomainCompleter,
-  History as HistoryCompleter,
-  Multi as MultiCompleter,
-  SearchEngine as SearchEngineCompleter,
-  Tab as TabCompleter,
-} from "./completion/completers.js";
+import * as completers from "./completion/completers.js";
 
 // NOTE(philc): This file has many superfluous return statements in its functions, as a result of
 // converting from coffeescript to es6. Many can be removed, but I didn't take the time to
@@ -43,25 +35,25 @@ const secretToken = randomArray.reduce((a, b) => a.toString(16) + b.toString(16)
 chrome.storage.session.set({ vimiumSecret: secretToken });
 
 const completionSources = {
-  bookmarks: new BookmarkCompleter(),
-  commands: new CommandCompleter(),
-  history: new HistoryCompleter(),
-  domains: new DomainCompleter(),
-  tabs: new TabCompleter(),
-  searchEngines: new SearchEngineCompleter(),
+  bookmarks: new completers.Bookmark(),
+  commands: new completers.Command(),
+  history: new completers.History(),
+  domains: new completers.Domain(),
+  tabs: new completers.Tab(),
+  searchEngines: new completers.SearchEngine(),
 };
 
-const completers = {
-  omni: new MultiCompleter([
+const completersByName = {
+  omni: new completers.Multi([
     completionSources.bookmarks,
     completionSources.history,
     completionSources.domains,
     completionSources.tabs,
     completionSources.searchEngines,
   ]),
-  bookmarks: new MultiCompleter([completionSources.bookmarks]),
-  commands: new MultiCompleter([completionSources.commands]),
-  tabs: new MultiCompleter([completionSources.tabs]),
+  bookmarks: new completers.Multi([completionSources.bookmarks]),
+  commands: new completers.Multi([completionSources.commands]),
+  tabs: new completers.Multi([completionSources.tabs]),
 };
 
 // A query dictionary for `chrome.tabs.query` that will return only the visible tabs.
@@ -741,7 +733,7 @@ const sendRequestHandlers = {
   },
 
   async filterCompletions(request) {
-    const completer = completers[request.completerName];
+    const completer = completersByName[request.completerName];
     let response = await completer.filter(request);
 
     // NOTE(smblott): response contains `relevancyFunction` (function) properties which cause
@@ -754,12 +746,12 @@ const sendRequestHandlers = {
   },
 
   refreshCompletions(request) {
-    const completer = completers[request.completerName];
+    const completer = completersByName[request.completerName];
     completer.refresh();
   },
 
   cancelCompletions(request) {
-    const completer = completers[request.completerName];
+    const completer = completersByName[request.completerName];
     completer.cancel();
   },
 };
@@ -920,7 +912,7 @@ async function injectContentScriptsAndCSSIntoExistingTabs() {
 
 async function initializeExtension() {
   await Settings.onLoaded();
-  await Commands.init();
+  await commands.Commands.init();
 }
 
 // The browser may have tabs already open. We inject the content scripts and Vimium's CSS

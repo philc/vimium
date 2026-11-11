@@ -1,8 +1,8 @@
 import "./test_helper.js";
-import { withPromise } from "./test_helper.js";
+import * as testHelper from "./test_helper.js";
 import "../../lib/settings.js";
 import "../../background_scripts/main.js";
-import { RegistryEntry } from "../../background_scripts/commands.js";
+import * as commands from "../../background_scripts/commands.js";
 
 context("HintCoordinator", () => {
   should("prepareToActivateLinkHintsMode", async () => {
@@ -17,7 +17,7 @@ context("HintCoordinator", () => {
     stub(
       chrome.tabs,
       "sendMessage",
-      withPromise((_tabId, message, options) => {
+      testHelper.withPromise((_tabId, message, options) => {
         if (message.messageType == "getHintDescriptors") {
           return frameIdToHintDescriptors[options.frameId];
         } else if (message.messageType == "activateMode") {
@@ -52,7 +52,7 @@ context("createTab command", () => {
       tabCreated = args;
     });
     requestStub = {
-      registryEntry: new RegistryEntry({ options: {} }),
+      registryEntry: new commands.RegistryEntry({ options: {} }),
       tab: {},
       count: 1,
     };
@@ -189,7 +189,7 @@ context("Selecting frames", () => {
     stub(
       chrome.tabs,
       "sendMessage",
-      withPromise((_tabId, message, options) => {
+      testHelper.withPromise((_tabId, message, options) => {
         if (message.handler == "getFocusStatus") {
           return { focused: options.frameId == 2, focusable: true };
         } else if (message.handler == "focusFrame") {

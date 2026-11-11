@@ -15,9 +15,8 @@ import * as bgUtils from "./../bg_utils.js";
 import * as completionSearch from "./search_wrapper.js";
 import * as userSearchEngines from "../user_search_engines.js";
 import * as ranking from "./ranking.js";
-import { list as allCommands } from "../all_commands.js";
-import { Commands, RegistryEntry } from "../commands.js";
-import { RegexpCache } from "./ranking.js";
+import * as allCommands from "../all_commands.js";
+import * as commands from "../commands.js";
 
 // Set this to true to render relevancy when debugging the ranking scores.
 const showRelevancy = false;
@@ -169,7 +168,7 @@ export class Suggestion {
     //   - term = "a"
     //   - splits = [ "", "A",    "b", "a",    "c", "a",    b" ]
     //                UM   M       UM   M       UM   M      UM      (M=Matched, UM=Unmatched)
-    const splits = string.split(RegexpCache.get(term, "(", ")"));
+    const splits = string.split(ranking.RegexpCache.get(term, "(", ")"));
     for (let index = 0, end = splits.length - 2; index <= end; index += 2) {
       const unmatchedText = splits[index];
       const matchedText = splits[index + 1];
@@ -396,7 +395,7 @@ export class Command {
 
     // Create a RegistryEntry for the default action (no options specified) of a command.
     const createUnboundRegistryEntry = (command) => {
-      return new RegistryEntry({
+      return new commands.RegistryEntry({
         keySequence: [],
         command: command.name,
         noRepeat: command.noRepeat,
@@ -407,7 +406,7 @@ export class Command {
       });
     };
 
-    const matchingCommands = allCommands.filter((c) => ranking.matches(queryTerms, c.desc));
+    const matchingCommands = allCommands.list.filter((c) => ranking.matches(queryTerms, c.desc));
 
     const suggestions = [];
     for (const commandInfo of matchingCommands) {
@@ -443,7 +442,7 @@ export class Command {
             title: commandInfo.desc + (options ? ` (${options})` : ""),
             deDuplicate: false,
             command: {
-              registryEntry: Commands.keyToRegistryEntry[keys[0]],
+              registryEntry: commands.Commands.keyToRegistryEntry[keys[0]],
               keys: keys,
             },
             relevancy: 1,
@@ -776,7 +775,7 @@ export class Multi {
       ? [searchEngineCompleter]
       : this.completers.filter((c) => c != searchEngineCompleter);
 
-    RegexpCache.clear();
+    ranking.RegexpCache.clear();
 
     const promises = completers.map((c) => c.filter(request));
     let results = (await Promise.all(promises)).flat(1);

@@ -1,6 +1,6 @@
 import "./all_content_scripts.js";
 import * as UIComponentMessenger from "./ui_component_messenger.js";
-import { list as allCommands } from "../background_scripts/all_commands.js";
+import * as allCommands from "../background_scripts/all_commands.js";
 
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
 function compareKeys(a, b) {
@@ -77,7 +77,7 @@ const Page = {
   // Returns: { group: [[command, args, keys], ...], ... }
   getRowsForDialog(commandToOptionsToKeys) {
     const result = {};
-    const byGroup = Object.groupBy(allCommands, (o) => o.group);
+    const byGroup = Object.groupBy(allCommands.list, (o) => o.group);
     for (const [group, commands] of Object.entries(byGroup)) {
       const list = [];
       for (const command of commands) {

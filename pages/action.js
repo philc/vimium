@@ -3,7 +3,7 @@ import "../lib/dom_utils.js";
 import "../lib/settings.js";
 
 import * as bgUtils from "../background_scripts/bg_utils.js";
-import { Editor as ExclusionRulesEditor } from "./exclusion_rules_editor.js";
+import * as exclusionRulesEditor from "./exclusion_rules_editor.js";
 
 const ActionPage = {
   async init() {
@@ -64,19 +64,19 @@ const ActionPage = {
     document.querySelector("#add-first-rule").addEventListener(
       "click",
       () => {
-        ExclusionRulesEditor.addRow(defaultPatternForNewRules);
+        exclusionRulesEditor.Editor.addRow(defaultPatternForNewRules);
         this.showExclusionRulesEditor();
         onUpdated();
       },
     );
 
-    ExclusionRulesEditor.defaultPatternForNewRules = defaultPatternForNewRules;
-    ExclusionRulesEditor.init();
-    ExclusionRulesEditor.addEventListener("input", onUpdated);
+    exclusionRulesEditor.Editor.defaultPatternForNewRules = defaultPatternForNewRules;
+    exclusionRulesEditor.Editor.init();
+    exclusionRulesEditor.Editor.addEventListener("input", onUpdated);
     const rules = Settings.get("exclusionRules").filter((r) =>
       this.tabUrl.match(this.getPatternRegExp(r.pattern))
     );
-    ExclusionRulesEditor.setForm(rules);
+    exclusionRulesEditor.Editor.setForm(rules);
     this.syncEnabledKeysCaption();
 
     if (rules.length > 0) {
@@ -120,7 +120,7 @@ const ActionPage = {
 
   syncEnabledKeysCaption() {
     let caption = "All";
-    const rules = ExclusionRulesEditor.getRules();
+    const rules = exclusionRulesEditor.Editor.getRules();
     if (rules.length > 0) {
       const hasBlankPassKeysRule = rules.find((r) => r.passKeys.length == 0);
       caption = hasBlankPassKeysRule ? "No" : "Some";
@@ -132,7 +132,7 @@ const ActionPage = {
     let rules = await Settings.get("exclusionRules");
     // Remove any rules which match the current URL, and replace them with the contents of this dialog.
     rules = rules.filter((r) => !this.tabUrl.match(this.getPatternRegExp(r.pattern)));
-    rules = rules.concat(ExclusionRulesEditor.getRules());
+    rules = rules.concat(exclusionRulesEditor.Editor.getRules());
     Settings.set("exclusionRules", rules);
     const el = document.querySelector("#save");
     el.disabled = true;

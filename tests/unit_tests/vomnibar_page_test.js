@@ -1,15 +1,10 @@
 import * as testHelper from "./test_helper.js";
-import { withPromise } from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
-import {
-  Command as CommandCompleter,
-  Multi as MultiCompleter,
-  Suggestion,
-} from "../../background_scripts/completion/completers.js";
+import * as completers from "../../background_scripts/completion/completers.js";
 import * as vomnibarPage from "../../pages/vomnibar_page.js";
 import * as userSearchEngines from "../../background_scripts/user_search_engines.js";
-import { Commands } from "../../background_scripts/commands.js";
-import { filterCompleter } from "./completion/completers_test.js";
+import * as commands from "../../background_scripts/commands.js";
+import * as completersTest from "./completion/completers_test.js";
 
 function newKeyEvent(properties) {
   return Object.assign(
@@ -34,7 +29,7 @@ context("vomnibar page", () => {
     stub(
       chrome.runtime,
       "sendMessage",
-      withPromise((message) => {
+      testHelper.withPromise((message) => {
         if (message.handler == "filterCompletions") {
           return [];
         }
@@ -58,9 +53,9 @@ context("vomnibar page", () => {
     stub(
       chrome.runtime,
       "sendMessage",
-      withPromise((message) => {
+      testHelper.withPromise((message) => {
         if (message.handler == "filterCompletions") {
-          const s = new Suggestion({ url: "http://hello.com" });
+          const s = new completers.Suggestion({ url: "http://hello.com" });
           return [s];
         }
       }),
@@ -79,7 +74,7 @@ context("vomnibar page", () => {
     stub(
       chrome.runtime,
       "sendMessage",
-      withPromise((message) => {
+      testHelper.withPromise((message) => {
         handler = message.handler;
         url = message.url;
       }),
@@ -97,7 +92,7 @@ context("vomnibar page", () => {
     stub(
       chrome.runtime,
       "sendMessage",
-      withPromise((message) => {
+      testHelper.withPromise((message) => {
         handler = message.handler;
         query = message.query;
       }),
@@ -123,7 +118,7 @@ context("vomnibar page", () => {
     stub(
       chrome.runtime,
       "sendMessage",
-      withPromise((message) => {
+      testHelper.withPromise((message) => {
         // Return a never-resolving promise for filterCompletions to simulate the race condition where
         // the user hits Enter before the background page responds with completions.
         if (message.handler === "filterCompletions") {
@@ -147,10 +142,14 @@ context("vomnibar page", () => {
   });
 
   should("create command suggestions with correct HTML for key bindings", async () => {
-    await Commands.loadKeyMappings("");
-    const multiCompleter = new MultiCompleter([new CommandCompleter()]);
-    const suggestions = await filterCompleter(multiCompleter, ["go", "tab", "right"]);
-    stub(chrome.runtime, "sendMessage", withPromise(() => suggestions));
+    await commands.Commands.loadKeyMappings("");
+    const multiCompleter = new completers.Multi([new completers.Command()]);
+    const suggestions = await completersTest.filterCompleter(multiCompleter, [
+      "go",
+      "tab",
+      "right",
+    ]);
+    stub(chrome.runtime, "sendMessage", testHelper.withPromise(() => suggestions));
     await ui.updateCompletions();
     assert.equal(1, ui.completionList.childNodes.length);
     const keys = Array.from(ui.completionList.querySelectorAll(".key")).map((x) => x.textContent);

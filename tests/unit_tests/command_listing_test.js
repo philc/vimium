@@ -1,9 +1,8 @@
 import * as testHelper from "./test_helper.js";
-import { withPromise } from "./test_helper.js";
 import "../../tests/unit_tests/test_chrome_stubs.js";
 import "../../lib/utils.js";
 import "../../lib/settings.js";
-import { list as allCommands } from "../../background_scripts/all_commands.js";
+import * as allCommands from "../../background_scripts/all_commands.js";
 import * as commandListing from "../../pages/command_listing.js";
 
 context("command listing", () => {
@@ -13,7 +12,7 @@ context("command listing", () => {
     stub(
       chrome.storage.session,
       "get",
-      withPromise((key) => {
+      testHelper.withPromise((key) => {
         if (key == "commandToOptionsToKeys") {
           const data = {
             "reload": {
@@ -31,7 +30,7 @@ context("command listing", () => {
     // This is to prevent editing errors, where a new command group is added, and we forget to add a
     // corresponding group to the command listing.
     await commandListing.populatePage();
-    const groups = Array.from(new Set(allCommands.map((c) => c.group))).sort();
+    const groups = Array.from(new Set(allCommands.list.map((c) => c.group))).sort();
     const groupsInPage = Array.from(globalThis.document.querySelectorAll("h2[data-group]"))
       .map((e) => e.dataset.group)
       .sort();
@@ -41,7 +40,7 @@ context("command listing", () => {
   should("have one entry per command", async () => {
     await commandListing.populatePage();
     const rows = globalThis.document.querySelectorAll(".command");
-    assert.equal(allCommands.length, rows.length);
+    assert.equal(allCommands.list.length, rows.length);
   });
 
   should("show key mappings for mapped commands", async () => {

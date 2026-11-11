@@ -1,5 +1,5 @@
 import "./all_content_scripts.js";
-import { list as allCommands } from "../background_scripts/all_commands.js";
+import * as allCommands from "../background_scripts/all_commands.js";
 
 // The ordering we show key bindings is alphanumerical, except that special keys sort to the end.
 function compareKeys(a, b) {
@@ -24,7 +24,7 @@ function replaceBackticksWithCodeTags(str) {
 
 async function populatePage() {
   const h2s = document.querySelectorAll("h2");
-  const byGroup = Object.groupBy(allCommands, (el) => el.group);
+  const byGroup = Object.groupBy(allCommands.list, (el) => el.group);
   const commandToOptionsToKeys =
     (await chrome.storage.session.get("commandToOptionsToKeys")).commandToOptionsToKeys;
 

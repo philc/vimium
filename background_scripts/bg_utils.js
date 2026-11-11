@@ -1,4 +1,4 @@
-import { Tracker as TabRecency } from "./tab_recency.js";
+import * as recency from "./tab_recency.js";
 
 // We're using browser.runtime to determine the browser name and version for Firefox. That API is
 // only available on the background page. We're not using window.navigator because it's unreliable.
@@ -15,5 +15,5 @@ export async function getFirefoxVersion() {
 }
 
 // TODO(philc): tabRecency imports bg_utils. We should resovle the cycle for the sake of clarity.
-export const tabRecency = new TabRecency();
+export const tabRecency = new recency.Tracker();
 tabRecency.init();

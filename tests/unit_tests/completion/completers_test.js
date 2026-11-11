@@ -1,24 +1,14 @@
 import "../test_helper.js";
-import { withPromise } from "../test_helper.js";
+import * as testHelper from "../test_helper.js";
 import "../../../background_scripts/tab_recency.js";
 import "../../../background_scripts/bg_utils.js";
 import "../../../background_scripts/completion/search_engines.js";
 import "../../../background_scripts/completion/search_wrapper.js";
 import * as userSearchEngines from "../../../background_scripts/user_search_engines.js";
-import {
-  Bookmark as BookmarkCompleter,
-  Command as CommandCompleter,
-  Domain as DomainCompleter,
-  History as HistoryCompleter,
-  HistoryCache,
-  Multi as MultiCompleter,
-  SearchEngine as SearchEngineCompleter,
-  Suggestion,
-  Tab as TabCompleter,
-} from "../../../background_scripts/completion/completers.js";
+import * as completers from "../../../background_scripts/completion/completers.js";
 import "../../../lib/url_utils.js";
-import { Commands, RegistryEntry } from "../../../background_scripts/commands.js";
-import { list as allCommands } from "../../../background_scripts/all_commands.js";
+import * as commands from "../../../background_scripts/commands.js";
+import * as allCommands from "../../../background_scripts/all_commands.js";
 
 const hours = (n) => 1000 * 60 * 60 * n;
 
@@ -38,7 +28,7 @@ context("bookmark completer", () => {
 
   setup(() => {
     stub(globalThis.chrome.bookmarks, "getTree", () => [bookmark1]);
-    completer = new BookmarkCompleter();
+    completer = new completers.Bookmark();
   });
 
   should("flatten a list of bookmarks with inorder traversal", async () => {
@@ -87,29 +77,29 @@ context("HistoryCache", () => {
   const compare = (a, b) => a - b;
   context("binary search", () => {
     should("find elements to the left of the middle", () => {
-      assert.equal(0, HistoryCache.binarySearch(3, [3, 5, 8], compare));
+      assert.equal(0, completers.HistoryCache.binarySearch(3, [3, 5, 8], compare));
     });
 
     should("find elements to the right of the middle", () => {
-      assert.equal(2, HistoryCache.binarySearch(8, [3, 5, 8], compare));
+      assert.equal(2, completers.HistoryCache.binarySearch(8, [3, 5, 8], compare));
     });
 
     context("unfound elements", () => {
       should("return 0 if it should be the head of the list", () => {
-        assert.equal(0, HistoryCache.binarySearch(1, [3, 5, 8], compare));
+        assert.equal(0, completers.HistoryCache.binarySearch(1, [3, 5, 8], compare));
       });
       should("return length - 1 if it should be at the end of the list", () => {
-        assert.equal(0, HistoryCache.binarySearch(3, [3, 5, 8], compare));
+        assert.equal(0, completers.HistoryCache.binarySearch(3, [3, 5, 8], compare));
       });
       should(
         "return one passed end of array (so: array.length) if greater than last element in array",
         () => {
-          assert.equal(3, HistoryCache.binarySearch(10, [3, 5, 8], compare));
+          assert.equal(3, completers.HistoryCache.binarySearch(10, [3, 5, 8], compare));
         },
       );
       should("found return the position if it's between two elements", () => {
-        assert.equal(1, HistoryCache.binarySearch(4, [3, 5, 8], compare));
-        assert.equal(2, HistoryCache.binarySearch(7, [3, 5, 8], compare));
+        assert.equal(1, completers.HistoryCache.binarySearch(4, [3, 5, 8], compare));
+        assert.equal(2, completers.HistoryCache.binarySearch(7, [3, 5, 8], compare));
       });
     });
   });
@@ -141,49 +131,49 @@ context("HistoryCache", () => {
         },
       });
 
-      HistoryCache.reset();
-      await HistoryCache.fetchHistory();
+      completers.HistoryCache.reset();
+      await completers.HistoryCache.fetchHistory();
     });
 
     should("store visits sorted by url ascending", () => {
-      assert.equal([history2, history1], HistoryCache.history);
+      assert.equal([history2, history1], completers.HistoryCache.history);
     });
 
     should("add new visits to the history", () => {
       const newSite = { url: "ab.com" };
       onVisitedListener(newSite);
-      assert.equal([history2, newSite, history1], HistoryCache.history);
+      assert.equal([history2, newSite, history1], completers.HistoryCache.history);
     });
 
     should("replace new visits in the history", () => {
-      assert.equal([history2, history1], HistoryCache.history);
+      assert.equal([history2, history1], completers.HistoryCache.history);
       const newSite = { url: "a.com", lastVisitTime: 15 };
       onVisitedListener(newSite);
-      assert.equal([newSite, history1], HistoryCache.history);
+      assert.equal([newSite, history1], completers.HistoryCache.history);
     });
 
     should(
       "(not) remove page from the history, when page is not in history (it should be a no-op)",
       () => {
-        assert.equal([history2, history1], HistoryCache.history);
+        assert.equal([history2, history1], completers.HistoryCache.history);
         const toRemove = { urls: ["x.com"], allHistory: false };
         onVisitRemovedListener(toRemove);
-        assert.equal([history2, history1], HistoryCache.history);
+        assert.equal([history2, history1], completers.HistoryCache.history);
       },
     );
 
     should("remove pages from the history", () => {
-      assert.equal([history2, history1], HistoryCache.history);
+      assert.equal([history2, history1], completers.HistoryCache.history);
       const toRemove = { urls: ["a.com"], allHistory: false };
       onVisitRemovedListener(toRemove);
-      assert.equal([history1], HistoryCache.history);
+      assert.equal([history1], completers.HistoryCache.history);
     });
 
     should("remove all pages from the history", () => {
-      assert.equal([history2, history1], HistoryCache.history);
+      assert.equal([history2, history1], completers.HistoryCache.history);
       const toRemove = { allHistory: true };
       onVisitRemovedListener(toRemove);
-      assert.equal([], HistoryCache.history);
+      assert.equal([], completers.HistoryCache.history);
     });
   });
 });
@@ -194,13 +184,13 @@ context("history completer", () => {
   let completer;
 
   setup(() => {
-    completer = new HistoryCompleter();
+    completer = new completers.History();
     stub(globalThis.chrome, "history", {
       search: (_options) => [history1, history2],
       onVisited: { addListener() {}, removeListener() {} },
       onVisitRemoved: { addListener() {}, removeListener() {} },
     });
-    HistoryCache.reset();
+    completers.HistoryCache.reset();
   });
 
   should("return matching history entries when searching", async () => {
@@ -231,8 +221,8 @@ context("domain completer", () => {
     });
     stub(Date, "now", returns(hours(24)));
 
-    completer = new DomainCompleter();
-    HistoryCache.reset();
+    completer = new completers.Domain();
+    completers.HistoryCache.reset();
   });
 
   should("return only a single matching domain", async () => {
@@ -290,7 +280,7 @@ context("domain completer (removing entries)", () => {
 
     stub(Date, "now", returns(hours(24)));
 
-    completer = new DomainCompleter();
+    completer = new completers.Domain();
     // Force installation of listeners.
     await filterCompleter(completer, ["story"]);
   });
@@ -337,12 +327,12 @@ context("domain completer (removing entries)", () => {
 
 context("multi completer", () => {
   const tabs = [{ url: "tab1.com", title: "tab1", id: 1 }];
-  const tabCompleter = new TabCompleter();
+  const tabCompleter = new completers.Tab();
   let multiCompleter;
 
   setup(() => {
     stub(chrome.tabs, "query", () => tabs);
-    multiCompleter = new MultiCompleter([tabCompleter, new DomainCompleter()]);
+    multiCompleter = new completers.Multi([tabCompleter, new completers.Domain()]);
   });
 
   should("return an empty list when the query is empty", async () => {
@@ -353,7 +343,7 @@ context("multi completer", () => {
   });
 
   should("deduplicate suggestions with the same URL", async () => {
-    const make = (url, relevancy) => new Suggestion({ url, relevancy, html: url });
+    const make = (url, relevancy) => new completers.Suggestion({ url, relevancy, html: url });
     const fakeCompleter = {
       filter: () => [
         make("http://example.com", 1),
@@ -361,7 +351,7 @@ context("multi completer", () => {
         make("http://other.com", 0.8),
       ],
     };
-    const results = await filterCompleter(new MultiCompleter([fakeCompleter]), ["example"]);
+    const results = await filterCompleter(new completers.Multi([fakeCompleter]), ["example"]);
     assert.equal(2, results.length);
     assert.equal("http://example.com", results[0].url);
     assert.equal("http://other.com", results[1].url);
@@ -369,23 +359,23 @@ context("multi completer", () => {
 });
 
 context("command completer", () => {
-  const commandCompleter = new CommandCompleter();
-  const multiCompleter = new MultiCompleter([commandCompleter]);
+  const commandCompleter = new completers.Command();
+  const multiCompleter = new completers.Multi([commandCompleter]);
 
   should("return all commands with default options if no mappings are specified", async () => {
     stub(
       chrome.storage.session,
       "get",
-      withPromise(() => ({
+      testHelper.withPromise(() => ({
         commandToOptionsToKeys: {},
       })),
     );
-    stub(Commands, "keyToRegistryEntry", {});
+    stub(commands.Commands, "keyToRegistryEntry", {});
 
     const suggestions = await filterCompleter(commandCompleter, []);
 
     // Checks that all available commands are returned as suggestions.
-    assert.equal(allCommands.length, suggestions.length);
+    assert.equal(allCommands.list.length, suggestions.length);
 
     // Check that by default no options (e.g. value=1.1) are applied to each command.
     assert.isTrue(
@@ -397,7 +387,7 @@ context("command completer", () => {
     stub(
       chrome.storage.session,
       "get",
-      withPromise(() => ({
+      testHelper.withPromise(() => ({
         commandToOptionsToKeys: {
           "setZoom": {
             "value=1.1": ["z1"],
@@ -407,9 +397,9 @@ context("command completer", () => {
       })),
     );
 
-    stub(Commands, "keyToRegistryEntry", {
-      "z1": new RegistryEntry(),
-      "z2": new RegistryEntry(),
+    stub(commands.Commands, "keyToRegistryEntry", {
+      "z1": new commands.RegistryEntry(),
+      "z2": new commands.RegistryEntry(),
     });
 
     const suggestions = await filterCompleter(multiCompleter, ["set", "zoom"]);
@@ -429,7 +419,7 @@ context("tab completer", () => {
 
   setup(() => {
     stub(chrome.tabs, "query", () => tabs);
-    completer = new TabCompleter();
+    completer = new completers.Tab();
   });
 
   should("return tabs by recency when query is empty", async () => {
@@ -453,7 +443,7 @@ context("SearchEngineCompleter", () => {
   };
 
   setup(() => {
-    completer = new SearchEngineCompleter();
+    completer = new completers.SearchEngine();
     const searchEngineConfig = `g: ${googleSearchUrl}%s`;
     userSearchEngines.set(searchEngineConfig);
   });
@@ -475,7 +465,7 @@ context("suggestions", () => {
   });
 
   should("escape html in page titles", () => {
-    const suggestion = new Suggestion({
+    const suggestion = new completers.Suggestion({
       queryTerms: ["queryterm"],
       description: "tab",
       url: "url",
@@ -486,7 +476,7 @@ context("suggestions", () => {
   });
 
   should("highlight query words", () => {
-    const suggestion = new Suggestion({
+    const suggestion = new completers.Suggestion({
       queryTerms: ["ninj", "words"],
       description: "tab",
       url: "url",
@@ -498,7 +488,7 @@ context("suggestions", () => {
   });
 
   should("highlight query words correctly when whey they overlap", () => {
-    const suggestion = new Suggestion({
+    const suggestion = new completers.Suggestion({
       queryTerms: ["ninj", "jaword"],
       description: "tab",
       url: "url",
@@ -510,7 +500,7 @@ context("suggestions", () => {
   });
 
   should("shorten urls", () => {
-    const suggestion = new Suggestion({
+    const suggestion = new completers.Suggestion({
       queryTerms: ["queryterm"],
       description: "history",
       url: "http://ninjawords.com",
@@ -537,7 +527,7 @@ context("Suggestion.pushMatchingRanges", () => {
   should("extract ranges matching term (simple case, two matches)", () => {
     const ranges = [];
     const [one, two, three] = ["one", "two", "three"];
-    const suggestion = new Suggestion([], "", "", "", returns(1));
+    const suggestion = new completers.Suggestion([], "", "", "", returns(1));
     suggestion.pushMatchingRanges(`${one}${two}${three}${two}${one}`, two, ranges);
     assert.equal(
       2,
@@ -550,7 +540,7 @@ context("Suggestion.pushMatchingRanges", () => {
   should("extract ranges matching term (two matches, one at start of string)", () => {
     const ranges = [];
     const [one, two, three] = ["one", "two", "three"];
-    const suggestion = new Suggestion([], "", "", "", returns(1));
+    const suggestion = new completers.Suggestion([], "", "", "", returns(1));
     suggestion.pushMatchingRanges(`${two}${three}${two}${one}`, two, ranges);
     assert.equal(
       2,
@@ -563,7 +553,7 @@ context("Suggestion.pushMatchingRanges", () => {
   should("extract ranges matching term (two matches, one at end of string)", () => {
     const ranges = [];
     const [one, two, three] = ["one", "two", "three"];
-    const suggestion = new Suggestion([], "", "", "", returns(1));
+    const suggestion = new completers.Suggestion([], "", "", "", returns(1));
     suggestion.pushMatchingRanges(`${one}${two}${three}${two}`, two, ranges);
     assert.equal(
       2,
@@ -576,7 +566,7 @@ context("Suggestion.pushMatchingRanges", () => {
   should("extract ranges matching term (no matches)", () => {
     const ranges = [];
     const [one, two, three] = ["one", "two", "three"];
-    const suggestion = new Suggestion([], "", "", "", returns(1));
+    const suggestion = new completers.Suggestion([], "", "", "", returns(1));
     suggestion.pushMatchingRanges(`${one}${two}${three}${two}${one}`, "does-not-match", ranges);
     assert.equal(0, ranges.length);
   });

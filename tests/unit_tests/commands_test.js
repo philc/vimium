@@ -1,13 +1,8 @@
 import "./test_helper.js";
 import "../../lib/settings.js";
 import "../../lib/keyboard_utils.js";
-import { list as allCommands } from "../../background_scripts/all_commands.js";
-import {
-  Commands,
-  defaultKeyMappings,
-  KeyMappingsParser,
-  parseLines,
-} from "../../background_scripts/commands.js";
+import * as allCommands from "../../background_scripts/all_commands.js";
+import * as commands from "../../background_scripts/commands.js";
 import "../../content_scripts/mode.js";
 import "../../content_scripts/mode_key_handler.js";
 import "../../content_scripts/marks.js";
@@ -19,61 +14,65 @@ import "../../content_scripts/link_hints.js";
 import "../../content_scripts/marks.js";
 import "../../content_scripts/vomnibar.js";
 
-await Commands.init();
+await commands.Commands.init();
 
 context("KeyMappingsParser", () => {
-  const getErrors = (config) => KeyMappingsParser.parse(config).validationErrors;
+  const getErrors = (config) => commands.KeyMappingsParser.parse(config).validationErrors;
 
   should("handle map statements", () => {
-    const { keyToRegistryEntry } = KeyMappingsParser.parse("map a scrollDown");
+    const { keyToRegistryEntry } = commands.KeyMappingsParser.parse("map a scrollDown");
     assert.equal("scrollDown", keyToRegistryEntry["a"]?.command);
   });
 
   should("ignore mappings for unknown commands", () => {
-    assert.equal({}, KeyMappingsParser.parse("map a unknownCommand").keyToRegistryEntry);
+    assert.equal({}, commands.KeyMappingsParser.parse("map a unknownCommand").keyToRegistryEntry);
   });
 
   should("handle mapkey statements", () => {
-    const { keyToMappedKey } = KeyMappingsParser.parse("mapkey a b");
+    const { keyToMappedKey } = commands.KeyMappingsParser.parse("mapkey a b");
     assert.equal({ "a": "b" }, keyToMappedKey);
   });
 
   should("handle unmap statements", () => {
     const input = "mapkey a b \n unmap a";
-    const { keyToMappedKey } = KeyMappingsParser.parse(input);
+    const { keyToMappedKey } = commands.KeyMappingsParser.parse(input);
     assert.equal({}, keyToMappedKey);
   });
 
   should("handle unmapall statements", () => {
     const input = "mapkey a b \n unmapall \n mapkey b c";
-    const { keyToMappedKey } = KeyMappingsParser.parse(input);
+    const { keyToMappedKey } = commands.KeyMappingsParser.parse(input);
     assert.equal({ "b": "c" }, keyToMappedKey);
   });
 
   should("ignore commands with the wrong number of tokens", () => {
-    assert.equal({}, KeyMappingsParser.parse("mapkey a b c").keyToMappedKey);
-    assert.equal({}, KeyMappingsParser.parse("map a").keyToRegistryEntry);
+    assert.equal({}, commands.KeyMappingsParser.parse("mapkey a b c").keyToMappedKey);
+    assert.equal({}, commands.KeyMappingsParser.parse("map a").keyToRegistryEntry);
     assert.equal(
       { "a": "b" },
-      KeyMappingsParser.parse("mapkey a b \n unmap a a").keyToMappedKey,
+      commands.KeyMappingsParser.parse("mapkey a b \n unmap a a").keyToMappedKey,
     );
   });
 
   should("parse option values surrounded by quotes", () => {
-    const { keyToRegistryEntry } = KeyMappingsParser.parse('map v Vomnibar.activate query="a b"');
+    const { keyToRegistryEntry } = commands.KeyMappingsParser.parse(
+      'map v Vomnibar.activate query="a b"',
+    );
     const entry = keyToRegistryEntry["v"];
     assert.equal({ query: "a b" }, entry.options);
   });
 
   should("parse options using all 3 syntaxes", () => {
     // This test exercises some of the edge cases of the underlying regular expressions.
-    const result = KeyMappingsParser.parseCommandOptions('keyA  keyB="a b=c"  keyC=" ');
+    const result = commands.KeyMappingsParser.parseCommandOptions('keyA  keyB="a b=c"  keyC=" ');
     assert.equal({ keyA: true, keyB: "a b=c", keyC: '"' }, result);
   });
 
   should("parse a URL parameter alongside an option value", () => {
     // URLs alongside the "position" option occurs in the createTab command.
-    const result = KeyMappingsParser.parseCommandOptions('abc.com/?param=val position="end"');
+    const result = commands.KeyMappingsParser.parseCommandOptions(
+      'abc.com/?param=val position="end"',
+    );
     assert.equal({ "abc.com/?param=val": true, position: "end" }, result);
   });
 
@@ -119,28 +118,28 @@ context("KeyMappingsParser", () => {
 
   context("parseLines", () => {
     should("omit whitespace", () => {
-      assert.equal(0, parseLines("    \n    \n   ").length);
+      assert.equal(0, commands.parseLines("    \n    \n   ").length);
     });
 
     should("omit comments", () => {
-      assert.equal(0, parseLines(' # comment   \n " comment   \n   ').length);
+      assert.equal(0, commands.parseLines(' # comment   \n " comment   \n   ').length);
     });
 
     should("join lines", () => {
-      assert.equal(1, parseLines("a\\\nb").length);
-      assert.equal("ab", parseLines("a\\\nb")[0]);
+      assert.equal(1, commands.parseLines("a\\\nb").length);
+      assert.equal("ab", commands.parseLines("a\\\nb")[0]);
     });
 
     should("trim lines", () => {
-      assert.equal(2, parseLines("  a  \n  b").length);
-      assert.equal("a", parseLines("  a  \n  b")[0]);
-      assert.equal("b", parseLines("  a  \n  b")[1]);
+      assert.equal(2, commands.parseLines("  a  \n  b").length);
+      assert.equal("a", commands.parseLines("  a  \n  b")[0]);
+      assert.equal("b", commands.parseLines("  a  \n  b")[1]);
     });
   });
 
   context("parseKeySequence", () => {
     const testKeySequence = (key, expectedKeyText, expectedKeyLength) => {
-      const keySequence = KeyMappingsParser.parseKeySequence(key);
+      const keySequence = commands.KeyMappingsParser.parseKeySequence(key);
       assert.equal(expectedKeyText, keySequence.join("/"));
       assert.equal(expectedKeyLength, keySequence.length);
     };
@@ -205,7 +204,7 @@ context("KeyMappingsParser", () => {
 
 context("Validate commands and options data structures", () => {
   should("have either noRepeat or repeatLimit, but not both", () => {
-    for (const command of allCommands) {
+    for (const command of allCommands.list) {
       const validProperties = !(command.noRepeat && command.repeatLimit);
       if (!validProperties) {
         assert.fail(`${command.name} has incorrect noRepeat and/or repeatLimit config.`);
@@ -214,7 +213,7 @@ context("Validate commands and options data structures", () => {
   });
 
   should("have required properties", () => {
-    for (const command of allCommands) {
+    for (const command of allCommands.list) {
       const hasRequired = command.desc.length > 0 && command.group.length > 0;
       if (!hasRequired) {
         assert.fail(`${command.name} is missing required properties.`);
@@ -223,8 +222,8 @@ context("Validate commands and options data structures", () => {
   });
 
   should("have valid commands for each default key mapping", () => {
-    const commandsByName = Utils.keyBy(allCommands, "name");
-    for (const [key, commandString] of Object.entries(defaultKeyMappings)) {
+    const commandsByName = Utils.keyBy(allCommands.list, "name");
+    for (const [key, commandString] of Object.entries(commands.defaultKeyMappings)) {
       // The comamnd string might be command name + an option string. Ignore the options.
       const name = commandString.split(" ")[0];
       if (commandsByName[name] == null) {
