@@ -111,7 +111,26 @@ Our tests use [shoulda.js](https://github.com/philc/shoulda.js) and
 
 1. Install [Deno](https://deno.land/) if you don't have it already. Deno 2.9+ is required.
 2. `deno run -A puppeteer browsers install chrome` to install puppeteer
-3. `./make.js test` to build the code and run the tests.
+3. `./make.js test` to build the code and run the unit and DOM tests.
+4. `./make.js test-e2e` to run the end-to-end tests.
+
+There are three kinds of tests:
+
+- **Unit tests** (`tests/unit_tests/`) run in Deno, with the browser's extension APIs stubbed out,
+  and DOM APIs stubbed via the jsdom library. They're fast, easy to write, and are the right place
+  for logic that doesn't need real implementations from a browser. E.g. URL parsing, settings,
+  completers. Prefer these, if possible.
+- **DOM tests** (`tests/dom_tests/`) run Vimium's content scripts in a single page in headless
+  Chrome, without the rest of the extension. They suit content-script behavior within one page.
+  These are harder to work with and less direct than unit tests.
+- **End-to-end tests** (`tests/e2e_tests/`) load the real extension into headless Chrome, and send
+  real key presses to test pages. Use them when the test needs the whole extension: the background
+  page and content scripts working together, multiple frames, multiple tabs, settings, or pages with
+  unusual security policies. See `tests/e2e_tests/harness.js`.
+
+When writing a test, use the lowest layer that can reproduce the behavior; the end-to-end tests are
+the slowest and should stay a small suite. Every bug fix should come with a test which fails before
+the fix and passes after it.
 
 ### Coding Style
 
