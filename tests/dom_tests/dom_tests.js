@@ -173,7 +173,7 @@ context("Site-specific link hints", () => {
 
   // Applies the special cases for `site` to this test page.
   const useRulesForSite = (site) =>
-    stub(doubleClickSelectorsBySite, globalThis.location.host, doubleClickSelectorsBySite[site]);
+    stub(siteSpecificClickables, globalThis.location.host, siteSpecificClickables[site]);
 
   const activateOnlyHint = () => {
     const mode = activateLinkHintsMode();
@@ -194,6 +194,24 @@ context("Site-specific link hints", () => {
     }
     activateOnlyHint();
     assert.equal(["click1", "click2", "dblclick2"], events);
+  });
+
+  should("click inside files on the Google Docs home page", () => {
+    useRulesForSite("docs.google.com");
+    document.getElementById("test-div").innerHTML = `
+      <div role="listbox">
+        <div role="option" tabindex="-1" style="width: 200px">
+          <div class="thumbnail" style="height: 100px"></div>
+          <div>a document</div>
+        </div>
+      </div>`;
+    // Like Docs, record clicks on the list, rather than on the file's element.
+    const clickTargets = [];
+    document.querySelector("#test-div [role=listbox]").addEventListener("click", (event) => {
+      clickTargets.push(event.target.getAttribute("role") ?? event.target.className);
+    });
+    activateOnlyHint();
+    assert.equal(["thumbnail"], clickTargets);
   });
 });
 

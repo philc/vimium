@@ -11,18 +11,51 @@
 // possibilities by typing the text of the link itself.
 //
 
-// Selectors for elements which a link hint should double click rather than click, by site. On these
-// sites, a single click only selects the element; it takes a double click to open it.
-const doubleClickSelectorsBySite = {
+// Special cases for clickable elements on specific sites, which our general heuristics don't detect
+// or don't activate correctly. Keyed by host. Each rule has:
+// - selector: the elements which should get hints.
+// - activation: how to activate them.
+//   - "doubleClick": a single click only selects the element; it takes a double click to open it.
+//   - "clickCenter": the page ignores clicks on the element itself, and only handles clicks on its
+//     descendants, so click the descendant at the element's center, as a real click would.
+const siteSpecificClickables = {
   // Files and folders are rows in Drive's list view, and grid cells in its grid view. Clicking on
   // them just selects them, which isn't useful. Double-clicking opens the file/folder. See #2919.
-  "drive.google.com":
-    '[role="row"][jsaction*="dblclick:"], [role="gridcell"][jsaction*="dblclick:"]',
+  "drive.google.com": {
+    selector: '[role="row"][jsaction*="dblclick:"], [role="gridcell"][jsaction*="dblclick:"]',
+    activation: "doubleClick",
+  },
+  // Files and templates on the Docs, Sheets and Slides home pages, in both grid and list views.
+  "docs.google.com": {
+    selector: '[role="listbox"] [role="option"]',
+    activation: "clickCenter",
+  },
 };
 
-function shouldDoubleClick(element) {
-  const selector = doubleClickSelectorsBySite[globalThis.location.host];
-  return selector != null && element.matches(selector);
+// Returns the site-specific rule which applies to `element`, or null.
+function siteSpecificRule(element) {
+  const rule = siteSpecificClickables[globalThis.location.host];
+  return rule != null && element.matches(rule.selector) ? rule : null;
+}
+
+// Returns the descendant of `element` at its center, or `element` if there's none.
+function descendantAtCenter(element) {
+  const rect = element.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  const descendant = document.elementFromPoint(x, y);
+  return (descendant != element && element.contains(descendant)) ? descendant : element;
+}
+
+function simulateClickForSite(element, modifiers) {
+  switch (siteSpecificRule(element)?.activation) {
+    case "doubleClick":
+      return DomUtils.simulateDoubleClick(element, modifiers);
+    case "clickCenter":
+      return DomUtils.simulateClick(descendantAtCenter(element), modifiers);
+    default:
+      return DomUtils.simulateClick(element, modifiers);
+  }
 }
 
 // A DOM element that sits on top of a link, showing the key the user should type to select the
@@ -792,10 +825,7 @@ class LinkHintsMode {
             globalThis.focus();
             return DomUtils.simulateSelect(clickEl);
           } else {
-            const clickActivator = (modifiers) => (link) =>
-              shouldDoubleClick(link)
-                ? DomUtils.simulateDoubleClick(link, modifiers)
-                : DomUtils.simulateClick(link, modifiers);
+            const clickActivator = (modifiers) => (link) => simulateClickForSite(link, modifiers);
             const linkActivator = this.mode.linkActivator != null
               ? this.mode.linkActivator
               : clickActivator(this.mode.clickModifiers);
@@ -1299,6 +1329,10 @@ const LocalHints = {
           }
         }
       }
+    }
+
+    if (!isClickable && siteSpecificRule(element)) {
+      isClickable = true;
     }
 
     // Check for tagNames which are natively clickable.
