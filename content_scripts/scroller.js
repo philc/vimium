@@ -478,6 +478,7 @@ const specialScrollingElementMap = {
   "new.reddit.com": "#overlayScrollContainer",
   "www.reddit.com": "#overlayScrollContainer",
   "web.telegram.org": ".MessageList",
+  "www.linkedin.com": "main#workspace",
 };
 
 globalThis.Scroller = Scroller;
