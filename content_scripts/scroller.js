@@ -10,23 +10,7 @@ let activatedElement = null;
 const getScrollingElement = () =>
   getSpecialScrollingElement() || document.scrollingElement || document.body;
 
-// Return 0, -1 or 1: the sign of the argument.
-// NOTE(smblott; 2014/12/17) We would like to use Math.sign(). However, according to this site
-// (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sign)
-// Math.sign() was only introduced in Chrome 38. This caused problems in R1.48 for users with old
-// Chrome installations. We can replace this with Math.sign() at some point.
-// TODO(philc): 2020-04-28: now we can make this replacement.
-const getSign = function (val) {
-  if (!val) {
-    return 0;
-  } else {
-    if (val < 0) {
-      return -1;
-    } else {
-      return 1;
-    }
-  }
-};
+const getSign = Math.sign;
 
 const scrollProperties = {
   x: {
