@@ -11,6 +11,20 @@
 // possibilities by typing the text of the link itself.
 //
 
+// Selectors for elements which a link hint should double click rather than click, by site. On these
+// sites, a single click only selects the element; it takes a double click to open it.
+const doubleClickSelectorsBySite = {
+  // Files and folders are rows in Drive's list view, and grid cells in its grid view. Clicking on
+  // them just selects them, which isn't useful. Double-clicking opens the file/folder. See #2919.
+  "drive.google.com":
+    '[role="row"][jsaction*="dblclick:"], [role="gridcell"][jsaction*="dblclick:"]',
+};
+
+function shouldDoubleClick(element) {
+  const selector = doubleClickSelectorsBySite[globalThis.location.host];
+  return selector != null && element.matches(selector);
+}
+
 // A DOM element that sits on top of a link, showing the key the user should type to select the
 // link.
 class HintMarker {
@@ -778,7 +792,10 @@ class LinkHintsMode {
             globalThis.focus();
             return DomUtils.simulateSelect(clickEl);
           } else {
-            const clickActivator = (modifiers) => (link) => DomUtils.simulateClick(link, modifiers);
+            const clickActivator = (modifiers) => (link) =>
+              shouldDoubleClick(link)
+                ? DomUtils.simulateDoubleClick(link, modifiers)
+                : DomUtils.simulateClick(link, modifiers);
             const linkActivator = this.mode.linkActivator != null
               ? this.mode.linkActivator
               : clickActivator(this.mode.clickModifiers);

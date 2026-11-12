@@ -162,6 +162,41 @@ context("jsaction matching", () => {
   });
 });
 
+context("Site-specific link hints", () => {
+  setup(() => {
+    initializeModeState();
+    stubSettings("filterLinkHints", false);
+    stub(globalThis, "windowIsFocused", () => true);
+  });
+
+  teardown(() => document.getElementById("test-div").innerHTML = "");
+
+  // Applies the special cases for `site` to this test page.
+  const useRulesForSite = (site) =>
+    stub(doubleClickSelectorsBySite, globalThis.location.host, doubleClickSelectorsBySite[site]);
+
+  const activateOnlyHint = () => {
+    const mode = activateLinkHintsMode();
+    assert.equal(1, mode.hintMarkers.length);
+    sendKeyboardEvent(mode.hintMarkers[0].hintString);
+  };
+
+  should("double click files and folders on Google Drive", () => {
+    useRulesForSite("drive.google.com");
+    document.getElementById("test-div").innerHTML = `
+      <table role="grid"><tr role="row" tabindex="-1" jsaction="click:h5M12e; dblclick:Hq2DWe">
+        <td>a folder</td>
+      </tr></table>`;
+    const events = [];
+    const row = document.querySelector("#test-div tr");
+    for (const type of ["click", "dblclick"]) {
+      row.addEventListener(type, (event) => events.push(type + event.detail));
+    }
+    activateOnlyHint();
+    assert.equal(["click1", "click2", "dblclick2"], events);
+  });
+});
+
 context("link hints for image maps", () => {
   setup(() => {
     const testContent = '<img usemap="#the-map" style="width: 50px; height: 50px">' +
