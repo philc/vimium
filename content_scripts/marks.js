@@ -20,9 +20,20 @@ const Marks = {
   },
 
   getMarkString() {
+    let localScrollX = 0;
+    let localScrollY = 0;
+    if (globalThis.Scroller) {
+      const scrollableEl = Scroller.activeElement();
+      if (scrollableEl) {
+        localScrollX = scrollableEl.scrollLeft;
+        localScrollY = scrollableEl.scrollTop;
+      }
+    }
     return JSON.stringify({
       scrollX: globalThis.scrollX,
       scrollY: globalThis.scrollY,
+      localScrollX,
+      localScrollY,
       hash: globalThis.location.hash,
     });
   },
@@ -117,10 +128,19 @@ const Marks = {
               if (markString != null) {
                 this.setPreviousPosition();
                 const position = JSON.parse(markString);
-                if (position.hash && (position.scrollX === 0) && (position.scrollY === 0)) {
+                if (position.hash && (position.scrollX === 0) && (position.scrollY === 0) && !position.localScrollX && !position.localScrollY) {
                   globalThis.location.hash = position.hash;
                 } else {
                   globalThis.scrollTo(position.scrollX, position.scrollY);
+                  if ("localScrollX" in position) {
+                    if (globalThis.Scroller) {
+                      const scrollableEl = Scroller.activeElement();
+                      if (scrollableEl) {
+                        scrollableEl.scrollLeft = position.localScrollX;
+                        scrollableEl.scrollTop = position.localScrollY;
+                      }
+                    }
+                  }
                 }
                 this.showMessage("Jumped to local mark", keyChar);
               } else {
