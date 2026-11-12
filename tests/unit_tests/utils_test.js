@@ -149,6 +149,23 @@ context("extractQuery", () => {
   });
 });
 
+context("escapeHtml", () => {
+  should("escape HTML special characters", () => {
+    assert.equal("&amp;", Utils.escapeHtml("&"));
+    assert.equal("&lt;", Utils.escapeHtml("<"));
+    assert.equal("&gt;", Utils.escapeHtml(">"));
+    assert.equal("&quot;", Utils.escapeHtml('"'));
+    assert.equal("&#39;", Utils.escapeHtml("'"));
+  });
+
+  should("escape a string with multiple special characters", () => {
+    assert.equal(
+      "&lt;a href=&quot;foo&quot;&gt;bar &amp; baz&#39;s&lt;/a&gt;",
+      Utils.escapeHtml('<a href="foo">bar & baz\'s</a>'),
+    );
+  });
+});
+
 context("pick", () => {
   should("omit properties", () => {
     assert.equal({ a: 1, b: 2 }, Utils.pick({ a: 1, b: 2, c: 3 }, ["a", "b", "d"]));
