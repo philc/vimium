@@ -160,6 +160,17 @@ const COPY_LINK_URL = {
     }
   },
 };
+const OPEN_IN_NEW_WINDOW = {
+  name: "new-window",
+  indicator: "Open link in new window",
+  linkActivator(link) {
+    if (link.href != null) {
+      chrome.runtime.sendMessage({ handler: "openUrlInNewWindow", url: link.href });
+    } else {
+      DomUtils.simulateClick(link);
+    }
+  },
+};
 const OPEN_INCOGNITO = {
   name: "open-incognito",
   indicator: "Open link in incognito window",
@@ -209,6 +220,7 @@ const availableModes = [
   OPEN_IN_NEW_FG_TAB,
   OPEN_WITH_QUEUE,
   COPY_LINK_URL,
+  OPEN_IN_NEW_WINDOW,
   OPEN_INCOGNITO,
   DOWNLOAD_LINK_URL,
   COPY_LINK_TEXT,
@@ -420,6 +432,9 @@ const LinkHints = {
   activateModeToOpenIncognito(count) {
     this.activateMode(count, { mode: OPEN_INCOGNITO });
   },
+  activateModeToOpenInNewWindow(count) {
+    this.activateMode(count, { mode: OPEN_IN_NEW_WINDOW });
+  },
   activateModeToDownloadLink(count) {
     this.activateMode(count, { mode: DOWNLOAD_LINK_URL });
   },
@@ -605,7 +620,13 @@ class LinkHintsMode {
     // NOTE(smblott) The modifier behaviour here applies only to alphabet hints.
     if (
       ["Control", "Shift"].includes(event.key) && !Settings.get("filterLinkHints") &&
-      [OPEN_IN_CURRENT_TAB, OPEN_WITH_QUEUE, OPEN_IN_NEW_BG_TAB, OPEN_IN_NEW_FG_TAB].includes(
+      [
+        OPEN_IN_CURRENT_TAB,
+        OPEN_WITH_QUEUE,
+        OPEN_IN_NEW_BG_TAB,
+        OPEN_IN_NEW_FG_TAB,
+        OPEN_IN_NEW_WINDOW,
+      ].includes(
         this.mode,
       )
     ) {
