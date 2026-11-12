@@ -1,0 +1,371 @@
+\documentclass[10pt,a4paper]{article}
+
+% Packages
+\usepackage{fancyhdr}           % For header and footer
+\usepackage{multicol}           % Allows multicols in tables
+\usepackage{tabularx}           % Intelligent column widths
+\usepackage{tabulary}           % Used in header and footer
+\usepackage{hhline}             % Border under tables
+\usepackage{graphicx}           % For images
+\usepackage{xcolor}             % For hex colours
+\usepackage[T1]{fontenc}        % Without this we get weird character replacements
+\usepackage{colortbl}           % For coloured tables
+\usepackage{setspace}           % For line height
+\usepackage{lastpage}           % Needed for total page number
+\usepackage{seqsplit}           % Splits long words.
+\usepackage[normalem]{ulem}     % For underlining links
+\usepackage{amsmath}            % Symbols
+\usepackage{MnSymbol}           % Symbols
+\usepackage{wasysym}            % Symbols
+
+% Document Info
+\author{Vimium Community}
+\pdfinfo{
+  /Title (vimium.pdf)
+  /Creator (Cheatography)
+  /Author (Vimium Community)
+  /Subject (Vimium Cheat Sheet)
+}
+
+% Lengths and widths
+\addtolength{\textwidth}{6cm}
+\addtolength{\textheight}{-1cm}
+\addtolength{\hoffset}{-3cm}
+\addtolength{\voffset}{-2cm}
+\setlength{\tabcolsep}{0.2cm} % Space between columns
+\setlength{\headsep}{-12pt} % Reduce space between header and content
+\setlength{\headheight}{85pt} % If less, LaTeX automatically increases it
+\renewcommand{\footrulewidth}{0pt} % Remove footer line
+\renewcommand{\headrulewidth}{0pt} % Remove header line
+\renewcommand{\seqinsert}{\ifmmode\allowbreak\else\-\fi} % Hyphens in seqsplit
+% This two commands together give roughly
+% the right line height in the tables
+\renewcommand{\arraystretch}{1.3}
+\onehalfspacing
+
+% Commands
+\newcommand{\SetRowColor}[1]{\noalign{\gdef\RowColorName{#1}}\rowcolor{\RowColorName}} % Shortcut for row colour
+\newcommand{\mymulticolumn}[3]{\multicolumn{#1}{>{\columncolor{\RowColorName}}#2}{#3}} % For coloured multi-cols
+\newcolumntype{x}[1]{>{\raggedright}p{#1}} % New column types for ragged-right paragraph columns
+\newcommand{\tn}{\tabularnewline} % Required as custom column type in use
+
+% Font and Colours
+\definecolor{HeadBackground}{HTML}{333333}
+\definecolor{FootBackground}{HTML}{666666}
+\definecolor{TextColor}{HTML}{333333}
+\definecolor{DarkBackground}{HTML}{4A7C59}
+\definecolor{LightBackground}{HTML}{EFF6F1}
+\renewcommand{\familydefault}{\sfdefault}
+\color{TextColor}
+
+% Header and Footer
+\pagestyle{fancy}
+\fancyhead{} % Set header to blank
+\fancyfoot{} % Set footer to blank
+\fancyhead[L]{
+\noindent
+\begin{multicols}{3}
+\begin{tabulary}{5.8cm}{C}
+    \SetRowColor{DarkBackground}
+    \vspace{-7pt}
+    {\parbox{\dimexpr\textwidth-2\fboxsep\relax}{\noindent
+        \hspace*{-6pt}\includegraphics[width=5.8cm]{/web/www.cheatography.com/public/images/cheatography_logo.pdf}}
+    }
+\end{tabulary}
+\columnbreak
+\begin{tabulary}{11cm}{L}
+    \vspace{-2pt}\large{\bf{\textcolor{DarkBackground}{\textrm{Vimium Cheat Sheet}}}} \\
+    \normalsize{by \textcolor{DarkBackground}{philc/vimium} --- \textcolor{DarkBackground}{The Hacker's Browser}}
+\end{tabulary}
+\end{multicols}}
+
+\fancyfoot[L]{ \footnotesize
+\noindent
+\begin{multicols}{3}
+\begin{tabulary}{5.8cm}{LL}
+  \SetRowColor{FootBackground}
+  \mymulticolumn{2}{p{5.377cm}}{\bf\textcolor{white}{Source}}  \\
+  \vspace{-2pt}github.com/philc/vimium \\
+  \end{tabulary}
+\vfill
+\columnbreak
+\begin{tabulary}{5.8cm}{L}
+  \SetRowColor{FootBackground}
+  \mymulticolumn{1}{p{5.377cm}}{\bf\textcolor{white}{Cheat Sheet}}  \\
+   \vspace{-2pt}Page {\thepage} of \pageref{LastPage}.
+\end{tabulary}
+\vfill
+\columnbreak
+\begin{tabulary}{5.8cm}{L}
+  \SetRowColor{FootBackground}
+  \mymulticolumn{1}{p{5.377cm}}{\bf\textcolor{white}{Tip}}  \\
+  \SetRowColor{white}
+  \vspace{-5pt}
+  Type ? in browser to see help dialog
+\end{tabulary}
+\end{multicols}}
+
+
+
+
+\begin{document}
+\raggedright
+\raggedcolumns
+
+% Set font size to small. Switch to any value
+% from this page to resize cheat sheet text:
+% www.emerson.emory.edu/services/latex/latex_169.html
+\footnotesize % Small font.
+
+\begin{multicols*}{3}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{Navigating the Page}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+j / k & Scroll down / up \tn 
+% Row 1
+\SetRowColor{white}
+h / l & Scroll left / right \tn 
+% Row 2
+\SetRowColor{LightBackground}
+gg & Scroll to top of page \tn 
+% Row 3
+\SetRowColor{white}
+G & Scroll to bottom of page \tn 
+% Row 4
+\SetRowColor{LightBackground}
+d & Scroll down half a page \tn 
+% Row 5
+\SetRowColor{white}
+u & Scroll up half a page \tn 
+% Row 6
+\SetRowColor{LightBackground}
+zH & Scroll all the way left \tn 
+% Row 7
+\SetRowColor{white}
+zL & Scroll all the way right \tn 
+% Row 8
+\SetRowColor{LightBackground}
+r & Reload page \tn 
+% Row 9
+\SetRowColor{white}
+gs & View page source \tn 
+% Row 10
+\SetRowColor{LightBackground}
+i & Enter insert mode (Esc to exit) \tn 
+% Row 11
+\SetRowColor{white}
+gi & Focus the n-th text input box \tn 
+% Row 12
+\SetRowColor{LightBackground}
+? & Show help dialog \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{Link Hints}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+f & Open link in current tab \tn 
+% Row 1
+\SetRowColor{white}
+F & Open link in new tab \tn 
+% Row 2
+\SetRowColor{LightBackground}
+\textless{}a-f\textgreater{} & Open multiple links in new tabs \tn 
+% Row 3
+\SetRowColor{white}
+yf & Copy a link URL to clipboard \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{Vomnibar (URL Bar)}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+o & Open URL / bookmark / history \tn 
+% Row 1
+\SetRowColor{white}
+O & Open in new tab \tn 
+% Row 2
+\SetRowColor{LightBackground}
+b & Open bookmark \tn 
+% Row 3
+\SetRowColor{white}
+B & Open bookmark in new tab \tn 
+% Row 4
+\SetRowColor{LightBackground}
+T & Search through open tabs \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{Using Find}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+/ & Enter find mode \tn 
+% Row 1
+\SetRowColor{white}
+n & Next find match \tn 
+% Row 2
+\SetRowColor{LightBackground}
+N & Previous find match \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{URL Navigation}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+yy & Copy current URL to clipboard \tn 
+% Row 1
+\SetRowColor{white}
+gu & Go up one level in URL \tn 
+% Row 2
+\SetRowColor{LightBackground}
+gU & Go up to root of URL \tn 
+% Row 3
+\SetRowColor{white}
+ge & Edit current URL \tn 
+% Row 4
+\SetRowColor{LightBackground}
+gE & Edit URL, open in new tab \tn 
+% Row 5
+\SetRowColor{white}
+{]}{]} & Follow `next' link \tn 
+% Row 6
+\SetRowColor{LightBackground}
+{[}{[} & Follow `previous' link \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{History Navigation}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+H & Go back in history \tn 
+% Row 1
+\SetRowColor{white}
+L & Go forward in history \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{Tab Management}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+t & Create new tab \tn 
+% Row 1
+\SetRowColor{white}
+J / gT & Go one tab left \tn 
+% Row 2
+\SetRowColor{LightBackground}
+K / gt & Go one tab right \tn 
+% Row 3
+\SetRowColor{white}
+g0 & Go to first tab \tn 
+% Row 4
+\SetRowColor{LightBackground}
+g\$ & Go to last tab \tn 
+% Row 5
+\SetRowColor{white}
+\textasciicircum{} & Visit previously-visited tab \tn 
+% Row 6
+\SetRowColor{LightBackground}
+yt & Duplicate current tab \tn 
+% Row 7
+\SetRowColor{white}
+x & Close current tab \tn 
+% Row 8
+\SetRowColor{LightBackground}
+X & Restore closed tab \tn 
+% Row 9
+\SetRowColor{white}
+\textless{}a-p\textgreater{} & Pin / unpin current tab \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{Marks}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+ma & Set local mark ``a'' \tn 
+% Row 1
+\SetRowColor{white}
+mA & Set global mark ``A'' \tn 
+% Row 2
+\SetRowColor{LightBackground}
+`a & Jump to local mark ``a'' \tn 
+% Row 3
+\SetRowColor{white}
+`A & Jump to global mark ``A'' \tn 
+% Row 4
+\SetRowColor{LightBackground}
+`` & Jump back to previous position \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{Frames}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+gf & Cycle to next frame \tn 
+% Row 1
+\SetRowColor{white}
+gF & Focus main/top frame \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{1.89 cm} x{3.65 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{2}{x{5.94cm}}{\bf\textcolor{white}{Visual Mode}}  \tn
+% Row 0
+\SetRowColor{LightBackground}
+v & Enter visual mode \tn 
+% Row 1
+\SetRowColor{white}
+V & Enter visual line mode \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\SetRowColor{LightBackground}
+\mymulticolumn{2}{x{5.94cm}}{Use p/P to paste-and-go, y to yank selected text.}  \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}--}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+\begin{tabularx}{5.94cm}{x{5.54 cm} }
+\SetRowColor{DarkBackground}
+\mymulticolumn{1}{x{5.54cm}}{\bf\textcolor{white}{Tips}}  \tn
+\SetRowColor{LightBackground}
+Vimium supports command repetition: e.g. 5t opens 5 tabs. \tn 
+\SetRowColor{white}
+Esc or \textless{}c-{[}\textgreater{} clears partial commands and exits insert/find modes. \tn 
+\SetRowColor{LightBackground}
+Customize key mappings in Vimium Options page. \tn 
+\hhline{>{\arrayrulecolor{DarkBackground}}-}
+\end{tabularx}
+\par\addvspace{1.3em}
+
+
+% That's all folks
+\end{multicols*}
+
+\end{document}
