@@ -11,6 +11,7 @@ import "../background_scripts/completion/search_wrapper.js";
 import "../background_scripts/completion/completers.js";
 import "../background_scripts/tab_operations.js";
 import * as marks from "../background_scripts/marks.js";
+import * as gistSync from "../background_scripts/gist_sync.js";
 
 import * as completers from "./completion/completers.js";
 
@@ -952,6 +953,9 @@ Object.assign(globalThis, {
   majorVersionHasIncreased,
   nextZoomLevel,
 });
+
+// If the user has enabled it, upload the settings to their gist whenever they change.
+Settings.addEventListener("change", () => gistSync.onSettingsChanged());
 
 // The chrome.runtime.onStartup and onInstalled events are not fired when disabling and then
 // re-enabling the extension in developer mode, so we also initialize the extension here.
