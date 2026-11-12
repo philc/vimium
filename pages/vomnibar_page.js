@@ -84,6 +84,7 @@ class VomnibarUI {
   }
   setForceNewTab(forceNewTab) {
     this.forceNewTab = forceNewTab;
+    this.newTabIndicator.hidden = !forceNewTab;
   }
 
   // name: one of [omni, bookmarks, commands, tabs].
@@ -113,6 +114,9 @@ class VomnibarUI {
   // This ensures that the vomnibar is actually hidden before any new tab is created, and avoids
   // flicker after opening a link in a new tab then returning to the original tab. See #1485.
   hide(onHiddenCallback = null) {
+    // Always hide the new tab indicator to avoid flickering (shown->hidden).
+    // Prefer hidden->shown transition.
+    this.newTabIndicator.hidden = true;
     this.onHiddenCallback = onHiddenCallback;
     this.input.blur();
     this.reset();
@@ -481,6 +485,7 @@ class VomnibarUI {
     this.input.addEventListener("input", this.onInput);
     this.input.addEventListener("keydown", this.onKeyEvent);
     this.input.addEventListener("keypress", this.onKeyEvent);
+    this.newTabIndicator = document.getElementById("new-tab-indicator");
     this.completionList = this.box.querySelector("ul");
     this.completionList.style.display = "";
 
