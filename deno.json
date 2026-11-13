@@ -14,7 +14,7 @@
       "tests/vendor/"
     ],
     "plugins": [
-      "jsr:@philc/lint-rules@^0.2.1"
+      "jsr:@philc/lint-rules@^0.3.0"
     ]
   }
 }

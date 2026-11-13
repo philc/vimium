@@ -3,6 +3,7 @@
   "specifiers": {
     "jsr:@b-fuze/deno-dom@~0.1.49": "0.1.49",
     "jsr:@denosaurs/plug@1.0.3": "1.0.3",
+    "jsr:@philc/lint-rules@0.3": "0.3.0",
     "jsr:@philc/lint-rules@~0.2.1": "0.2.1",
     "jsr:@std/assert@~0.213.1": "0.213.1",
     "jsr:@std/cli@^1.0.8": "1.0.9",
@@ -45,6 +46,9 @@
     },
     "@philc/lint-rules@0.2.1": {
       "integrity": "5da438129a2387b6e057c6408682ab01fae3278f270d6560c326050b2bad74e0"
+    },
+    "@philc/lint-rules@0.3.0": {
+      "integrity": "fbbcbf5e4391aed43d78a6a2b9a0f49e9f36d8ca6a136b6ca43d48791b283eba"
     },
     "@std/assert@0.213.1": {
       "integrity": "24c28178b30c8e0782c18e8e94ea72b16282207569cdd10ffb9d1d26f2edebfe"
