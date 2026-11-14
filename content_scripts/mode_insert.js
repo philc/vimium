@@ -53,7 +53,9 @@ class InsertMode extends Mode {
 
         if (!this.permanent) {
           this.exit();
+          return this.suppressEvent;
         }
+        return this.passEventToPage;
       } else {
         return this.passEventToPage;
       }
