@@ -47,7 +47,7 @@ const scrollProperties = {
 // it is either "max" (meaning the height or width of element), or "viewSize". In both cases, we
 // look up and return the requested amount, either in `element` or in `window`, as appropriate.
 const getDimension = function (el, direction, amount) {
-  if (Utils.isString(amount)) {
+  if (typeof amount === "string" || amount instanceof String) {
     const name = amount;
     // the clientSizes of the body are the dimensions of the entire page, but the viewport should
     // only be the part visible through the window
