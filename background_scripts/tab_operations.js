@@ -126,14 +126,14 @@ export async function openUrlInNewTab(request) {
 export async function openUrlInNewWindow(request) {
   const winConfig = {
     url: await UrlUtils.convertToUrl(request.url),
-    active: true,
+    focused: true,
   };
   if (request.active != null) {
-    winConfig.active = request.active;
+    winConfig.focused = request.active;
   }
-  // Firefox does not support "about:newtab" in chrome.tabs.create, so omit it.
-  if (tabConfig["url"] === UrlUtils.chromeNewTabUrl) {
-    delete winConfig["url"];
+  // Firefox does not support "about:newtab" in chrome.windows.create, so omit it.
+  if (winConfig.url === UrlUtils.chromeNewTabUrl) {
+    delete winConfig.url;
   }
   await chrome.windows.create(winConfig);
 }
