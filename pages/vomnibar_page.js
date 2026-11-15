@@ -69,6 +69,7 @@ class VomnibarUI {
     // The user's custom search engine, if they have prefixed their query with the keyword for one
     // of their search engines.
     this.activeUserSearchEngine = null;
+    this.escapedUserSearchEngine = null;
     // Used for synchronizing requests and responses to the background page.
     this.lastRequestId = null;
   }
@@ -78,6 +79,7 @@ class VomnibarUI {
   }
   setActiveUserSearchEngine(userSearchEngine) {
     this.activeUserSearchEngine = userSearchEngine;
+    this.escapedUserSearchEngine = null;
   }
   setInitialSelectionValue(initialSelectionValue) {
     this.initialSelectionValue = initialSelectionValue;
@@ -135,6 +137,7 @@ class VomnibarUI {
     this.renderCompletions(this.completions);
     this.previousInputValue = null;
     this.activeUserSearchEngine = null;
+    this.escapedUserSearchEngine = null;
     this.selection = this.initialSelectionValue;
     this.seenTabToOpenCompletionList = false;
     this.lastRequestId = null;
@@ -253,10 +256,17 @@ class VomnibarUI {
         // Normally, with custom search engines, the keyword (e.g. the "w" of "w query terms") is
         // suppressed. If the cursor is at the start of the input, then reinstate the keyword (the
         // "w").
-        const keyword = this.activeUserSearchEngine.keyword;
+        this.escapedUserSearchEngine = this.activeUserSearchEngine;
+        const keyword = this.escapedUserSearchEngine.keyword + " ";
         this.input.value = keyword + this.input.value.trimStart();
         this.input.selectionStart = this.input.selectionEnd = keyword.length;
         this.activeUserSearchEngine = null;
+        // The current completions belong to the custom search engine. Clear them synchronously so
+        // that pressing Enter before the replacement completions arrive uses the default search.
+        this.completions = [];
+        this.renderCompletions(this.completions);
+        this.previousInputValue = null;
+        this.selection = this.initialSelectionValue;
         this.update();
       } else if (this.seenTabToOpenCompletionList && (this.input.value.trim().length === 0)) {
         this.seenTabToOpenCompletionList = false;
@@ -373,6 +383,7 @@ class VomnibarUI {
       completerName: this.completerName,
       queryTerms,
       query,
+      isUserSearchEngineEscaped: this.escapedUserSearchEngine != null,
       seenTabToOpenCompletionList: this.seenTabToOpenCompletionList,
     });
 
@@ -418,8 +429,12 @@ class VomnibarUI {
 
     // For custom search engines, we suppress the leading prefix (e.g. the "w" of "w query terms")
     // within the vomnibar input.
-    if (!this.isUserSearchEngineActive() && this.getUserSearchEngineForQuery() != null) {
-      this.activeUserSearchEngine = this.getUserSearchEngineForQuery();
+    const userSearchEngine = this.getUserSearchEngineForQuery();
+    if (this.escapedUserSearchEngine != userSearchEngine) {
+      this.escapedUserSearchEngine = null;
+    }
+    if (!this.isUserSearchEngineActive() && !this.escapedUserSearchEngine && userSearchEngine) {
+      this.activeUserSearchEngine = userSearchEngine;
       const queryTerms = this.input.value.trim().split(/\s+/);
       this.input.value = queryTerms.slice(1).join(" ");
     }

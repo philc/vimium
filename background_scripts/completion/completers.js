@@ -768,7 +768,8 @@ export class Multi {
       return [];
     }
 
-    const queryMatchesUserSearchEngine = searchEngineCompleter?.getUserSearchEngineForQuery(query);
+    const queryMatchesUserSearchEngine = !request.isUserSearchEngineEscaped &&
+      searchEngineCompleter?.getUserSearchEngineForQuery(query);
 
     // If the user's query matches one of their custom search engines, then use only that engine to
     // provide completions for their query.
