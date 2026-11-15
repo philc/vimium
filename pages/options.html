@@ -247,6 +247,64 @@ b: http://b.com/?q=%s description
         <div class="example">
           Choose a backup file to restore.
         </div>
+
+        <div id="gist-sync">
+          <h2>GitHub token</h2>
+          <div>
+            <input id="gist-token" type="password" spellcheck="false" autocomplete="off" />
+            <div class="example gist-field-link">
+              <a
+                href="https://github.com/settings/tokens/new?description=Vimium%20Gist%20Sync&scopes=gist"
+                target="_blank"
+                rel="noopener"
+              >Create a token on GitHub</a>
+            </div>
+          </div>
+          <div class="example">
+            The link pre-fills the token form with only the "gist" scope. Set "Expiration" to "No
+            expiration", then click "Generate token". The token is stored only on this computer,
+            and is not included in backups.
+          </div>
+
+          <h2>Gist ID</h2>
+          <div>
+            <input id="gist-id" type="text" spellcheck="false" />
+            <div class="example gist-field-link">
+              <button id="gist-create">Create a secret gist</button>
+            </div>
+          </div>
+          <div class="example">
+            Create a new secret gist for your settings, or paste the ID or URL of a gist you've
+            already created. Settings are stored in its <tt>vimium-options.json</tt> file.
+          </div>
+
+          <h2></h2>
+          <label class="boolean-label">
+            <input id="gist-auto-upload" type="checkbox" />
+            Automatically upload to the gist when settings are saved
+          </label>
+          <div class="example"></div>
+
+          <h2></h2>
+          <div id="gist-actions">
+            <button id="gist-test">Test connection</button>
+            <button id="gist-upload">Upload to gist</button>
+            <button id="gist-download">Restore from gist</button>
+            <span id="gist-status" role="status"></span>
+          </div>
+          <div class="example"></div>
+
+          <h2>Version history</h2>
+          <div>
+            <button id="gist-history-load">Show recent versions</button>
+            <table id="gist-history"></table>
+          </div>
+          <div class="example">
+            The gist's 10 most recent versions. Restoring a version replaces your current settings.
+            With auto-upload enabled, the restored settings are then uploaded as the latest version;
+            otherwise, click "Upload to gist" to do that.
+          </div>
+        </div>
       </div>
 
       <footer>

@@ -222,6 +222,7 @@ textarea:read-only {
 }
 
 input[type="text"],
+input[type="password"],
 textarea {
   border: 1px solid #bfbfbf;
   border-radius: 2px;
@@ -233,6 +234,7 @@ textarea {
 
 button:focus,
 input[type="text"]:focus,
+input[type="password"]:focus,
 textarea:focus {
   -webkit-transition: border-color 200ms;
   border-color: #4d90fe;
@@ -356,6 +358,74 @@ footer {
 
 input#upload-backup {
   max-width: 400px;
+}
+
+#gist-sync {
+  display: contents;
+}
+
+#gist-token,
+#gist-id {
+  width: 100%;
+}
+
+.gist-field-link {
+  margin-left: 0;
+  margin-top: 4px;
+}
+
+#gist-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#gist-status {
+  --gistSuccessColor: #188038;
+  margin-left: 4px;
+}
+
+#gist-status.flash {
+  animation: gist-status-flash 600ms ease-out;
+}
+
+@keyframes gist-status-flash {
+  from {
+    opacity: 0;
+  }
+}
+
+#gist-status.pending {
+  color: #979ca0;
+}
+
+#gist-status.success {
+  color: var(--gistSuccessColor);
+}
+
+#gist-history {
+  margin-top: 6px;
+  border-collapse: collapse;
+}
+
+#gist-history td {
+  padding: 2px 12px 2px 0;
+}
+
+#gist-history .gist-history-changes {
+  color: #979ca0;
+  font-size: 12px;
+}
+
+#gist-status.error {
+  color: var(--validationErrorColor);
+}
+
+@media (prefers-color-scheme: dark) {
+  #gist-status {
+    --gistSuccessColor: #81c995;
+  }
 }
 
 @media (prefers-color-scheme: light) {

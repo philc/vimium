@@ -39,7 +39,7 @@ const createStorageAPI = (areaName) => {
         return result;
       } else {
         const result = {};
-        for (key of keysArg) {
+        for (const key of keysArg) {
           result[key] = globalThis.structuredClone(this.store[key]);
         }
         return result;

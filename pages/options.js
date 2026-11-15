@@ -2,6 +2,7 @@ import "./all_content_scripts.js";
 import * as exclusionRulesEditor from "./exclusion_rules_editor.js";
 import * as commands from "../background_scripts/commands.js";
 import * as userSearchEngines from "../background_scripts/user_search_engines.js";
+import * as gistSync from "../background_scripts/gist_sync.js";
 
 const options = {
   filterLinkHints: "boolean",
@@ -41,6 +42,8 @@ export async function init() {
   };
 
   for (const el of document.querySelectorAll("input, textarea")) {
+    // The gist sync fields aren't settings; they're stored separately, outside of the settings.
+    if (el.closest("#gist-sync")) continue;
     // We want to immediately enable the save button when a setting is changed, so we want to use
     // the HTML element's "input" event here rather than the "change" event.
     el.addEventListener("input", () => onUpdated());
@@ -93,6 +96,8 @@ export async function init() {
 
   exclusionRulesEditor.Editor.init();
   exclusionRulesEditor.Editor.addEventListener("input", onUpdated);
+
+  await initGistSync();
 
   const settings = Settings.getSettings();
   setFormFromSettings(settings);
@@ -316,13 +321,7 @@ function maintainLinkHintsView() {
 }
 
 export function prepareBackupSettings() {
-  const settings = Settings.pruneOutDefaultValues(getSettingsFromForm());
-  // Serialize the JSON keys in order, so that they're stable across backups. See #4764.
-  const keys = Object.keys(settings).sort();
-  const sortedSettings = Object.fromEntries(keys.map((k) => [k, settings[k]]));
-  // Don't use an array replacer in JSON.stringify; it filters nested object keys too, which would
-  // drop nested fields inside exclusionRules (e.g. `pattern`, `passKeys`). See #4853.
-  return JSON.stringify(sortedSettings, null, 2) + "\n";
+  return gistSync.serializeSettings(getSettingsFromForm());
 }
 
 function onDownloadBackupClicked() {
@@ -359,6 +358,172 @@ function onUploadBackupClicked() {
       alert("Settings have been restored from the backup.");
     };
   }
+}
+
+// Shows the result of a gist operation next to the gist buttons. `status` is either
+// {ok, message, time} as recorded by gist_sync.js, or {pending: true, message} while an operation is
+// in progress.
+function showGistStatus(status, { flash = true } = {}) {
+  const el = document.querySelector("#gist-status");
+  el.className = "";
+  if (!status) {
+    el.textContent = "";
+    return;
+  }
+  if (status.pending) {
+    el.textContent = status.message;
+    el.classList.add("pending");
+    return;
+  }
+  const time = new Date(status.time).toLocaleString();
+  el.textContent = `${status.ok ? "\u2713" : "\u2717"} ${status.message} (${time})`;
+  el.classList.add(status.ok ? "success" : "error");
+  if (flash) {
+    // Restart the animation, so that a result identical to the previous one is still noticeable.
+    void el.offsetWidth;
+    el.classList.add("flash");
+  }
+}
+
+async function initGistSync() {
+  const tokenEl = document.querySelector("#gist-token");
+  const gistIdEl = document.querySelector("#gist-id");
+  const autoUploadEl = document.querySelector("#gist-auto-upload");
+  const testButton = document.querySelector("#gist-test");
+  const uploadButton = document.querySelector("#gist-upload");
+  const downloadButton = document.querySelector("#gist-download");
+  const createButton = document.querySelector("#gist-create");
+  const historyButton = document.querySelector("#gist-history-load");
+  const historyTable = document.querySelector("#gist-history");
+
+  // Creating a gist only makes sense when the user hasn't already got one.
+  const maintainCreateButton = () => {
+    createButton.disabled = gistIdEl.value.trim() != "";
+  };
+
+  const config = await gistSync.getConfig();
+  tokenEl.value = config.token;
+  gistIdEl.value = config.gistId;
+  autoUploadEl.checked = config.autoUpload;
+  showGistStatus(config.status, { flash: false });
+  maintainCreateButton();
+
+  tokenEl.addEventListener("change", () => gistSync.setConfig({ token: tokenEl.value.trim() }));
+  gistIdEl.addEventListener("change", () => {
+    gistIdEl.value = gistSync.parseGistId(gistIdEl.value);
+    gistSync.setConfig({ gistId: gistIdEl.value });
+  });
+  gistIdEl.addEventListener("input", maintainCreateButton);
+  autoUploadEl.addEventListener(
+    "change",
+    () => gistSync.setConfig({ autoUpload: autoUploadEl.checked }),
+  );
+
+  // Runs a gist operation with the buttons disabled, then shows the resulting status. If `fn` returns
+  // a string, it's shown as the success message; otherwise the status recorded by gist_sync.js is.
+  const runGistAction = async (pendingMessage, fn) => {
+    const buttons = [testButton, uploadButton, downloadButton, createButton, historyButton]
+      .concat(Array.from(historyTable.querySelectorAll("button")));
+    for (const b of buttons) b.disabled = true;
+    showGistStatus({ pending: true, message: pendingMessage });
+    try {
+      const message = await fn();
+      showGistStatus(
+        typeof message == "string"
+          ? { ok: true, message, time: new Date().toISOString() }
+          : (await gistSync.getConfig()).status,
+      );
+    } catch (error) {
+      console.log("Gist sync error:", error);
+      showGistStatus({ time: new Date().toISOString(), ok: false, message: error.message });
+    } finally {
+      for (const b of buttons) b.disabled = false;
+      maintainCreateButton();
+    }
+  };
+
+  const onSettingsRestored = () => {
+    setFormFromSettings(Settings.getSettings());
+    const saveButton = document.querySelector("#save");
+    saveButton.disabled = true;
+    saveButton.textContent = "Saved";
+  };
+
+  const renderHistory = (revisions) => {
+    historyTable.replaceChildren();
+    for (const [i, revision] of revisions.entries()) {
+      const row = historyTable.insertRow();
+      row.insertCell().textContent = new Date(revision.committedAt).toLocaleString() +
+        (i == 0 ? " (latest)" : "");
+      const changes = row.insertCell();
+      changes.className = "gist-history-changes";
+      changes.textContent = `${revision.version.slice(0, 7)}  +${revision.additions} ` +
+        `\u2212${revision.deletions}`;
+      const button = document.createElement("button");
+      button.textContent = "Restore";
+      button.addEventListener("click", () => {
+        const time = new Date(revision.committedAt).toLocaleString();
+        if (!confirm(`Replace all of your current settings with the version from ${time}?`)) return;
+        runGistAction("Restoring\u2026", async () => {
+          await gistSync.restoreRevision(revision.version);
+          onSettingsRestored();
+        });
+      });
+      row.insertCell().appendChild(button);
+    }
+  };
+
+  historyButton.addEventListener(
+    "click",
+    () =>
+      runGistAction("Loading versions\u2026", async () => {
+        const revisions = await gistSync.listRevisions();
+        renderHistory(revisions);
+        if (revisions.length == 0) throw new Error("The gist has no versions yet.");
+        return `Loaded the ${revisions.length} most recent versions.`;
+      }),
+  );
+
+  // Saves any pending changes, so that what's uploaded matches what's on screen.
+  const saveBeforeUploading = async () => {
+    const saveButton = document.querySelector("#save");
+    if (!saveButton.disabled) {
+      await saveOptions();
+      if (!saveButton.disabled) {
+        throw new Error("Fix the invalid settings before uploading.");
+      }
+    }
+  };
+
+  testButton.addEventListener(
+    "click",
+    () => runGistAction("Connecting\u2026", () => gistSync.testConnection()),
+  );
+
+  uploadButton.addEventListener("click", () =>
+    runGistAction("Uploading\u2026", async () => {
+      await saveBeforeUploading();
+      await gistSync.upload();
+    }));
+
+  createButton.addEventListener(
+    "click",
+    () =>
+      runGistAction("Creating a secret gist\u2026", async () => {
+        // The token field may not have fired its "change" event yet.
+        await gistSync.setConfig({ token: tokenEl.value.trim() });
+        await saveBeforeUploading();
+        gistIdEl.value = await gistSync.createGist();
+      }),
+  );
+
+  downloadButton.addEventListener("click", () => {
+    if (!confirm("Replace all of your current settings with the settings from the gist?")) return;
+    runGistAction("Restoring\u2026", async () => {
+      await gistSync.download();
+      onSettingsRestored();
+    });
+  });
 }
 
 const testEnv = globalThis.window == null ||
