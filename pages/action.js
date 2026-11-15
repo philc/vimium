@@ -45,6 +45,19 @@ const ActionPage = {
       return;
     }
 
+    const { globallyDisabled } = await chrome.runtime.sendMessage({
+      handler: "getGloballyDisabled",
+    });
+    if (globallyDisabled) {
+      hideUI();
+      document.querySelector("#globally-disabled-notice").style.display = "block";
+      document.querySelector("#re-enable-vimium").addEventListener("click", async () => {
+        await chrome.runtime.sendMessage({ handler: "toggleGloballyDisabled" });
+        globalThis.close();
+      });
+      return;
+    }
+
     document.querySelector("#optionsLink").href = chrome.runtime.getURL("pages/options.html");
 
     const saveButton = document.querySelector("#save");
