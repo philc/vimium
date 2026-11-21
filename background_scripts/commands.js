@@ -446,6 +446,7 @@ const defaultKeyMappings = {
   // Link hints
   "f": "LinkHints.activateMode",
   "F": "LinkHints.activateModeToOpenInNewTab",
+  "sf": "LinkHints.activateModeToOpenInSplitView",
   "<a-f>": "LinkHints.activateModeWithQueue",
   "yf": "LinkHints.activateModeToCopyLinkUrl",
 
@@ -482,7 +483,12 @@ const defaultKeyMappings = {
   "g$": "lastTab",
   "W": "moveTabToNewWindow",
   "t": "createTab",
+  "sr": "reverseSplitViewTabs",
+  "sx": "closeSplitViewTabs",
+  "st": "addSplitView",
+  "ss": "separateSplitView",
   "yt": "duplicateTab",
+  "ys": "duplicateTabInSplitView",
   "x": "removeTab",
   "X": "restoreTab",
   "<a-p>": "togglePinTab",

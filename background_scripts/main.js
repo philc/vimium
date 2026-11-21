@@ -230,6 +230,20 @@ function nextZoomLevel(currentZoom, steps) {
   }
 }
 
+function getNewTabUrl() {
+  let url;
+  const destination = Settings.get("newTabDestination");
+  const customUrl = Settings.get("newTabCustomUrl");
+  if (destination == Settings.newTabDestinations.vimiumNewTabPage) {
+    url = Settings.vimiumNewTabPageUrl;
+  } else if (destination == Settings.newTabDestinations.customUrl && customUrl.length > 0) {
+    url = customUrl;
+  } else {
+    url = UrlUtils.chromeNewTabUrl;
+  }
+  return url;
+}
+
 // These are commands which are bound to keystrokes which must be handled by the background page.
 // They are mapped in commands.js.
 const BackgroundCommands = {
@@ -251,17 +265,7 @@ const BackgroundCommands = {
           request.urls = urlList;
         } else {
           // Otherwise, just create a new tab.
-          let url;
-          const destination = Settings.get("newTabDestination");
-          const customUrl = Settings.get("newTabCustomUrl");
-          if (destination == Settings.newTabDestinations.vimiumNewTabPage) {
-            url = Settings.vimiumNewTabPageUrl;
-          } else if (destination == Settings.newTabDestinations.customUrl && customUrl.length > 0) {
-            url = customUrl;
-          } else {
-            url = UrlUtils.chromeNewTabUrl;
-          }
-          request.urls = [url];
+          request.urls = [getNewTabUrl()];
         }
       }
     }
@@ -304,6 +308,63 @@ const BackgroundCommands = {
         chrome.tabs.move(tabs.map((t) => t.id), { windowId: window.id, index: -1 });
       });
     });
+  },
+
+  async reverseSplitViewTabs(request) {
+    const currentTab = request.tab;
+
+    if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
+      return;
+    }
+
+    const splitTabs = (await chrome.tabs.query(visibleTabsQueryArgs))
+      .filter((t) => t.splitViewId === currentTab.splitViewId)
+      .sort((t) => t.index);
+
+    // The split tabs are sorted based on their index.
+    // Move the higher index tab in the position of the lower index tab.
+    chrome.tabs.move([splitTabs.at(-1).id], { index: splitTabs[0].index });
+  },
+
+  async closeSplitViewTabs(request) {
+    const currentTab = request.tab;
+
+    if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
+      return;
+    }
+
+    const splitTabs = (await chrome.tabs.query(visibleTabsQueryArgs))
+      .filter((t) => t.splitViewId === currentTab.splitViewId);
+
+    chrome.tabs.remove(splitTabs.map((tab) => tab.id));
+  },
+
+  addSplitView(request) {
+    const currentTab = request.tab;
+
+    if (currentTab.splitViewId !== chrome.tabs.SPLIT_VIEW_ID_NONE) {
+      return;
+    }
+
+    chrome.tabs.create({ splitWithTabId: currentTab.id, url: getNewTabUrl() });
+  },
+
+  duplicateTabInSplitView(request) {
+    const currentTab = request.tab;
+
+    TabOperations.openUrlInSplitView({ ...request, url: currentTab.url });
+  },
+
+  separateSplitView(request) {
+    const currentTab = request.tab;
+
+    if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
+      return;
+    }
+
+    // TODO: Firefox does not support unsplit yet.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=2016928
+    chrome.tabs.unsplit(currentTab.splitViewId);
   },
 
   nextTab(request) {
@@ -622,6 +683,9 @@ const sendRequestHandlers = {
   }),
   async openUrlInNewWindow(request) {
     await TabOperations.openUrlInNewWindow(request);
+  },
+  async openUrlInSplitView(request) {
+    await TabOperations.openUrlInSplitView(request);
   },
   async openUrlInIncognito(request) {
     await chrome.windows.create({

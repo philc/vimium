@@ -209,6 +209,12 @@ const list = [
   },
 
   {
+    name: "LinkHints.activateModeToOpenInSplitView",
+    desc: "Open a link in split view",
+    group: "navigation",
+  },
+
+  {
     name: "LinkHints.activateModeWithQueue",
     desc: "Open multiple links in a new tab",
     group: "navigation",
@@ -486,6 +492,44 @@ const list = [
   {
     name: "lastTab",
     desc: "Go to the last tab",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "duplicateTabInSplitView",
+    desc: "Duplicate current tab in split view",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "reverseSplitViewTabs",
+    desc: "Reverse split view tabs",
+    group: "tabs",
+    background: true,
+  },
+
+  {
+    name: "closeSplitViewTabs",
+    desc: "Close split view tabs",
+    group: "tabs",
+    background: true,
+  },
+
+  {
+    name: "addSplitView",
+    desc: "Add split view",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "separateSplitView",
+    desc: "Separate split view",
     group: "tabs",
     background: true,
     noRepeat: true,

@@ -122,6 +122,24 @@ export async function openUrlInNewTab(request) {
   return newTab;
 }
 
+export async function openUrlInSplitView(request) {
+  const currentTab = request.tab;
+
+  if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
+    // TODO: Firefox does not support splitWithTabId yet.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=2016928
+    chrome.tabs.create({ splitWithTabId: currentTab.id, url: request.url });
+  } else {
+    const otherSplitTabs = (await chrome.tabs.query({ currentWindow: true }))
+      .filter((t) => t.splitViewId === currentTab.splitViewId && t.id != currentTab.id);
+    if (otherSplitTabs.length === 1) {
+      chrome.tabs.update(otherSplitTabs[0].id, { url: request.url });
+    } else {
+      console.warn("Split view with more than 2 tabs detected.");
+    }
+  }
+}
+
 // Open request.url in new window and switch to it.
 export async function openUrlInNewWindow(request) {
   const winConfig = {
