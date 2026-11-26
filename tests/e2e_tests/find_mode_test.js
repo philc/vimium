@@ -49,4 +49,15 @@ context("find mode", () => {
     await tab.keys("N");
     await tab.waitFor(() => isRevealed("first"));
   });
+
+  should("find text inside a stylesheet-defined display: contents element", async ({ tab }) => {
+    await tab.load(`
+      <style>.contents { display: contents; }</style>
+      <div class="contents"><p>Find this needle.</p></div>
+    `);
+    await tab.keys("/");
+    await tab.waitFor(async () => (await tab.hud())?.findMode);
+    await tab.type("needle");
+    await tab.waitFor(() => tab.evaluate(() => getSelection().toString() == "needle"));
+  });
 });

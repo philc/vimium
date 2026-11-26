@@ -520,7 +520,8 @@ const getAllTextNodes = () => {
       textNodes.push(node);
     } else if (
       node.nodeType === Node.ELEMENT_NODE &&
-      (node.checkVisibility() || node.style.display === "contents")
+      // Sites can set display: contents in a stylesheet, so check the computed value. See #4561.
+      (node.checkVisibility() || getComputedStyle(node).display === "contents")
     ) {
       const children = node.childNodes;
       for (const child of children) {
