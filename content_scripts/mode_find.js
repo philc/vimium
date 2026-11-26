@@ -461,7 +461,7 @@ const getRegexMatchIndices = (text, regex) => {
   return indices;
 };
 
-// Highlights text starting from the given startIndex with the specified length.
+// Selects and reveals the match at startIndex. Returns false if there is no match to highlight.
 const highlight = (textNode, startIndex, length) => {
   if (startIndex === -1) {
     return false;
@@ -473,7 +473,33 @@ const highlight = (textNode, startIndex, length) => {
   selection.removeAllRanges();
   selection.addRange(range);
 
-  // Ensure the highlighted element is visible within the viewport.
+  revealMatch(range, textNode.parentElement);
+  return true;
+};
+
+const revealMatch = (range, element) => {
+  // Scroll each enclosing pane until the match itself is visible within that pane.
+  // Check the window viewport last, since scrolling a pane moves the match.
+  for (let pane = element; pane && pane !== document.documentElement; pane = pane.parentElement) {
+    if (pane === document.scrollingElement || pane.scrollHeight <= pane.clientHeight) {
+      continue;
+    }
+    const canScrollVertically = /^(auto|scroll|hidden|overlay)$/.test(
+      getComputedStyle(pane).overflowY,
+    );
+    if (!canScrollVertically) {
+      continue;
+    }
+    const rect = range.getBoundingClientRect();
+    const paneTop = pane.getBoundingClientRect().top + pane.clientTop;
+    const paneBottom = paneTop + pane.clientHeight;
+    if (rect.top < paneTop || rect.bottom > paneBottom) {
+      const matchCenter = rect.top + rect.height / 2;
+      const paneCenter = paneTop + pane.clientHeight / 2;
+      pane.scrollBy({ top: matchCenter - paneCenter, behavior: "instant" });
+    }
+  }
+
   const rect = range.getBoundingClientRect();
   if (rect.top < 0 || rect.bottom > globalThis.innerHeight) {
     const screenHeight = globalThis.innerHeight;
@@ -484,8 +510,6 @@ const highlight = (textNode, startIndex, length) => {
       behavior: "instant",
     });
   }
-
-  return true;
 };
 
 const getAllTextNodes = () => {

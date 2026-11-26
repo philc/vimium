@@ -13,4 +13,40 @@ context("find mode", () => {
     await tab.keys("<enter>");
     await tab.waitFor(() => tab.evaluate(() => getSelection().toString() == "needle"));
   });
+
+  should("reveal the selected match in nested scroll panes", async ({ tab }) => {
+    await tab.load(`
+      <div id="outer" style="height: 100px; overflow: auto">
+        <div style="height: 180px"></div>
+        <div id="inner" style="height: 100px; overflow: auto">
+          <p id="first">needle</p>
+          <div style="height: 180px"></div>
+          <p id="second">needle</p>
+        </div>
+      </div>
+    `);
+    const isRevealed = (id) => {
+      return tab.evaluate((id) => {
+        const selection = getSelection();
+        if (selection.anchorNode?.parentElement.id !== id) {
+          return false;
+        }
+        const match = selection.getRangeAt(0).getBoundingClientRect();
+        return ["outer", "inner"].every((pane) => {
+          const bounds = document.getElementById(pane).getBoundingClientRect();
+          return match.top >= bounds.top && match.bottom <= bounds.bottom;
+        });
+      }, id);
+    };
+
+    await tab.keys("/");
+    await tab.waitFor(async () => (await tab.hud())?.findMode);
+    await tab.type("needle");
+    await tab.keys("<enter>");
+    await tab.waitFor(() => isRevealed("first"));
+    await tab.keys("n");
+    await tab.waitFor(() => isRevealed("second"));
+    await tab.keys("N");
+    await tab.waitFor(() => isRevealed("first"));
+  });
 });
