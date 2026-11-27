@@ -24,6 +24,7 @@ const HUD = {
     const handlers = {
       hideFindMode: this.hideFindMode,
       search: this.search,
+      findInputFocused: this.findInputFocused,
       unfocusIfFocused: this.unfocusIfFocused,
       pasteResponse: this.pasteResponse,
       showClipboardUnavailableMessage: this.showClipboardUnavailableMessage,
@@ -94,6 +95,10 @@ const HUD = {
     await this.init();
     this.hudUI.show({ name: "showFindMode", reverse: findMode?.options.reverse });
     this.tween.fade(1.0, 150);
+  },
+
+  findInputFocused() {
+    this.findMode?.onInputFocused();
   },
 
   search(data) {

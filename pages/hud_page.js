@@ -165,6 +165,7 @@ export const handlers = {
         globalThis.focus();
       }
       inputEl.focus();
+      UIComponentMessenger.postMessage({ name: "findInputFocused" });
     });
 
     findMode = {
