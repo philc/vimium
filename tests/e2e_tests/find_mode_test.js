@@ -72,6 +72,22 @@ context("find mode", () => {
     await tab.waitFor(async () => (await tab.hud()).text.includes("(2 Matches)"));
   });
 
+  should("keep the highlights after Enter, and clear them on a click", async ({ tab }) => {
+    await tab.load(`<p>needle needle needle</p>`);
+    const highlighted = () =>
+      tab.evaluate(() => CSS.highlights.get("vimium-find-match")?.size ?? 0);
+    await tab.keys("/");
+    await tab.waitFor(async () => (await tab.hud())?.findMode);
+    await tab.type("needle");
+    await tab.waitFor(async () => (await highlighted()) == 2);
+    await tab.keys("<enter>");
+    await tab.keys("n");
+    await tab.waitFor(() => tab.evaluate(() => getSelection().anchorOffset == 7));
+    assert.equal(2, await highlighted());
+    await tab.page.mouse.click(5, 5);
+    await tab.waitFor(async () => (await highlighted()) == 0);
+  });
+
   should("search backward with the reverse option", async ({ tab }) => {
     await tab.harness.setSettings({ keyMappings: "map ? enterFindMode reverse" });
     await tab.load(`
