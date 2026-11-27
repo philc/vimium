@@ -140,7 +140,6 @@ const HUD = {
   hideFindMode({ exitEventIsEnter, exitEventIsEscape }) {
     let postExit;
     this.findMode.checkReturnToViewPort();
-    this.findMode.selectActiveMatch();
 
     // An element won't receive a focus event if the search landed on it while we were in the HUD
     // iframe. To end up with the correct modes active, we create a focus/blur event manually after

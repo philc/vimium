@@ -156,22 +156,7 @@ class FindMode extends Mode {
     // find the right match as the user adds matching characters, or removes previously-matched
     // characters. See #1434.
     this.restoreSelection();
-    FindMode.query.hasResults = FindMode.execute(
-      FindMode.getActiveMatchText(),
-      Object.assign({ collapseSelection: true }, options),
-    );
-  }
-
-  // While the user types, the selection is a caret at the start of the active match (see
-  // `highlight`). When find mode closes, this selects the whole match, for Enter, Escape and
-  // focusing a found link.
-  selectActiveMatch() {
-    const range = matchHighlights.activeRange;
-    if (range) {
-      const selection = getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range.cloneRange());
-    }
+    FindMode.query.hasResults = FindMode.execute(FindMode.getActiveMatchText(), options);
   }
 
   static updateQuery(query) {
@@ -300,7 +285,9 @@ class FindMode extends Mode {
 
     const match = this.query.matches?.[this.query.activeMatchIndex];
     if (match) {
-      result = highlight(match, options.collapseSelection);
+      // Find leaves a caret at the match, so it doesn't hide the match's highlight. Visual mode's n
+      // and N, which don't highlight, select the whole match.
+      result = highlight(match, options.colorSelection);
     }
 
     if (options.colorSelection) {
@@ -429,10 +416,9 @@ const selectFoundInputElement = function () {
 // Selects and reveals a match from findMatches. Returns false if the page's text has changed since
 // findMatches ran, so that one of the match's offsets is past the end of its text node.
 //
-// If `collapse`, this selects only a caret at the match's start. The browser paints the selection
-// over custom highlights, and while the user types in the HUD, it paints the page's unfocused
-// selection in a dim color which tints the active match's orange highlight brown. A caret paints
-// nothing.
+// If `collapse`, this selects only a caret at the match's start, as Vim's cursor lands there.
+// The browser paints the selection over custom highlights, which would hide the active match's
+// orange highlight. A caret paints nothing.
 const highlight = (match, collapse) => {
   const range = createMatchRange(match);
   if (!range) {
@@ -463,8 +449,7 @@ const createMatchRange = (match) => {
 };
 
 // Paints the matches of the query with the CSS Custom Highlight API, which styles Ranges without
-// changing the page's DOM. vimium.css styles the two highlights. After find mode closes, the active
-// match is also the selection, which the browser paints over its orange highlight.
+// changing the page's DOM. vimium.css styles the two highlights.
 const matchHighlights = {
   // Painting many highlights is slow on a large page, so this paints at most this many matches:
   // half before the active match and half after, or more on one side when the other side reaches
@@ -496,16 +481,15 @@ const matchHighlights = {
     CSS.highlights.delete("vimium-find-match");
   },
 
-  // A selection the user makes, such as with a click, ends the search, as Escape does. Selecting
-  // the active match, or a caret at its start, is find's own change, so it doesn't.
+  // A selection the user makes, such as with a click, ends the search, as Escape does. A caret at
+  // the start of the active match is find's own change, so it doesn't.
   onSelectionChange: forTrusted(() => {
     const selection = globalThis.getSelection();
     const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
     const active = matchHighlights.activeRange;
-    const isActiveMatch = range && active &&
-      range.compareBoundaryPoints(Range.START_TO_START, active) === 0 &&
-      (range.collapsed || range.compareBoundaryPoints(Range.END_TO_END, active) === 0);
-    if (!isActiveMatch) {
+    const isFindsCaret = range && active &&
+      range.collapsed && range.compareBoundaryPoints(Range.START_TO_START, active) === 0;
+    if (!isFindsCaret) {
       matchHighlights.clear();
     }
   }),
