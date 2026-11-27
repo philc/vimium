@@ -5,13 +5,15 @@ context("find mode", () => {
   setup(e2e.setup);
   teardown(e2e.teardown);
 
-  should("select the matching text", async ({ tab }) => {
+  should("leave a caret at the start of the match, as Vim does", async ({ tab }) => {
     await tab.load(`<p>haystack haystack needle haystack</p>`);
     await tab.keys("/");
     await tab.waitFor(async () => (await tab.hud())?.findMode);
     await tab.type("needle");
     await tab.keys("<enter>");
-    await tab.waitFor(() => tab.evaluate(() => getSelection().toString() == "needle"));
+    await tab.waitFor(() =>
+      tab.evaluate(() => getSelection().isCollapsed && getSelection().anchorOffset == 18)
+    );
   });
 
   should("reveal the selected match in nested scroll panes", async ({ tab }) => {
