@@ -9,7 +9,8 @@
   (https://github.com/philc/vimium/issues/4623)
 * Find mode: add a `reverse` option to search backward, e.g. `map ? enterFindMode reverse`.
   (https://github.com/philc/vimium/issues/4912)
-* Find mode is much faster on large pages: 85–91% faster in Chrome, and 88–94% faster in Firefox.
+* Find mode is much faster on large pages. In Firefox, each keystroke is 91–94% faster. In Chrome,
+  the first keystroke of a search is 43–48% faster, and later keystrokes are 84–90% faster.
   (https://github.com/philc/vimium/issues/4546)
 * Find mode no longer matches text which is hidden for screen readers.
   (https://github.com/philc/vimium/issues/4584)
