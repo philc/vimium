@@ -662,6 +662,13 @@ const textRunCache = {
       attributes: true,
       attributeOldValue: true,
     });
+    // Build the runs now, while the user starts typing, so the first keystroke needn't wait for
+    // them. The timeout lets the HUD open first.
+    setTimeout(() => {
+      if (this.observer) {
+        this.get();
+      }
+    }, 0);
   },
 
   stop() {
