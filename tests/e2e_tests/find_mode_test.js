@@ -58,7 +58,9 @@ context("find mode", () => {
     await tab.keys("/");
     await tab.waitFor(async () => (await tab.hud())?.findMode);
     await tab.type("needle");
-    await tab.waitFor(() => tab.evaluate(() => getSelection().toString() == "needle"));
+    const activeMatch = () =>
+      tab.evaluate(() => [...CSS.highlights.get("vimium-find-active") ?? []].join());
+    await tab.waitFor(async () => (await activeMatch()) == "needle");
   });
 
   should("find text the page adds while find mode is open", async ({ tab }) => {
