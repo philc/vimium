@@ -170,8 +170,10 @@ class FindMode extends Mode {
     // presence of escape sequences. '\' is the escape character and needs to be escaped itself to
     // be used as a normal character. here we grep for the relevant escape sequences.
     this.query.isRegex = Settings.get("regexFindMode");
+    // As in Vim, \c ignores case and \C matches it, overriding smartcase.
+    let ignoreCase;
     this.query.parsedQuery = this.query.rawQuery.replace(
-      /(\\{1,2})([rRI]?)/g,
+      /(\\{1,2})([rRcC]?)/g,
       (match, slashes, flag) => {
         if ((flag === "") || (slashes.length !== 1)) {
           return match;
@@ -184,13 +186,19 @@ class FindMode extends Mode {
           case "R":
             this.query.isRegex = false;
             break;
+          case "c":
+            ignoreCase = true;
+            break;
+          case "C":
+            ignoreCase = false;
+            break;
         }
         return "";
       },
     );
 
     // Implement smartcase.
-    this.query.ignoreCase = !Utils.hasUpperCase(this.query.parsedQuery);
+    this.query.ignoreCase = ignoreCase ?? !Utils.hasUpperCase(this.query.parsedQuery);
 
     const regexPattern = this.query.isRegex
       ? this.query.parsedQuery
