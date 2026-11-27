@@ -156,7 +156,9 @@ function firstScrollableElement(element = null) {
     const children = Array.from(element.children)
       .map((c) => ({ "element": c, "rect": DomUtils.getVisibleClientRect(c) }))
       .filter((child) => child.rect); // Filter out non-visible elements.
-    children.map((child) => child.area = child.rect.width * child.rect.height);
+    for (const child of children) {
+      child.area = child.rect.width * child.rect.height;
+    }
     // Largest to smallest by visible area.
     for (child of children.sort((a, b) => b.area - a.area)) {
       const el = firstScrollableElement(child.element);
