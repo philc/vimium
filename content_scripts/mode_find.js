@@ -154,10 +154,7 @@ class FindMode extends Mode {
     // find the right match as the user adds matching characters, or removes previously-matched
     // characters. See #1434.
     this.restoreSelection();
-    query = FindMode.query.isRegex
-      ? FindMode.getQueryFromRegexMatches()
-      : FindMode.query.parsedQuery;
-    FindMode.query.hasResults = FindMode.execute(query, options);
+    FindMode.query.hasResults = FindMode.execute(FindMode.getActiveMatchText(), options);
   }
 
   static updateQuery(query) {
@@ -204,8 +201,7 @@ class FindMode extends Mode {
       ? this.query.parsedQuery
       : Utils.escapeRegexSpecialCharacters(this.query.parsedQuery);
 
-    // Grep for all matches in every text node,
-    // so we can show a the number of results.
+    // Find every match up front, so we can show the number of results.
     try {
       pattern = new RegExp(regexPattern, `g${this.query.ignoreCase ? "i" : ""}`);
     } catch {
@@ -213,98 +209,46 @@ class FindMode extends Mode {
       return;
     }
 
-    const textNodes = getAllTextNodes();
-    const matchedNodes = textNodes.filter((node) => {
-      return node.textContent.match(pattern);
-    });
-    const regexMatches = matchedNodes.map((node) => node.textContent.match(pattern));
-    this.query.regexMatches = regexMatches;
-    this.query.regexPattern = pattern;
-    this.query.regexMatchedNodes = matchedNodes;
-    this.updateActiveRegexIndices();
-
-    return this.query.matchCount = regexMatches != null ? regexMatches.flat().length : null;
+    this.query.matches = findMatches(pattern);
+    this.selectMatchAtSelection();
+    return this.query.matchCount = this.query.matches.length;
   }
 
-  // set activeRegexIndices near the latest selection
-  static updateActiveRegexIndices() {
-    let activeNodeIndex = -1;
-    const matchedNodes = this.query.regexMatchedNodes;
+  // Makes the first match which starts at or after the selection the active one, wrapping around to
+  // the page's first match if there is none.
+  static selectMatchAtSelection() {
     const selection = globalThis.getSelection();
-    if (selection.rangeCount > 0) {
-      activeNodeIndex = matchedNodes.indexOf(selection.anchorNode);
-
-      if (activeNodeIndex === -1) {
-        activeNodeIndex = this.query.regexMatchedNodes.findIndex((node) => {
-          const range = selection.getRangeAt(0);
-
-          if (range) {
-            const sourceRange = document.createRange();
-            sourceRange.setStart(node, 0);
-            return range.compareBoundaryPoints(Range.START_TO_START, sourceRange) <= 0;
-          } else {
-            return false;
-          }
-        });
-      }
-    }
-    this.query.activeRegexIndices = [Math.max(activeNodeIndex, 0), 0];
+    const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+    const index = range ? countMatchesBefore(this.query.matches, range) : 0;
+    this.query.activeMatchIndex = index < this.query.matches.length ? index : 0;
   }
 
-  // Sets activeRegexIndices to the last match which starts before `range`, wrapping around to the
-  // page's last match if there is none.
+  // Makes the last match which starts before `range` the active one, wrapping around to the page's
+  // last match if there is none.
   static selectLastMatchBefore(range) {
-    const matchedNodes = this.query.regexMatchedNodes;
-    if (!matchedNodes?.length) {
+    const matches = this.query.matches;
+    if (!matches?.length) {
       return;
     }
-    const lastRow = matchedNodes.length - 1;
-    let indices = [lastRow, this.query.regexMatches[lastRow].length - 1];
-    // A copy, so this doesn't move the shared pattern's lastIndex.
-    const pattern = new RegExp(this.query.regexPattern);
-    matchedNodes.forEach((node, row) => {
-      getRegexMatchIndices(node.textContent, pattern).forEach((startIndex, col) => {
-        if (range.comparePoint(node, startIndex) < 0) {
-          indices = [row, col];
-        }
-      });
-    });
-    this.query.activeRegexIndices = indices;
+    const index = countMatchesBefore(matches, range) - 1;
+    this.query.activeMatchIndex = index >= 0 ? index : matches.length - 1;
   }
 
-  static getQueryFromRegexMatches() {
-    // find()ing an empty query always returns false
-    if (!this.query.regexMatches?.length) {
-      return "";
-    }
-    const [row, col] = this.query.activeRegexIndices;
-    return this.query.regexMatches[row][col];
+  // Returns "" if there are no matches.
+  static getActiveMatchText() {
+    return this.query.matches?.[this.query.activeMatchIndex]?.text ?? "";
   }
 
-  static getNextQueryFromRegexMatches(backwards) {
-    // find()ing an empty query always returns false
-    if (!this.query.regexMatches?.length) {
+  // Moves to the next match, or the previous one if `backwards`, and returns its text. Returns ""
+  // if there are no matches, which findNext reports as having no query.
+  static selectNextMatch(backwards) {
+    const count = this.query.matches?.length;
+    if (!count) {
       return "";
     }
-    const stepSize = backwards ? -1 : 1;
-
-    let [row, col] = this.query.activeRegexIndices;
-    const numRows = this.query.regexMatches.length;
-    col += stepSize;
-    while (col < 0 || col >= this.query.regexMatches[row].length) {
-      if (col < 0) {
-        row += numRows - 1;
-        row %= numRows;
-        col += this.query.regexMatches[row].length;
-      } else {
-        col -= this.query.regexMatches[row].length;
-        row += 1;
-        row %= numRows;
-      }
-    }
-    this.query.activeRegexIndices = [row, col];
-
-    return this.query.regexMatches[row][col];
+    const step = backwards ? -1 : 1;
+    this.query.activeMatchIndex = (this.query.activeMatchIndex + step + count) % count;
+    return this.getActiveMatchText();
   }
 
   // Returns null if no search has been performed yet.
@@ -318,7 +262,7 @@ class FindMode extends Mode {
       this.updateQuery(mostRecentQuery);
     }
 
-    return this.getNextQueryFromRegexMatches(backwards);
+    return this.selectNextMatch(backwards);
   }
 
   static saveQuery() {
@@ -343,15 +287,9 @@ class FindMode extends Mode {
       document.removeEventListener("selectionchange", this.restoreDefaultSelectionHighlight, true);
     }
 
-    if (this.query.regexMatches?.length) {
-      const [row, col] = this.query.activeRegexIndices;
-      const node = this.query.regexMatchedNodes[row];
-      const text = node.textContent;
-      const matchIndices = getRegexMatchIndices(text, this.query.regexPattern);
-      if (matchIndices.length > 0) {
-        const startIndex = matchIndices[col];
-        result = highlight(node, startIndex, query.length);
-      }
+    const match = this.query.matches?.[this.query.activeMatchIndex];
+    if (match) {
+      result = highlight(match);
     }
 
     // window.find focuses the |window| that it is called on. This gives us an opportunity to
@@ -484,35 +422,219 @@ const selectFoundInputElement = function () {
   }
 };
 
-// Retrieve the starting indices of all matches of the queried pattern within the given text.
-const getRegexMatchIndices = (text, regex) => {
-  const indices = [];
-  let match;
-
-  while ((match = regex.exec(text)) !== null) {
-    if (!match[0]) {
-      break;
-    }
-    indices.push(match.index);
-  }
-
-  return indices;
-};
-
-// Selects and reveals the match at startIndex. Returns false if there is no match to highlight.
-const highlight = (textNode, startIndex, length) => {
-  if (startIndex === -1) {
+// Selects and reveals a match from findMatches. Returns false if the page has changed so that the
+// match's offsets are no longer in its nodes.
+const highlight = (match) => {
+  const range = document.createRange();
+  try {
+    range.setStart(match.startNode, match.startOffset);
+    range.setEnd(match.endNode, match.endOffset);
+  } catch {
     return false;
   }
   const selection = globalThis.getSelection();
-  const range = document.createRange();
-  range.setStart(textNode, startIndex);
-  range.setEnd(textNode, startIndex + length);
   selection.removeAllRanges();
   selection.addRange(range);
 
-  revealMatch(range, textNode.parentElement);
+  revealMatch(range, match.startNode.parentElement);
   return true;
+};
+
+// Returns how many of `matches`, which are in document order, start before `range` starts. This is
+// a binary search, so it compares only a few matches with `range`.
+const countMatchesBefore = (matches, range) => {
+  let low = 0;
+  let high = matches.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (range.comparePoint(matches[mid].startNode, matches[mid].startOffset) < 0) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+  return low;
+};
+
+// Returns every match of `pattern`, a global RegExp, in the page's displayed text, in document
+// order. Each match is { text, startNode, startOffset, endNode, endOffset }. A match can span
+// several text nodes, such as a phrase split across syntax-highlighting spans (#4623), but not a
+// block boundary. This is how Chrome and Firefox's own find works.
+const findMatches = (pattern) => {
+  const matches = [];
+  for (const run of getTextRuns()) {
+    for (const match of run.text.matchAll(pattern)) {
+      if (!match[0]) {
+        continue;
+      }
+      const start = match.index;
+      const end = start + match[0].length;
+      const startPiece = findPiece(run.pieces, start, false);
+      const endPiece = findPiece(run.pieces, end, true);
+      matches.push({
+        text: match[0],
+        startNode: startPiece.node,
+        startOffset: nodeOffset(startPiece, start, false),
+        endNode: endPiece.node,
+        endOffset: nodeOffset(endPiece, end, true),
+      });
+    }
+  }
+  return matches;
+};
+
+// Returns the piece of a text run which holds the character at `offset`, or, if `isEnd`, the
+// character just before it. This is a binary search over the pieces' start offsets.
+const findPiece = (pieces, offset, isEnd) => {
+  let low = 0;
+  let high = pieces.length - 1;
+  while (low < high) {
+    const mid = (low + high + 1) >> 1;
+    const start = pieces[mid].start;
+    if (isEnd ? start < offset : start <= offset) {
+      low = mid;
+    } else {
+      high = mid - 1;
+    }
+  }
+  return pieces[low];
+};
+
+// Maps an offset in a text run to an offset in the text node of `piece`, which holds it.
+const nodeOffset = (piece, runOffset, isEnd) => {
+  const offset = runOffset - piece.start;
+  if (!piece.offsets) {
+    return offset;
+  }
+  return isEnd ? piece.offsets[offset - 1] + 1 : piece.offsets[offset];
+};
+
+// How a text node's white-space style treats its whitespace.
+const collapseAll = 0;
+const preserveBreaks = 1;
+const preserveAll = 2;
+
+const whitespaceModes = {
+  // Values of white-space-collapse.
+  "collapse": collapseAll,
+  "preserve-breaks": preserveBreaks,
+  // Values of white-space, for Firefox before 124, which lacks white-space-collapse.
+  "normal": collapseAll,
+  "nowrap": collapseAll,
+  "pre-line": preserveBreaks,
+};
+
+const getWhitespaceMode = (style) =>
+  whitespaceModes[style.whiteSpaceCollapse ?? style.whiteSpace] ?? preserveAll;
+
+// Collapses each run of whitespace in `text` to one space, as the page renders it. Returns the
+// collapsed text, and the offset in `text` of each of its characters.
+const collapseWhitespace = (text, mode, afterSpace) => {
+  let collapsed = "";
+  const offsets = [];
+  for (let i = 0; i < text.length; i++) {
+    let char = text[i];
+    const isSpace = char === " " || char === "\t" || char === "\n" || char === "\r" ||
+      char === "\f";
+    if (isSpace && !(mode === preserveBreaks && char === "\n")) {
+      if (afterSpace) {
+        continue;
+      }
+      char = " ";
+    }
+    afterSpace = isSpace;
+    collapsed += char;
+    offsets.push(i);
+  }
+  return { collapsed, offsets };
+};
+
+// Splits the page's displayed text into runs, which find matches within. As in Chrome, a run ends
+// at a block boundary, at an inline-block, and at a <br>. Each run is { text, pieces }, where each
+// piece is { node, start, offsets }: the text node a part of the run came from, where that part
+// starts in the run, and, if whitespace was collapsed, the node offset of each of its characters.
+//
+// This uses a TreeWalker rather than recursing through childNodes, because in Firefox, each DOM
+// access from a content script is expensive. Recursing made each keystroke slow on large pages.
+// See #4546.
+const getTextRuns = () => {
+  // For each element: whether it's displayed, the block its text belongs to, and how it treats
+  // whitespace.
+  const elementInfo = new Map();
+  const getInfo = (element) => {
+    let info = elementInfo.get(element);
+    if (info === undefined) {
+      const style = getComputedStyle(element);
+      const parent = element.parentElement;
+      const parentInfo = parent ? getInfo(parent) : null;
+      const isContents = style.display === "contents";
+      info = {
+        // An element with display: contents has no box, so checkVisibility() is false for it, but
+        // its children are shown if its parent is. Sites can set display: contents in a
+        // stylesheet, so check the computed value. See #4561.
+        displayed: element.checkVisibility() || (isContents && (parentInfo?.displayed ?? true)),
+        block: (style.display === "inline" || isContents) && parentInfo
+          ? parentInfo.block
+          : element,
+        whitespace: getWhitespaceMode(style),
+      };
+      elementInfo.set(element, info);
+    }
+    return info;
+  };
+
+  const runs = [];
+  let run = null;
+  let block = null;
+  // Whether the run so far ends in collapsible whitespace, so that leading whitespace in the next
+  // text node collapses into it.
+  let afterSpace;
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+  );
+  let node;
+  while ((node = walker.nextNode())) {
+    if (node.nodeType !== Node.TEXT_NODE) {
+      if (node.nodeName === "BR") {
+        block = null;
+      }
+      continue;
+    }
+    const info = getInfo(node.parentElement);
+    if (!info.displayed) {
+      continue;
+    }
+    if (info.block !== block) {
+      block = info.block;
+      run = { parts: [], pieces: [], length: 0 };
+      runs.push(run);
+      afterSpace = true;
+    }
+
+    let text = node.data;
+    let offsets = null;
+    if (info.whitespace === preserveAll) {
+      afterSpace = false;
+    } else {
+      if (/[\t\n\r\f]| {2}/.test(text) || (afterSpace && text[0] === " ")) {
+        ({ collapsed: text, offsets } = collapseWhitespace(text, info.whitespace, afterSpace));
+      }
+      if (text.length === 0) {
+        continue;
+      }
+      afterSpace = text.endsWith(" ") || text.endsWith("\n");
+    }
+    // Chrome matches a typed space against a non-breaking one.
+    text = text.replaceAll(" ", " ");
+    run.pieces.push({ node, start: run.length, offsets });
+    run.parts.push(text);
+    run.length += text.length;
+  }
+  for (const run of runs) {
+    run.text = run.parts.join("");
+  }
+  return runs;
 };
 
 const revealMatch = (range, element) => {
@@ -548,40 +670,6 @@ const revealMatch = (range, element) => {
       behavior: "instant",
     });
   }
-};
-
-// Returns the text nodes in the body which aren't hidden by display: none.
-// This uses a TreeWalker rather than recursing through childNodes, because in Firefox, each DOM
-// access from a content script is expensive. Recursing made each keystroke slow on large pages.
-// See #4546.
-const getAllTextNodes = () => {
-  const displayed = new Map();
-  const elementIsDisplayed = (element) => {
-    if (!element) {
-      return true;
-    }
-    let result = displayed.get(element);
-    if (result === undefined) {
-      // An element with display: contents has no box, so checkVisibility() is false for it, but
-      // its children are shown if its parent is. Sites can set display: contents in a stylesheet,
-      // so check the computed value. See #4561.
-      result = element.checkVisibility() ||
-        (getComputedStyle(element).display === "contents" &&
-          elementIsDisplayed(element.parentElement));
-      displayed.set(element, result);
-    }
-    return result;
-  };
-
-  const textNodes = [];
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  let node;
-  while ((node = walker.nextNode())) {
-    if (elementIsDisplayed(node.parentElement)) {
-      textNodes.push(node);
-    }
-  }
-  return textNodes;
 };
 
 globalThis.PostFindMode = PostFindMode;
