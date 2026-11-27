@@ -118,10 +118,12 @@ class FindMode extends Mode {
       suppressAllKeyboardEvents: true,
     }));
 
+    textRunCache.start();
     HUD.showFindMode(this);
   }
 
   exit(event) {
+    textRunCache.stop();
     HUD.unfocusIfFocused();
     super.exit();
     if (event) {
@@ -462,7 +464,7 @@ const countMatchesBefore = (matches, range) => {
 // block boundary. This is how Chrome and Firefox's own find works.
 const findMatches = (pattern) => {
   const matches = [];
-  for (const run of getTextRuns()) {
+  for (const run of textRunCache.get()) {
     for (const match of run.text.matchAll(pattern)) {
       if (!match[0]) {
         continue;
@@ -637,6 +639,55 @@ const getTextRuns = () => {
     run.text = run.parts.join("");
   }
   return runs;
+};
+
+// Keeps the page's text runs while find mode is open, so each keystroke only has to run the regex.
+// Building the runs is the slow part of a search on a large page, especially in Firefox. Any change
+// to the page clears the cache.
+const textRunCache = {
+  runs: null,
+  observer: null,
+
+  start() {
+    this.stop();
+    this.observer = new MutationObserver((records) => {
+      if (!records.every(isFindModeClassChange)) {
+        this.runs = null;
+      }
+    });
+    this.observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeOldValue: true,
+    });
+  },
+
+  stop() {
+    this.observer?.disconnect();
+    this.observer = null;
+    this.runs = null;
+  },
+
+  get() {
+    if (!this.observer) {
+      return getTextRuns();
+    }
+    this.runs ??= getTextRuns();
+    return this.runs;
+  },
+};
+
+// Whether a mutation is only find mode adding or removing its class on the body, which doesn't
+// change the page's text.
+const isFindModeClassChange = (record) => {
+  if (record.target !== document.body || record.attributeName !== "class") {
+    return false;
+  }
+  const otherClasses = (classes) =>
+    (classes ?? "").split(/\s+/).filter((name) => name && name !== "vimium-find-mode").join(" ");
+  return otherClasses(record.oldValue) === otherClasses(document.body.className);
 };
 
 const revealMatch = (range, element) => {

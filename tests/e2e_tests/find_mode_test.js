@@ -61,6 +61,17 @@ context("find mode", () => {
     await tab.waitFor(() => tab.evaluate(() => getSelection().toString() == "needle"));
   });
 
+  should("find text the page adds while find mode is open", async ({ tab }) => {
+    await tab.load(`<p>needle</p>`);
+    await tab.keys("/");
+    await tab.waitFor(async () => (await tab.hud())?.findMode);
+    await tab.type("need");
+    await tab.waitFor(async () => (await tab.hud()).text.includes("(1 Match)"));
+    await tab.evaluate(() => document.body.insertAdjacentHTML("beforeend", "<p>needle</p>"));
+    await tab.type("l");
+    await tab.waitFor(async () => (await tab.hud()).text.includes("(2 Matches)"));
+  });
+
   should("search backward with the reverse option", async ({ tab }) => {
     await tab.harness.setSettings({ keyMappings: "map ? enterFindMode reverse" });
     await tab.load(`
