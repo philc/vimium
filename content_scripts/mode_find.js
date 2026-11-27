@@ -594,6 +594,20 @@ const collapseWhitespace = (text, mode, afterSpace) => {
   return { collapsed, offsets };
 };
 
+// Whether the element is hidden from sight but not from screen readers, by being clipped to at most
+// 1px. Jira labels every board card and button this way, and Find kept landing on those labels. See
+// #4584. Only the element's own box is checked: text inside a block child of such an element is
+// still found.
+const isScreenReaderOnly = (element, style) => {
+  // Check the overflow first, since its style is already computed, and it rules out most elements
+  // before reading their size.
+  const overflow = style.overflow;
+  if (overflow !== "hidden" && overflow !== "clip") {
+    return false;
+  }
+  return element.offsetWidth <= 1 && element.offsetHeight <= 1;
+};
+
 // Splits the page's displayed text into runs, which find matches within. As in Chrome, a run ends
 // at a block boundary, at an inline-block, and at a <br>. Each run is { text, pieces }, where each
 // piece is { node, start, offsets }: the text node a part of the run came from, where that part
@@ -613,12 +627,16 @@ const getTextRuns = () => {
       const parent = element.parentElement;
       const isInline = display === "inline" || display === "contents";
       const parentInfo = isInline && parent ? getInfo(parent) : null;
+      const isParentDisplayed = parentInfo?.displayed ?? true;
+      // An element with display: contents has no box, so checkVisibility() is false for it, but
+      // its children are shown if its parent is. Sites can set display: contents in a stylesheet,
+      // so check the computed value. See #4561.
+      const isVisible = element.checkVisibility() || (display === "contents" && isParentDisplayed);
       info = {
-        // An element with display: contents has no box, so checkVisibility() is false for it, but
-        // its children are shown if its parent is. Sites can set display: contents in a
-        // stylesheet, so check the computed value. See #4561.
-        displayed: element.checkVisibility() ||
-          (display === "contents" && (parentInfo?.displayed ?? true)),
+        // checkVisibility() is true for text inside a screen-reader-only element, so an inline
+        // element also takes its parent's verdict. Overflow doesn't clip an inline element.
+        displayed: isVisible && isParentDisplayed &&
+          (isInline || !isScreenReaderOnly(element, style)),
         block: parentInfo?.block ?? element,
         style,
         whitespace: null,
