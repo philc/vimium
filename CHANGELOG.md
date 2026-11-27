@@ -1,3 +1,9 @@
+2.5.0 (unreleased)
+
+* Find mode: add Vim's `\c` and `\C` to ignore or match case, overriding smartcase. See the
+  [wiki](https://github.com/philc/vimium/wiki/Find-Mode).
+  (https://github.com/philc/vimium/issues/4849)
+
 2.4.1, 2.4.2 (2026-03-07)
 
 * Fix issue where existing users were mistakenly opted-in to
