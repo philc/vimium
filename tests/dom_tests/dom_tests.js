@@ -1482,6 +1482,18 @@ context("PostFindMode", () => {
     sendKeyboardEvent("Escape", "keydown");
     assert.isTrue(postFindMode.modeIsActive);
   });
+
+  should("exit once the user moves find's caret in an editable element", () => {
+    document.getElementById("test-div").innerHTML = "<div contenteditable>needle</div>";
+    const text = document.querySelector("[contenteditable]").firstChild;
+    getSelection().collapse(text, 0);
+    postFindMode = new PostFindMode();
+    sendKeyboardEvent("a", "keyup");
+    assert.isTrue(postFindMode.modeIsActive);
+    getSelection().collapse(text, 1);
+    sendKeyboardEvent("ArrowRight", "keyup");
+    assert.isFalse(postFindMode.modeIsActive);
+  });
 });
 
 context("LinkHintsMode confirmation", () => {
