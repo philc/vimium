@@ -11,6 +11,7 @@
   },
   "lint": {
     "exclude": [
+      ".worktrees/",
       "tests/vendor/"
     ],
     "plugins": [
