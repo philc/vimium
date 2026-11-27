@@ -92,8 +92,20 @@ Vimium is written in Javascript. To install Vimium from source:
 
 **On Firefox:**
 
+Run `./make.js run-firefox-dev`.
+
+* It launches Firefox with a separate dev profile, and installs Vimium as a temporary add-on.
+  * The profile is in `~/.local/share/vimium/firefox-dev-profile`, and persists across runs.
+    * It's outside the repo, so `git clean -x` doesn't delete logins saved in it.
+    * All worktrees share it.
+  * Extensions you install in it from addons.mozilla.org stay installed.
+* Run it again to reload Vimium after changing its code.
+  * Firefox removes temporary add-ons when it quits, so running it again also reinstalls Vimium
+    after a restart.
 * manifest.json has keys for both Chrome and Firefox, so the same directory loads in both.
   * `./make.js package` removes the other browser's keys from each store build.
+
+You can also load Vimium by hand:
 
 1. Open Firefox
 1. Enter "about:debugging" in the URL bar

@@ -11,6 +11,7 @@ import * as shoulda from "./tests/vendor/shoulda.js";
 import JSON5 from "json5";
 import * as denoDom from "@b-fuze/deno-dom";
 import * as fileServer from "@std/http/file-server";
+import * as firefoxDev from "./build_scripts/firefox_dev.js";
 
 const projectPath = new URL(".", import.meta.url).pathname;
 
@@ -494,6 +495,13 @@ drake.desc("Build a static version of command_listing.html, to be hosted on vimi
 drake.task("write-command-listing", [], async () => {
   // Run this script in a separate shell so it doesn't pollute our JS environment.
   await shell("./build_scripts/write_command_listing_page.js", []);
+});
+
+drake.desc(
+  "Launches Firefox with a dev profile and Vimium installed, or reloads Vimium if it's running",
+);
+drake.task("run-firefox-dev", [], async () => {
+  await firefoxDev.run(projectPath);
 });
 
 drake.desc("Enable the git hooks in .githooks, e.g. the pre-push hook which runs `check`");
