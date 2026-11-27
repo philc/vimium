@@ -1279,6 +1279,21 @@ context("FindMode.updateQuery", () => {
     const ids = FindMode.query.matches.map((match) => match.startNode.parentElement.id);
     assert.equal(["shown", "contents"], ids);
   });
+
+  should("skip text that only screen readers can see", () => {
+    stubSettings("regexFindMode", false);
+    // Jira labels its cards and buttons with text clipped to 1px, like the first two elements.
+    document.getElementById("test-div").innerHTML = `
+      <style>.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; }</style>
+      <span class="sr-only">needle</span>
+      <div class="sr-only"><b>needle</b></div>
+      <p id="shown">needle</p>
+    `;
+    FindMode.query = { rawQuery: "" };
+    FindMode.updateQuery("needle");
+    const ids = FindMode.query.matches.map((match) => match.startNode.parentElement.id);
+    assert.equal(["shown"], ids);
+  });
 });
 
 context("FindMode.updateQuery across nodes", () => {
