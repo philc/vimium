@@ -92,11 +92,8 @@ Vimium is written in Javascript. To install Vimium from source:
 
 **On Firefox:**
 
-Firefox needs a modified version of the manifest.json that's used for Chrome. To generate this, run
-
-`./make.js write-firefox-manifest`
-
-After that:
+* manifest.json has keys for both Chrome and Firefox, so the same directory loads in both.
+  * `./make.js package` removes the other browser's keys from each store build.
 
 1. Open Firefox
 1. Enter "about:debugging" in the URL bar
