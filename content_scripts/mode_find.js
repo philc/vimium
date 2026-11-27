@@ -8,7 +8,7 @@ class SuppressPrintable extends Mode {
     super.init(options);
     const handler = (event) =>
       KeyboardUtils.isPrintable(event) ? this.suppressEvent : this.continueBubbling;
-    const initialType = globalThis.getSelection().type;
+    const initialEnds = selectionEnds();
 
     // We use unshift here, so we see events after normal mode, so we only see unmapped keys.
     this.unshift({
@@ -16,16 +16,23 @@ class SuppressPrintable extends Mode {
       keydown: handler,
       keypress: handler,
       keyup: () => {
-        // If the selection type has changed (usually, no longer "Range"), then the user is
+        // If the selection has changed (usually, the user moved find's caret), then the user is
         // interacting with the input element, so we get out of the way. See discussion of option 5c
         // from #1415.
-        if (globalThis.getSelection().type !== initialType) {
+        const ends = selectionEnds();
+        if (ends.some((end, i) => end !== initialEnds[i])) {
           return this.exit();
         }
       },
     });
   }
 }
+
+// The selection's anchor and focus, as [anchorNode, anchorOffset, focusNode, focusOffset].
+const selectionEnds = () => {
+  const { anchorNode, anchorOffset, focusNode, focusOffset } = globalThis.getSelection();
+  return [anchorNode, anchorOffset, focusNode, focusOffset];
+};
 
 // When we use find, the selection/focus can land in a focusable/editable element. In this
 // situation, special considerations apply. We implement three special cases:
