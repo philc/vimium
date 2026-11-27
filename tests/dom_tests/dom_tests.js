@@ -1318,6 +1318,32 @@ context("FindMode.selectLastMatchBefore", () => {
   });
 });
 
+context("FindMode.updateQuery case sensitivity", () => {
+  setup(() => {
+    stubSettings("regexFindMode", false);
+    document.getElementById("test-div").innerHTML = "<p>Needle needle</p>";
+    FindMode.query = { rawQuery: "" };
+  });
+
+  teardown(() => {
+    document.getElementById("test-div").innerHTML = "";
+  });
+
+  should("use smartcase by default", () => {
+    assert.equal(2, FindMode.updateQuery("needle"));
+    assert.equal(1, FindMode.updateQuery("Needle"));
+  });
+
+  should("ignore case with \\c anywhere in the query", () => {
+    assert.equal(2, FindMode.updateQuery("\\cNeedle"));
+    assert.equal(2, FindMode.updateQuery("Needle\\c"));
+  });
+
+  should("match case with \\C", () => {
+    assert.equal(1, FindMode.updateQuery("needle\\C"));
+  });
+});
+
 context("PostFindMode", () => {
   let postFindMode;
 
