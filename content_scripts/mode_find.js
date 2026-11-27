@@ -520,14 +520,9 @@ const whitespaceModes = {
   // Values of white-space-collapse.
   "collapse": collapseAll,
   "preserve-breaks": preserveBreaks,
-  // Values of white-space, for Firefox before 124, which lacks white-space-collapse.
-  "normal": collapseAll,
-  "nowrap": collapseAll,
-  "pre-line": preserveBreaks,
 };
 
-const getWhitespaceMode = (style) =>
-  whitespaceModes[style.whiteSpaceCollapse ?? style.whiteSpace] ?? preserveAll;
+const getWhitespaceMode = (style) => whitespaceModes[style.whiteSpaceCollapse] ?? preserveAll;
 
 // Collapses each run of whitespace in `text` to one space, as the page renders it. Returns the
 // collapsed text, and the offset in `text` of each of its characters.
