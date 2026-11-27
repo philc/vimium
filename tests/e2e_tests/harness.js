@@ -303,19 +303,23 @@ export class Tab {
     return iframe ? await iframe.contentFrame() : null;
   }
 
-  // Returns { text, findMode } for the HUD, or null if the HUD isn't showing. `findMode` is true
-  // when find mode's input is showing and focused, i.e. ready to be typed into. `text` includes the
-  // find query and match count.
+  // Returns { text, findMode, prompt } for the HUD, or null if the HUD isn't showing. `findMode`
+  // is true when find mode's input is showing and focused, i.e. ready to be typed into. `text`
+  // includes the find query and match count. `prompt` is the character shown before the query.
   async hud() {
     const frame = await this.visibleUIComponentFrame("vimium-hud-frame");
     if (!frame) {
       return null;
     }
-    return await frame.$eval("#hud", (el) => ({
-      text: el.textContent.trim(),
-      findMode: el.classList.contains("hud-find") && document.hasFocus() &&
-        document.activeElement?.id == "hud-find-input",
-    }));
+    return await frame.$eval("#hud", (el) => {
+      const input = document.getElementById("hud-find-input");
+      return {
+        text: el.textContent.trim(),
+        findMode: el.classList.contains("hud-find") && document.hasFocus() &&
+          document.activeElement?.id == "hud-find-input",
+        prompt: input && JSON.parse(getComputedStyle(input, "::before").content),
+      };
+    });
   }
 
   // Returns { query, completions } for the Vomnibar, or null if it isn't showing. `completions`

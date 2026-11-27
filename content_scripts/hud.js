@@ -92,7 +92,7 @@ const HUD = {
     this.findMode = findMode;
     await DomUtils.documentComplete();
     await this.init();
-    this.hudUI.show({ name: "showFindMode" });
+    this.hudUI.show({ name: "showFindMode", reverse: findMode?.options.reverse });
     this.tween.fade(1.0, 150);
   },
 

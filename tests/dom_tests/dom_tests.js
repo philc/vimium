@@ -1257,6 +1257,43 @@ context("Mode utilities", () => {
   });
 });
 
+context("FindMode.selectLastMatchBefore", () => {
+  let start;
+
+  setup(() => {
+    stubSettings("regexFindMode", false);
+    document.getElementById("test-div").innerHTML = `
+      <p id="first">needle needle</p>
+      <p id="start">start</p>
+      <p id="last">needle</p>
+    `;
+    start = document.createRange();
+    FindMode.query = { rawQuery: "", backwards: true };
+    FindMode.updateQuery("needle");
+  });
+
+  teardown(() => {
+    document.getElementById("test-div").innerHTML = "";
+  });
+
+  const activeMatch = () => {
+    const [row, col] = FindMode.query.activeRegexIndices;
+    return [FindMode.query.regexMatchedNodes[row].parentElement.id, col];
+  };
+
+  should("choose the last match before the range", () => {
+    start.setStart(document.getElementById("start").firstChild, 0);
+    FindMode.selectLastMatchBefore(start);
+    assert.equal(["first", 1], activeMatch());
+  });
+
+  should("wrap to the last match when none comes before the range", () => {
+    start.setStart(document.getElementById("first").firstChild, 0);
+    FindMode.selectLastMatchBefore(start);
+    assert.equal(["last", 0], activeMatch());
+  });
+});
+
 context("PostFindMode", () => {
   let postFindMode;
 

@@ -100,8 +100,9 @@ function findSelectedHelper(backwards) {
     return;
   }
   FindMode.updateQuery(selection);
+  FindMode.query.backwards = backwards;
   FindMode.saveQuery();
-  FindMode.findNext(backwards);
+  FindMode.findNext(false);
 }
 
 const NormalModeCommands = {
@@ -232,9 +233,9 @@ const NormalModeCommands = {
     return mode;
   },
 
-  enterFindMode() {
+  enterFindMode(_count, { registryEntry }) {
     Marks.setPreviousPosition();
-    return new FindMode();
+    return new FindMode({ reverse: Boolean(registryEntry?.options.reverse) });
   },
 
   // Find.

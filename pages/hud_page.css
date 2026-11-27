@@ -45,6 +45,10 @@ span#hud-find-input:before {
   content: "/";
 }
 
+span#hud-find-input.reverse:before {
+  content: "?";
+}
+
 span#hud-match-count {
   color: #aaa;
   font-size: 12px;

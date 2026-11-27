@@ -390,6 +390,10 @@ const list = [
     desc: "Enter find mode.",
     group: "find",
     noRepeat: true,
+    options: {
+      reverse: "Search backward from the current position, like Vim's `?`. " +
+        "Afterward, `n` continues backward and `N` forward.",
+    },
   },
 
   {

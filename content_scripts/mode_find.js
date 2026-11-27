@@ -100,7 +100,8 @@ class FindMode extends Mode {
 
     // Save the selection, so findInPlace can restore it.
     this.initialRange = getCurrentRange();
-    FindMode.query = { rawQuery: "" };
+    // `backwards` is the search's direction, which n and N are relative to, as in Vim.
+    FindMode.query = { rawQuery: "", backwards: Boolean(options.reverse) };
 
     if (options.returnToViewport) {
       this.scrollX = globalThis.scrollX;
@@ -142,8 +143,14 @@ class FindMode extends Mode {
     // If requested, restore the scroll position (so that failed searches leave the scroll position
     // unchanged).
     this.checkReturnToViewPort();
+    // updateQuery builds the pattern and the list of matches, and makes the first match after the
+    // current selection the active one. A backward search replaces that with the last match before
+    // where the search started.
     FindMode.updateQuery(query);
-    // Restore the selection. That way, we're always searching forward from the same place, so we
+    if (FindMode.query.backwards) {
+      FindMode.selectLastMatchBefore(this.initialRange);
+    }
+    // Restore the selection. That way, we're always searching from the same place, so we
     // find the right match as the user adds matching characters, or removes previously-matched
     // characters. See #1434.
     this.restoreSelection();
@@ -234,6 +241,27 @@ class FindMode extends Mode {
       }
     }
     this.query.activeRegexIndices = [Math.max(activeNodeIndex, 0), 0];
+  }
+
+  // Sets activeRegexIndices to the last match which starts before `range`, wrapping around to the
+  // page's last match if there is none.
+  static selectLastMatchBefore(range) {
+    const matchedNodes = this.query.regexMatchedNodes;
+    if (!matchedNodes?.length) {
+      return;
+    }
+    const lastRow = matchedNodes.length - 1;
+    let indices = [lastRow, this.query.regexMatches[lastRow].length - 1];
+    // A copy, so this doesn't move the shared pattern's lastIndex.
+    const pattern = new RegExp(this.query.regexPattern);
+    matchedNodes.forEach((node, row) => {
+      getRegexMatchIndices(node.textContent, pattern).forEach((startIndex, col) => {
+        if (range.comparePoint(node, startIndex) < 0) {
+          indices = [row, col];
+        }
+      });
+    });
+    this.query.activeRegexIndices = indices;
   }
 
   static getQueryFromRegexMatches() {
@@ -366,7 +394,9 @@ class FindMode extends Mode {
     return FindMode.saveQuery();
   }
 
-  static findNext(backwards) {
+  // Repeats the search in its own direction, or in the opposite one if `reverse` is set.
+  static findNext(reverse) {
+    const backwards = Boolean(FindMode.query?.backwards) != reverse;
     // Bail out if we don't have any query text.
     const nextQuery = FindMode.getQuery(backwards);
     if (!nextQuery) {

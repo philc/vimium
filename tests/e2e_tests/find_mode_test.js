@@ -1,4 +1,4 @@
-import { context, setup, should, teardown } from "../vendor/shoulda.js";
+import { assert, context, setup, should, teardown } from "../vendor/shoulda.js";
 import * as e2e from "./harness.js";
 
 context("find mode", () => {
@@ -59,5 +59,31 @@ context("find mode", () => {
     await tab.waitFor(async () => (await tab.hud())?.findMode);
     await tab.type("needle");
     await tab.waitFor(() => tab.evaluate(() => getSelection().toString() == "needle"));
+  });
+
+  should("search backward with the reverse option", async ({ tab }) => {
+    await tab.harness.setSettings({ keyMappings: "map ? enterFindMode reverse" });
+    await tab.load(`
+      <p id="a">needle</p>
+      <p id="b">needle</p>
+      <p id="start">start</p>
+      <p id="c">needle</p>
+    `);
+    await tab.evaluate(() => {
+      getSelection().collapse(document.getElementById("start").firstChild, 0);
+    });
+    const isSelected = (id) =>
+      tab.evaluate((id) => getSelection().anchorNode?.parentElement.id == id, id);
+    await tab.keys("?");
+    await tab.waitFor(async () => (await tab.hud())?.findMode);
+    assert.equal("?", (await tab.hud()).prompt);
+    await tab.type("needle");
+    await tab.waitFor(() => isSelected("b"));
+    await tab.keys("<enter>");
+    // n repeats in the search's direction, and N reverses it.
+    await tab.keys("n");
+    await tab.waitFor(() => isSelected("a"));
+    await tab.keys("N");
+    await tab.waitFor(() => isSelected("b"));
   });
 });

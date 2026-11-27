@@ -117,7 +117,7 @@ export const handlers = {
     setMessageName(el, null);
   },
 
-  showFindMode() {
+  showFindMode({ reverse } = {}) {
     let executeQuery;
     const hudEl = document.querySelector("#hud");
     hudEl.classList.add("hud-find");
@@ -131,6 +131,8 @@ export const handlers = {
       inputEl.contentEditable = "true";
     }
     inputEl.id = "hud-find-input";
+    // Show "?" as the prompt for a backward search, as Vim does.
+    inputEl.classList.toggle("reverse", Boolean(reverse));
     hudEl.appendChild(inputEl);
 
     inputEl.addEventListener(
