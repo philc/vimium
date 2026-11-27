@@ -18,6 +18,7 @@
   (https://github.com/philc/vimium/issues/4561)
 * Fix Find mode not scrolling to matches inside nested scroll panes.
   (https://github.com/philc/vimium/issues/4835)
+* Fix Find mode losing keys typed straight after `/`, before its input had the focus.
 * Vimium now requires Firefox 140 or newer.
 
 2.4.1, 2.4.2 (2026-03-07)
