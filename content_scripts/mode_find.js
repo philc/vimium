@@ -542,25 +542,37 @@ const revealMatch = (range, element) => {
   }
 };
 
+// Returns the text nodes in the body which aren't hidden by display: none.
+// This uses a TreeWalker rather than recursing through childNodes, because in Firefox, each DOM
+// access from a content script is expensive. Recursing made each keystroke slow on large pages.
+// See #4546.
 const getAllTextNodes = () => {
-  const textNodes = [];
+  const displayed = new Map();
+  const elementIsDisplayed = (element) => {
+    if (!element) {
+      return true;
+    }
+    let result = displayed.get(element);
+    if (result === undefined) {
+      // An element with display: contents has no box, so checkVisibility() is false for it, but
+      // its children are shown if its parent is. Sites can set display: contents in a stylesheet,
+      // so check the computed value. See #4561.
+      result = element.checkVisibility() ||
+        (getComputedStyle(element).display === "contents" &&
+          elementIsDisplayed(element.parentElement));
+      displayed.set(element, result);
+    }
+    return result;
+  };
 
-  function getAllTextNodes(node) {
-    if (node.nodeType === Node.TEXT_NODE) {
+  const textNodes = [];
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    if (elementIsDisplayed(node.parentElement)) {
       textNodes.push(node);
-    } else if (
-      node.nodeType === Node.ELEMENT_NODE &&
-      // Sites can set display: contents in a stylesheet, so check the computed value. See #4561.
-      (node.checkVisibility() || getComputedStyle(node).display === "contents")
-    ) {
-      const children = node.childNodes;
-      for (const child of children) {
-        getAllTextNodes(child, textNodes);
-      }
     }
   }
-
-  getAllTextNodes(document.body);
   return textNodes;
 };
 
