@@ -1257,6 +1257,30 @@ context("Mode utilities", () => {
   });
 });
 
+context("FindMode.updateQuery", () => {
+  teardown(() => {
+    document.getElementById("test-div").innerHTML = "";
+  });
+
+  should("search only text which is displayed", () => {
+    stubSettings("regexFindMode", false);
+    // Only the elements with an id should match. The others hide "needle" with display: none on
+    // its parent or an ancestor, including a display: contents parent whose ancestor is hidden.
+    document.getElementById("test-div").innerHTML = `
+      <style>.contents { display: contents; }</style>
+      <p id="shown">needle</p>
+      <p style="display: none">needle</p>
+      <div style="display: none"><p>needle</p></div>
+      <div class="contents" id="contents">needle</div>
+      <div style="display: none"><div class="contents">needle</div></div>
+    `;
+    FindMode.query = { rawQuery: "" };
+    FindMode.updateQuery("needle");
+    const ids = FindMode.query.regexMatchedNodes.map((node) => node.parentElement.id);
+    assert.equal(["shown", "contents"], ids);
+  });
+});
+
 context("FindMode.selectLastMatchBefore", () => {
   let start;
 
