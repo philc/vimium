@@ -7,8 +7,9 @@ let activatedElement = null;
 // features" flag is enabled, then we need to use document.scrollingElement instead. There's an
 // explanation in #2168: https://github.com/philc/vimium/pull/2168#issuecomment-236488091
 
-const getScrollingElement = () =>
-  getSpecialScrollingElement() || document.scrollingElement || document.body;
+function getScrollingElement() {
+  return getSpecialScrollingElement() || document.scrollingElement || document.body;
+}
 
 // Return 0, -1 or 1: the sign of the argument.
 // NOTE(smblott; 2014/12/17) We would like to use Math.sign(). However, according to this site
@@ -16,7 +17,7 @@ const getScrollingElement = () =>
 // Math.sign() was only introduced in Chrome 38. This caused problems in R1.48 for users with old
 // Chrome installations. We can replace this with Math.sign() at some point.
 // TODO(philc): 2020-04-28: now we can make this replacement.
-const getSign = function (val) {
+function getSign(val) {
   if (!val) {
     return 0;
   } else {
@@ -26,7 +27,7 @@ const getSign = function (val) {
       return 1;
     }
   }
-};
+}
 
 const scrollProperties = {
   x: {
@@ -46,7 +47,7 @@ const scrollProperties = {
 // either a number (in which case it is simply returned) or a string. If :amount is a string, then
 // it is either "max" (meaning the height or width of element), or "viewSize". In both cases, we
 // look up and return the requested amount, either in `element` or in `window`, as appropriate.
-const getDimension = function (el, direction, amount) {
+function getDimension(el, direction, amount) {
   if (Utils.isString(amount)) {
     const name = amount;
     // the clientSizes of the body are the dimensions of the entire page, but the viewport should
@@ -60,10 +61,10 @@ const getDimension = function (el, direction, amount) {
   } else {
     return amount;
   }
-};
+}
 
 // Perform a scroll. Return true if we successfully scrolled by any amount, and false otherwise.
-const performScroll = function (element, direction, amount) {
+function performScroll(element, direction, amount) {
   const axisName = scrollProperties[direction].axisName;
   const before = element[axisName];
   if (element.scrollBy) {
@@ -74,10 +75,10 @@ const performScroll = function (element, direction, amount) {
     element[axisName] += amount;
   }
   return element[axisName] !== before;
-};
+}
 
 // Test whether `element` should be scrolled. E.g. hidden elements should not be scrolled.
-const shouldScroll = function (element, direction) {
+function shouldScroll(element, direction) {
   const computedStyle = globalThis.getComputedStyle(element);
   // Elements with `overflow: hidden` must not be scrolled.
   if (computedStyle.getPropertyValue(`overflow-${direction}`) === "hidden") {
@@ -91,7 +92,7 @@ const shouldScroll = function (element, direction) {
     return false;
   }
   return true;
-};
+}
 
 // Test whether element does actually scroll in the direction required when asked to do so. Due to
 // chrome bug 110149, scrollHeight and clientHeight cannot be used to reliably determine whether an
@@ -100,7 +101,7 @@ const shouldScroll = function (element, direction) {
 // :factor can be negative, so we need it here in order to decide whether we should test a forward
 // scroll or a backward scroll.
 // Bug last verified in Chrome 38.0.2125.104.
-const doesScroll = function (element, direction, amount, factor) {
+function doesScroll(element, direction, amount, factor) {
   // amount is treated as a relative amount, which is correct for relative scrolls. For absolute
   // scrolls (only gg, G, and friends), amount can be either a string ("max" or "viewSize") or zero.
   // In the former case, we're definitely scrolling forwards, so any positive value will do for
@@ -109,9 +110,9 @@ const doesScroll = function (element, direction, amount, factor) {
   let delta = (factor * getDimension(element, direction, amount)) || -1;
   delta = getSign(delta); // 1 or -1
   return performScroll(element, direction, delta) && performScroll(element, direction, -delta);
-};
+}
 
-const isScrollableElement = function (element, direction, amount, factor) {
+function isScrollableElement(element, direction, amount, factor) {
   if (direction == null) {
     direction = "y";
   }
@@ -122,22 +123,22 @@ const isScrollableElement = function (element, direction, amount, factor) {
     factor = 1;
   }
   return doesScroll(element, direction, amount, factor) && shouldScroll(element, direction);
-};
+}
 
 // From element and its parents, find the first which we should scroll and which does scroll.
-const findScrollableElement = function (element, direction, amount, factor) {
+function findScrollableElement(element, direction, amount, factor) {
   while (
     (element !== getScrollingElement()) && !isScrollableElement(element, direction, amount, factor)
   ) {
     element = DomUtils.getContainingElement(element) || getScrollingElement();
   }
   return element;
-};
+}
 
 // On some pages, the scrolling element is not actually scrollable. Here, we search the document for
 // the largest visible element which does scroll vertically. This is used to initialize
 // activatedElement. See #1358.
-const firstScrollableElement = function (element = null) {
+function firstScrollableElement(element = null) {
   let child;
   if (!element) {
     const scrollingElement = getScrollingElement();
@@ -165,9 +166,9 @@ const firstScrollableElement = function (element = null) {
     }
     return null;
   }
-};
+}
 
-const checkVisibility = function (element) {
+function checkVisibility(element) {
   // If the activated element has been scrolled completely offscreen, then subsequent changes in its
   // scroll position will not provide any more visual feedback to the user. Therefore, we deactivate
   // it so that subsequent scrolls affect the parent element.
@@ -178,7 +179,7 @@ const checkVisibility = function (element) {
   ) {
     return activatedElement = element;
   }
-};
+}
 
 // How scrolling is handled by CoreScroller.
 //   - For jump scrolling, the entire scroll happens immediately.
@@ -465,12 +466,12 @@ const Scroller = {
   },
 };
 
-const getSpecialScrollingElement = function () {
+function getSpecialScrollingElement() {
   const selector = specialScrollingElementMap[globalThis.location.host];
   if (selector) {
     return document.querySelector(selector);
   }
-};
+}
 
 const specialScrollingElementMap = {
   "twitter.com": "div.permalink-container div.permalink[role=main]",

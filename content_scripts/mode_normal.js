@@ -83,7 +83,7 @@ class NormalMode extends KeyHandlerMode {
   }
 }
 
-const enterNormalMode = function (count) {
+function enterNormalMode(count) {
   const mode = new NormalMode();
   mode.init({
     indicator: "Normal mode (pass keys disabled)",
@@ -92,7 +92,7 @@ const enterNormalMode = function (count) {
     count,
   });
   return mode;
-};
+}
 
 function findSelectedHelper(backwards) {
   const selection = globalThis.getSelection().toString();
@@ -413,7 +413,7 @@ const textInputXPath = (function () {
 })();
 
 // used by the findAndFollow* functions.
-const followLink = function (linkElement) {
+function followLink(linkElement) {
   if (linkElement.nodeName.toLowerCase() === "link") {
     globalThis.location.href = linkElement.href;
   } else {
@@ -422,7 +422,7 @@ const followLink = function (linkElement) {
     linkElement.scrollIntoView();
     DomUtils.simulateClick(linkElement);
   }
-};
+}
 
 // Find links which have text matching any one of `linkStrings`. If there are multiple candidates,
 // they are prioritized for shortness, by their position in `linkStrings`, how far down the page

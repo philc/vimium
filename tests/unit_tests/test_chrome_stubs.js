@@ -12,7 +12,7 @@ export function withPromise(fn) {
 
 // There are 3 chrome.storage.* objects with identical APIs.
 // - areaName: one of "local", "sync", "session".
-const createStorageAPI = (areaName) => {
+function createStorageAPI(areaName) {
   const storage = {
     store: {},
 
@@ -65,7 +65,7 @@ const createStorageAPI = (areaName) => {
     storage.setAccessLevel = () => {};
   }
   return storage;
-};
+}
 
 globalThis.chrome = {
   areRunningVimiumTests: true,

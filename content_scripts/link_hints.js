@@ -1206,13 +1206,13 @@ class FilterHints {
 //
 // Make each hint character a span, so that we can highlight the typed characters as you type them.
 //
-const spanWrap = (hintString) => {
+function spanWrap(hintString) {
   const innerHTML = [];
   for (const char of hintString) {
     innerHTML.push("<span class='vimium-reset'>" + char + "</span>");
   }
   return innerHTML.join("");
-};
+}
 
 const LocalHints = {
   // Returns an array of LocalHints if the element is visible and clickable, and computes the rect

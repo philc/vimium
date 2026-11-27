@@ -29,10 +29,10 @@ class SuppressPrintable extends Mode {
 }
 
 // The selection's anchor and focus, as [anchorNode, anchorOffset, focusNode, focusOffset].
-const selectionEnds = () => {
+function selectionEnds() {
   const { anchorNode, anchorOffset, focusNode, focusOffset } = globalThis.getSelection();
   return [anchorNode, anchorOffset, focusNode, focusOffset];
-};
+}
 
 // When we use find, the selection/focus can land in a focusable/editable element. In this
 // situation, special considerations apply. We implement three special cases:
@@ -42,12 +42,12 @@ const selectionEnds = () => {
 //      this by inheriting from SuppressPrintable.
 //   3. If the very-next keystroke is Escape, then drop immediately into insert mode.
 //
-const newPostFindMode = function () {
+function newPostFindMode() {
   if (!document.activeElement || !DomUtils.isEditable(document.activeElement)) {
     return;
   }
   return new PostFindMode();
-};
+}
 
 class PostFindMode extends SuppressPrintable {
   constructor() {
@@ -384,7 +384,7 @@ class FindMode extends Mode {
   }
 }
 
-const getCurrentRange = function () {
+function getCurrentRange() {
   const selection = getSelection();
   if (selection.type === "None") {
     const range = document.createRange();
@@ -398,9 +398,9 @@ const getCurrentRange = function () {
   }
 
   return selection.getRangeAt(0);
-};
+}
 
-const getLinkFromSelection = function () {
+function getLinkFromSelection() {
   let node = globalThis.getSelection().anchorNode;
   while (node && (node !== document.body)) {
     if (node.nodeName.toLowerCase() === "a") {
@@ -409,18 +409,18 @@ const getLinkFromSelection = function () {
     node = node.parentNode;
   }
   return null;
-};
+}
 
-const focusFoundLink = function () {
+function focusFoundLink() {
   if (FindMode.query.hasResults) {
     const link = getLinkFromSelection();
     if (link) {
       link.focus();
     }
   }
-};
+}
 
-const selectFoundInputElement = function () {
+function selectFoundInputElement() {
   // Since the last focused element might not be the one currently pointed to by find (e.g. the
   // current one might be disabled and therefore unable to receive focus), we use the approximate
   // heuristic of checking that the last anchor node is an ancestor of our element.
@@ -432,7 +432,7 @@ const selectFoundInputElement = function () {
   ) {
     return DomUtils.simulateSelect(document.activeElement);
   }
-};
+}
 
 // Selects and reveals a match from findMatches. Returns false if the page's text has changed since
 // findMatches ran, so that one of the match's offsets is past the end of its text node.
@@ -440,7 +440,7 @@ const selectFoundInputElement = function () {
 // If `collapse`, this selects only a caret at the match's start, as Vim's cursor lands there.
 // The browser paints the selection over custom highlights, which would hide the active match's
 // orange highlight. A caret paints nothing.
-const highlight = (match, collapse) => {
+function highlight(match, collapse) {
   const range = createMatchRange(match);
   if (!range) {
     return false;
@@ -454,11 +454,11 @@ const highlight = (match, collapse) => {
 
   revealMatch(range, match.startNode.parentElement);
   return true;
-};
+}
 
 // Returns a Range over a match from findMatches, or null if the page's text has changed since
 // findMatches ran, so that one of the match's offsets is past the end of its text node.
-const createMatchRange = (match) => {
+function createMatchRange(match) {
   const range = document.createRange();
   try {
     range.setStart(match.startNode, match.startOffset);
@@ -467,7 +467,7 @@ const createMatchRange = (match) => {
     return null;
   }
   return range;
-};
+}
 
 // Paints the matches of the query with the CSS Custom Highlight API, which styles Ranges without
 // changing the page's DOM. vimium.css styles the two highlights.
@@ -518,7 +518,7 @@ const matchHighlights = {
 
 // Returns how many of `matches`, which are in document order, start before `range` starts. This is
 // a binary search, so it compares only a few matches with `range`.
-const countMatchesBefore = (matches, range) => {
+function countMatchesBefore(matches, range) {
   let low = 0;
   let high = matches.length;
   while (low < high) {
@@ -530,13 +530,13 @@ const countMatchesBefore = (matches, range) => {
     }
   }
   return low;
-};
+}
 
 // Returns every match of `pattern`, a global RegExp, in the page's displayed text, in document
 // order. Each match is { text, startNode, startOffset, endNode, endOffset }. A match can span
 // several text nodes, such as a phrase split across syntax-highlighting spans (#4623), but not a
 // block boundary. This is how Chrome and Firefox's own find works.
-const findMatches = (pattern) => {
+function findMatches(pattern) {
   const matches = [];
   for (const run of textRunCache.get()) {
     for (const match of run.text.matchAll(pattern)) {
@@ -557,11 +557,11 @@ const findMatches = (pattern) => {
     }
   }
   return matches;
-};
+}
 
 // Returns the piece of a text run which holds the character at `offset`, or, if `isEnd`, the
 // character just before it. This is a binary search over the pieces' start offsets.
-const findPiece = (pieces, offset, isEnd) => {
+function findPiece(pieces, offset, isEnd) {
   let low = 0;
   let high = pieces.length - 1;
   while (low < high) {
@@ -574,16 +574,16 @@ const findPiece = (pieces, offset, isEnd) => {
     }
   }
   return pieces[low];
-};
+}
 
 // Maps an offset in a text run to an offset in the text node of `piece`, which holds it.
-const nodeOffset = (piece, runOffset, isEnd) => {
+function nodeOffset(piece, runOffset, isEnd) {
   const offset = runOffset - piece.start;
   if (!piece.offsets) {
     return offset;
   }
   return isEnd ? piece.offsets[offset - 1] + 1 : piece.offsets[offset];
-};
+}
 
 // How a text node's white-space style treats its whitespace.
 const collapseAll = 0;
@@ -600,7 +600,7 @@ const getWhitespaceMode = (style) => whitespaceModes[style.whiteSpaceCollapse] ?
 
 // Collapses each run of whitespace in `text` to one space, as the page renders it. Returns the
 // collapsed text, and the offset in `text` of each of its characters.
-const collapseWhitespace = (text, mode, afterSpace) => {
+function collapseWhitespace(text, mode, afterSpace) {
   let collapsed = "";
   const offsets = [];
   for (let i = 0; i < text.length; i++) {
@@ -618,13 +618,13 @@ const collapseWhitespace = (text, mode, afterSpace) => {
     offsets.push(i);
   }
   return { collapsed, offsets };
-};
+}
 
 // Whether the element is hidden from sight but not from screen readers, by being clipped to at most
 // 1px. Jira labels every board card and button this way, and Find kept landing on those labels. See
 // #4584. Only the element's own box is checked: text inside a block child of such an element is
 // still found.
-const isScreenReaderOnly = (element, style) => {
+function isScreenReaderOnly(element, style) {
   // Check the overflow first, since its style is already computed, and it rules out most elements
   // before reading their size.
   const overflow = style.overflow;
@@ -632,7 +632,7 @@ const isScreenReaderOnly = (element, style) => {
     return false;
   }
   return element.offsetWidth <= 1 && element.offsetHeight <= 1;
-};
+}
 
 // Splits the page's displayed text into runs, which find matches within. As in Chrome, a run ends
 // at a block boundary, at an inline-block, and at a <br>. Each run is { text, pieces }, where each
@@ -642,7 +642,7 @@ const isScreenReaderOnly = (element, style) => {
 // In Firefox, each DOM access from a content script is expensive, so this visits as few nodes as it
 // can. It walks only the text nodes, with a TreeWalker rather than recursing through childNodes
 // (#4546), and reads the style of only their parents and inline ancestors.
-const getTextRuns = () => {
+function getTextRuns() {
   // For each element: whether it's displayed, the block its text belongs to, and its style.
   const elementInfo = new Map();
   const getInfo = (element) => {
@@ -726,7 +726,7 @@ const getTextRuns = () => {
     run.text = run.parts.join("");
   }
   return runs;
-};
+}
 
 // Keeps the page's text runs while find mode is open, so each keystroke only has to run the regex.
 // Building the runs is the slow part of a search on a large page, especially in Firefox. Any change
@@ -770,7 +770,7 @@ const textRunCache = {
   },
 };
 
-const revealMatch = (range, element) => {
+function revealMatch(range, element) {
   // Scroll each enclosing pane until the match itself is visible within that pane.
   // Check the window viewport last, since scrolling a pane moves the match.
   for (let pane = element; pane && pane !== document.documentElement; pane = pane.parentElement) {
@@ -803,7 +803,7 @@ const revealMatch = (range, element) => {
       behavior: "instant",
     });
   }
-};
+}
 
 globalThis.PostFindMode = PostFindMode;
 globalThis.FindMode = FindMode;

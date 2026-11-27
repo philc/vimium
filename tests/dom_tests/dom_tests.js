@@ -4,7 +4,7 @@ let commandName = null;
 // Some tests have side effects on the handler stack and the active mode, so these are reset on
 // setup. Also, some tests affect the focus (e.g. Vomnibar tests), so we make sure the window has
 // the focus.
-const initializeModeState = () => {
+function initializeModeState() {
   globalThis.focus();
   Mode.reset();
   handlerStack.reset();
@@ -21,7 +21,7 @@ const initializeModeState = () => {
   commandName = null;
   commandCount = null;
   return normalMode;
-};
+}
 
 //
 // Retrieve the hint markers as an array object.
@@ -40,7 +40,7 @@ HintCoordinator.sendMessage = (name, request) => {
   return request;
 };
 
-const activateLinkHintsMode = () => {
+function activateLinkHintsMode() {
   HintCoordinator.getHintDescriptors({ modeIndex: 0 }, {}, () => {});
   HintCoordinator.activateMode({
     frameIdToHintDescriptors: {},
@@ -48,13 +48,13 @@ const activateLinkHintsMode = () => {
     originatingFrameId: frameId,
   });
   return HintCoordinator.linkHintsMode;
-};
+}
 
 //
 // Generate tests that are common to both default and filtered
 // link hinting modes.
 //
-const createGeneralHintTests = (isFilteredMode) => {
+function createGeneralHintTests(isFilteredMode) {
   globalThis.vimiumOnClickAttributeName = "does-not-matter";
 
   context("Link hints", () => {
@@ -96,7 +96,7 @@ const createGeneralHintTests = (isFilteredMode) => {
       mode.deactivateMode();
     });
   });
-};
+}
 
 createGeneralHintTests(false);
 createGeneralHintTests(true);
@@ -235,7 +235,7 @@ context("link hints for image maps", () => {
   });
 });
 
-const sendKeyboardEvent = (key, type, extra) => {
+function sendKeyboardEvent(key, type, extra) {
   if (type == null) {
     type = "keydown";
   }
@@ -251,13 +251,13 @@ const sendKeyboardEvent = (key, type, extra) => {
       stopImmediatePropagation() {},
     }),
   );
-};
+}
 
-const sendKeyboardEvents = (keys) => {
+function sendKeyboardEvents(keys) {
   for (const key of keys.split("")) {
     sendKeyboardEvent(key);
   }
-};
+}
 
 // TODO(philc): For some reason, this test corrupts the state linkhints state for other tests, in
 // particular, the alphabet hints tests. I haven't yet dug into why.
@@ -356,13 +356,13 @@ context("Test link hints for changing mode", () => {
   });
 });
 
-const createLinks = function (n) {
+function createLinks(n) {
   for (let i = 0, end = n; i < end; i++) {
     const link = document.createElement("a");
     link.textContent = "test";
     document.getElementById("test-div").appendChild(link);
   }
-};
+}
 
 context("Alphabet link hints", () => {
   let mode;
@@ -1183,11 +1183,11 @@ context("Triggering insert mode", () => {
 //   })
 // );
 
-const createMode = (options) => {
+function createMode(options) {
   const mode = new Mode();
   mode.init(options);
   return mode;
-};
+}
 
 context("Mode utilities", () => {
   setup(() => {
