@@ -139,7 +139,6 @@ function findScrollableElement(element, direction, amount, factor) {
 // the largest visible element which does scroll vertically. This is used to initialize
 // activatedElement. See #1358.
 function firstScrollableElement(element = null) {
-  let child;
   if (!element) {
     const scrollingElement = getScrollingElement();
     if (doesScroll(scrollingElement, "y", 1, 1) || doesScroll(scrollingElement, "y", -1, 1)) {
@@ -160,7 +159,7 @@ function firstScrollableElement(element = null) {
       child.area = child.rect.width * child.rect.height;
     }
     // Largest to smallest by visible area.
-    for (child of children.sort((a, b) => b.area - a.area)) {
+    for (const child of children.sort((a, b) => b.area - a.area)) {
       const el = firstScrollableElement(child.element);
       if (el) {
         return el;
