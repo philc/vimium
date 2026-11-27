@@ -1276,8 +1276,57 @@ context("FindMode.updateQuery", () => {
     `;
     FindMode.query = { rawQuery: "" };
     FindMode.updateQuery("needle");
-    const ids = FindMode.query.regexMatchedNodes.map((node) => node.parentElement.id);
+    const ids = FindMode.query.matches.map((match) => match.startNode.parentElement.id);
     assert.equal(["shown", "contents"], ids);
+  });
+});
+
+context("FindMode.updateQuery across nodes", () => {
+  setup(() => {
+    stubSettings("regexFindMode", false);
+    FindMode.query = { rawQuery: "" };
+  });
+
+  teardown(() => {
+    document.getElementById("test-div").innerHTML = "";
+  });
+
+  const matchedText = () => {
+    return FindMode.query.matches.map((match) => {
+      const range = document.createRange();
+      range.setStart(match.startNode, match.startOffset);
+      range.setEnd(match.endNode, match.endOffset);
+      return range.toString();
+    });
+  };
+
+  should("match text split across inline elements", () => {
+    document.getElementById("test-div").innerHTML = `<pre><span>one</span><span> two</span></pre>`;
+    assert.equal(1, FindMode.updateQuery("one two"));
+    assert.equal(["one two"], matchedText());
+  });
+
+  should("not match across blocks, inline-blocks or line breaks", () => {
+    document.getElementById("test-div").innerHTML = `
+      <div>alpha</div><div>beta</div>
+      <p>left<span style="display: inline-block">right</span></p>
+      <p>line<br>break</p>
+    `;
+    assert.equal(0, FindMode.updateQuery("alphabeta"));
+    assert.equal(0, FindMode.updateQuery("leftright"));
+    assert.equal(0, FindMode.updateQuery("linebreak"));
+    assert.equal(1, FindMode.updateQuery("right"));
+  });
+
+  should("collapse whitespace as the page renders it", () => {
+    document.getElementById("test-div").innerHTML = `
+      <p>one
+        <span> two</span>&nbsp;three</p>
+      <pre>two  spaces</pre>
+    `;
+    assert.equal(1, FindMode.updateQuery("one two three"));
+    assert.equal("one two three", matchedText()[0].replace(/\s+/g, " "));
+    assert.equal(1, FindMode.updateQuery("two  spaces"));
   });
 });
 
@@ -1301,14 +1350,14 @@ context("FindMode.selectLastMatchBefore", () => {
   });
 
   const activeMatch = () => {
-    const [row, col] = FindMode.query.activeRegexIndices;
-    return [FindMode.query.regexMatchedNodes[row].parentElement.id, col];
+    const match = FindMode.query.matches[FindMode.query.activeMatchIndex];
+    return [match.startNode.parentElement.id, match.startOffset];
   };
 
   should("choose the last match before the range", () => {
     start.setStart(document.getElementById("start").firstChild, 0);
     FindMode.selectLastMatchBefore(start);
-    assert.equal(["first", 1], activeMatch());
+    assert.equal(["first", 7], activeMatch());
   });
 
   should("wrap to the last match when none comes before the range", () => {
