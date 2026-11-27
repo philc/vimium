@@ -554,34 +554,46 @@ const collapseWhitespace = (text, mode, afterSpace) => {
 // piece is { node, start, offsets }: the text node a part of the run came from, where that part
 // starts in the run, and, if whitespace was collapsed, the node offset of each of its characters.
 //
-// This uses a TreeWalker rather than recursing through childNodes, because in Firefox, each DOM
-// access from a content script is expensive. Recursing made each keystroke slow on large pages.
-// See #4546.
+// In Firefox, each DOM access from a content script is expensive, so this visits as few nodes as it
+// can. It walks only the text nodes, with a TreeWalker rather than recursing through childNodes
+// (#4546), and reads the style of only their parents and inline ancestors.
 const getTextRuns = () => {
-  // For each element: whether it's displayed, the block its text belongs to, and how it treats
-  // whitespace.
+  // For each element: whether it's displayed, the block its text belongs to, and its style.
   const elementInfo = new Map();
   const getInfo = (element) => {
     let info = elementInfo.get(element);
     if (info === undefined) {
       const style = getComputedStyle(element);
+      const display = style.display;
       const parent = element.parentElement;
-      const parentInfo = parent ? getInfo(parent) : null;
-      const isContents = style.display === "contents";
+      const isInline = display === "inline" || display === "contents";
+      const parentInfo = isInline && parent ? getInfo(parent) : null;
       info = {
         // An element with display: contents has no box, so checkVisibility() is false for it, but
         // its children are shown if its parent is. Sites can set display: contents in a
         // stylesheet, so check the computed value. See #4561.
-        displayed: element.checkVisibility() || (isContents && (parentInfo?.displayed ?? true)),
-        block: (style.display === "inline" || isContents) && parentInfo
-          ? parentInfo.block
-          : element,
-        whitespace: getWhitespaceMode(style),
+        displayed: element.checkVisibility() ||
+          (display === "contents" && (parentInfo?.displayed ?? true)),
+        block: parentInfo?.block ?? element,
+        style,
+        whitespace: null,
       };
       elementInfo.set(element, info);
     }
     return info;
   };
+
+  // A <br> ends a run, so note the text node which follows each one. Most pages have few, and
+  // finding them this way is much cheaper in Firefox than walking every element.
+  const textAfterBreak = new Set();
+  const breakWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (const br of document.body.getElementsByTagName("br")) {
+    breakWalker.currentNode = br;
+    const next = breakWalker.nextNode();
+    if (next) {
+      textAfterBreak.add(next);
+    }
+  }
 
   const runs = [];
   let run = null;
@@ -589,23 +601,14 @@ const getTextRuns = () => {
   // Whether the run so far ends in collapsible whitespace, so that leading whitespace in the next
   // text node collapses into it.
   let afterSpace;
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
-  );
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   let node;
   while ((node = walker.nextNode())) {
-    if (node.nodeType !== Node.TEXT_NODE) {
-      if (node.nodeName === "BR") {
-        block = null;
-      }
-      continue;
-    }
     const info = getInfo(node.parentElement);
     if (!info.displayed) {
       continue;
     }
-    if (info.block !== block) {
+    if (info.block !== block || textAfterBreak.has(node)) {
       block = info.block;
       run = { parts: [], pieces: [], length: 0 };
       runs.push(run);
@@ -614,19 +617,18 @@ const getTextRuns = () => {
 
     let text = node.data;
     let offsets = null;
-    if (info.whitespace === preserveAll) {
-      afterSpace = false;
-    } else {
-      if (/[\t\n\r\f]| {2}/.test(text) || (afterSpace && text[0] === " ")) {
+    if (/[\t\n\r\f]| {2}/.test(text) || (afterSpace && text[0] === " ")) {
+      info.whitespace ??= getWhitespaceMode(info.style);
+      if (info.whitespace !== preserveAll) {
         ({ collapsed: text, offsets } = collapseWhitespace(text, info.whitespace, afterSpace));
       }
-      if (text.length === 0) {
-        continue;
-      }
-      afterSpace = text.endsWith(" ") || text.endsWith("\n");
     }
+    if (text.length === 0) {
+      continue;
+    }
+    afterSpace = info.whitespace !== preserveAll && (text.endsWith(" ") || text.endsWith("\n"));
     // Chrome matches a typed space against a non-breaking one.
-    text = text.replaceAll(" ", " ");
+    text = text.replaceAll("\u00a0", " ");
     run.pieces.push({ node, start: run.length, offsets });
     run.parts.push(text);
     run.length += text.length;
