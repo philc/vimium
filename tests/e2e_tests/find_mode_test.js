@@ -16,6 +16,13 @@ context("find mode", () => {
     );
   });
 
+  should("keep the keys typed before the HUD has the focus", async ({ tab }) => {
+    await tab.load(`<p>needle</p>`);
+    await tab.keys("/");
+    await tab.type("needle");
+    await tab.waitFor(async () => (await tab.hud())?.text == "needle (1 Match)");
+  });
+
   should("reveal the selected match in nested scroll panes", async ({ tab }) => {
     await tab.load(`
       <div id="outer" style="height: 100px; overflow: auto">

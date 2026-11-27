@@ -57,4 +57,22 @@ context("hud page", () => {
     await hudPage.onKeyEvent(newKeyEvent({ key: "Escape" }));
     assert.equal("hideFindMode", message.name);
   });
+
+  should("put text typed into the page before text typed into find mode", async () => {
+    const messages = [];
+    const stubPort = { postMessage: (event) => messages.push(event) };
+    await UIComponentMessenger.registerPortWithOwnerPage({
+      data: (await chrome.storage.session.get("vimiumSecret")).vimiumSecret,
+      ports: [stubPort],
+    });
+    // The jsdom stub doesn't provide the window's selection.
+    stub(globalThis, "getSelection", () => ({ removeAllRanges() {}, addRange() {} }));
+    hudPage.handlers.showFindMode();
+    // The user typed "the", but only "e" reached the input directly.
+    document.querySelector("#hud-find-input").textContent = "e";
+    hudPage.handlers.typeInFindMode({ text: "t" });
+    hudPage.handlers.typeInFindMode({ text: "h" });
+    assert.equal("the", document.querySelector("#hud-find-input").textContent);
+    assert.equal("the", messages.at(-1).query);
+  });
 });

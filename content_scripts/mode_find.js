@@ -113,9 +113,15 @@ class FindMode extends Mode {
       indicator: false,
       exitOnClick: true,
       exitOnEscape: true,
-      // This prevents further Vimium commands launching before the find-mode HUD receives the
-      // focus. E.g. "/" followed quickly by "i" should not leave us in insert mode.
+      // Until the HUD's input has the focus, keys go to the page. Suppressing them prevents
+      // Vimium commands from running, e.g. "/" followed quickly by "i" should not leave us in
+      // insert mode. The text they type is passed to the HUD instead, so that it isn't lost.
       suppressAllKeyboardEvents: true,
+      keydown: (event) => {
+        if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
+          HUD.typeInFindMode(event.key);
+        }
+      },
     }));
 
     textRunCache.start();

@@ -89,12 +89,24 @@ const HUD = {
     }
   },
 
-  async showFindMode(findMode = null) {
+  showFindMode(findMode = null) {
     this.findMode = findMode;
-    await DomUtils.documentComplete();
-    await this.init();
-    this.hudUI.show({ name: "showFindMode", reverse: findMode?.options.reverse });
-    this.tween.fade(1.0, 150);
+    // typeInFindMode waits for this, so that its text reaches the HUD after find mode's input
+    // exists.
+    this.findModeShown = (async () => {
+      await DomUtils.documentComplete();
+      await this.init();
+      await this.hudUI.show({ name: "showFindMode", reverse: findMode?.options.reverse });
+      this.tween.fade(1.0, 150);
+    })();
+    return this.findModeShown;
+  },
+
+  // Passes the HUD text which the user typed into the page before find mode's input had the
+  // focus.
+  async typeInFindMode(text) {
+    await this.findModeShown;
+    this.hudUI.postMessage({ name: "typeInFindMode", text });
   },
 
   findInputFocused() {
