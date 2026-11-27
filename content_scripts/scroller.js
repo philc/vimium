@@ -463,6 +463,14 @@ const Scroller = {
       }
     }
   },
+
+  activeElement() {
+    if (!activatedElement || !document.body.contains(activatedElement)) {
+      activatedElement = (getScrollingElement() && firstScrollableElement()) ||
+        getScrollingElement();
+    }
+    return activatedElement;
+  },
 };
 
 const getSpecialScrollingElement = function () {
