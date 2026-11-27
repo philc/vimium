@@ -3,6 +3,21 @@
 * Find mode: add Vim's `\c` and `\C` to ignore or match case, overriding smartcase. See the
   [wiki](https://github.com/philc/vimium/wiki/Find-Mode).
   (https://github.com/philc/vimium/issues/4849)
+* Find mode: highlight every match as you type, with the current match in orange and the others in
+  yellow, as Chrome's own find does. (https://github.com/philc/vimium/issues/3469)
+* Find mode: match text which is split across inline elements, such as syntax-highlighted code.
+  (https://github.com/philc/vimium/issues/4623)
+* Find mode: add a `reverse` option to search backward, e.g. `map ? enterFindMode reverse`.
+  (https://github.com/philc/vimium/issues/4912)
+* Find mode is much faster on large pages: 85–91% faster in Chrome, and 88–94% faster in Firefox.
+  (https://github.com/philc/vimium/issues/4546)
+* Find mode no longer matches text which is hidden for screen readers.
+  (https://github.com/philc/vimium/issues/4584)
+* Fix Find mode skipping text inside `display: contents` elements.
+  (https://github.com/philc/vimium/issues/4561)
+* Fix Find mode not scrolling to matches inside nested scroll panes.
+  (https://github.com/philc/vimium/issues/4835)
+* Vimium now requires Firefox 140 or newer.
 
 2.4.1, 2.4.2 (2026-03-07)
 
