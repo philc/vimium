@@ -197,8 +197,15 @@ iframe.vimium-hud-frame {
   opacity: 0;
 }
 
-body.vimium-find-mode ::selection {
-  background: #ff9632;
+/* Find mode's highlights, in Chrome's find colors. See matchHighlights in mode_find.js. */
+::highlight(vimium-find-match) {
+  background-color: #ffff00;
+  color: #000000;
+}
+
+::highlight(vimium-find-active) {
+  background-color: #ff9632;
+  color: #000000;
 }
 
 iframe.vomnibar-frame {

@@ -1393,6 +1393,41 @@ context("FindMode.updateQuery case sensitivity", () => {
   });
 });
 
+context("FindMode highlights", () => {
+  setup(() => {
+    stubSettings("regexFindMode", false);
+    FindMode.query = { rawQuery: "" };
+  });
+
+  teardown(() => {
+    FindMode.clearHighlights();
+    document.getElementById("test-div").innerHTML = "";
+  });
+
+  const search = (query) => {
+    FindMode.updateQuery(query);
+    FindMode.query.hasResults = FindMode.execute(FindMode.getActiveMatchText());
+  };
+  const highlightSize = (name) => CSS.highlights.get(name)?.size ?? 0;
+
+  should("highlight the active match apart from the others, until Escape", () => {
+    document.getElementById("test-div").innerHTML = "<p>needle needle needle</p>";
+    search("needle");
+    assert.equal(1, highlightSize("vimium-find-active"));
+    assert.equal(2, highlightSize("vimium-find-match"));
+    FindMode.handleEscape();
+    assert.equal(0, highlightSize("vimium-find-active"));
+    assert.equal(0, highlightSize("vimium-find-match"));
+  });
+
+  should("highlight at most 1,000 matches", () => {
+    document.getElementById("test-div").innerHTML = `<p>${"x ".repeat(1500)}</p>`;
+    search("x");
+    assert.equal(1500, FindMode.query.matchCount);
+    assert.equal(999, highlightSize("vimium-find-match"));
+  });
+});
+
 context("PostFindMode", () => {
   let postFindMode;
 
