@@ -122,6 +122,14 @@ class FindMode extends Mode {
     HUD.showFindMode(this);
   }
 
+  // The HUD calls this once its input has the focus.
+  onInputFocused() {
+    // Build the text runs now, before the user's first keystroke, so that it needn't wait for them.
+    // Building them blocks the page, so wait until the HUD has the focus: until then, keys go to
+    // the page, and would wait behind the build.
+    textRunCache.build();
+  }
+
   exit(event) {
     textRunCache.stop();
     HUD.unfocusIfFocused();
@@ -725,13 +733,13 @@ const textRunCache = {
       characterData: true,
       attributes: true,
     });
-    // Build the runs now, while the user starts typing, so the first keystroke needn't wait for
-    // them. The timeout lets the HUD open first.
-    setTimeout(() => {
-      if (this.observer) {
-        this.get();
-      }
-    }, 0);
+  },
+
+  // Builds the runs ahead of the first query, if the cache is in use.
+  build() {
+    if (this.observer) {
+      this.get();
+    }
   },
 
   stop() {
