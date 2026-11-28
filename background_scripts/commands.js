@@ -432,6 +432,7 @@ const defaultKeyMappings = {
   "yy": "copyCurrentUrl",
   "p": "openCopiedUrlInCurrentTab",
   "P": "openCopiedUrlInNewTab",
+  "sp": "openCopiedUrlInSplitView",
   "gi": "focusInput",
   "[[": "goPrevious",
   "]]": "goNext",
@@ -446,6 +447,7 @@ const defaultKeyMappings = {
   // Link hints
   "f": "LinkHints.activateMode",
   "F": "LinkHints.activateModeToOpenInNewTab",
+  "sf": "LinkHints.activateModeToOpenInSplitView",
   "<a-f>": "LinkHints.activateModeWithQueue",
   "yf": "LinkHints.activateModeToCopyLinkUrl",
 
@@ -459,12 +461,16 @@ const defaultKeyMappings = {
   // Vomnibar
   "o": "Vomnibar.activate",
   "O": "Vomnibar.activateInNewTab",
+  "so": "Vomnibar.activateInSplitView",
   "T": "Vomnibar.activateTabSelection",
+  "sT": "Vomnibar.activateMoveTabToSplitView",
   "b": "Vomnibar.activateBookmarks",
   "B": "Vomnibar.activateBookmarksInNewTab",
+  "sb": "Vomnibar.activateBookmarksInSplitView",
   ":": "Vomnibar.activateCommandSelection",
   "ge": "Vomnibar.activateEditUrl",
   "gE": "Vomnibar.activateEditUrlInNewTab",
+  "se": "Vomnibar.activateEditUrlInSplitView",
 
   // Navigating history
   "H": "goBack",
@@ -482,7 +488,12 @@ const defaultKeyMappings = {
   "g$": "lastTab",
   "W": "moveTabToNewWindow",
   "t": "createTab",
+  "sr": "reverseSplitViewTabs",
+  "sx": "closeSplitViewTabs",
+  "st": "addSplitView",
+  "ss": "separateSplitView",
   "yt": "duplicateTab",
+  "ys": "duplicateTabInSplitView",
   "x": "removeTab",
   "X": "restoreTab",
   "<a-p>": "togglePinTab",

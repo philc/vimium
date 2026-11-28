@@ -122,6 +122,72 @@ export async function openUrlInNewTab(request) {
   return newTab;
 }
 
+// Get the id of the other split view if the current tab is in a split view.
+export async function getSplitViewOtherTab(currentTab) {
+  if (currentTab.splitViewId !== chrome.tabs.SPLIT_VIEW_ID_NONE) {
+    const otherSplitTabs = (await chrome.tabs.query({ currentWindow: true }))
+      .filter((t) => t.splitViewId === currentTab.splitViewId && t.id != currentTab.id);
+    if (otherSplitTabs.length === 1) {
+      return otherSplitTabs[0];
+    } else {
+      console.warn("Split view with more than 2 tabs detected.");
+      return null;
+    }
+  } else {
+    return null;
+  }
+}
+
+export async function createSplit(currentTab, tab) {
+  const currentBefore = currentTab.index < tab.index;
+
+  // The tabs must be not pinned in order to create the split view.
+  await chrome.tabs.update(currentTab.id, { pinned: false });
+  await chrome.tabs.update(tab.id, { pinned: false });
+
+  // The tabs my be in the same group to create the split view.
+  if (currentTab.groupId >= 0) {
+    await chrome.tabs.group({ tabIds: tab.id, groupId: currentTab.groupId });
+  }
+
+  // The tabs must be in the same window and adjacent to create the split view.
+  await chrome.tabs.move(tab.id, {
+    index: currentTab.index,
+    windowId: currentTab.windowId,
+  });
+  // Update tab information because the indexes have changed due to the tab move.
+  currentTab = await chrome.tabs.get(currentTab.id);
+  tab = await chrome.tabs.get(tab.id);
+
+  // Maintain original order.
+  if (currentBefore != currentTab.index < tab.index) {
+    chrome.tabs.move(currentTab.id, { index: tab.index });
+  }
+
+  // TODO: Firefox does not support createSplit yet.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=2016928
+  await chrome.tabs.createSplit([currentTab.id, tab.id]);
+}
+
+export async function openUrlInSplitView(request) {
+  const currentTab = request.tab;
+
+  let otherTab = await getSplitViewOtherTab(currentTab);
+  if (otherTab) {
+    const urlStr = await UrlUtils.convertToUrl(request.url);
+    if (urlStr) {
+      await chrome.tabs.update(otherTab.id, { url: urlStr });
+    } else {
+      await chrome.search.query({ text: request.url, tabId: otherTab.id });
+    }
+  } else {
+    otherTab = await openUrlInNewTab(request);
+    await createSplit(currentTab, otherTab);
+  }
+  // Focus the split view tab.
+  await chrome.tabs.update(otherTab.id, { active: true });
+}
+
 // Open request.url in new window and switch to it.
 export async function openUrlInNewWindow(request) {
   const winConfig = {

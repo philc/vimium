@@ -208,6 +208,15 @@ const NormalModeCommands = {
     );
   },
 
+  openCopiedUrlInSplitView() {
+    HUD.pasteFromClipboard((url) =>
+      chrome.runtime.sendMessage({
+        handler: "openUrlInSplitView",
+        url,
+      })
+    );
+  },
+
   openCopiedUrlInCurrentTab() {
     HUD.pasteFromClipboard((url) =>
       chrome.runtime.sendMessage({ handler: "openUrlInCurrentTab", url })
@@ -374,6 +383,9 @@ const NormalModeCommands = {
   "LinkHints.activateModeToOpenInNewTab": LinkHints.activateModeToOpenInNewTab.bind(LinkHints),
   "LinkHints.activateModeToOpenInNewForegroundTab": LinkHints.activateModeToOpenInNewForegroundTab
     .bind(LinkHints),
+  "LinkHints.activateModeToOpenInSplitView": LinkHints.activateModeToOpenInSplitView.bind(
+    LinkHints,
+  ),
   "LinkHints.activateModeWithQueue": LinkHints.activateModeWithQueue.bind(LinkHints),
   "LinkHints.activateModeToOpenIncognito": LinkHints.activateModeToOpenIncognito.bind(LinkHints),
   "LinkHints.activateModeToDownloadLink": LinkHints.activateModeToDownloadLink.bind(LinkHints),
@@ -381,12 +393,18 @@ const NormalModeCommands = {
 
   "Vomnibar.activate": Vomnibar.activate.bind(Vomnibar),
   "Vomnibar.activateInNewTab": Vomnibar.activateInNewTab.bind(Vomnibar),
+  "Vomnibar.activateInSplitView": Vomnibar.activateInSplitView.bind(Vomnibar),
   "Vomnibar.activateTabSelection": Vomnibar.activateTabSelection.bind(Vomnibar),
+  "Vomnibar.activateMoveTabToSplitView": Vomnibar.activateMoveTabToSplitView.bind(
+    Vomnibar,
+  ),
   "Vomnibar.activateBookmarks": Vomnibar.activateBookmarks.bind(Vomnibar),
   "Vomnibar.activateBookmarksInNewTab": Vomnibar.activateBookmarksInNewTab.bind(Vomnibar),
+  "Vomnibar.activateBookmarksInSplitView": Vomnibar.activateBookmarksInSplitView.bind(Vomnibar),
   "Vomnibar.activateCommandSelection": Vomnibar.activateCommandSelection.bind(Vomnibar),
   "Vomnibar.activateEditUrl": Vomnibar.activateEditUrl.bind(Vomnibar),
   "Vomnibar.activateEditUrlInNewTab": Vomnibar.activateEditUrlInNewTab.bind(Vomnibar),
+  "Vomnibar.activateEditUrlInSplitView": Vomnibar.activateEditUrlInSplitView.bind(Vomnibar),
 
   "Marks.activateCreateMode": Marks.activateCreateMode.bind(Marks),
   "Marks.activateGotoMode": Marks.activateGotoMode.bind(Marks),

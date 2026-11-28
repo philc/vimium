@@ -132,6 +132,13 @@ const list = [
   },
 
   {
+    name: "openCopiedUrlInSplitView",
+    desc: "Open the clipboard's URL in a split view",
+    group: "navigation",
+    noRepeat: true,
+  },
+
+  {
     name: "goUp",
     desc: "Go up the URL hierarchy",
     group: "navigation",
@@ -205,6 +212,12 @@ const list = [
   {
     name: "LinkHints.activateModeToOpenInNewForegroundTab",
     desc: "Open a link in a new tab & switch to it",
+    group: "navigation",
+  },
+
+  {
+    name: "LinkHints.activateModeToOpenInSplitView",
+    desc: "Open a link in split view",
     group: "navigation",
   },
 
@@ -328,6 +341,19 @@ const list = [
   },
 
   {
+    name: "Vomnibar.activateInSplitView",
+    desc: "Open URL, bookmark or history entry in a split view",
+    group: "vomnibar",
+    options: {
+      query: "The text to prefill the Vomnibar with.",
+      keyword: 'The keyword of a search engine defined in the "Custom search engines" ' +
+        "section of the Vimium Options page. The Vomnibar will be scoped to use that search engine.",
+    },
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
     name: "Vomnibar.activateBookmarks",
     desc: "Open a bookmark",
     group: "vomnibar",
@@ -350,8 +376,27 @@ const list = [
   },
 
   {
+    name: "Vomnibar.activateBookmarksInSplitView",
+    desc: "Open a bookmark in a split view",
+    group: "vomnibar",
+    options: {
+      query: "The text to prefill the Vomnibar with.",
+    },
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
     name: "Vomnibar.activateTabSelection",
     desc: "Search through your open tabs",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "Vomnibar.activateMoveTabToSplitView",
+    desc: "Move an open tab in a split view",
     group: "vomnibar",
     topFrame: true,
     noRepeat: true,
@@ -368,6 +413,14 @@ const list = [
   {
     name: "Vomnibar.activateEditUrlInNewTab",
     desc: "Edit the current URL and open in a new tab",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "Vomnibar.activateEditUrlInSplitView",
+    desc: "Edit the current URL and open in a split view",
     group: "vomnibar",
     topFrame: true,
     noRepeat: true,
@@ -490,6 +543,44 @@ const list = [
   {
     name: "lastTab",
     desc: "Go to the last tab",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "duplicateTabInSplitView",
+    desc: "Duplicate current tab in split view",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "reverseSplitViewTabs",
+    desc: "Reverse split view tabs",
+    group: "tabs",
+    background: true,
+  },
+
+  {
+    name: "closeSplitViewTabs",
+    desc: "Close split view tabs",
+    group: "tabs",
+    background: true,
+  },
+
+  {
+    name: "addSplitView",
+    desc: "Add split view",
+    group: "tabs",
+    background: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "separateSplitView",
+    desc: "Separate split view",
     group: "tabs",
     background: true,
     noRepeat: true,

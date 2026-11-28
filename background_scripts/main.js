@@ -174,6 +174,31 @@ async function selectSpecificTab(request) {
   await chrome.tabs.update(request.id, { active: true });
 }
 
+async function moveTabToSplitView(request) {
+  let currentTab = request.tab;
+  let tab = await chrome.tabs.get(request.id);
+
+  if (tab.id == currentTab.id) {
+    return;
+  }
+
+  // Remove other split view tab if it already exists.
+  const otherTab = await TabOperations.getSplitViewOtherTab(currentTab);
+  if (otherTab) {
+    if (tab.id == otherTab.id) {
+      return;
+    }
+    // If a split view is already open, update the order to reflect that instead.
+    await chrome.tabs.unsplit(currentTab.splitViewId);
+    await chrome.tabs.remove(otherTab.id);
+    // Update tab information because the index may have changed due to the tab removal.
+    currentTab = await chrome.tabs.get(currentTab.id);
+    tab = await chrome.tabs.get(tab.id);
+  }
+
+  await TabOperations.createSplit(currentTab, tab);
+}
+
 function moveTab({ count, tab, registryEntry }) {
   if (registryEntry.command === "moveTabLeft") {
     count = -count;
@@ -230,6 +255,20 @@ function nextZoomLevel(currentZoom, steps) {
   }
 }
 
+function getNewTabUrl() {
+  let url;
+  const destination = Settings.get("newTabDestination");
+  const customUrl = Settings.get("newTabCustomUrl");
+  if (destination == Settings.newTabDestinations.vimiumNewTabPage) {
+    url = Settings.vimiumNewTabPageUrl;
+  } else if (destination == Settings.newTabDestinations.customUrl && customUrl.length > 0) {
+    url = customUrl;
+  } else {
+    url = UrlUtils.chromeNewTabUrl;
+  }
+  return url;
+}
+
 // These are commands which are bound to keystrokes which must be handled by the background page.
 // They are mapped in commands.js.
 const BackgroundCommands = {
@@ -251,17 +290,7 @@ const BackgroundCommands = {
           request.urls = urlList;
         } else {
           // Otherwise, just create a new tab.
-          let url;
-          const destination = Settings.get("newTabDestination");
-          const customUrl = Settings.get("newTabCustomUrl");
-          if (destination == Settings.newTabDestinations.vimiumNewTabPage) {
-            url = Settings.vimiumNewTabPageUrl;
-          } else if (destination == Settings.newTabDestinations.customUrl && customUrl.length > 0) {
-            url = customUrl;
-          } else {
-            url = UrlUtils.chromeNewTabUrl;
-          }
-          request.urls = [url];
+          request.urls = [getNewTabUrl()];
         }
       }
     }
@@ -304,6 +333,63 @@ const BackgroundCommands = {
         chrome.tabs.move(tabs.map((t) => t.id), { windowId: window.id, index: -1 });
       });
     });
+  },
+
+  async reverseSplitViewTabs(request) {
+    const currentTab = request.tab;
+
+    if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
+      return;
+    }
+
+    const splitTabs = (await chrome.tabs.query(visibleTabsQueryArgs))
+      .filter((t) => t.splitViewId === currentTab.splitViewId)
+      .sort((t) => t.index);
+
+    // The split tabs are sorted based on their index.
+    // Move the higher index tab in the position of the lower index tab.
+    chrome.tabs.move(splitTabs.at(-1).id, { index: splitTabs[0].index });
+  },
+
+  async closeSplitViewTabs(request) {
+    const currentTab = request.tab;
+
+    if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
+      return;
+    }
+
+    const splitTabs = (await chrome.tabs.query(visibleTabsQueryArgs))
+      .filter((t) => t.splitViewId === currentTab.splitViewId);
+
+    chrome.tabs.remove(splitTabs.map((tab) => tab.id));
+  },
+
+  addSplitView(request) {
+    const currentTab = request.tab;
+
+    if (currentTab.splitViewId !== chrome.tabs.SPLIT_VIEW_ID_NONE) {
+      return;
+    }
+
+    chrome.tabs.create({ splitWithTabId: currentTab.id, url: getNewTabUrl() });
+  },
+
+  duplicateTabInSplitView(request) {
+    const currentTab = request.tab;
+
+    TabOperations.openUrlInSplitView({ ...request, url: currentTab.url });
+  },
+
+  separateSplitView(request) {
+    const currentTab = request.tab;
+
+    if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
+      return;
+    }
+
+    // TODO: Firefox does not support unsplit yet.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=2016928
+    chrome.tabs.unsplit(currentTab.splitViewId);
   },
 
   nextTab(request) {
@@ -623,6 +709,9 @@ const sendRequestHandlers = {
   async openUrlInNewWindow(request) {
     await TabOperations.openUrlInNewWindow(request);
   },
+  async openUrlInSplitView(request) {
+    await TabOperations.openUrlInSplitView(request);
+  },
   async openUrlInIncognito(request) {
     await chrome.windows.create({
       incognito: true,
@@ -637,9 +726,26 @@ const sendRequestHandlers = {
     });
   },
 
-  launchSearchQuery({ query, openInNewTab }) {
-    const disposition = openInNewTab ? "NEW_TAB" : "CURRENT_TAB";
-    chrome.search.query({ disposition, text: query });
+  async launchSearchQuery(request) {
+    if (request.openTarget === "current") {
+      chrome.search.query({ disposition: "CURRENT_TAB", text: request.query });
+    } else if (request.openTarget === "tab") {
+      chrome.search.query({ disposition: "NEW_TAB", text: request.query });
+    } else {
+      const currentTab = request.tab;
+      let searchTabId = currentTab.id;
+      if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
+        // Create a new split view tab to be used for the search.
+        searchTabId =
+          (await chrome.tabs.create({ splitWithTabId: currentTab.id, url: "about:blank" })).id;
+      } else {
+        const otherTab = await TabOperations.getSplitViewOtherTab(currentTab);
+        if (otherTab) {
+          searchTabId = otherTab.id;
+        }
+      }
+      chrome.search.query({ tabId: searchTabId, text: request.query });
+    }
   },
 
   domReady(_, sender) {
@@ -657,6 +763,7 @@ const sendRequestHandlers = {
 
   nextFrame: BackgroundCommands.nextFrame,
   selectSpecificTab,
+  moveTabToSplitView: moveTabToSplitView,
   createMark: marks.create,
   gotoMark: marks.goto,
   // Send a message to all frames in the current tab. If request.frameId is provided, then send

@@ -160,6 +160,13 @@ const COPY_LINK_URL = {
     }
   },
 };
+const OPEN_IN_SPLIT_VIEW = {
+  name: "open-in-split-view",
+  indicator: "Open link in split view",
+  linkActivator(link) {
+    chrome.runtime.sendMessage({ handler: "openUrlInSplitView", url: link.href });
+  },
+};
 const OPEN_INCOGNITO = {
   name: "open-incognito",
   indicator: "Open link in incognito window",
@@ -209,6 +216,7 @@ const availableModes = [
   OPEN_IN_NEW_FG_TAB,
   OPEN_WITH_QUEUE,
   COPY_LINK_URL,
+  OPEN_IN_SPLIT_VIEW,
   OPEN_INCOGNITO,
   DOWNLOAD_LINK_URL,
   COPY_LINK_TEXT,
@@ -285,7 +293,9 @@ const HintCoordinator = {
       return [];
     }
 
-    const requireHref = [COPY_LINK_URL, OPEN_INCOGNITO].includes(availableModes[modeIndex]);
+    const requireHref = [COPY_LINK_URL, OPEN_IN_SPLIT_VIEW, OPEN_INCOGNITO].includes(
+      availableModes[modeIndex],
+    );
     // If link hints is launched within the help dialog, then we only offer hints from that frame.
     // This improves the usability of the help dialog on the options page (particularly for
     // selecting command names).
@@ -416,6 +426,9 @@ const LinkHints = {
   },
   activateModeWithQueue() {
     this.activateMode(1, { mode: OPEN_WITH_QUEUE });
+  },
+  activateModeToOpenInSplitView(count) {
+    this.activateMode(count, { mode: OPEN_IN_SPLIT_VIEW });
   },
   activateModeToOpenIncognito(count) {
     this.activateMode(count, { mode: OPEN_INCOGNITO });

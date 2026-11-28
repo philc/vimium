@@ -13,7 +13,15 @@ const Vomnibar = {
   },
 
   activateInNewTab(sourceFrameId, registryEntry) {
-    const options = Object.assign({}, registryEntry.options, { completer: "omni", newTab: true });
+    const options = Object.assign({}, registryEntry.options, { completer: "omni", target: "tab" });
+    this.open(sourceFrameId, options);
+  },
+
+  activateInSplitView(sourceFrameId, registryEntry) {
+    const options = Object.assign({}, registryEntry.options, {
+      completer: "omni",
+      target: "split",
+    });
     this.open(sourceFrameId, options);
   },
 
@@ -21,6 +29,14 @@ const Vomnibar = {
     this.open(sourceFrameId, {
       completer: "tabs",
       selectFirst: true,
+    });
+  },
+
+  activateMoveTabToSplitView(sourceFrameId) {
+    this.open(sourceFrameId, {
+      completer: "tabs",
+      selectFirst: true,
+      target: "split",
     });
   },
 
@@ -44,7 +60,16 @@ const Vomnibar = {
     const options = Object.assign({}, registryEntry.options, {
       completer: "bookmarks",
       selectFirst: true,
-      newTab: true,
+      target: "tab",
+    });
+    this.open(sourceFrameId, options);
+  },
+
+  activateBookmarksInSplitView(sourceFrameId, registryEntry) {
+    const options = Object.assign({}, registryEntry.options, {
+      completer: "bookmarks",
+      selectFirst: true,
+      target: "split",
     });
     this.open(sourceFrameId, options);
   },
@@ -62,7 +87,16 @@ const Vomnibar = {
       completer: "omni",
       selectFirst: false,
       query: globalThis.location.href,
-      newTab: true,
+      target: "tab",
+    });
+  },
+
+  activateEditUrlInSplitView(sourceFrameId) {
+    this.open(sourceFrameId, {
+      completer: "omni",
+      selectFirst: false,
+      query: globalThis.location.href,
+      target: "split",
     });
   },
 
@@ -78,7 +112,7 @@ const Vomnibar = {
   //     completer: The name of the completer to fetch results from.
   //     query: Optional. Text to prefill the Vomnibar with.
   //     selectFirst: Optional. Whether to select the first entry.
-  //     newTab: Optional. Whether to open the result in a new tab.
+  //     target: Optional. Target to open the result in: current (default), tab or split.
   //     keyword: A keyword which will scope the search to a UserSearchEngine.
   async open(sourceFrameId, vomnibarShowOptions) {
     this.init();
