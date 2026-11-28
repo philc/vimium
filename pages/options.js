@@ -12,6 +12,7 @@ const options = {
   keyMappings: "string",
   linkHintCharacters: "string",
   linkHintNumbers: "string",
+  nativeSmoothScroll: "boolean",
   newTabCustomUrl: "string",
   newTabDestination: "option",
   nextPatterns: "string",
