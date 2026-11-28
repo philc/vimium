@@ -432,6 +432,7 @@ const defaultKeyMappings = {
   "yy": "copyCurrentUrl",
   "p": "openCopiedUrlInCurrentTab",
   "P": "openCopiedUrlInNewTab",
+  "sp": "openCopiedUrlInSplitView",
   "gi": "focusInput",
   "[[": "goPrevious",
   "]]": "goNext",

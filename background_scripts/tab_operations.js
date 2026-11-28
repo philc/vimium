@@ -138,19 +138,51 @@ export async function getSplitViewOtherTab(currentTab) {
   }
 }
 
+export async function createSplit(currentTab, tab) {
+  const currentBefore = currentTab.index < tab.index;
+
+  // The tabs must be not pinned in order to create the split view.
+  await chrome.tabs.update(currentTab.id, { pinned: false });
+  await chrome.tabs.update(tab.id, { pinned: false });
+
+  // The tabs my be in the same group to create the split view.
+  if (currentTab.groupId >= 0) {
+    await chrome.tabs.group({ tabIds: tab.id, groupId: currentTab.groupId });
+  }
+
+  // The tabs must be in the same window and adjacent to create the split view.
+  await chrome.tabs.move(tab.id, {
+    index: currentTab.index,
+    windowId: currentTab.windowId,
+  });
+  // Update tab information because the indexes have changed due to the tab move.
+  currentTab = await chrome.tabs.get(currentTab.id);
+  tab = await chrome.tabs.get(tab.id);
+
+  // Maintain original order.
+  if (currentBefore != currentTab.index < tab.index) {
+    chrome.tabs.move(currentTab.id, { index: tab.index });
+  }
+
+  // TODO: Firefox does not support createSplit yet.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=2016928
+  await chrome.tabs.createSplit([currentTab.id, tab.id]);
+}
+
 export async function openUrlInSplitView(request) {
   const currentTab = request.tab;
   const urlStr = await UrlUtils.convertToUrl(request.url);
 
-  if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
-    // TODO: Firefox does not support splitWithTabId yet.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=2016928
-    chrome.tabs.create({ splitWithTabId: currentTab.id, url: urlStr });
-  } else {
-    const otherTab = await getSplitViewOtherTab(currentTab);
-    if (otherTab) {
-      chrome.tabs.update(otherTab.id, { url: urlStr });
+  const otherTab = await getSplitViewOtherTab(currentTab);
+  if (otherTab) {
+    if (urlStr) {
+      await chrome.tabs.update(otherTab.id, { url: urlStr });
+    } else {
+      await chrome.search.query({ text: request.url, tabId: otherTab.id });
     }
+  } else {
+    const newTab = await openUrlInNewTab(request);
+    createSplit(currentTab, newTab);
   }
 }
 

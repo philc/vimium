@@ -132,6 +132,13 @@ const list = [
   },
 
   {
+    name: "openCopiedUrlInSplitView",
+    desc: "Open the clipboard's URL in a split view",
+    group: "navigation",
+    noRepeat: true,
+  },
+
+  {
     name: "goUp",
     desc: "Go up the URL hierarchy",
     group: "navigation",

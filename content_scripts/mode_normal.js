@@ -207,6 +207,15 @@ const NormalModeCommands = {
     );
   },
 
+  openCopiedUrlInSplitView() {
+    HUD.pasteFromClipboard((url) =>
+      chrome.runtime.sendMessage({
+        handler: "openUrlInSplitView",
+        url,
+      })
+    );
+  },
+
   openCopiedUrlInCurrentTab() {
     HUD.pasteFromClipboard((url) =>
       chrome.runtime.sendMessage({ handler: "openUrlInCurrentTab", url })

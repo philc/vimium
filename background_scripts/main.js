@@ -181,7 +181,6 @@ async function moveTabToSplitView(request) {
   if (tab.id == currentTab.id) {
     return;
   }
-  let currentBefore = currentTab.index < tab.index;
 
   // Remove other split view tab if it already exists.
   const otherTab = await TabOperations.getSplitViewOtherTab(currentTab);
@@ -190,7 +189,6 @@ async function moveTabToSplitView(request) {
       return;
     }
     // If a split view is already open, update the order to reflect that instead.
-    currentBefore = currentTab.index < otherTab.index;
     await chrome.tabs.unsplit(currentTab.splitViewId);
     await chrome.tabs.remove(otherTab.id);
     // Update tab information because the index may have changed due to the tab removal.
@@ -198,30 +196,7 @@ async function moveTabToSplitView(request) {
     tab = await chrome.tabs.get(tab.id);
   }
 
-  // The tabs must be not pinned in order to create the split view.
-  await chrome.tabs.update(currentTab.id, { pinned: false });
-  await chrome.tabs.update(tab.id, { pinned: false });
-
-  // The tabs my be in the same group to create the split view.
-  if (currentTab.groupId >= 0) {
-    await chrome.tabs.group({ tabIds: tab.id, groupId: currentTab.groupId });
-  }
-
-  // The tabs my be in the same window and adjacent to create the split view.
-  await chrome.tabs.move(tab.id, {
-    index: currentTab.index,
-    windowId: currentTab.windowId,
-  });
-  // Update tab information because the indexes have changed due to the tab move.
-  currentTab = await chrome.tabs.get(currentTab.id);
-  tab = await chrome.tabs.get(tab.id);
-
-  // Maintain original split view order.
-  if (currentBefore != currentTab.index < tab.index) {
-    chrome.tabs.move(currentTab.id, { index: tab.index });
-  }
-
-  await chrome.tabs.createSplit([currentTab.id, tab.id]);
+  await TabOperations.createSplit(currentTab, tab);
 }
 
 function moveTab({ count, tab, registryEntry }) {
