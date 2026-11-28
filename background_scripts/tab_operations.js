@@ -171,10 +171,10 @@ export async function createSplit(currentTab, tab) {
 
 export async function openUrlInSplitView(request) {
   const currentTab = request.tab;
-  const urlStr = await UrlUtils.convertToUrl(request.url);
 
   let otherTab = await getSplitViewOtherTab(currentTab);
   if (otherTab) {
+    const urlStr = await UrlUtils.convertToUrl(request.url);
     if (urlStr) {
       await chrome.tabs.update(otherTab.id, { url: urlStr });
     } else {
@@ -182,7 +182,7 @@ export async function openUrlInSplitView(request) {
     }
   } else {
     otherTab = await openUrlInNewTab(request);
-    createSplit(currentTab, otherTab);
+    await createSplit(currentTab, otherTab);
   }
   // Focus the split view tab.
   await chrome.tabs.update(otherTab.id, { active: true });
