@@ -173,7 +173,7 @@ export async function openUrlInSplitView(request) {
   const currentTab = request.tab;
   const urlStr = await UrlUtils.convertToUrl(request.url);
 
-  const otherTab = await getSplitViewOtherTab(currentTab);
+  let otherTab = await getSplitViewOtherTab(currentTab);
   if (otherTab) {
     if (urlStr) {
       await chrome.tabs.update(otherTab.id, { url: urlStr });
@@ -181,9 +181,11 @@ export async function openUrlInSplitView(request) {
       await chrome.search.query({ text: request.url, tabId: otherTab.id });
     }
   } else {
-    const newTab = await openUrlInNewTab(request);
-    createSplit(currentTab, newTab);
+    otherTab = await openUrlInNewTab(request);
+    createSplit(currentTab, otherTab);
   }
+  // Focus the split view tab.
+  await chrome.tabs.update(otherTab.id, { active: true });
 }
 
 // Open request.url in new window and switch to it.
