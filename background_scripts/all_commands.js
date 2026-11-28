@@ -334,6 +334,19 @@ const list = [
   },
 
   {
+    name: "Vomnibar.activateInSplitView",
+    desc: "Open URL, bookmark or history entry in a split view",
+    group: "vomnibar",
+    options: {
+      query: "The text to prefill the Vomnibar with.",
+      keyword: 'The keyword of a search engine defined in the "Custom search engines" ' +
+        "section of the Vimium Options page. The Vomnibar will be scoped to use that search engine.",
+    },
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
     name: "Vomnibar.activateBookmarks",
     desc: "Open a bookmark",
     group: "vomnibar",
@@ -356,8 +369,27 @@ const list = [
   },
 
   {
+    name: "Vomnibar.activateBookmarksInSplitView",
+    desc: "Open a bookmark in a split view",
+    group: "vomnibar",
+    options: {
+      query: "The text to prefill the Vomnibar with.",
+    },
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
     name: "Vomnibar.activateTabSelection",
     desc: "Search through your open tabs",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "Vomnibar.activateMoveTabToSplitView",
+    desc: "Move an open tab in a split view",
     group: "vomnibar",
     topFrame: true,
     noRepeat: true,
@@ -374,6 +406,14 @@ const list = [
   {
     name: "Vomnibar.activateEditUrlInNewTab",
     desc: "Edit the current URL and open in a new tab",
+    group: "vomnibar",
+    topFrame: true,
+    noRepeat: true,
+  },
+
+  {
+    name: "Vomnibar.activateEditUrlInSplitView",
+    desc: "Edit the current URL and open in a split view",
     group: "vomnibar",
     topFrame: true,
     noRepeat: true,

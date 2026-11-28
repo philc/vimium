@@ -122,20 +122,34 @@ export async function openUrlInNewTab(request) {
   return newTab;
 }
 
+// Get the id of the other split view if the current tab is in a split view.
+export async function getSplitViewOtherTab(currentTab) {
+  if (currentTab.splitViewId !== chrome.tabs.SPLIT_VIEW_ID_NONE) {
+    const otherSplitTabs = (await chrome.tabs.query({ currentWindow: true }))
+      .filter((t) => t.splitViewId === currentTab.splitViewId && t.id != currentTab.id);
+    if (otherSplitTabs.length === 1) {
+      return otherSplitTabs[0];
+    } else {
+      console.warn("Split view with more than 2 tabs detected.");
+      return null;
+    }
+  } else {
+    return null;
+  }
+}
+
 export async function openUrlInSplitView(request) {
   const currentTab = request.tab;
+  const urlStr = await UrlUtils.convertToUrl(request.url);
 
   if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
     // TODO: Firefox does not support splitWithTabId yet.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=2016928
-    chrome.tabs.create({ splitWithTabId: currentTab.id, url: request.url });
+    chrome.tabs.create({ splitWithTabId: currentTab.id, url: urlStr });
   } else {
-    const otherSplitTabs = (await chrome.tabs.query({ currentWindow: true }))
-      .filter((t) => t.splitViewId === currentTab.splitViewId && t.id != currentTab.id);
-    if (otherSplitTabs.length === 1) {
-      chrome.tabs.update(otherSplitTabs[0].id, { url: request.url });
-    } else {
-      console.warn("Split view with more than 2 tabs detected.");
+    const otherTab = await getSplitViewOtherTab(currentTab);
+    if (otherTab) {
+      chrome.tabs.update(otherTab.id, { url: urlStr });
     }
   }
 }

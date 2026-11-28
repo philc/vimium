@@ -174,6 +174,56 @@ async function selectSpecificTab(request) {
   await chrome.tabs.update(request.id, { active: true });
 }
 
+async function moveTabToSplitView(request) {
+  let currentTab = request.tab;
+  let tab = await chrome.tabs.get(request.id);
+
+  if (tab.id == currentTab.id) {
+    return;
+  }
+  let currentBefore = currentTab.index < tab.index;
+
+  // Remove other split view tab if it already exists.
+  const otherTab = await TabOperations.getSplitViewOtherTab(currentTab);
+  if (otherTab) {
+    if (tab.id == otherTab.id) {
+      return;
+    }
+    // If a split view is already open, update the order to reflect that instead.
+    currentBefore = currentTab.index < otherTab.index;
+    await chrome.tabs.unsplit(currentTab.splitViewId);
+    await chrome.tabs.remove(otherTab.id);
+    // Update tab information because the index may have changed due to the tab removal.
+    currentTab = await chrome.tabs.get(currentTab.id);
+    tab = await chrome.tabs.get(tab.id);
+  }
+
+  // The tabs must be not pinned in order to create the split view.
+  await chrome.tabs.update(currentTab.id, { pinned: false });
+  await chrome.tabs.update(tab.id, { pinned: false });
+
+  // The tabs my be in the same group to create the split view.
+  if (currentTab.groupId >= 0) {
+    await chrome.tabs.group({ tabIds: tab.id, groupId: currentTab.groupId });
+  }
+
+  // The tabs my be in the same window and adjacent to create the split view.
+  await chrome.tabs.move(tab.id, {
+    index: currentTab.index,
+    windowId: currentTab.windowId,
+  });
+  // Update tab information because the indexes have changed due to the tab move.
+  currentTab = await chrome.tabs.get(currentTab.id);
+  tab = await chrome.tabs.get(tab.id);
+
+  // Maintain original split view order.
+  if (currentBefore != currentTab.index < tab.index) {
+    chrome.tabs.move(currentTab.id, { index: tab.index });
+  }
+
+  await chrome.tabs.createSplit([currentTab.id, tab.id]);
+}
+
 function moveTab({ count, tab, registryEntry }) {
   if (registryEntry.command === "moveTabLeft") {
     count = -count;
@@ -323,7 +373,7 @@ const BackgroundCommands = {
 
     // The split tabs are sorted based on their index.
     // Move the higher index tab in the position of the lower index tab.
-    chrome.tabs.move([splitTabs.at(-1).id], { index: splitTabs[0].index });
+    chrome.tabs.move(splitTabs.at(-1).id, { index: splitTabs[0].index });
   },
 
   async closeSplitViewTabs(request) {
@@ -701,9 +751,26 @@ const sendRequestHandlers = {
     });
   },
 
-  launchSearchQuery({ query, openInNewTab }) {
-    const disposition = openInNewTab ? "NEW_TAB" : "CURRENT_TAB";
-    chrome.search.query({ disposition, text: query });
+  async launchSearchQuery(request) {
+    if (request.openTarget === "current") {
+      chrome.search.query({ disposition: "CURRENT_TAB", text: request.query });
+    } else if (request.openTarget === "tab") {
+      chrome.search.query({ disposition: "NEW_TAB", text: request.query });
+    } else {
+      const currentTab = request.tab;
+      let searchTabId = currentTab.id;
+      if (currentTab.splitViewId === chrome.tabs.SPLIT_VIEW_ID_NONE) {
+        // Create a new split view tab to be used for the search.
+        searchTabId =
+          (await chrome.tabs.create({ splitWithTabId: currentTab.id, url: "about:blank" })).id;
+      } else {
+        const otherTab = await TabOperations.getSplitViewOtherTab(currentTab);
+        if (otherTab) {
+          searchTabId = otherTab.id;
+        }
+      }
+      chrome.search.query({ tabId: searchTabId, text: request.query });
+    }
   },
 
   domReady(_, sender) {
@@ -721,6 +788,7 @@ const sendRequestHandlers = {
 
   nextFrame: BackgroundCommands.nextFrame,
   selectSpecificTab,
+  moveTabToSplitView: moveTabToSplitView,
   createMark: marks.create,
   gotoMark: marks.goto,
   // Send a message to all frames in the current tab. If request.frameId is provided, then send

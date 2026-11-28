@@ -460,12 +460,16 @@ const defaultKeyMappings = {
   // Vomnibar
   "o": "Vomnibar.activate",
   "O": "Vomnibar.activateInNewTab",
+  "so": "Vomnibar.activateInSplitView",
   "T": "Vomnibar.activateTabSelection",
+  "sT": "Vomnibar.activateMoveTabToSplitView",
   "b": "Vomnibar.activateBookmarks",
   "B": "Vomnibar.activateBookmarksInNewTab",
+  "sb": "Vomnibar.activateBookmarksInSplitView",
   ":": "Vomnibar.activateCommandSelection",
   "ge": "Vomnibar.activateEditUrl",
   "gE": "Vomnibar.activateEditUrlInNewTab",
+  "se": "Vomnibar.activateEditUrlInSplitView",
 
   // Navigating history
   "H": "goBack",

@@ -30,7 +30,7 @@ export async function activate(options) {
   const defaults = {
     completer: "omni",
     query: "",
-    newTab: false,
+    target: "current",
     selectFirst: false,
     keyword: null,
     prefixCount: 1,
@@ -44,7 +44,7 @@ export async function activate(options) {
   ui.setCompleterName(options.completer);
   ui.refreshCompletions();
   ui.setInitialSelectionValue(options.selectFirst ? 0 : -1);
-  ui.setForceNewTab(options.newTab);
+  ui.setTarget(options.target);
   ui.setQuery(options.query);
   ui.setPrefixCount(options.prefixCount);
   ui.setActiveUserSearchEngine(userSearchEngines.keywordToEngine[options.keyword]);
@@ -82,8 +82,8 @@ class VomnibarUI {
   setInitialSelectionValue(initialSelectionValue) {
     this.initialSelectionValue = initialSelectionValue;
   }
-  setForceNewTab(forceNewTab) {
-    this.forceNewTab = forceNewTab;
+  setTarget(target) {
+    this.target = target;
   }
 
   // name: one of [omni, bookmarks, commands, tabs].
@@ -283,8 +283,9 @@ class VomnibarUI {
     const waitingOnCompletions = this.completions.length == 0;
     const completion = this.completions[this.selection];
 
-    const openInNewTab = this.forceNewTab || event.shiftKey || event.ctrlKey || event.altKey ||
-      event.metaKey;
+    const openTarget = event.shiftKey || event.ctrlKey || event.altKey || event.metaKey
+      ? "tab"
+      : this.target;
 
     // If the user types something and hits enter without selecting a completion from the list,
     // then:
@@ -307,7 +308,7 @@ class VomnibarUI {
       // (waitingOnCompletions).
       if (this.isUserSearchEngineActive()) {
         query = UrlUtils.createSearchUrl(query, this.activeUserSearchEngine.url);
-        this.hide(() => this.launchUrl(query, openInNewTab));
+        this.hide(() => this.launchUrl(query, openTarget));
         return;
       }
 
@@ -327,20 +328,20 @@ class VomnibarUI {
         // TODO(philc):
         const isUrl = await UrlUtils.isUrl(query);
         if (isUrl) {
-          this.hide(() => this.launchUrl(query, openInNewTab));
+          this.hide(() => this.launchUrl(query, openTarget));
         } else {
           this.hide(() =>
             chrome.runtime.sendMessage({
               handler: "launchSearchQuery",
               query,
-              openInNewTab,
+              openTarget,
             })
           );
         }
       }
     } else if (isPrimarySearchSuggestion(completion)) {
       query = UrlUtils.createSearchUrl(query, completion.searchUrl);
-      this.hide(() => this.launchUrl(query, openInNewTab));
+      this.hide(() => this.launchUrl(query, openTarget));
     } else if (completion.command) {
       this.hide(async () => {
         await chrome.runtime.sendMessage({
@@ -350,7 +351,7 @@ class VomnibarUI {
         });
       });
     } else {
-      this.hide(() => this.openCompletion(completion, openInNewTab));
+      this.hide(() => this.openCompletion(completion, openTarget));
     }
   }
 
@@ -454,22 +455,30 @@ class VomnibarUI {
     this.input.focus();
   }
 
-  openCompletion(completion, openInNewTab) {
+  openCompletion(completion, openTarget) {
     if (completion.description == "tab") {
-      chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: completion.tabId });
+      if (openTarget === "split") {
+        chrome.runtime.sendMessage({ handler: "moveTabToSplitView", id: completion.tabId });
+      } else {
+        chrome.runtime.sendMessage({ handler: "selectSpecificTab", id: completion.tabId });
+      }
     } else {
-      this.launchUrl(completion.url, openInNewTab);
+      this.launchUrl(completion.url, openTarget);
     }
   }
 
-  async launchUrl(url, openInNewTab) {
+  async launchUrl(url, openTarget) {
     // If the URL is a bookmarklet (so, prefixed with "javascript:"), then always open it in the
     // current tab.
-    if (openInNewTab && UrlUtils.hasJavascriptProtocol(url)) {
-      openInNewTab = false;
+    if (UrlUtils.hasJavascriptProtocol(url)) {
+      openTarget = "current";
     }
     await chrome.runtime.sendMessage({
-      handler: openInNewTab ? "openUrlInNewTab" : "openUrlInCurrentTab",
+      handler: openTarget === "tab"
+        ? "openUrlInNewTab"
+        : openTarget === "split"
+        ? "openUrlInSplitView"
+        : "openUrlInCurrentTab",
       url,
     });
   }
