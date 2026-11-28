@@ -3,6 +3,7 @@ import * as testHelper from "./test_helper.js";
 import "../../lib/settings.js";
 import "../../background_scripts/main.js";
 import * as commands from "../../background_scripts/commands.js";
+import * as tabRecency from "../../background_scripts/tab_recency.js";
 
 context("HintCoordinator", () => {
   should("prepareToActivateLinkHintsMode", async () => {
@@ -210,5 +211,68 @@ context("majorVersionHasIncreased", () => {
     assert.equal(false, majorVersionHasIncreased("2.0.0"));
     shoulda.stub(Utils, "getCurrentVersion", () => "2.1.0");
     assert.equal(true, majorVersionHasIncreased("2.0.0"));
+  });
+});
+
+context("selectSpecificTab", () => {
+  // Simulates two windows. Window 1 shows tab A, and window 2 shows tab C. We select tab B, which
+  // is in window 2, from tab A. Like the browser, tab activation and window-focus queries take
+  // effect asynchronously, in the order in which they were issued.
+  const [A, B, C] = [11, 12, 13];
+
+  setup(() => {
+    chrome.storage.session.clear();
+  });
+
+  teardown(() => {
+    chrome.storage.session.clear();
+  });
+
+  should("make the previously-active tab the most recent tab after the selected tab", async () => {
+    const activeTabInWindow = { 1: A, 2: C };
+    const windowOfTab = { [A]: 1, [B]: 2, [C]: 2 };
+    const listeners = { onActivated: [], onFocusChanged: [] };
+    const focusedWindows = [];
+    const nextTask = (fn) => new Promise((resolve) => setTimeout(() => resolve(fn()), 0));
+
+    stub(chrome.tabs.onActivated, "addListener", (fn) => listeners.onActivated.push(fn));
+    stub(chrome.windows.onFocusChanged, "addListener", (fn) => listeners.onFocusChanged.push(fn));
+    stub(chrome.tabs, "query", ({ windowId, active }) => {
+      if (windowId == null || !active) {
+        return Promise.resolve([]);
+      }
+      return nextTask(() => [{ id: activeTabInWindow[windowId], windowId }]);
+    });
+    stub(chrome.tabs, "get", (id) => Promise.resolve({ id, windowId: windowOfTab[id] }));
+    stub(chrome.tabs, "update", (id, properties) =>
+      nextTask(() => {
+        const windowId = windowOfTab[id];
+        if (properties.active === true) {
+          activeTabInWindow[windowId] = id;
+          listeners.onActivated.forEach((fn) => fn({ tabId: id, windowId }));
+        }
+        return { id, windowId };
+      }));
+    stub(
+      chrome.windows,
+      "update",
+      testHelper.withPromise((windowId, properties) => {
+        if (properties.focused === true) {
+          focusedWindows.push(windowId);
+          listeners.onFocusChanged.forEach((fn) => fn(windowId));
+        }
+      }),
+    );
+
+    const tracker = new tabRecency.Tracker();
+    await tracker.init();
+    tracker.queueAction("register", C);
+    tracker.queueAction("register", A);
+
+    await selectSpecificTab({ id: B });
+    await nextTask(() => {});
+
+    assert.equal([B, A, C], tracker.getTabsByRecency());
+    assert.equal([2], focusedWindows);
   });
 });
